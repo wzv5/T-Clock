@@ -12,13 +12,13 @@ HMODULE hmodMSIMG32 = NULL;
 HMODULE hmodUSER32 = NULL;
 HMODULE hmodUxTheme = NULL;
 
-BOOL (WINAPI *pGradientFill)(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG) = NULL;
+BOOL (WINAPI* pGradientFill)(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG) = NULL;
 
-BOOL (WINAPI *pSetLayeredWindowAttributes)(HWND,COLORREF,BYTE,DWORD) = NULL;
+BOOL (WINAPI* pSetLayeredWindowAttributes)(HWND,COLORREF,BYTE,DWORD) = NULL;
 
-BOOL (WINAPI *pTransparentBlt)(HDC,int,int,int,int,HDC,int,int,int,int,UINT) = NULL;
+BOOL (WINAPI* pTransparentBlt)(HDC,int,int,int,int,HDC,int,int,int,int,UINT) = NULL;
 
-BOOL (WINAPI *pDrawThemeParentBackground)(HWND hwnd, HDC hdc, RECT *prc) = NULL;
+BOOL (WINAPI* pDrawThemeParentBackground)(HWND hwnd, HDC hdc, RECT* prc) = NULL;
 
 static BOOL bInitGradientFill = FALSE;
 static BOOL bInitLayeredWindow = FALSE;
@@ -37,11 +37,9 @@ void InitGradientFill(void)
 	if(bInitGradientFill) return;
 	
 	hmodMSIMG32 = LoadLibrary("msimg32.dll");
-	if(hmodMSIMG32 != NULL)
-	{
+	if(hmodMSIMG32 != NULL) {
 		(FARPROC)pGradientFill = GetProcAddress(hmodMSIMG32, "GradientFill");
-		if(pGradientFill == NULL)
-		{
+		if(pGradientFill == NULL) {
 			FreeLibrary(hmodMSIMG32); hmodMSIMG32 = NULL;
 		}
 	}
@@ -53,11 +51,9 @@ void InitTransparentBlt(void)
 	if(bInitTransparentBlt) return;
 	
 	hmodMSIMG32 = LoadLibrary("msimg32.dll");
-	if(hmodMSIMG32 != NULL)
-	{
+	if(hmodMSIMG32 != NULL) {
 		(FARPROC)pTransparentBlt = GetProcAddress(hmodMSIMG32, "TransparentBlt");
-		if(pTransparentBlt == NULL)
-		{
+		if(pTransparentBlt == NULL) {
 			FreeLibrary(hmodMSIMG32); hmodMSIMG32 = NULL;
 		}
 	}
@@ -69,12 +65,10 @@ void InitLayeredWindow(void)
 	if(bInitLayeredWindow) return;
 	
 	hmodUSER32 = LoadLibrary("user32.dll");
-	if(hmodUSER32 != NULL)
-	{
-		(FARPROC)pSetLayeredWindowAttributes = 
+	if(hmodUSER32 != NULL) {
+		(FARPROC)pSetLayeredWindowAttributes =
 			GetProcAddress(hmodUSER32, "SetLayeredWindowAttributes");
-		if(pSetLayeredWindowAttributes == NULL)
-		{
+		if(pSetLayeredWindowAttributes == NULL) {
 			FreeLibrary(hmodUSER32); hmodUSER32 = NULL;
 		}
 	}
@@ -86,15 +80,13 @@ void EndNewAPI(HWND hwndClock)
 	if(hmodMSIMG32 != NULL) FreeLibrary(hmodMSIMG32);
 	hmodMSIMG32 = NULL; pGradientFill = NULL; pTransparentBlt = NULL;
 	
-	if(pSetLayeredWindowAttributes)
-	{
+	if(pSetLayeredWindowAttributes) {
 		HWND hwnd;
 		LONG exstyle;
 		
 		hwnd = GetParent(GetParent(hwndClock));
 		exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-		if(exstyle & WS_EX_LAYERED)
-		{
+		if(exstyle & WS_EX_LAYERED) {
 			exstyle &= ~WS_EX_LAYERED;
 			SetWindowLong(hwnd, GWL_EXSTYLE, exstyle);
 			bClearTaskbar = FALSE;
@@ -105,22 +97,22 @@ void EndNewAPI(HWND hwndClock)
 	if(hmodUSER32 != NULL) FreeLibrary(hmodUSER32);
 	hmodUSER32 = NULL;
 	pSetLayeredWindowAttributes = NULL;
-
+	
 	if(hmodUxTheme != NULL) FreeLibrary(hmodUxTheme);
 	hmodUxTheme = NULL;
 	pDrawThemeParentBackground = NULL;
-
+	
 }
 /*
 void GradientFillClock(HDC hdc, RECT* prc, COLORREF col1, COLORREF col2) {
 	TRIVERTEX vert[2];
 	GRADIENT_RECT gRect;
-	
+
   if(!pGradientFill) InitGradientFill();
   if(!pGradientFill) {
 	 return;
   }
-	
+
 	vert[0].x      = prc->left;
 	vert[0].y      = prc->top;
 	vert[0].Red    = (COLOR16)GetRValue(col1) * 256;
@@ -128,7 +120,7 @@ void GradientFillClock(HDC hdc, RECT* prc, COLORREF col1, COLORREF col2) {
 	vert[0].Blue   = (COLOR16)GetBValue(col1) * 256;
 	vert[0].Alpha  = 0x0000;
 	vert[1].x      = prc->right;
-	vert[1].y      = prc->bottom; 
+	vert[1].y      = prc->bottom;
 	vert[1].Red    = (COLOR16)GetRValue(col2) * 256;
 	vert[1].Green  = (COLOR16)GetGValue(col2) * 256;
 	vert[1].Blue   = (COLOR16)GetBValue(col2) * 256;
@@ -139,12 +131,13 @@ void GradientFillClock(HDC hdc, RECT* prc, COLORREF col1, COLORREF col2) {
   pGradientFill(hdc, vert, 2, &gRect, 1, GRADIENT_FILL_RECT_H);
 }
 */
-void TransBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh) {
-  if(!pTransparentBlt) InitTransparentBlt();
-  if(!pTransparentBlt) {
-	 return;
-  }
-  pTransparentBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, RGB(255, 0, 255));
+void TransBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh)
+{
+	if(!pTransparentBlt) InitTransparentBlt();
+	if(!pTransparentBlt) {
+		return;
+	}
+	pTransparentBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, RGB(255, 0, 255));
 }
 
 void SetLayeredTaskbar(HWND hwndClock)
@@ -167,8 +160,7 @@ void SetLayeredTaskbar(HWND hwndClock)
 	if(alpha < 255 || bClearTaskbar) exstyle |= WS_EX_LAYERED;
 	else exstyle &= ~WS_EX_LAYERED;
 	SetWindowLong(hwnd, GWL_EXSTYLE, exstyle);
-	if(bRefreshClearTaskbar)
-	{
+	if(bRefreshClearTaskbar) {
 		bRefreshClearTaskbar = FALSE;
 		RefreshUs();
 	}
@@ -178,7 +170,7 @@ void SetLayeredTaskbar(HWND hwndClock)
 		pSetLayeredWindowAttributes(hwnd, 0, (BYTE)alpha, LWA_ALPHA);
 	else if(bClearTaskbar)
 		pSetLayeredWindowAttributes(hwnd, GetSysColor(COLOR_3DFACE), (BYTE)alpha, LWA_COLORKEY|LWA_ALPHA);
-
+		
 }
 
 /*--------------------------------------------------
@@ -190,15 +182,12 @@ void RefreshRebar(HWND hwndBar)
 	char classname[80];
 	
 	hwnd = GetWindow(hwndBar, GW_CHILD);
-	while(hwnd)
-	{
+	while(hwnd) {
 		GetClassName(hwnd, classname, 80);
-		if(lstrcmpi(classname, "ReBarWindow32") == 0)
-		{
+		if(lstrcmpi(classname, "ReBarWindow32") == 0) {
 			InvalidateRect(hwnd, NULL, TRUE);
 			hwnd = GetWindow(hwnd, GW_CHILD);
-			while(hwnd)
-			{
+			while(hwnd) {
 				InvalidateRect(hwnd, NULL, TRUE);
 				hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 			}
@@ -214,24 +203,20 @@ void RefreshUs(void)
 	HWND hwndBar;
 	HWND hwndChild;
 	char classname[80];
-
+	
 	hwndBar = FindWindow("Shell_TrayWnd", NULL);
-
+	
 	// find the clock window
 	hwndChild = GetWindow(hwndBar, GW_CHILD);
-	while(hwndChild)
-	{
+	while(hwndChild) {
 		GetClassName(hwndChild, classname, 80);
 		//WriteDebug(classname);
-		if(lstrcmpi(classname, "TrayNotifyWnd") == 0)
-		{
+		if(lstrcmpi(classname, "TrayNotifyWnd") == 0) {
 			hwndChild = GetWindow(hwndChild, GW_CHILD);
-			while(hwndChild)
-			{
+			while(hwndChild) {
 				GetClassName(hwndChild, classname, 80);
 				//WriteDebug(classname);
-				if(lstrcmpi(classname, "TrayClockWClass") == 0)
-				{
+				if(lstrcmpi(classname, "TrayClockWClass") == 0) {
 					SendMessage(hwndChild, CLOCKM_REFRESHCLOCK, 0, 0);
 					SendMessage(hwndChild, CLOCKM_REFRESHTASKBAR, 0, 0);
 					break;
@@ -243,26 +228,29 @@ void RefreshUs(void)
 	}
 }
 
-void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans) {
-  if(useTrans) TransBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh);
-  else StretchBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, SRCCOPY);
+void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans)
+{
+	if(useTrans) TransBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh);
+	else StretchBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, SRCCOPY);
 }
 
-void InitDrawThemeParentBackground(void) {
-  if(bInitDrawThemeParentBackground) return;
+void InitDrawThemeParentBackground(void)
+{
+	if(bInitDrawThemeParentBackground) return;
 	
-  hmodUxTheme = LoadLibrary("UxTheme.dll");
-  if(hmodUxTheme != NULL) {
-	 (FARPROC)pDrawThemeParentBackground = GetProcAddress(hmodUxTheme, "DrawThemeParentBackground");
-	 if(pDrawThemeParentBackground == NULL) {
-		FreeLibrary(hmodUxTheme); hmodUxTheme = NULL;
-	 }
-  }
- bInitDrawThemeParentBackground = TRUE;
+	hmodUxTheme = LoadLibrary("UxTheme.dll");
+	if(hmodUxTheme != NULL) {
+		(FARPROC)pDrawThemeParentBackground = GetProcAddress(hmodUxTheme, "DrawThemeParentBackground");
+		if(pDrawThemeParentBackground == NULL) {
+			FreeLibrary(hmodUxTheme); hmodUxTheme = NULL;
+		}
+	}
+	bInitDrawThemeParentBackground = TRUE;
 }
 
-void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT *prc) {
-  if(!pDrawThemeParentBackground) InitDrawThemeParentBackground();
-  if(!pDrawThemeParentBackground)return;
- pDrawThemeParentBackground(hwnd, hdc, prc);
+void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT* prc)
+{
+	if(!pDrawThemeParentBackground) InitDrawThemeParentBackground();
+	if(!pDrawThemeParentBackground)return;
+	pDrawThemeParentBackground(hwnd, hdc, prc);
 }

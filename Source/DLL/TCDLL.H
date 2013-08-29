@@ -45,7 +45,7 @@
 extern BOOL bNoClock;
 void DrawClock(HWND hwnd, HDC hdc);
 void GetDisplayTime(SYSTEMTIME* pt, int* beat100);
-void FillClock(HWND hwnd, HDC hdc, RECT *prc, int nblink);
+void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink);
 
 //#pragma once
 //extern char szTZone[]; //---+++--> TimeZone String Buffer, Also Used (as External) in Format.c
@@ -55,30 +55,30 @@ extern BOOL g_bIniSetting;
 extern char g_inifile[];
 
 char* MyString(UINT id);
-void del_title(char *path);
-int ext_cmp(char *fname, char *ext);
-void add_title(char *path, char *title);
-void parse(char *dst, char *src, int n);
+void del_title(char* path);
+int ext_cmp(char* fname, char* ext);
+void add_title(char* path, char* title);
+void parse(char* dst, char* src, int n);
 int _strncmp(const char* d, const char* s, size_t n);
 BOOL SetMyRegLong(char* subkey, char* entry, DWORD val);
 LONG GetMyRegLong(char* section, char* entry, LONG defval);
 LONG GetMyRegLongEx(char* section, char* entry, LONG defval);
 COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval);
-LONG GetRegLong(HKEY rootkey, char*subkey, char* entry, LONG defval);
+LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval);
 int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval);
 int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defval);
 HFONT CreateMyFont(char* fontname, int fontsize, LONG weight, LONG italic, int angle);
-int GetRegStr(HKEY rootkey, char*subkey, char* entry, char* val, int cbData, char* defval);
-void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, 
+int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, char* defval);
+void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc,
 					 int xSrc, int ySrc, int cxSrc, int cySrc, BOOL ReverseBlt, BOOL useTrans);
-void HorizontalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, 
+void HorizontalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc,
 					   int xSrc, int ySrc, int cxSrc, int cySrc, DWORD rasterOp);
-void FillTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, 
+void FillTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc,
 				 int xSrc, int ySrc, int cxSrc, int cySrc, DWORD rasterOp);
 void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc,
 			 int xSrc, int ySrc, int cxSrc, int cySrc, BOOL useTrans);
 void GetFileAndOption(const char* command, char* fname, char* opt);
-BOOL ConvertTip(char *destination, WCHAR *tip, UINT code);
+BOOL ConvertTip(char* destination, WCHAR* tip, UINT code);
 BOOL SetMyRegStr(char* subkey, char* entry, char* val);
 BOOL ExecFile(HWND hwnd, char* command);
 void Pause(HWND hWnd, LPCTSTR pszArgs);
@@ -104,7 +104,7 @@ void EndNewAPI(HWND hwnd);
 void SetLayeredTaskbar(HWND hwndClock);
 void TransBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh);
 void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans);
-void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT *prc);
+void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT* prc);
 void InitDrawThemeParentBackground(void);
 void RefreshUs(void);
 

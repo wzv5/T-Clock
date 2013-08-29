@@ -16,10 +16,10 @@
 #ifndef GUID_DEFINED
 #define GUID_DEFINED
 typedef struct _GUID {
-unsigned long Data1;
-unsigned short Data2;
-unsigned short Data3;
-unsigned char Data4[ 8 ];
+	unsigned long Data1;
+	unsigned short Data2;
+	unsigned short Data3;
+	unsigned char Data4[ 8 ];
 } GUID;
 #endif
 
@@ -61,11 +61,11 @@ DEFINE_GUIDEX(GUID_NULL);
 
 #ifdef INITGUID
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-			EXTERN_C const GUID DECLSPEC_SELECTANY name \
-				={ l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } }
+	EXTERN_C const GUID DECLSPEC_SELECTANY name \
+		={ l, w1, w2, { b1, b2, b3, b4, b5, b6, b7, b8 } }
 #else
 #define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-			EXTERN_C const GUID name
+	EXTERN_C const GUID name
 #endif
 
 #undef DEFINE_OLEGUID
@@ -82,12 +82,12 @@ DEFINE_GUIDEX(GUID_NULL);
 
 #ifndef __LPGUID_DEFINED__
 #define __LPGUID_DEFINED__
-typedef GUID *LPGUID;
+typedef GUID* LPGUID;
 #endif
 
 #ifndef __LPCGUID_DEFINED__
 #define __LPCGUID_DEFINED__
-typedef const GUID *LPCGUID;
+typedef const GUID* LPCGUID;
 #endif
 
 // ---------------------------------------------------------------------------
@@ -96,17 +96,17 @@ typedef const GUID *LPCGUID;
 #define __IID_DEFINED__
 
 typedef GUID IID;
-typedef IID *LPIID;
+typedef IID* LPIID;
 #define IID_NULL GUID_NULL
 #define IsEqualIID(riid1, riid2) IsEqualGUID(riid1, riid2)
 
 typedef GUID CLSID;
-typedef CLSID *LPCLSID;
+typedef CLSID* LPCLSID;
 #define CLSID_NULL GUID_NULL
 #define IsEqualCLSID(rclsid1, rclsid2) IsEqualGUID(rclsid1, rclsid2)
 
 typedef GUID FMTID;
-typedef FMTID *LPFMTID;
+typedef FMTID* LPFMTID;
 #define FMTID_NULL GUID_NULL
 #define IsEqualFMTID(rfmtid1, rfmtid2) IsEqualGUID(rfmtid1, rfmtid2)
 
@@ -147,10 +147,10 @@ typedef FMTID *LPFMTID;
 #define _SYS_GUID_OPERATORS_
 
 #define InlineIsEqualGUID(rguid1, rguid2)  \
-        ( ((unsigned long *) rguid1)[0] == ((unsigned long *) rguid2)[0] &&   \
-          ((unsigned long *) rguid1)[1] == ((unsigned long *) rguid2)[1] &&   \
-          ((unsigned long *) rguid1)[2] == ((unsigned long *) rguid2)[2] &&   \
-          ((unsigned long *) rguid1)[3] == ((unsigned long *) rguid2)[3] )
+	( ((unsigned long *) rguid1)[0] == ((unsigned long *) rguid2)[0] &&   \
+	  ((unsigned long *) rguid1)[1] == ((unsigned long *) rguid2)[1] &&   \
+	  ((unsigned long *) rguid1)[2] == ((unsigned long *) rguid2)[2] &&   \
+	  ((unsigned long *) rguid1)[3] == ((unsigned long *) rguid2)[3] )
 
 #define IsEqualGUID(rguid1, rguid2) \
 	( !memcmp( &(rguid1), &(rguid2), sizeof(GUID)) )

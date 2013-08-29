@@ -13,8 +13,7 @@ char g_inifile[MAX_PATH];
 int _strncmp(const char* d, const char* s, size_t n)
 {
 	unsigned int i;
-	for(i = 0; i < n; i++)
-	{
+	for(i = 0; i < n; i++) {
 		if(*s == 0 && *d == 0) break;
 		if(*d != *s) return (*d - *s);
 		d++; s++;
@@ -23,28 +22,23 @@ int _strncmp(const char* d, const char* s, size_t n)
 }
 
 /*-------------------------------------------
-@ƒpƒX–¼‚Éƒtƒ@ƒCƒ‹–¼‚ğ‚Â‚¯‚é
+	ãƒ‘ã‚¹åã«ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ã¤ã‘ã‚‹
 ---------------------------------------------*/
-void add_title(char *path, char *title)
+void add_title(char* path, char* title)
 {
-	char *p;
+	char* p;
 	
 	p = path;
-
+	
 	if(*title && *(title + 1) == ':') ;
-	else if(*title == '\\')
-	{
+	else if(*title == '\\') {
 		if(*p && *(p + 1) == ':') p += 2;
-	}
-	else
-	{
-		while(*p)
-		{
-			if((*p == '\\' || *p == '/') && *(p + 1) == 0)
-			{
+	} else {
+		while(*p) {
+			if((*p == '\\' || *p == '/') && *(p + 1) == 0) {
 				break;
 			}
-			p = (char *)CharNext(p);
+			p = (char*)CharNext(p);
 		}
 		*p++ = '\\';
 	}
@@ -53,40 +47,36 @@ void add_title(char *path, char *title)
 }
 
 /*-------------------------------------------
-@ƒpƒX–¼‚©‚çƒtƒ@ƒCƒ‹–¼‚ğ‚Æ‚è‚Ì‚¼‚­
+	ãƒ‘ã‚¹åã‹ã‚‰ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ã¨ã‚Šã®ãã
 ---------------------------------------------*/
-void del_title(char *path)
+void del_title(char* path)
 {
-	char *p, *ep;
-
+	char* p, *ep;
+	
 	p = ep = path;
-	while(*p)
-	{
-		if(*p == '\\' || *p == '/')
-		{
+	while(*p) {
+		if(*p == '\\' || *p == '/') {
 			if(p > path && *(p - 1) == ':') ep = p + 1;
 			else ep = p;
 		}
-		p = (char *)CharNext(p);
+		p = (char*)CharNext(p);
 	}
 	*ep = 0;
 }
 
 /*------------------------------------------------
-	ƒJƒ“ƒ}‚Å‹æØ‚ç‚ê‚½•¶š—ñ‚ğæ‚èo‚·
+	ã‚«ãƒ³ãƒã§åŒºåˆ‡ã‚‰ã‚ŒãŸæ–‡å­—åˆ—ã‚’å–ã‚Šå‡ºã™
 --------------------------------------------------*/
-void parse(char *dst, char *src, int n)
+void parse(char* dst, char* src, int n)
 {
-	char *dp;
+	char* dp;
 	int i;
-
-	for(i = 0; i < n; i++)
-	{
+	
+	for(i = 0; i < n; i++) {
 		while(*src && *src != ',') src++;
 		if(*src == ',') src++;
 	}
-	if(*src == 0) 
-	{
+	if(*src == 0) {
 		*dst = 0; return;
 	}
 	
@@ -96,8 +86,7 @@ void parse(char *dst, char *src, int n)
 	while(*src && *src != ',') *dst++ = *src++;
 	*dst = 0;
 	
-	while(dst != dp)
-	{
+	while(dst != dp) {
 		dst--;
 		if(*dst == ' ') *dst = 0;
 		else break;
@@ -113,71 +102,16 @@ char* MyString(UINT id)
 	
 	if(LoadString(hmod, id, buf, 80) == 0)
 		buf[0] = 0;
-	
+		
 	return buf;
 }
 
 char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
 
 /*------------------------------------------------
-@©•ª‚ÌƒŒƒWƒXƒgƒŠ‚©‚ç•¶š—ñ‚ğ“¾‚é
+	è‡ªåˆ†ã®ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰æ–‡å­—åˆ—ã‚’å¾—ã‚‹
 --------------------------------------------------*/
-int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval) {
-	char key[80];
-	HKEY hkey;
-	DWORD regtype;
-	DWORD size;
-	BOOL b;
-	int r;
-	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, mykey);
-	
-	if(section && *section)
-	{
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	}
-	else
-	{
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting)
-	{
-		r = GetPrivateProfileString(key, 
-			entry, defval, 
-			val,
-			cbData, 
-			g_inifile);
-	}
-	else
-	{
-		b = FALSE;
-		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0)
-		{
-			size = cbData;
-			if(RegQueryValueEx(hkey, entry, 0, &regtype,
-				(LPBYTE)val, &size) == 0)
-			{
-				if(size == 0) *val = 0;
-				r = size;
-				b = TRUE;
-			}
-			RegCloseKey(hkey);
-		}
-		if(b == FALSE)
-		{
-			strcpy(val, defval);
-			r = (INT)strlen(defval);
-		}
-	}
-	
-	return r;
-}
-
-int GetMyRegStrEx(char* section, char* entry, char* val, int cbData,
-	char* defval)
+int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 {
 	char key[80];
 	HKEY hkey;
@@ -189,40 +123,78 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData,
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
 	
-	if(section && *section)
-	{
+	if(section && *section) {
 		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
-	}
-	else
-	{
+	} else {
 		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(g_bIniSetting)
-	{
-		r = GetPrivateProfileString(key, entry, defval, val,
-			cbData, g_inifile);
-		if(r == cbData)
-			SetMyRegStr(section, entry, defval);
-	}
-	else
-	{
+	if(g_bIniSetting) {
+		r = GetPrivateProfileString(key,
+									entry, defval,
+									val,
+									cbData,
+									g_inifile);
+	} else {
 		b = FALSE;
-		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0)
-		{
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			size = cbData;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
-				(LPBYTE)val, &size) == 0)
-			{
+							   (LPBYTE)val, &size) == 0) {
 				if(size == 0) *val = 0;
 				r = size;
 				b = TRUE;
 			}
 			RegCloseKey(hkey);
 		}
-		if(b == FALSE)
-		{
+		if(b == FALSE) {
+			strcpy(val, defval);
+			r = (INT)strlen(defval);
+		}
+	}
+	
+	return r;
+}
+
+int GetMyRegStrEx(char* section, char* entry, char* val, int cbData,
+				  char* defval)
+{
+	char key[80];
+	HKEY hkey;
+	DWORD regtype;
+	DWORD size;
+	BOOL b;
+	int r;
+	
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
+	
+	if(section && *section) {
+		if(!g_bIniSetting) strcat(key, "\\");
+		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
+	}
+	
+	if(g_bIniSetting) {
+		r = GetPrivateProfileString(key, entry, defval, val,
+									cbData, g_inifile);
+		if(r == cbData)
+			SetMyRegStr(section, entry, defval);
+	} else {
+		b = FALSE;
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
+			size = cbData;
+			if(RegQueryValueEx(hkey, entry, 0, &regtype,
+							   (LPBYTE)val, &size) == 0) {
+				if(size == 0) *val = 0;
+				r = size;
+				b = TRUE;
+			}
+			RegCloseKey(hkey);
+		}
+		if(b == FALSE) {
 			SetMyRegStr(section, entry, defval);
 			strcpy(val, defval);
 			r = (INT)strlen(defval);
@@ -233,7 +205,7 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData,
 }
 
 /*------------------------------------------------
-@©•ª‚ÌƒŒƒWƒXƒgƒŠ‚©‚çLONG’l‚ğ“¾‚é
+	è‡ªåˆ†ã®ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰LONGå€¤ã‚’å¾—ã‚‹
 --------------------------------------------------*/
 LONG GetMyRegLong(char* section, char* entry, LONG defval)
 {
@@ -247,29 +219,21 @@ LONG GetMyRegLong(char* section, char* entry, LONG defval)
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
 	
-	if(section && *section)
-	{
+	if(section && *section) {
 		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
-	}
-	else
-	{
+	} else {
 		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(g_bIniSetting)
-	{
+	if(g_bIniSetting) {
 		r = GetPrivateProfileInt(key, entry, defval, g_inifile);
-	}
-	else
-	{
+	} else {
 		b = FALSE;
-		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0)
-		{
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			size = 4;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
-				(LPBYTE)&r, &size) == 0)
-			{
+							   (LPBYTE)&r, &size) == 0) {
 				if(size == 4) b = TRUE;
 			}
 			RegCloseKey(hkey);
@@ -291,29 +255,21 @@ COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
 	
-	if(section && *section)
-	{
+	if(section && *section) {
 		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
-	}
-	else
-	{
+	} else {
 		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(g_bIniSetting)
-	{
+	if(g_bIniSetting) {
 		r = GetPrivateProfileInt(key, entry, defval, g_inifile);
-	}
-	else
-	{
+	} else {
 		b = FALSE;
-		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0)
-		{
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			size = 4;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
-				(LPBYTE)&r, &size) == 0)
-			{
+							   (LPBYTE)&r, &size) == 0) {
 				if(size == 4) b = TRUE;
 			}
 			RegCloseKey(hkey);
@@ -321,7 +277,7 @@ COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
 		if(b == FALSE) r = defval;
 	}
 	if(r & 0x80000000) r = GetSysColor(r & 0x00ffffff);
-
+	
 	return r;
 }
 
@@ -337,37 +293,28 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
 	
-	if(section && *section)
-	{
+	if(section && *section) {
 		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
-	}
-	else
-	{
+	} else {
 		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(g_bIniSetting)
-	{
+	if(g_bIniSetting) {
 		r = GetPrivateProfileInt(key, entry, defval, g_inifile);
 		if(r = defval)
 			SetMyRegLong(section, entry, defval);
-	}
-	else
-	{
+	} else {
 		b = FALSE;
-		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0)
-		{
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			size = 4;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
-				(LPBYTE)&r, &size) == 0)
-			{
+							   (LPBYTE)&r, &size) == 0) {
 				if(size == 4) b = TRUE;
 			}
 			RegCloseKey(hkey);
 		}
-		if(b == FALSE) 
-		{
+		if(b == FALSE) {
 			r = defval;
 			SetMyRegLong(section, entry, defval);
 		}
@@ -378,7 +325,7 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 /*------------------------------------------------
   get DWORD value from registry
 --------------------------------------------------*/
-LONG GetRegLong(HKEY rootkey, char*subkey, char* entry, LONG defval)
+LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 {
 	HKEY hkey;
 	DWORD regtype;
@@ -387,13 +334,11 @@ LONG GetRegLong(HKEY rootkey, char*subkey, char* entry, LONG defval)
 	int r;
 	
 	b = FALSE;
-	if(RegOpenKey(rootkey, subkey, &hkey) == 0)
-	{
+	if(RegOpenKey(rootkey, subkey, &hkey) == 0) {
 		size = 4;
 		regtype = REG_DWORD;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype,
-			(LPBYTE)&r, &size) == 0)
-		{
+						   (LPBYTE)&r, &size) == 0) {
 			if(size == 4) b = TRUE;
 		}
 		RegCloseKey(hkey);
@@ -403,10 +348,10 @@ LONG GetRegLong(HKEY rootkey, char*subkey, char* entry, LONG defval)
 }
 
 /*------------------------------------------------
-@ƒŒƒWƒXƒgƒŠ‚©‚ç•¶š—ñ‚ğ“¾‚é
+	ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã‹ã‚‰æ–‡å­—åˆ—ã‚’å¾—ã‚‹
 --------------------------------------------------*/
-int GetRegStr(HKEY rootkey, char*subkey, char* entry,
-	char* val, int cbData, char* defval)
+int GetRegStr(HKEY rootkey, char* subkey, char* entry,
+			  char* val, int cbData, char* defval)
 {
 	HKEY hkey;
 	DWORD regtype;
@@ -415,19 +360,16 @@ int GetRegStr(HKEY rootkey, char*subkey, char* entry,
 	int r;
 	
 	b = FALSE;
-	if(RegOpenKey(rootkey, subkey, &hkey) == 0)
-	{
+	if(RegOpenKey(rootkey, subkey, &hkey) == 0) {
 		size = cbData;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype,
-			(LPBYTE)val, &size) == 0)
-		{
+						   (LPBYTE)val, &size) == 0) {
 			if(size == 0) *val = 0;
 			b = TRUE;
 		}
 		RegCloseKey(hkey);
 	}
-	if(b == FALSE)
-	{
+	if(b == FALSE) {
 		strcpy(val, defval);
 		r = (INT)strlen(defval);
 	}
@@ -435,7 +377,7 @@ int GetRegStr(HKEY rootkey, char*subkey, char* entry,
 }
 
 /*-------------------------------------------
-@ƒŒƒWƒXƒgƒŠ‚É•¶š—ñ‚ğ‘‚«‚Ş
+	ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã«æ–‡å­—åˆ—ã‚’æ›¸ãè¾¼ã‚€
 ---------------------------------------------*/
 BOOL SetMyRegStr(char* section, char* entry, char* val)
 {
@@ -446,30 +388,22 @@ BOOL SetMyRegStr(char* section, char* entry, char* val)
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
 	
-	if(section && *section)
-	{
+	if(section && *section) {
 		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
-	}
-	else
-	{
+	} else {
 		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(g_bIniSetting)
-	{
+	if(g_bIniSetting) {
 		r = FALSE;
 		if(WritePrivateProfileString(key, entry, val, g_inifile))
 			r = TRUE;
-	}
-	else
-	{
+	} else {
 		r = FALSE;
-		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0)
-		{
+		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			if(RegSetValueEx(hkey, entry, 0, REG_SZ,
-				(CONST BYTE*)val, (INT)strlen(val)) == 0)
-			{
+							 (CONST BYTE*)val, (INT)strlen(val)) == 0) {
 				r = TRUE;
 			}
 			RegCloseKey(hkey);
@@ -479,7 +413,7 @@ BOOL SetMyRegStr(char* section, char* entry, char* val)
 }
 
 /*-------------------------------------------
-@ƒŒƒWƒXƒgƒŠ‚ÉDWORD’l‚ğ‘‚«‚Ş
+	ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã«DWORDå€¤ã‚’æ›¸ãè¾¼ã‚€
 ---------------------------------------------*/
 BOOL SetMyRegLong(char* section, char* entry, DWORD val)
 {
@@ -490,32 +424,24 @@ BOOL SetMyRegLong(char* section, char* entry, DWORD val)
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
 	
-	if(section && *section)
-	{
+	if(section && *section) {
 		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
-	}
-	else
-	{
+	} else {
 		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(g_bIniSetting)
-	{
+	if(g_bIniSetting) {
 		char s[20];
 		wsprintf(s, "%d", val);
 		r = FALSE;
 		if(WritePrivateProfileString(key, entry, s, g_inifile))
 			r = TRUE;
-	}
-	else
-	{
+	} else {
 		r = FALSE;
-		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0)
-		{
+		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			if(RegSetValueEx(hkey, entry, 0, REG_DWORD,
-				(CONST BYTE*)&val, 4) == 0)
-			{
+							 (CONST BYTE*)&val, 4) == 0) {
 				r = TRUE;
 			}
 			RegCloseKey(hkey);
@@ -525,43 +451,39 @@ BOOL SetMyRegLong(char* section, char* entry, DWORD val)
 }
 
 // tile an image vertically
-void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, 
-					 HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc, 
+void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest,
+					 HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc,
 					 BOOL ReverseBlt, BOOL useTrans)
 {
 	int y;
 	
-	if(ReverseBlt)
-	{
-	for(y = cyDest - cySrc; y > yDest - cySrc; y -= cySrc)
-		{
+	if(ReverseBlt) {
+		for(y = cyDest - cySrc; y > yDest - cySrc; y -= cySrc) {
 			TC2DrawBlt(hdcDest,
-				xDest,
-				y,
-				cxDest,
-				cySrc,
-				hdcSrc,
-				xSrc,
-				ySrc,
-				cxSrc,
-				cySrc,
-				useTrans);
+					   xDest,
+					   y,
+					   cxDest,
+					   cySrc,
+					   hdcSrc,
+					   xSrc,
+					   ySrc,
+					   cxSrc,
+					   cySrc,
+					   useTrans);
 		}
-	}else
-	{
-	for(y = 0; y < cyDest; y += cySrc)
-		{
+	} else {
+		for(y = 0; y < cyDest; y += cySrc) {
 			TC2DrawBlt(hdcDest,
-				xDest,
-				yDest + y,
-				cxDest,
-				min(cyDest - y, cySrc),
-				hdcSrc,
-				xSrc,
-				ySrc,
-				cxSrc,
-				min(cyDest - y, cySrc),
-				useTrans);
+					   xDest,
+					   yDest + y,
+					   cxDest,
+					   min(cyDest - y, cySrc),
+					   hdcSrc,
+					   xSrc,
+					   ySrc,
+					   cxSrc,
+					   min(cyDest - y, cySrc),
+					   useTrans);
 		}
 	}
 }
@@ -570,59 +492,52 @@ void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest,
 void FillTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc, DWORD rasterOp)
 {
 	int x, y;
-
-	for(y = 0; y < cyDest; y += cySrc)
-	{
-		for(x = 0; x < cxDest; x += cxSrc)
-		{
+	
+	for(y = 0; y < cyDest; y += cySrc) {
+		for(x = 0; x < cxDest; x += cxSrc) {
 			BitBlt(hdcDest,
-				xDest + x,
-				yDest + y,
-				cxSrc,
-				cySrc,
-				hdcSrc,
-				xSrc,
-				ySrc,
-				rasterOp);
+				   xDest + x,
+				   yDest + y,
+				   cxSrc,
+				   cySrc,
+				   hdcSrc,
+				   xSrc,
+				   ySrc,
+				   rasterOp);
 		}
 	}
 }
 
-void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, 
-    int xSrc, int ySrc, int cxSrc, int cySrc, BOOL useTrans) 
-{ 
-    int y, x;
+void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc,
+			 int xSrc, int ySrc, int cxSrc, int cySrc, BOOL useTrans)
+{
+	int y, x;
 	
-	for (y = yDest; y < cyDest; y = y + cySrc) 
-    { 
-        for (x = xDest; x < cxDest; x = x + cxSrc) 
-        { 
-            TC2DrawBlt(hdcDest, x, y, cxSrc, cySrc, 
-                     hdcSrc, xSrc, ySrc, cxSrc, cySrc, useTrans); 
-        } 
-    } 
-} 
+	for(y = yDest; y < cyDest; y = y + cySrc) {
+		for(x = xDest; x < cxDest; x = x + cxSrc) {
+			TC2DrawBlt(hdcDest, x, y, cxSrc, cySrc,
+					   hdcSrc, xSrc, ySrc, cxSrc, cySrc, useTrans);
+		}
+	}
+}
 
 /*--------------------------------------------------------
   Retreive a file name and option from a command string
 ----------------------------------------------------------*/
 void GetFileAndOption(const char* command, char* fname, char* opt)
 {
-	const char *p, *pe;
-	char *pd;
+	const char* p, *pe;
+	char* pd;
 	WIN32_FIND_DATA fd;
 	HANDLE hfind;
 	
 	p = command; pd = fname;
 	pe = NULL;
-	for(; ;)
-	{
-		if(*p == ' ' || *p == 0)
-		{
+	for(; ;) {
+		if(*p == ' ' || *p == 0) {
 			*pd = 0;
 			hfind = FindFirstFile(fname, &fd);
-			if(hfind != INVALID_HANDLE_VALUE)
-			{
+			if(hfind != INVALID_HANDLE_VALUE) {
 				FindClose(hfind);
 				pe = p;
 			}
@@ -633,52 +548,50 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 	if(pe == NULL) pe = p;
 	
 	p = command; pd = fname;
-	for(; p != pe; )
-	{
+	for(; p != pe;) {
 		*pd++ = *p++;
 	}
 	*pd = 0;
 	if(*p == ' ') p++;
 	
 	pd = opt;
-	for(; *p; ) *pd++ = *p++;
+	for(; *p;) *pd++ = *p++;
 	*pd = 0;
 }
 
 /*------------------------------------------------
   Open a file
 --------------------------------------------------*/
-BOOL ExecFile(HWND hwnd, char* command) {
+BOOL ExecFile(HWND hwnd, char* command)
+{
 	char fname[MAX_PATH], opt[MAX_PATH];
 	
-  if(*command == 0) return FALSE;
-  GetFileAndOption(command, fname, opt);
-  if((int)(UINT_PTR)(HINSTANCE)ShellExecute(hwnd, NULL, fname, opt[0]?opt:NULL, "", SW_SHOW) <= 32) return FALSE;
- return TRUE;
+	if(*command == 0) return FALSE;
+	GetFileAndOption(command, fname, opt);
+	if((int)(UINT_PTR)(HINSTANCE)ShellExecute(hwnd, NULL, fname, opt[0]?opt:NULL, "", SW_SHOW) <= 32) return FALSE;
+	return TRUE;
 }
 
-BOOL IsXPStyle() {
-	char temp[1024];
-
-  GetRegStr(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\ThemeManager", "ThemeActive", temp, 1024, "0");
-  if(_strnicmp(temp, "1", 1) == 0) return TRUE;
-  else return FALSE;
-}
-
-void Pause( HWND hWnd, LPCTSTR pszArgs )
+BOOL IsXPStyle()
 {
-	LONG lInterval = atoi( pszArgs );
+	char temp[1024];
+	
+	GetRegStr(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\ThemeManager", "ThemeActive", temp, 1024, "0");
+	if(_strnicmp(temp, "1", 1) == 0) return TRUE;
+	else return FALSE;
+}
+
+void Pause(HWND hWnd, LPCTSTR pszArgs)
+{
+	LONG lInterval = atoi(pszArgs);
 	LONG lTime = GetTickCount();
 	MSG msg;
 	
-	if( lInterval > 0 )
-	{
-		while((LONG)(GetTickCount() - lTime) < lInterval )
-		{
-			if( PeekMessage( &msg, NULL, 0, 0, PM_REMOVE ) )
-			{
-				TranslateMessage( &msg );
-				DispatchMessage( &msg );
+	if(lInterval > 0) {
+		while((LONG)(GetTickCount() - lTime) < lInterval) {
+			if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
 			}
 		}
 	}

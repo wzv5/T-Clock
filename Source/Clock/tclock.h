@@ -1,6 +1,6 @@
-   //===============================================================================
-  //--+++--> tclock.h - KAZUBON  1997-1999 =========================================
- //=================== Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
+//===============================================================================
+//--+++--> tclock.h - KAZUBON  1997-1999 =========================================
+//=================== Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 //-------------------------{ Stoic Joker 2006-2010 }-------------------------+++-->
 #define _CRT_SECURE_NO_DEPRECATE 1 // SHUT-UP About the New String Functions Already!!!
 
@@ -12,7 +12,7 @@
 
 #ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.                   
 #define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
-#endif						
+#endif
 
 #ifndef _WIN32_IE			// Allow use of features specific to IE 6.0 or later.
 #define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
@@ -62,7 +62,7 @@ int _strnicmp(const char* d, const char* s, size_t n);
 int _stricmp(const char* d, const char* s);
 #define malloc(s) GlobalAllocPtr(GHND,(s))
 #define free(p) GlobalFreePtr(p);
-int atoi(const char *p);
+int atoi(const char* p);
 
 // IDs for timer
 #define IDTIMER_START				2
@@ -116,7 +116,7 @@ extern HWND		 g_hDlgTimerWatch;  // Timwe Watch Dialog Window Handle
 extern HWND      g_hwndSheet;       // (TCM Property Sheet Window Handle
 extern HWND      g_hWnd;			// Main Window Anchor for HotKeys Only!
 extern HICON     g_hIconTClock, g_hIconPlay, // Frequently Used Icon Handles
-	  g_hIconStop, g_hIconDel, g_hIconLogo; // Frequently Used Icon Handles
+	   g_hIconStop, g_hIconDel, g_hIconLogo; // Frequently Used Icon Handles
 extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
 extern BOOL bV7up; //--------------+++--> OS Version is Vista/7 or Better.
 extern BOOL b2000; //--------------+++--> OS is Windows 2000.
@@ -130,7 +130,7 @@ extern BOOL g_bApplyClock;
 void MyPropertySheet(void);
 extern BOOL g_bApplyTaskbar;
 void SetMyDialgPos(HWND hwnd);
-BOOL SelectMyFile(HWND hDlg, const char *filter, DWORD nFilterIndex, const char *deffile, char *retfile);
+BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
 
 // alarm.c
 void StopFile(void);
@@ -139,7 +139,7 @@ void InitAlarm(void);
 void OnMCINotify(HWND hwnd);
 BOOL ExecFile(HWND hwnd, char* command);
 void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
-BOOL PlayFile(HWND hwnd, char *fname, DWORD dwLoops);
+BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
 void GetFileAndOption(const char* command, char* fname, char* opt);
 extern bKillPCBeep; // Declared in alarm.c
 
@@ -148,7 +148,7 @@ int SetAlarmDay(HWND hDlg, int n);
 
 // soundselect.c
 BOOL IsMMFile(const char* fname);
-BOOL BrowseSoundFile(HWND hDlg, const char *deffile, char *fname);
+BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname);
 
 // pageformat.c
 void InitFormat(void);
@@ -175,27 +175,27 @@ void EndTimer(void);
 void DialogTimer(HWND hwnd);
 void StopTimer(HWND hwnd, int n);
 void OnTimerTimer(HWND hwnd, SYSTEMTIME* st);
-int GetTimerInfo(char *dst, int num, BOOL bNameOnly);
+int GetTimerInfo(char* dst, int num, BOOL bNameOnly);
 
 // StopWatch.c
 void DialogStopWatch(HWND);
 
 // utl.c
-int atox(const char *p);
-void del_title(char *path);
+int atox(const char* p);
+void del_title(char* path);
 void ForceForegroundWindow(HWND hWnd);
 DWORDLONG M32x32to64(DWORD a, DWORD b);
-void parse(char *dst, char *src, int n);
-void add_title(char *path, char* titile);
-void get_title(char* dst, const char *path);
-int ext_cmp(const char *fname, const char *ext);
-void parsechar(char *dst, char *src, char ch, int n);
+void parse(char* dst, char* src, int n);
+void add_title(char* path, char* titile);
+void get_title(char* dst, const char* path);
+int ext_cmp(const char* fname, const char* ext);
+void parsechar(char* dst, char* src, char ch, int n);
 COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval);
 int MyMessageBox(HWND hwnd, char* msg, char* title, UINT uType, UINT uBeep);
 int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval);
 int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defval);
-int GetRegStr(HKEY rootkey, char*subkey, char* entry, char* val, int cbData, char* defval);
-LONG GetRegLong(HKEY rootkey, char*subkey, char* entry, LONG defval);
+int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, char* defval);
+LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval);
 BOOL SetRegStr(HKEY rootkey, char* subkey, char* entry, char* val);
 LONG GetMyRegLongEx(char* section, char* entry, LONG defval);
 LONG GetMyRegLong(char* section, char* entry, LONG defval);
@@ -211,7 +211,7 @@ BOOL ShutDown(void);
 BOOL ReBoot(void);
 BOOL LogOff(void);
 
-// TCDLL.DLL‚ÌAPI
+// TCDLL.DLLâ€šÃŒAPI
 void WINAPI HookStart(HWND hwnd);
 void WINAPI HookEnd(void);
 
@@ -243,8 +243,7 @@ void ReleaseTheHound(HWND hWnd, BOOL);
 #define CBGetCurSel(hDlg,id) SendDlgItemMessage((hDlg),(id),CB_GETCURSEL,0,0)
 #define CBGetCount(hDlg,id) SendDlgItemMessage((hDlg),(id),CB_GETCOUNT,0,0)
 
-typedef struct _tagAlarmStruct
-{
+typedef struct _tagAlarmStruct {
 	char name[TNY_BUFF];
 	BOOL bAlarm;
 	int hour;

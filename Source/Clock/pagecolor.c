@@ -28,50 +28,45 @@ __inline void SendPSChanged(HWND hDlg)
   Dialog procedure
 --------------------------------------------------*/
 BOOL CALLBACK PageColorProc(HWND hDlg, UINT message,
-	WPARAM wParam, LPARAM lParam)
+							WPARAM wParam, LPARAM lParam)
 {
-	switch(message)
-	{
-		case WM_INITDIALOG:
-			OnInit(hDlg);
-			return TRUE;
-		case WM_MEASUREITEM:
-			OnMeasureItemColorCombo(lParam);
-			return TRUE;
-		case WM_DRAWITEM:
-			OnDrawItemColorCombo(lParam);
-			return TRUE;
-		case WM_COMMAND:
-		{
+	switch(message) {
+	case WM_INITDIALOG:
+		OnInit(hDlg);
+		return TRUE;
+	case WM_MEASUREITEM:
+		OnMeasureItemColorCombo(lParam);
+		return TRUE;
+	case WM_DRAWITEM:
+		OnDrawItemColorCombo(lParam);
+		return TRUE;
+	case WM_COMMAND: {
 			WORD id, code;
 			id = LOWORD(wParam); code = HIWORD(wParam);
-			if((id == IDC_COLFORE || id == IDC_FONT || id == IDC_FONTQUAL || 
-				id == IDC_FONTSIZE || id == IDC_CLOCKROTATE) && code == CBN_SELCHANGE)
-			{
+			if((id == IDC_COLFORE || id == IDC_FONT || id == IDC_FONTQUAL ||
+				id == IDC_FONTSIZE || id == IDC_CLOCKROTATE) && code == CBN_SELCHANGE) {
 				if(id == IDC_FONT) SetComboFontSize(hDlg, FALSE);
 				SendPSChanged(hDlg);
-			}
-			else if(id == IDC_CHOOSECOLFORE)
+			} else if(id == IDC_CHOOSECOLFORE)
 				OnChooseColor(hDlg, id);
 			else if(id == IDC_BOLD || id == IDC_ITALIC)
 				SendPSChanged(hDlg);
 			else if((id == IDC_CLOCKHEIGHT || id == IDC_CLOCKWIDTH || id == IDC_ALPHATB ||
-				id == IDC_VERTPOS || id == IDC_LINEHEIGHT || id == IDC_HORIZPOS)
-				&& code == EN_CHANGE)
+					 id == IDC_VERTPOS || id == IDC_LINEHEIGHT || id == IDC_HORIZPOS)
+					&& code == EN_CHANGE)
 				SendPSChanged(hDlg);
 			return TRUE;
 		}
-		case WM_NOTIFY:
-			switch(((NMHDR *)lParam)->code)
-			{
-				case PSN_APPLY: OnApply(hDlg); break;
-			}
-			return TRUE;
-		case WM_DESTROY:
-		  DeleteObject(hfontb);
-		  DeleteObject(hfonti);
-		  DestroyWindow(hDlg);
-		  break;
+	case WM_NOTIFY:
+		switch(((NMHDR*)lParam)->code) {
+		case PSN_APPLY: OnApply(hDlg); break;
+		}
+		return TRUE;
+	case WM_DESTROY:
+		DeleteObject(hfontb);
+		DeleteObject(hfonti);
+		DestroyWindow(hDlg);
+		break;
 	}
 	return FALSE;
 }
@@ -86,14 +81,13 @@ void OnInit(HWND hDlg)
 	HFONT hfont;
 	char s[1024];
 	int i;
-
+	
 	// setting of "background" and "text"
 	InitColor(hDlg);
-
+	
 	// if color depth is 256 or less
 	hdc = CreateIC("DISPLAY", NULL, NULL, NULL);
-	if(GetDeviceCaps(hdc, BITSPIXEL) <= 8)
-	{
+	if(GetDeviceCaps(hdc, BITSPIXEL) <= 8) {
 		EnableDlgItem(hDlg, IDC_CHOOSECOLFORE, FALSE);
 	}
 	DeleteDC(hdc);
@@ -101,12 +95,12 @@ void OnInit(HWND hDlg)
 	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 	if(hfont)
 		SendDlgItemMessage(hDlg, IDC_FONT, WM_SETFONT, (WPARAM)hfont, 0);
-	
-	
+		
+		
 	InitComboFont(hDlg);
 	
 	SetComboFontSize(hDlg, TRUE);
-		
+	
 	
 	CheckDlgButton(hDlg, IDC_BOLD, GetMyRegLong("Clock", "Bold", TRUE));
 	CheckDlgButton(hDlg, IDC_ITALIC, GetMyRegLong("Clock", "Italic", FALSE));
@@ -116,43 +110,43 @@ void OnInit(HWND hDlg)
 	logfont.lfWeight = FW_BOLD;
 	hfontb = CreateFontIndirect(&logfont);
 	SendDlgItemMessage(hDlg, IDC_BOLD, WM_SETFONT, (WPARAM)hfontb, 0);
-
+	
 	logfont.lfWeight = FW_NORMAL;
 	logfont.lfItalic = 1;
 	hfonti = CreateFontIndirect(&logfont);
 	SendDlgItemMessage(hDlg, IDC_ITALIC, WM_SETFONT, (WPARAM)hfonti, 0);
-
+	
 	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETRANGE, 0, MAKELONG(200, -32));
 	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "ClockHeight", 0));
-
+	
 	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETRANGE, 0, MAKELONG(32, -32));
 	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "ClockWidth", 0));
-
+	
 	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETRANGE, 0, MAKELONG(32, -32));
 	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "LineHeight", 0));
-
+	
 	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETRANGE, 0, MAKELONG(32, -32));
 	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "VertPos", 0));
-
+	
 	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETRANGE, 0, MAKELONG(32, -32));
 	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "HorizPos", 0));
-
+	
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE, 0, MAKELONG(100, 0));
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
-
+	
 	for(i = 72; i <= 74; i++)
 		CBAddString(hDlg, IDC_CLOCKROTATE, (LPARAM)MyString(i));
-
+		
 	GetMyRegStr("Clock", "FontRotateDirection", s, 80, MyString(72));
 	if(_strnicmp(s, "LEFT", 4) == 0)
 		CBSetCurSel(hDlg, IDC_CLOCKROTATE, 1);
-
+		
 	else if(_strnicmp(s, "RIGHT", 5) == 0)
 		CBSetCurSel(hDlg, IDC_CLOCKROTATE, 2);
-
+		
 	else
 		CBSetCurSel(hDlg, IDC_CLOCKROTATE, 0);
-
+		
 	i = GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY);
 	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"Default (Win2000)");	// DEFAULT_QUALITY			 = 0
 	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"Draft");				// DRAFT_QUALITY			 = 1
@@ -167,38 +161,39 @@ void OnInit(HWND hDlg)
 /*------------------------------------------------
   Apply
 --------------------------------------------------*/
-void OnApply(HWND hDlg) {
+void OnApply(HWND hDlg)
+{
 	DWORD dw;
 	char s[80];
 	char ss[1024];
-
-  dw = (DWORD)(LRESULT)CBGetItemData(hDlg, IDC_COLFORE, CBGetCurSel(hDlg, IDC_COLFORE));
-  SetMyRegLong("Clock", "ForeColor", dw);
 	
-  CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), s);
-  SetMyRegStr("Clock", "Font", s);
+	dw = (DWORD)(LRESULT)CBGetItemData(hDlg, IDC_COLFORE, CBGetCurSel(hDlg, IDC_COLFORE));
+	SetMyRegLong("Clock", "ForeColor", dw);
 	
-  if(CBGetCount(hDlg, IDC_FONTSIZE) > 0) {
-	 CBGetLBText(hDlg, IDC_FONTSIZE, CBGetCurSel(hDlg, IDC_FONTSIZE), s);
-	 SetMyRegLong("Clock", "FontSize", atoi(s));
-  } else SetMyRegLong("Clock", "FontSize", 9);
-
-  SetMyRegLong("Clock", "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
-  SetMyRegLong("Clock", "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
-
-  SetMyRegLong("Clock", "FontQuality", (DWORD)CBGetCurSel(hDlg, IDC_FONTQUAL));
+	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), s);
+	SetMyRegStr("Clock", "Font", s);
 	
-  SetMyRegLong("Clock", "ClockHeight", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_GETPOS, 0, 0));
-  SetMyRegLong("Clock", "ClockWidth",  (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINCWIDTH,  UDM_GETPOS, 0, 0));
-  SetMyRegLong("Clock", "LineHeight",  (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_GETPOS, 0, 0));
-  SetMyRegLong("Clock", "VertPos",     (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINVPOS,    UDM_GETPOS, 0, 0));
-  SetMyRegLong("Clock", "HorizPos",    (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINHPOS,    UDM_GETPOS, 0, 0));
-  SetMyRegLong("Taskbar","AlphaTaskbar",(DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINALPHA,  UDM_GETPOS, 0, 0));
-
-  GetDlgItemText(hDlg, IDC_CLOCKROTATE, ss, 1024);
-  if(_strnicmp(ss, "LEFT", 4) == 0)		  SetMyRegStr("Clock", "FontRotateDirection", "Left");
-  else if(_strnicmp(ss, "RIGHT", 5) == 0) SetMyRegStr("Clock", "FontRotateDirection", "Right");
-  else									  SetMyRegStr("Clock", "FontRotateDirection", "None");
+	if(CBGetCount(hDlg, IDC_FONTSIZE) > 0) {
+		CBGetLBText(hDlg, IDC_FONTSIZE, CBGetCurSel(hDlg, IDC_FONTSIZE), s);
+		SetMyRegLong("Clock", "FontSize", atoi(s));
+	} else SetMyRegLong("Clock", "FontSize", 9);
+	
+	SetMyRegLong("Clock", "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
+	SetMyRegLong("Clock", "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
+	
+	SetMyRegLong("Clock", "FontQuality", (DWORD)CBGetCurSel(hDlg, IDC_FONTQUAL));
+	
+	SetMyRegLong("Clock", "ClockHeight", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "ClockWidth", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINCWIDTH,  UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "LineHeight", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "VertPos", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINVPOS,    UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "HorizPos", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINHPOS,    UDM_GETPOS, 0, 0));
+	SetMyRegLong("Taskbar","AlphaTaskbar",(DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINALPHA,  UDM_GETPOS, 0, 0));
+	
+	GetDlgItemText(hDlg, IDC_CLOCKROTATE, ss, 1024);
+	if(_strnicmp(ss, "LEFT", 4) == 0)		  SetMyRegStr("Clock", "FontRotateDirection", "Left");
+	else if(_strnicmp(ss, "RIGHT", 5) == 0) SetMyRegStr("Clock", "FontRotateDirection", "Right");
+	else									  SetMyRegStr("Clock", "FontRotateDirection", "None");
 }
 
 /*------------------------------------------------
@@ -208,18 +203,19 @@ void InitColor(HWND hDlg)
 	COLORREF col;
 	int j;
 	WORD id;
-	//WindowsÉfÉtÉHÉãÉg16êF
+	//Windows„Éá„Éï„Ç©„É´„Éà16Ëâ≤
 	int rgb[16][3] = {{0,0,0}, {128,0,0}, {0,128,0}, {128,128,0},
 		{0,0,128}, {128,0,128}, {0,128,128}, {192,192,192},
 		{128,128,128}, {255,0,0}, {0,255,0}, {255,255,0},
-		{0,0,255},{255,0,255}, {0,255,255}, {255,255,255}};
+		{0,0,255},{255,0,255}, {0,255,255}, {255,255,255}
+	};
 	
 	id = IDC_COLFORE;
-
-	for(j = 0; j < 16; j++) //äÓñ{16êF
+	
+	for(j = 0; j < 16; j++) //Âü∫Êú¨16Ëâ≤
 		CBAddString(hDlg, id,
-			RGB(rgb[j][0], rgb[j][1], rgb[j][2]));
-	//É{É^ÉìÇÃ...êF
+					RGB(rgb[j][0], rgb[j][1], rgb[j][2]));
+	//„Éú„Çø„É≥„ÅÆ...Ëâ≤
 	CBAddString(hDlg, id, 0x80000000|COLOR_3DFACE);
 	CBAddString(hDlg, id, 0x80000000|COLOR_3DSHADOW);
 	CBAddString(hDlg, id, 0x80000000|COLOR_3DHILIGHT);
@@ -227,23 +223,24 @@ void InitColor(HWND hDlg)
 	
 	// New Default Font Color is White - Better Contrast for Vista & 7
 	col = GetMyRegLong("Clock", "ForeColor", 0x00ffffff); // 0x80000000 | COLOR_BTNTEXT);
-
+	
 	for(j = 0; j < 20; j++) {
 		if(col == (COLORREF)CBGetItemData(hDlg, id, j))
 			break;
 	}
 	if(j == 20) // Add the Selected Custom Color
 		CBAddString(hDlg, id, col);
-
+		
 	CBSetCurSel(hDlg, id, j);
 }
 
 /*------------------------------------------------
 --------------------------------------------------*/
-void OnMeasureItemColorCombo(LPARAM lParam) {
+void OnMeasureItemColorCombo(LPARAM lParam)
+{
 	LPMEASUREITEMSTRUCT pmis;
-  pmis = (LPMEASUREITEMSTRUCT)lParam;
-  pmis->itemHeight = 7 * HIWORD(GetDialogBaseUnits()) / 8;
+	pmis = (LPMEASUREITEMSTRUCT)lParam;
+	pmis->itemHeight = 7 * HIWORD(GetDialogBaseUnits()) / 8;
 }
 
 /*------------------------------------------------
@@ -255,28 +252,23 @@ void OnDrawItemColorCombo(LPARAM lParam)
 	COLORREF col;
 	TEXTMETRIC tm;
 	int y;
-
+	
 	pdis = (LPDRAWITEMSTRUCT)lParam;
 	
-	if(IsWindowEnabled(pdis->hwndItem))
-	{
+	if(IsWindowEnabled(pdis->hwndItem)) {
 		col = (COLORREF)(ULONG_PTR)pdis->itemData;
 		if(col & 0x80000000) col = GetSysColor(col & 0x00ffffff);
-	}
-	else col = col = GetSysColor(COLOR_3DFACE);
+	} else col = col = GetSysColor(COLOR_3DFACE);
 	
-	switch(pdis->itemAction)
-	{
-		case ODA_DRAWENTIRE:
-		case ODA_SELECT:
-		{
+	switch(pdis->itemAction) {
+	case ODA_DRAWENTIRE:
+	case ODA_SELECT: {
 			hbr = CreateSolidBrush(col);
 			FillRect(pdis->hDC, &pdis->rcItem, hbr);
 			DeleteObject(hbr);
-
+			
 			// print color names
-			if(16 <= pdis->itemID && pdis->itemID <= 19)
-			{
+			if(16 <= pdis->itemID && pdis->itemID <= 19) {
 				char s[80];
 				
 				strcpy(s, MyString(IDS_BTNFACE + pdis->itemID - 16));
@@ -288,12 +280,11 @@ void OnDrawItemColorCombo(LPARAM lParam)
 					SetTextColor(pdis->hDC, RGB(0,0,0));
 				y = (pdis->rcItem.bottom - pdis->rcItem.top - tm.tmHeight)/2;
 				TextOut(pdis->hDC, pdis->rcItem.left + 4, pdis->rcItem.top + y,
-					s, (int)strlen(s));
+						s, (int)strlen(s));
 			}
 			if(!(pdis->itemState & ODS_FOCUS)) break;
 		}
-		case ODA_FOCUS:
-		{
+	case ODA_FOCUS: {
 			if(pdis->itemState & ODS_FOCUS)
 				hbr = CreateSolidBrush(0);
 			else
@@ -331,13 +322,11 @@ void OnChooseColor(HWND hDlg, WORD id)
 	
 	if(!ChooseColor(&cc)) return;
 	
-	for(i = 0; i < 16; i++)
-	{
+	for(i = 0; i < 16; i++) {
 		if(cc.rgbResult == (COLORREF)CBGetItemData(hDlg, idCombo, i))
 			break;
 	}
-	if(i == 16) //äÓñ{16êFÇ≈ÇÕÇ»Ç¢Ç∆Ç´
-	{
+	if(i == 16) { //Âü∫Êú¨16Ëâ≤„Åß„ÅØ„Å™„ÅÑ„Å®„Åç
 		if(CBGetCount(hDlg, idCombo) == 20)
 			CBAddString(hDlg, idCombo, cc.rgbResult);
 		else
@@ -357,36 +346,37 @@ int logpixelsy;
 /*------------------------------------------------
    Initialization of "Font" combo box
 --------------------------------------------------*/
-void InitComboFont(HWND hDlg) {
+void InitComboFont(HWND hDlg)
+{
 	HDC hdc;
 	LOGFONT lf;
 	HWND hcombo;
 	char s[80];
 	int i;
 	
-  hdc = GetDC(NULL);
+	hdc = GetDC(NULL);
 	
 	// Enumerate fonts and set in the combo box
-  memset(&lf, 0, sizeof(LOGFONT));
-  hcombo = GetDlgItem(hDlg, IDC_FONT);
-
-  lf.lfCharSet = GetTextCharset(hdc);  // MS UI Gothic, ...
-  EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
-
-  lf.lfCharSet = OEM_CHARSET;   // Small Fonts, Terminal...
-  EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
-
-  lf.lfCharSet = DEFAULT_CHARSET;  // Arial, Courier, Times New Roman, ...
-  EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
-
-  
-  ReleaseDC(NULL, hdc);
-
-  GetMyRegStrEx("Clock", "Font", s, 80, "Arial");
-
-  i = (int)(LRESULT)CBFindStringExact(hDlg, IDC_FONT, s);
-  if(i == LB_ERR) i = 0;
-  CBSetCurSel(hDlg, IDC_FONT, i);
+	memset(&lf, 0, sizeof(LOGFONT));
+	hcombo = GetDlgItem(hDlg, IDC_FONT);
+	
+	lf.lfCharSet = GetTextCharset(hdc);  // MS UI Gothic, ...
+	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
+	
+	lf.lfCharSet = OEM_CHARSET;   // Small Fonts, Terminal...
+	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
+	
+	lf.lfCharSet = DEFAULT_CHARSET;  // Arial, Courier, Times New Roman, ...
+	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
+	
+	
+	ReleaseDC(NULL, hdc);
+	
+	GetMyRegStrEx("Clock", "Font", s, 80, "Arial");
+	
+	i = (int)(LRESULT)CBFindStringExact(hDlg, IDC_FONT, s);
+	if(i == LB_ERR) i = 0;
+	CBSetCurSel(hDlg, IDC_FONT, i);
 }
 
 /*------------------------------------------------
@@ -398,17 +388,14 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	DWORD size;
 	LOGFONT lf;
 	int i;
-
-	//à»ëOÇÃsizeÇï€ë∂
-	if(bInit) // WM_INITDIALOGÇÃÇ∆Ç´
-	{
+	
+	//‰ª•Ââç„ÅÆsize„Çí‰øùÂ≠ò
+	if(bInit) { // WM_INITDIALOG„ÅÆ„Å®„Åç
 		size = GetMyRegLong("Clock", "FontSize", 10);
 		if(size == 0) size = 9;
-	}
-	else   // IDC_FONTÇ™ïœçXÇ≥ÇÍÇΩÇ∆Ç´
-	{
+	} else { // IDC_FONT„ÅåÂ§âÊõ¥„Åï„Çå„Åü„Å®„Åç
 		CBGetLBText(hDlg, IDC_FONTSIZE,
-			CBGetCurSel(hDlg, IDC_FONTSIZE), (LPARAM)s);
+					CBGetCurSel(hDlg, IDC_FONTSIZE), (LPARAM)s);
 		size = atoi(s);
 	}
 	
@@ -423,17 +410,15 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	strcpy(lf.lfFaceName, s);
 	lf.lfCharSet = (BYTE)CBGetItemData(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT));
 	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumSizeProcEx,
-		(LPARAM)GetDlgItem(hDlg, IDC_FONTSIZE), 0);
-	
+					   (LPARAM)GetDlgItem(hDlg, IDC_FONTSIZE), 0);
+					   
 	ReleaseDC(NULL, hdc);
 	
 	// size
-	for(; size > 0; size--)
-	{
+	for(; size > 0; size--) {
 		wsprintf(s, "%d", size);
 		i = (int)(LRESULT)CBFindStringExact(hDlg, IDC_FONTSIZE, s);
-		if(i != LB_ERR)
-		{
+		if(i != LB_ERR) {
 			CBSetCurSel(hDlg, IDC_FONTSIZE, i); return;
 		}
 	}
@@ -444,35 +429,32 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
   Callback function for enumerating fonts.
   To set a font name in the combo box.
 --------------------------------------------------*/
-BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf, 
-	NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo)
+BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf,
+								NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo)
 {
-	if(pelf->elfLogFont.lfFaceName[0] != '@' && 
-		SendMessage((HWND)hCombo, CB_FINDSTRINGEXACT, 0, 
-			(LPARAM)pelf->elfLogFont.lfFaceName) == LB_ERR)
-	{
+	if(pelf->elfLogFont.lfFaceName[0] != '@' &&
+	   SendMessage((HWND)hCombo, CB_FINDSTRINGEXACT, 0,
+				   (LPARAM)pelf->elfLogFont.lfFaceName) == LB_ERR) {
 		int index;
 		index = (int)(LRESULT)SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)pelf->elfLogFont.lfFaceName);
 		if(index >= 0)
 			SendMessage((HWND)hCombo, CB_SETITEMDATA,
-				index, (LPARAM)pelf->elfLogFont.lfCharSet);
+						index, (LPARAM)pelf->elfLogFont.lfCharSet);
 	}
 	return 1;
 }
 
 /*------------------------------------------------
 --------------------------------------------------*/
-BOOL CALLBACK EnumSizeProcEx(ENUMLOGFONTEX* pelf, 
-	NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo)
+BOOL CALLBACK EnumSizeProcEx(ENUMLOGFONTEX* pelf,
+							 NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo)
 {
 	char s[80];
 	int num, i, count;
 	
-	if((FontType & TRUETYPE_FONTTYPE) || 
-		!( (FontType & TRUETYPE_FONTTYPE) || (FontType & RASTER_FONTTYPE) ))
-	{
-		for (i = 0; i < 20; i++)
-		{
+	if((FontType & TRUETYPE_FONTTYPE) ||
+	   !((FontType & TRUETYPE_FONTTYPE) || (FontType & RASTER_FONTTYPE))) {
+		for(i = 0; i < 20; i++) {
 			wsprintf(s, "%d", nFontSizes[i]);
 			SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)s);
 		}
@@ -481,12 +463,10 @@ BOOL CALLBACK EnumSizeProcEx(ENUMLOGFONTEX* pelf,
 	
 	num = (lpntm->ntmTm.tmHeight - lpntm->ntmTm.tmInternalLeading) * 72 / logpixelsy;
 	count = (int)(LRESULT)SendMessage((HWND)hCombo, CB_GETCOUNT, 0, 0);
-	for(i = 0; i < count; i++)
-	{
+	for(i = 0; i < count; i++) {
 		SendMessage((HWND)hCombo, CB_GETLBTEXT, i, (LPARAM)s);
 		if(num == atoi(s)) return TRUE;
-		else if(num < atoi(s))
-		{
+		else if(num < atoi(s)) {
 			wsprintf(s, "%d", num);
 			SendMessage((HWND)hCombo, CB_INSERTSTRING, i, (LPARAM)s);
 			return TRUE;
