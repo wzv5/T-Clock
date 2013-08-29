@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by Win32.Version.rc
+// Used by version.rc
 //
 
 // Next default values for new objects

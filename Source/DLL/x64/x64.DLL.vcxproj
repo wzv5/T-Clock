@@ -108,7 +108,7 @@
     <ClInclude Include="..\TCDLL.H" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\x64.Version.rc" />
+    <ResourceCompile Include="..\version64.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

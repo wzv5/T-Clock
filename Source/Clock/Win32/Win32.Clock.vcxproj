@@ -200,7 +200,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tClock.rc" />
-    <ResourceCompile Include="..\Win32.Version.rc" />
+    <ResourceCompile Include="..\version.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DLL\Win32\Win32.DLL.vcxproj">

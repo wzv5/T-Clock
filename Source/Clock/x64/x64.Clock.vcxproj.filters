@@ -117,7 +117,7 @@
     <ResourceCompile Include="..\tClock.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-    <ResourceCompile Include="..\x64.Version.rc">
+    <ResourceCompile Include="..\version64.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

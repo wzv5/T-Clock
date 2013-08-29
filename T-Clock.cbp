@@ -91,6 +91,10 @@
 				</Linker>
 			</Target>
 		</Build>
+		<VirtualTargets>
+			<Add alias="debug" targets="dll debug;app debug;" />
+			<Add alias="release" targets="dll;app;" />
+		</VirtualTargets>
 		<Compiler>
 			<Add option="/W3" />
 			<Add option="/DWINVER=0x0501" />
@@ -153,11 +157,6 @@
 		</Unit>
 		<Unit filename="Source/Clock/StopWatch.c">
 			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="app debug" />
-		</Unit>
-		<Unit filename="Source/Clock/Win32.Version.rc">
-			<Option compilerVar="WINDRES" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
@@ -243,6 +242,11 @@
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
+		<Unit filename="Source/Clock/version.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="app" />
+			<Option target="app debug" />
+		</Unit>
 		<Unit filename="Source/DLL/MAIN.C">
 			<Option compilerVar="CC" />
 			<Option target="dll debug" />
@@ -267,11 +271,6 @@
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/Win32.Version.rc">
-			<Option compilerVar="WINDRES" />
-			<Option target="dll" />
-			<Option target="dll debug" />
-		</Unit>
 		<Unit filename="Source/DLL/font.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
@@ -283,6 +282,11 @@
 			<Option target="dll debug" />
 		</Unit>
 		<Unit filename="Source/DLL/resource.h">
+			<Option target="dll" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="Source/DLL/version.rc">
+			<Option compilerVar="WINDRES" />
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>

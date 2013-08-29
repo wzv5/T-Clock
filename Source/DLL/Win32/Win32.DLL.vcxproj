@@ -170,7 +170,7 @@
     <ClInclude Include="..\TCDLL.H" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\Win32.Version.rc" />
+    <ResourceCompile Include="..\version.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,0 +1,4 @@
+#ifndef _WIN64
+#	define _WIN64
+#endif
+#include "version.rc"

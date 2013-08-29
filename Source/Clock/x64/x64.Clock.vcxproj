@@ -199,7 +199,7 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tClock.rc" />
-    <ResourceCompile Include="..\x64.Version.rc" />
+    <ResourceCompile Include="..\version64.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DLL\x64\x64.DLL.vcxproj">
