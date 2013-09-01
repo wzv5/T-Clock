@@ -246,20 +246,26 @@ int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 		strcat(key, section);
 	}
 	
-	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
+	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
 		size = cbData;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-			if(size == 0) *val = 0;
-			r = size;
+			r=size;
+		}else{
+			if((r=(int)strlen(defval))<=cbData){
+				strcpy(val,defval);
+			}else{
+				r=0;
+			}
 		}
 		RegCloseKey(hkey);
 	}
+	if(!r) *val='\0';
 	return r;
 }
 
 int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defval)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
+	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
 	
 	strcpy(key, mykey);
 	
@@ -268,21 +274,21 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defva
 		strcat(key, section);
 	}
 	
-	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
+	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
 		size = cbData;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-			if(size == 0) *val = 0;
-			r = size;
-			b = TRUE;
+			r=size;
+		}else{
+			if((r=(int)strlen(defval))<=cbData){
+				SetMyRegStr(section, entry, defval);
+				strcpy(val,defval);
+			}else{
+				r=0;
+			}
 		}
 		RegCloseKey(hkey);
 	}
-	
-	if(b == FALSE) {
-		SetMyRegStr(section, entry, defval);
-		strcpy(val, defval);
-		r = (int)strlen(defval);
-	}
+	if(!r) *val='\0';
 	return r;
 }
 
