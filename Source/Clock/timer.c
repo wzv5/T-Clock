@@ -110,7 +110,6 @@ BOOL CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 	case WM_NOTIFY: { //========================================== BEGIN WM_NOTIFY:
 //----------------------------------------------------------------------------+++-->
 			if(((LPNMHDR)lParam)->code == UDN_DELTAPOS) {
-				char szTime[TNY_BUFF] = {0};
 				LPNMUPDOWN lpnmud;
 				int i;
 				
@@ -849,11 +848,11 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 				char szTimer[GEN_BUFF] = {0};	int i;
 				switch(nmkey->wVKey) {
 				case VK_DELETE:
-					if((i = (int)SendMessage(hList, LVM_GETNEXTITEM, -1, LVNI_SELECTED)) != -1) {
+					if((i = ListView_GetNextItem (hList,-1,LVNI_SELECTED)) != -1) {
 						ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
 						RemoveFromWatch(hDlg, hList, szTimer, i);
 					} return TRUE; // Delete Key Handled
-					return FALSE; // ALL Other Keys Ignored!
+//					return FALSE; // ALL Other Keys Ignored!
 				}
 			} break;
 		} //------------------------------------------------+++--> END of Case WM_NOTIFY

@@ -34,11 +34,10 @@ BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf, //-------------------------
 HFONT CreateMyFont(char* fontname, int fontsize, LONG weight, LONG italic, int angle)   //--+++-->
 {
 	LOGFONT lf;	POINT pt;	HDC hdc;	WORD langid;
-	char s[11];	int cp, i;	BYTE charset; int FontQty;
+	char s[11];	int cp, i;	BYTE charset;
 	
 	memset(&lf, 0, sizeof(LOGFONT));
 	langid = (WORD)GetMyRegLong("Format", "Locale", (int)GetUserDefaultLangID());
-	FontQty = GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY);
 	cp = CP_ACP;
 	
 	if(GetLocaleInfo(langid, LOCALE_IDEFAULTANSICODEPAGE, s, 10) > 0) {
@@ -85,7 +84,7 @@ HFONT CreateMyFont(char* fontname, int fontsize, LONG weight, LONG italic, int a
 	lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
 	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 	
-	lf.lfQuality = FontQty; // This Just HAD To be Adjustable.
+	lf.lfQuality = GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY); // This Just HAD To be Adjustable.
 	
 	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 	strcpy(lf.lfFaceName, fontname);

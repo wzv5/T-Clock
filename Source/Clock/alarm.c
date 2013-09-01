@@ -156,8 +156,8 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 	} else {
 		while(!bKillPCBeep) {
 			// If We Have a Line, Play Its Beep!
-			while(szLine = fgets(szTmp, TNY_BUFF, file)) {
-				int iDur, iFeq, i = 0;
+			while((szLine=fgets(szTmp, TNY_BUFF, file))!=0) {
+				int iDur=0, iFeq=0, i = 0;
 				szToken = strtok_s(szTmp, seps, &nxToken);
 				while(szToken != NULL) {
 					switch(i) {
@@ -390,7 +390,7 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 	
 	if(hWaveOut != NULL) return FALSE;
 	
-	if(!(hmmio = mmioOpen(fname, NULL, MMIO_READ | MMIO_ALLOCBUF)))
+	if((hmmio=mmioOpen(fname, NULL, MMIO_READ|MMIO_ALLOCBUF))==0)
 		return FALSE;
 		
 	mmckinfoParent.fccType = mmioFOURCC('W', 'A', 'V', 'E');

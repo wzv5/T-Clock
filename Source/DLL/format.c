@@ -332,7 +332,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 			if(n < AltYear) {
 				n = 1; while(n < AltYear) n *= 10;
 			}
-			while(1) {
+			for(;;) {
 				*dp++ = (AltYear % n) / (n/10) + '0';
 				if(n == 10) break;
 				n /= 10;

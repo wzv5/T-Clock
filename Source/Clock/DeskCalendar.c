@@ -20,7 +20,7 @@ void GetDayOfYearTitle(char* szTitle, int ivMonths)
 //  strftime(szDoY, 8, "%#j", &today); // <--{OutPut}--> Day 95
 	strftime(szDoY, 8, "%j", &today);   // <--{OutPut}--> Day 095
 	
-	if(!bV7up && (ivMonths = 1)) {
+	if(!bV7up && ivMonths == 1) {
 		wsprintf(szTitle, "Calendar:  Day: %s", szDoY);
 	} else {
 		wsprintf(szTitle, "T-Clock: Calendar  Day: %s", szDoY);

@@ -12,12 +12,15 @@
 				<Option type="1" />
 				<Option compiler="msvc10" />
 				<Compiler>
-					<Add option="/MT" />
+					<Add option="/MD" />
 					<Add option="/GL" />
+					<Add option="/Gy" />
 					<Add option="/Ox" />
+					<Add option="/Zi" />
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/DEBUG" />
 					<Add library="Psapi" />
 					<Add library="ole32" />
 					<Add library="Comdlg32" />
@@ -39,12 +42,15 @@
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="/MT" />
+					<Add option="/MD" />
 					<Add option="/GL" />
+					<Add option="/Gy" />
 					<Add option="/Ox" />
+					<Add option="/Zi" />
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/DEBUG" />
 					<Add option="/def:Source\DLL\DLL.def" />
 				</Linker>
 			</Target>
@@ -96,7 +102,9 @@
 			<Add alias="release" targets="dll;app;" />
 		</VirtualTargets>
 		<Compiler>
-			<Add option="/W3" />
+			<Add option="/W4" />
+			<Add option="/wd4100" />
+			<Add option="/wd4244" />
 			<Add option="/DWINVER=0x0501" />
 		</Compiler>
 		<Linker>

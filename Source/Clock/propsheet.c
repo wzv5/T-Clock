@@ -108,7 +108,7 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 
 #endif
 //==================================================================================
-		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)g_hIconTClock);
+//		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)g_hIconTClock);
 	}
 	return 0;
 }

@@ -740,21 +740,19 @@ int iHourTransition = -1, iMinuteTransition = -1; //--++--> Used Only in the Two
 void InitDaylightTimeTransition(void)   //--------------------------------------------------+++-->
 {
 	TIME_ZONE_INFORMATION tzi;
-	SYSTEMTIME lt, *plt;
+	SYSTEMTIME lt, *plt=NULL;
 	DWORD dw;
-	BOOL b;
 	
 	iHourTransition = iMinuteTransition = -1;
 	
 	GetLocalTime(&lt);
 	
-	b = FALSE;
 	memset(&tzi, 0, sizeof(tzi));
 	dw = GetTimeZoneInformation(&tzi);
 	if(dw == TIME_ZONE_ID_STANDARD // This Will Only Apply in the Fall/Winter Months When DST is NOT in Effect.
 	   && tzi.DaylightDate.wMonth == lt.wMonth
 	   && tzi.DaylightDate.wDayOfWeek == lt.wDayOfWeek) {
-		b = TRUE; plt = &(tzi.DaylightDate);
+		plt = &(tzi.DaylightDate);
 //		strcpy(szTZone, (char *)tzi.StandardName);
 //		wcstombs(szTZone, tzi.StandardName, 32);
 //		wsprintf(szTZone, "%S", tzi.StandardName);
@@ -762,18 +760,18 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 	if(dw == TIME_ZONE_ID_DAYLIGHT // This Will Only Apply in the Spring/Summer Months When DST IS in Effect.
 	   && tzi.StandardDate.wMonth == lt.wMonth
 	   && tzi.StandardDate.wDayOfWeek == lt.wDayOfWeek) {
-		b = TRUE; plt = &(tzi.StandardDate);
+		plt = &(tzi.StandardDate);
 //		strcpy(szTZone, tzi.DaylightName);
 //		wcstombs(szTZone, tzi.DaylightName, 32);
 //		wsprintf(szTZone, "%S", tzi.DaylightName);
 	}
 	
-	if(b && plt->wDay < 5) {
+	if(plt && plt->wDay < 5) {
 		if(((lt.wDay - 1) / 7 + 1) == plt->wDay) {
 			iHourTransition = plt->wHour;
 			iMinuteTransition = plt->wMinute;
 		}
-	} else if(b && plt->wDay == 5) {
+	} else if(plt && plt->wDay == 5) {
 		FILETIME ft;
 		SystemTimeToFileTime(&lt, &ft);
 		*(DWORDLONG*)&ft += 6048000000000i64;

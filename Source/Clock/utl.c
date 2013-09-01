@@ -94,13 +94,12 @@ int ext_cmp(const char* fname, const char* ext)
 	if(sp == NULL) sp = p;
 	if(*sp == '.') sp++;
 	
-	while(1) {
+	for(;;) {
 		if(*sp == 0 && *ext == 0) return 0;
 		if(toupper(*sp) != toupper(*ext))
 			return (toupper(*sp) - toupper(*ext));
 		sp++; ext++;
 	}
-	return 0;
 }
 
 void parse(char* dst, char* src, int n)
@@ -208,24 +207,37 @@ DWORDLONG M32x32to64(DWORD a, DWORD b)   //-------------------------------------
 }
 //================================================================================================
 //-----------+++--> (Momentarily) Force Window X Into the Foreground So we Interact With IT (only):
-void ForceForegroundWindow(HWND hWnd)   //---{ Required to Dismiss Context Menu Properly }--+++-->
+//void ForceForegroundWindow(HWND hWnd)   //---{ Required to Dismiss Context Menu Properly }--+++-->
+//{
+//	DWORD thread1, thread2, pid;
+//	
+//	thread1 = GetWindowThreadProcessId(GetForegroundWindow(), &pid);
+//	thread2 = GetCurrentThreadId();
+//	
+//	AttachThreadInput(thread2, thread1, TRUE);
+//	SetForegroundWindow(hWnd);
+//	
+//	AttachThreadInput(thread2, thread1, FALSE);
+//	BringWindowToTop(hWnd);
+//}
+#include <stddef.h>
+void ForceForegroundWindow(HWND hwnd)
 {
-	DWORD thread1, thread2, pid;
-	
-	thread1 = GetWindowThreadProcessId(GetForegroundWindow(), &pid);
-	thread2 = GetCurrentThreadId();
-	
-	AttachThreadInput(thread2, thread1, TRUE);
-	SetForegroundWindow(hWnd);
-	
-	AttachThreadInput(thread2, thread1, FALSE);
-	BringWindowToTop(hWnd);
+	DWORD fgthread=GetWindowThreadProcessId(GetForegroundWindow(),0);
+	if(fgthread && _threadid^fgthread && AttachThreadInput(_threadid,fgthread,1)){
+//		AllowSetForegroundWindow(ASFW_ANY);//does nothing... we bekome foreground, but won't receive window messages
+//		SetFocus(hwnd);// "
+		SetForegroundWindow(hwnd);
+		AttachThreadInput(_threadid,fgthread,0);
+		return;
+	}
+	SetForegroundWindow(hwnd);
 }
 //===============================================================================
 //--+++-->
 int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;	int r;
+	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
 	
 	strcpy(key, mykey);
 	
@@ -247,7 +259,7 @@ int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 
 int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defval)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;	BOOL b = FALSE;	int r;
+	HKEY hkey;	char key[80];	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
 	
 	strcpy(key, mykey);
 	
@@ -277,7 +289,7 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defva
 LONG GetMyRegLong(char* section, char* entry, LONG defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;
-	BOOL b = FALSE;	LONG r;
+	BOOL b = FALSE;	LONG r=0;
 	
 	strcpy(key, mykey);
 	
@@ -301,7 +313,7 @@ LONG GetMyRegLong(char* section, char* entry, LONG defval)
 LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;
-	BOOL b = FALSE;	LONG r;
+	BOOL b = FALSE;	LONG r=0;
 	
 	strcpy(key, mykey);
 	
@@ -330,7 +342,7 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 --------------------------------------------------*/
 LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 {
-	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r;
+	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
 	
 	if(RegOpenKey(rootkey, subkey, &hkey) == ERROR_SUCCESS) {
 		size = 4;
@@ -345,7 +357,7 @@ LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 
 int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, char* defval)
 {
-	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r;
+	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
 	
 	if(RegOpenKey(rootkey, subkey, &hkey) == ERROR_SUCCESS) {
 		size = cbData;
@@ -365,7 +377,7 @@ int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, ch
 
 BOOL SetMyRegStr(char* section, char* entry, char* val)
 {
-	HKEY hkey;	char key[80];	BOOL r;
+	HKEY hkey;	char key[80];	BOOL r=FALSE;
 	
 	strcpy(key, mykey);
 	
@@ -452,7 +464,7 @@ BOOL DelMyRegKey(char* section)
 COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;
-	BOOL b = FALSE;	LONG r;
+	BOOL b = FALSE; LONG r=0;
 	
 	strcpy(key, mykey);
 	
@@ -473,7 +485,7 @@ COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
 	if(r & 0x80000000) r = GetSysColor(r & 0x00ffffff);
 	return r;
 }
-
+#ifndef TCLOCK_LIGHT
 void OnChooseColor(HWND hDlg, WORD id, WORD idCombo)
 {
 	CHOOSECOLOR cc;
@@ -508,3 +520,4 @@ void OnChooseColor(HWND hDlg, WORD id, WORD idCombo)
 	}
 	CBSetCurSel(hDlg, idCombo, i);
 }
+#endif //!TCLOCK_LIGHT

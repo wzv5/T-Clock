@@ -118,7 +118,7 @@ int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 	DWORD regtype;
 	DWORD size;
 	BOOL b;
-	int r;
+	int r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -165,7 +165,7 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData,
 	DWORD regtype;
 	DWORD size;
 	BOOL b;
-	int r;
+	int r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -214,7 +214,7 @@ LONG GetMyRegLong(char* section, char* entry, LONG defval)
 	DWORD regtype;
 	DWORD size;
 	BOOL b;
-	LONG r;
+	LONG r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -250,7 +250,7 @@ COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
 	DWORD regtype;
 	DWORD size;
 	BOOL b;
-	LONG r;
+	LONG r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -288,7 +288,7 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 	DWORD regtype;
 	DWORD size;
 	BOOL b;
-	LONG r;
+	LONG r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -302,7 +302,7 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 	
 	if(g_bIniSetting) {
 		r = GetPrivateProfileInt(key, entry, defval, g_inifile);
-		if(r = defval)
+		if(r == defval)
 			SetMyRegLong(section, entry, defval);
 	} else {
 		b = FALSE;
@@ -331,7 +331,7 @@ LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 	DWORD regtype;
 	DWORD size;
 	BOOL b;
-	int r;
+	int r=0;
 	
 	b = FALSE;
 	if(RegOpenKey(rootkey, subkey, &hkey) == 0) {
@@ -357,7 +357,7 @@ int GetRegStr(HKEY rootkey, char* subkey, char* entry,
 	DWORD regtype;
 	DWORD size;
 	BOOL b;
-	int r;
+	int r=0;
 	
 	b = FALSE;
 	if(RegOpenKey(rootkey, subkey, &hkey) == 0) {

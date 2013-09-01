@@ -50,9 +50,10 @@ BOOL CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 		
 	case WM_NOTIFY:
 		switch(((NMHDR*)lParam)->code) {
-		case PSN_APPLY: OnApply(hDlg); break;
-		} return TRUE;
-		
+		case PSN_APPLY:
+			OnApply(hDlg);
+		}
+		return TRUE;
 	case WM_DESTROY:
 		DestroyWindow(hDlg);
 		break;
@@ -125,7 +126,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 //-------------------------//-----------------------------+++--> Save Current Settings to Registry:
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
-	int ivMonths;  char szWeek[8];
+	int ivMonths=0;  char szWeek[8];
 	
 	SetMyRegLong("Calendar", "CloseCalendar",
 				 IsDlgButtonChecked(hDlg, IDCB_CLOSECAL));
@@ -137,10 +138,10 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 				 IsDlgButtonChecked(hDlg, IDCB_CALTOPMOST));
 	SetMyRegLong("Desktop", "Transparent2kIconText",
 				 IsDlgButtonChecked(hDlg, IDCB_TRANS2KICONS));
-				 
+	
 	if(IsDlgButtonChecked(hDlg, IDC_CAL_1MON)) ivMonths = 1;
-	if(IsDlgButtonChecked(hDlg, IDC_CAL_3MON)) ivMonths = 3;
-	if(IsDlgButtonChecked(hDlg, IDC_CAL_YEAR)) ivMonths = 12;
+	else if(IsDlgButtonChecked(hDlg, IDC_CAL_3MON)) ivMonths = 3;
+	else if(IsDlgButtonChecked(hDlg, IDC_CAL_YEAR)) ivMonths = 12;
 	SetMyRegLong("Calendar", "ViewMonths", ivMonths);
 	
 	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);
@@ -151,7 +152,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			SetMyRegLong("Desktop", "MonOffOnLock", TRUE);
 			RegisterSession(g_hWnd); // Sets bMonOffOnLock to TRUE.
 		} else if((bMonOffOnLock) &&(IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK))) {
-			// RegisterSession() Already Set bMonOffOnLock So There is Nothing to do.
+			//RegisterSession() Already Set bMonOffOnLock So There is Nothing to do.
 		} else {
 			SetMyRegLong("Desktop", "MonOffOnLock", FALSE);
 			UnregisterSession(g_hWnd); // Sets bMonOffOnLock to FALSE.

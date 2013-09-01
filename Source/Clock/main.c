@@ -63,37 +63,35 @@ BOOL CheckSystemVersion()   //--------------------------------------------------
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
 void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 2000 }--------+++-->
 {
-	typedef DWORD (WINAPI *tWTSUnRegisterSessionNotification)(HWND, DWORD);
-	
-	tWTSUnRegisterSessionNotification pWTSUnRegisterSessionNotification=0;
-	HINSTANCE handle = LoadLibrary("wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
+	typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
+	WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification=NULL;
+	HINSTANCE handle = LoadLibrary("Wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
 	// ...Or Support This Feature.
-	pWTSUnRegisterSessionNotification = (tWTSUnRegisterSessionNotification)
-										GetProcAddress(handle,"WTSUnRegisterSessionNotification");
-										
-	if(pWTSUnRegisterSessionNotification) {
-		pWTSUnRegisterSessionNotification(hwnd, NOTIFY_FOR_THIS_SESSION);
-		bMonOffOnLock = FALSE;
+	if(handle){
+		WTSUnRegisterSessionNotification=(WTSUnRegisterSessionNotification_t)GetProcAddress(handle,"WTSUnRegisterSessionNotification");
+		if(WTSUnRegisterSessionNotification){
+			WTSUnRegisterSessionNotification(hwnd);
+			bMonOffOnLock=FALSE;
+		}
+		FreeLibrary(handle);
 	}
-	FreeLibrary(handle);
 }
 //================================================================================================
 //--------------------------------+++--> Register the Clock For Login Session Change Notifications:
 void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 2000 }---------+++-->
 {
-	typedef DWORD (WINAPI *tWTSRegisterSessionNotification)(HWND, DWORD);
-	
-	tWTSRegisterSessionNotification pWTSRegisterSessionNotification=0;
-	HINSTANCE handle = LoadLibrary("wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
+	typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);
+	WTSRegisterSessionNotification_t WTSRegisterSessionNotification=NULL;
+	HINSTANCE handle = LoadLibrary("Wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
 	// ...Or Support This Feature.
-	pWTSRegisterSessionNotification = (tWTSRegisterSessionNotification)
-									  GetProcAddress(handle,"WTSRegisterSessionNotification");
-									  
-	if(pWTSRegisterSessionNotification) {
-		pWTSRegisterSessionNotification(hwnd, NOTIFY_FOR_THIS_SESSION);
-		bMonOffOnLock = TRUE;
+	if(handle){
+		WTSRegisterSessionNotification=(WTSRegisterSessionNotification_t)GetProcAddress(handle,"WTSRegisterSessionNotification");
+		if(WTSRegisterSessionNotification) {
+			WTSRegisterSessionNotification(hwnd,NOTIFY_FOR_THIS_SESSION);
+			bMonOffOnLock=TRUE;
+		}
+		FreeLibrary(handle);
 	}
-	FreeLibrary(handle);
 }
 
 //================================================================================================
@@ -110,13 +108,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	if(!bWin2000) { //---//---------// If it's Older Then Windows 2000, it is too Old!
 		MessageBox(0, "T-Clock Requires Windows 2000 or Newer OS!\nSorry, Your Computer is To Old to Run This Program", "ERROR: Age Limit", MB_OK|MB_ICONERROR);
 		ExitProcess(1); //---------// Die Laughing...
-		return 0;
 	}
 	
 	// make sure ObjectBar isn't running -> From Original Code/Unclear if This is Still a Conflict.
 	if(FindWindow("ObjectBar Main", "ObjectBar") != NULL) { // However Nobody Has Ever Complained...
 		ExitProcess(1);
-		return 0;
 	}
 	
 	// Do Not Allow the Program to Execute Twice!
@@ -124,7 +120,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	FindTrayServer(hwnd);
 	if(hwnd != NULL) { // This One Sends Commands to the Instance
 		CheckCommandLine(hwnd, TRUE); // That is Currently Running.
-		ExitProcess(1); return 0;
+		ExitProcess(1);
 	}
 	
 	// get the path where .exe is positioned
@@ -133,7 +129,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	
 	CheckRegistry();
 	CancelAllTimersOnStartUp();
-	if(!CheckTCDLL()) { ExitProcess(1); return 0; }
+	if(!CheckTCDLL()) { ExitProcess(1);}
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
 	s_uTaskbarRestart = RegisterWindowMessage("TaskbarCreated");

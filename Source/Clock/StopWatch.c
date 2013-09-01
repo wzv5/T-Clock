@@ -101,7 +101,7 @@ void InsertLapTime(HWND hList)   //---------------------------------------------
 	double dwElapsed; // Need to use a (Floating Point) Double to Get the "Change" Later.
 	double ms; //------------+++--> This is/Will Be the MilliSecond "Change" We're After.
 	LVITEM lvItem; // ListView Control Row Identifier
-	int col = 0;  // ListView Control Column to Populate
+//	int col = 0;  // ListView Control Column to Populate
 	int iLap;
 	
 	GetTimeNow(&tcLap); //---------------//-+++--> Get the Current High Resolution Time.
@@ -137,7 +137,6 @@ void InsertLapTime(HWND hList)   //---------------------------------------------
 BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
 	WORD id, code; HWND hList;
-	char szElapsed[TNY_BUFF] = {0};
 	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
 	
 	id = LOWORD(wParam);

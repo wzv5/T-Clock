@@ -12,13 +12,17 @@ HMODULE hmodMSIMG32 = NULL;
 HMODULE hmodUSER32 = NULL;
 HMODULE hmodUxTheme = NULL;
 
-BOOL (WINAPI* pGradientFill)(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG) = NULL;
+typedef BOOL (WINAPI* pGradientFill_t)(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
+pGradientFill_t pGradientFill=NULL;
 
-BOOL (WINAPI* pSetLayeredWindowAttributes)(HWND,COLORREF,BYTE,DWORD) = NULL;
+typedef BOOL (WINAPI* pSetLayeredWindowAttributes_t)(HWND,COLORREF,BYTE,DWORD);
+pSetLayeredWindowAttributes_t pSetLayeredWindowAttributes=NULL;
 
-BOOL (WINAPI* pTransparentBlt)(HDC,int,int,int,int,HDC,int,int,int,int,UINT) = NULL;
+typedef BOOL (WINAPI* pTransparentBlt_t)(HDC,int,int,int,int,HDC,int,int,int,int,UINT);
+pTransparentBlt_t pTransparentBlt=NULL;
 
-BOOL (WINAPI* pDrawThemeParentBackground)(HWND hwnd, HDC hdc, RECT* prc) = NULL;
+typedef BOOL (WINAPI* pDrawThemeParentBackground_t)(HWND hwnd, HDC hdc, RECT* prc);
+pDrawThemeParentBackground_t pDrawThemeParentBackground=NULL;
 
 static BOOL bInitGradientFill = FALSE;
 static BOOL bInitLayeredWindow = FALSE;
@@ -38,7 +42,7 @@ void InitGradientFill(void)
 	
 	hmodMSIMG32 = LoadLibrary("msimg32.dll");
 	if(hmodMSIMG32 != NULL) {
-		(FARPROC)pGradientFill = GetProcAddress(hmodMSIMG32, "GradientFill");
+		pGradientFill = (pGradientFill_t)GetProcAddress(hmodMSIMG32, "GradientFill");
 		if(pGradientFill == NULL) {
 			FreeLibrary(hmodMSIMG32); hmodMSIMG32 = NULL;
 		}
@@ -52,7 +56,7 @@ void InitTransparentBlt(void)
 	
 	hmodMSIMG32 = LoadLibrary("msimg32.dll");
 	if(hmodMSIMG32 != NULL) {
-		(FARPROC)pTransparentBlt = GetProcAddress(hmodMSIMG32, "TransparentBlt");
+		pTransparentBlt = (pTransparentBlt_t)GetProcAddress(hmodMSIMG32, "TransparentBlt");
 		if(pTransparentBlt == NULL) {
 			FreeLibrary(hmodMSIMG32); hmodMSIMG32 = NULL;
 		}
@@ -66,8 +70,7 @@ void InitLayeredWindow(void)
 	
 	hmodUSER32 = LoadLibrary("user32.dll");
 	if(hmodUSER32 != NULL) {
-		(FARPROC)pSetLayeredWindowAttributes =
-			GetProcAddress(hmodUSER32, "SetLayeredWindowAttributes");
+		pSetLayeredWindowAttributes = (pSetLayeredWindowAttributes_t)GetProcAddress(hmodUSER32, "SetLayeredWindowAttributes");
 		if(pSetLayeredWindowAttributes == NULL) {
 			FreeLibrary(hmodUSER32); hmodUSER32 = NULL;
 		}
@@ -240,7 +243,7 @@ void InitDrawThemeParentBackground(void)
 	
 	hmodUxTheme = LoadLibrary("UxTheme.dll");
 	if(hmodUxTheme != NULL) {
-		(FARPROC)pDrawThemeParentBackground = GetProcAddress(hmodUxTheme, "DrawThemeParentBackground");
+		pDrawThemeParentBackground = (pDrawThemeParentBackground_t)GetProcAddress(hmodUxTheme, "DrawThemeParentBackground");
 		if(pDrawThemeParentBackground == NULL) {
 			FreeLibrary(hmodUxTheme); hmodUxTheme = NULL;
 		}

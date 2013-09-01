@@ -58,11 +58,11 @@
 #endif
 
 // replacement of standard library's functions
-int _strnicmp(const char* d, const char* s, size_t n);
-int _stricmp(const char* d, const char* s);
-#define malloc(s) GlobalAllocPtr(GHND,(s))
-#define free(p) GlobalFreePtr(p);
-int atoi(const char* p);
+//int _strnicmp(const char* d, const char* s, size_t n);
+//int _stricmp(const char* d, const char* s);
+//#define malloc(s) GlobalAllocPtr(GHND,(s))
+//#define free(p) GlobalFreePtr(p);
+//int atoi(const char* p);
 
 // IDs for timer
 #define IDTIMER_START				2
@@ -141,7 +141,7 @@ BOOL ExecFile(HWND hwnd, char* command);
 void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
 BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
 void GetFileAndOption(const char* command, char* fname, char* opt);
-extern bKillPCBeep; // Declared in alarm.c
+extern BOOL bKillPCBeep; // Declared in alarm.c
 
 // alarmday.c
 int SetAlarmDay(HWND hDlg, int n);

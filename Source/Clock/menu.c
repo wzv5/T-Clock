@@ -249,7 +249,6 @@ void OnTClockCommand(HWND hwnd, WORD wID, WORD wCode)   //----------------------
 	case ID_T_TIMER6:
 	case ID_T_TIMER7: {
 			char szTime[GEN_BUFF] = {0};
-			int iFree = 0;
 			wID -= ID_T_TIMER1;
 			GetTimerInfo(szTime, wID, FALSE);
 			WatchTimer(); // Shelter All the Homeless Timers.

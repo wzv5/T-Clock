@@ -18,10 +18,10 @@ BOOL CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 	char szText[TNY_BUFF] = {0};
 	LVCOLUMN lvCol;
 	HWND hList;
+	int iCol = 0;
 	
 	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
 	switch(message) {
-		int iCol = 0;
 		
 	case WM_INITDIALOG:
 		OnInit(hDlg);				// IF We Give IT a Window Caption ... Is IT Easier to Find??!?
@@ -77,7 +77,7 @@ BOOL CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 //--------------------------------------------------------------------------------------------------
 			if(((LPNMHDR)lParam)->code == NM_DBLCLK) {
 				int iSel;
-				if((iSel = (int)SendMessage(hList, LVM_GETNEXTITEM, -1, LVNI_FOCUSED)) != -1) {
+				if((iSel = ListView_GetNextItem(hList, -1, LVNI_FOCUSED)) != -1) {
 					char TaskSwitches[LRG_BUFF] = {0};
 					char TaskTarget[LRG_BUFF] = {0};
 					char TaskName[TNY_BUFF] = {0};

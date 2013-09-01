@@ -131,7 +131,6 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 	
 	switch(message) {
 	case WM_INITDIALOG: {
-			char szText[TNY_BUFF] = {0};
 			LVCOLUMN lvCol; int iCol = 0;
 			
 			OnInit(hDlg);
