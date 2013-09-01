@@ -46,7 +46,6 @@ static int nTimerCount = 0;
 static PTIMERSTRUCT2 pTimersWorking = NULL; // Array of Currently Active Timers
 
 void UpdateNextCtrl(HWND, int, int, BOOL);
-void ValidateTimerInput(int seconds, int minutes, int hours, int days);
 BOOL CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 //=========================================================================================*
 // ------------------------------------------------------------- Open Add/Edit Timers Dialog
@@ -337,7 +336,10 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	hours   = GetDlgItemInt(hDlg, IDC_TIMERHOUR,   0, FALSE);
 	days    = GetDlgItemInt(hDlg, IDC_TIMERDAYS,   0, FALSE);
 	
-	ValidateTimerInput(seconds, minutes, hours, days);
+	if(seconds>59) for(; seconds>59; seconds-=60,++minutes);
+	if(minutes>59) for(; minutes>59; minutes-=60,++hours);
+	if(hours>23) for(; hours>23; hours-=24,++days);
+	if(days>42) days=7;
 	
 	SetMyRegLong(subkey, "Seconds", seconds);
 	SetMyRegLong(subkey, "Minutes", minutes);
@@ -637,32 +639,6 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 	}
 }
 //================================================================================================
-//--{ DC - ewemoa }------+++--> Validate Values as Being Within Expected Ranges (Adjust as Needed):
-void ValidateTimerInput(int sec, int min, int hrs, int day)   // Second  = 1 Second --------+++-->
-{
-	// Minute = 60 Seconds
-	// Hour = 3600 Seconds
-	if(sec > 59) {											  // Day = 86400 Seconds
-		for(sec; sec > 59; sec -= 60) {
-			min += 1;
-		}
-	}
-	
-	if(min > 59) {
-		for(min; min > 59; min -= 60) {
-			hrs += 1;
-		}
-	}
-	
-	if(hrs > 23) {
-		for(hrs; hrs > 23; hrs -= 24) {
-			day += 1;
-		}
-	}
-	
-	if(day > 42) day = 7;
-}
-//================================================================================================
 //-----------------------------+++--> When T-Clock Starts, Make Sure ALL Timer Are Set as INActive:
 void CancelAllTimersOnStartUp()   //--------------------------------------------------------+++-->
 {
@@ -717,7 +693,7 @@ BOOL OnWatchTimer(HWND hDlg, HWND hList)   //-----------------------------------
 	LVITEM lvItem;
 	
 	iTc = nTimerCount;
-	for(iTc; iTc > 0; iTc--) {
+	for(; iTc > 0; --iTc) {
 		iTn = (iTc - 1);
 		if(pTimersWorking[iTn].bHomeless) {
 			GetTimerInfo(szStatus, iTn, FALSE);
