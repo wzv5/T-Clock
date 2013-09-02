@@ -1,0 +1,5 @@
+this font is from:
+	http://www.styleseven.com/php/get_product.php?product=Digital-7
+just install it by double-clicking and then click on "Install" (or copy to C:\WINDOWS\Fonts)
+	you'll need to enable it in T-Clock though...
+	Settings->Clock Text, and select font
