@@ -1,8 +1,4 @@
-
-NEED TO Figure Out How to Hook & Launch the Windows 7 (and Vista???) Calendar Window/Dialog.
-
 Store Configuration Data in (alternate) .ini File - As Option.
-
 REQUESTED .ini Based Portable Version.
 
 ADD Time Difference (from TClock Lite)
@@ -54,6 +50,7 @@ http://en.wikipedia.org/wiki/Iranian_calendars
  ========= =========================== [COMPLETED OBJECTIVES] =========================== =========
    ========= ========================================================================== =========
      ========= ====================================================================== =========
+DONE - being able to launch systems default calendar + tooltip
 
 DONE - Calendar - Is Boaring as Hell.
 
