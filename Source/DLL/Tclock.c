@@ -30,8 +30,6 @@ HHOOK hhook = 0;
 --------------------------------------------------*/
 HANDLE hmod = 0;
 WNDPROC oldWndProc = NULL;
-BOOL bTimer = FALSE;
-BOOL bTimerTesting = FALSE;
 HDC hdcClock = NULL;
 HBITMAP hbmpClock = NULL;
 HBITMAP hbmpClockSkin = NULL;
@@ -41,16 +39,19 @@ HWND g_Tip = NULL;
 TOOLINFO g_TipInfo;
 COLORREF colback, colback2, colfore;
 char format[1024];
-BOOL bHour12, bHourZero;
 SYSTEMTIME LastTime;
 int beatLast = -1;
 int bDispSecond = FALSE;
 int nDispBeat = 0;
-BOOL bNoClock = FALSE;
 int nBlink = 0;
 int dwidth = 0, dheight = 0, dvpos = 0, dlineheight = 0, dhpos = 0;
 int iClockWidth = -1;
-BOOL bPlaying = FALSE;
+char bTimer=0;
+char bTimerTesting=0;
+char bHour12, bHourZero;
+char bNoClock=0;
+char bPlaying=0;
+char bV7up=0;
 
 extern HWND hwndStartMenu;
 extern int codepage;
@@ -94,8 +95,11 @@ void ShowTip(){
 //---------------------------------------------------------------------+++--> Initialize the Clock:
 void InitClock(HWND hWnd)   //--------------------------------------------------------------+++-->
 {
-	BOOL b;
-	
+	OSVERSIONINFOEX osvi;
+	memset(&osvi,0,sizeof(OSVERSIONINFOEX));
+	osvi.dwOSVersionInfoSize=sizeof(OSVERSIONINFOEX);
+	if(GetVersionEx((OSVERSIONINFO*)&osvi) && osvi.dwMajorVersion>=6)
+		bV7up=1;
 	hwndClock = hWnd;
 	PostMessage(hwndTClockMain, WM_USER, 0, (LPARAM)hwndClock);
 	
@@ -115,8 +119,7 @@ void InitClock(HWND hWnd)   //--------------------------------------------------
 	
 	CreateTip(hwndClock); // Create Mouse-Over ToolTip Window & Contents
 	
-	b = GetMyRegLong(NULL, "DropFiles", FALSE);
-	DragAcceptFiles(hWnd, b); // Enable/Disable DropFiles on Clock Based on Reg Info.
+	DragAcceptFiles(hWnd, GetMyRegLong(NULL, "DropFiles", FALSE)); // Enable/Disable DropFiles on Clock Based on Reg Info.
 	
 	SetLayeredTaskbar(hwndClock); // Strangely Not Required for XP Themes... WTF is it For?? 2010
 	
@@ -235,14 +238,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_MOUSEHOVER:
 		g_TipState=2;
-		if(GetMyRegLong("Tooltip","bCustom",0)){
+		if(!bV7up || GetMyRegLong("Tooltip","bCustom",0)){
 			ShowTip();//show custom tooltip
 		}else{
 			PostMessage(hwndClock, WM_USER+103,1,0);//show system tooltip
 		}
 		return 0;
 	case WM_MOUSELEAVE:
-		if(g_TipState==2) if(GetMyRegLong("Tooltip","bCustom",0)){
+		if(g_TipState==2) if(!bV7up || GetMyRegLong("Tooltip","bCustom",0)){
 			PostMessage(g_Tip, TTM_TRACKACTIVATE , FALSE, (LPARAM)&g_TipInfo);//hide custom tooltip
 		}else{
 			PostMessage(hwndClock, WM_USER+103,0,0);//hide system tooltip

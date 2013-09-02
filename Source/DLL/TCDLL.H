@@ -42,7 +42,7 @@
 #define CLEARTYPE_NATURAL_QUALITY	6
 
 // tclock.c
-extern BOOL bNoClock;
+extern char bNoClock;
 void DrawClock(HWND hwnd, HDC hdc);
 void GetDisplayTime(SYSTEMTIME* pt, int* beat100);
 void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink);
@@ -51,7 +51,7 @@ void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink);
 //extern char szTZone[]; //---+++--> TimeZone String Buffer, Also Used (as External) in Format.c
 
 // utl.c
-extern BOOL g_bIniSetting;
+extern char g_bIniSetting;
 extern char g_inifile[];
 
 char* MyString(UINT id);

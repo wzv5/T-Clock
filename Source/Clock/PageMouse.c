@@ -277,9 +277,13 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	OnDropFilesChange(hDlg);
 	CBSetCurSel(hDlg, IDC_MOUSEBUTTON, 0);
 	OnMouseButton(hDlg);
-	if(!bV7up)
-		EnableDlgItem(hDlg, IDCB_TOOLTIP, FALSE);
-	CheckDlgButton(hDlg,IDCB_TOOLTIP, GetMyRegLongEx("Tooltip","bCustom",0));
+	if(!bV7up){
+		EnableDlgItem(hDlg, IDCB_TOOLTIP, 0);
+		CheckDlgButton(hDlg,IDCB_TOOLTIP, 1);
+	}else{
+		CheckDlgButton(hDlg,IDCB_TOOLTIP, GetMyRegLongEx("Tooltip","bCustom",0));
+		EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
+	}
 	GetMyRegStr("Tooltip", "Tooltip", s, LRG_BUFF, "");
 	if(!*s) strcpy(s, "\"T-Clock\" LDATE");
 	SetDlgItemText(hDlg, IDC_TOOLTIP, s);
@@ -311,7 +315,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			}
 		}
 	}
-	SetMyRegLong("Tooltip","bCustom", IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
+	if(bV7up) SetMyRegLong("Tooltip","bCustom", IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	GetDlgItemText(hDlg, IDC_TOOLTIP, s, 256);
 	SetMyRegStr("Tooltip", "Tooltip", s);
 }

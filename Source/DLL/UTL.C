@@ -7,7 +7,7 @@
 
 extern HANDLE hmod;
 
-BOOL g_bIniSetting = FALSE;
+char g_bIniSetting = 0;
 char g_inifile[MAX_PATH];
 
 int _strncmp(const char* d, const char* s, size_t n)

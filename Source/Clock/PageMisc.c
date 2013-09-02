@@ -37,19 +37,20 @@ BOOL CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 				EnableDlgItem(hDlg,IDCB_CALTOPMOST,enable);
 				EnableDlgItem(hDlg,IDC_FIRSTWEEK,enable);
 				EnableDlgItem(hDlg,IDC_CALMONTHS,enable);
+				SendPSChanged(hDlg);
+				return TRUE;
 			}
 			
-			if(((id==IDCB_USECALENDAR) || // IF Anything Happens to Anything,
-				(id==IDCB_CLOSECAL) || //--+++--> Send Changed Message.
-				(id==IDCB_SHOWWEEKNUMS) ||
+			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE))
+				SendPSChanged(hDlg);
+			else if(((id==IDCB_CLOSECAL) ||  // IF Anything Happens to Anything,
+				(id==IDCB_SHOWWEEKNUMS) || //--+++--> Send Changed Message.
 				(id==IDCB_TRANS2KICONS) ||
 				(id==IDCB_SHOW_DOY) ||
-				(id==IDC_CALMONTHS) ||
 				(id==IDCB_MONOFF_ONLOCK) ||
-				(id==IDCB_CALTOPMOST)) && (code==BST_CHECKED||code==BST_UNCHECKED||code==EN_CHANGE)) {
+				(id==IDCB_CALTOPMOST)) && (code==BST_CHECKED||code==BST_UNCHECKED)) {
 				SendPSChanged(hDlg);
 			}
-			if(id == IDC_FIRSTWEEK && code == CBN_SELCHANGE) SendPSChanged(hDlg);
 			
 			return TRUE;
 		}
@@ -97,7 +98,7 @@ void SetMySysWeek(char* val)   //-----------------------------------------------
 //--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
-	if(!b2000 && !GetMyRegLongEx("Calendar","bCustom",0)){
+	if(bV7up && !GetMyRegLongEx("Calendar","bCustom",0)){
 		UINT iter=IDC_CALSTATIC1;
 		for(; iter<=IDC_CALSTATIC4; ++iter) EnableDlgItem(hDlg,iter,0);
 		EnableDlgItem(hDlg,IDCB_SHOW_DOY,0);
@@ -127,13 +128,13 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	CBSetCurSel(hDlg, IDC_FIRSTWEEK, GetMySysWeek());
 	
 	if(b2000) {
-		EnableDlgItem(hDlg, IDCB_USECALENDAR, FALSE);
 		EnableDlgItem(hDlg, IDCB_MONOFF_ONLOCK, FALSE);
 		CheckDlgButton(hDlg, IDCB_TRANS2KICONS, GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE));
 	} else {
 		EnableDlgItem(hDlg, IDCB_TRANS2KICONS, FALSE);
 		CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, bMonOffOnLock);
 	}
+	if(!bV7up) EnableDlgItem(hDlg, IDCB_USECALENDAR, FALSE);
 }
 //================================================================================================
 //-------------------------//-----------------------------+++--> Save Current Settings to Registry:
@@ -141,7 +142,6 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 {
 	char szWeek[8];
 	
-	SetMyRegLong("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
 	SetMyRegLong("Calendar","CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));
 	SetMyRegLong("Calendar","ShowWeekNums", IsDlgButtonChecked(hDlg,IDCB_SHOWWEEKNUMS));
 	SetMyRegLong("Calendar","ShowDayOfYear", IsDlgButtonChecked(hDlg,IDCB_SHOW_DOY));
@@ -162,5 +162,6 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			SetMyRegLong("Desktop", "MonOffOnLock", FALSE);
 			UnregisterSession(g_hWnd); // Sets bMonOffOnLock to FALSE.
 		}
+		if(bV7up) SetMyRegLong("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
 	}
 }
