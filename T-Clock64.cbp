@@ -123,11 +123,6 @@
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/DeskCalendar.c">
-			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="app debug" />
-		</Unit>
 		<Unit filename="Source/Clock/ExitWindows.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />

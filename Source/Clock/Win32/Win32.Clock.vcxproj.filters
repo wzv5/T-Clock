@@ -24,9 +24,6 @@
     <ClCompile Include="..\BounceWind.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\DeskCalendar.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\ExitWindows.c">
       <Filter>Source Files</Filter>
     </ClCompile>

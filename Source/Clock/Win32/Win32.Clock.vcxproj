@@ -59,22 +59,31 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(Platform)\$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\..\Release\Win32\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(Platform)\$(Configuration)\</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <OutDir>..\..\..\$(Configuration)\$(Platform)\</OutDir>
+    <TargetName>Clock</TargetName>
+    <TargetExt>.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)'=='Debug'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)'=='Release'">false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WINVER=0x0501;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
     <Link>
+      <AdditionalDependencies>Advapi32.lib;kernel32.lib;Ws2_32.lib;user32.lib;Mpr.lib;../../../$(Configuration)/$(Platform)/tClock.lib;ole32.lib;Comdlg32.lib;shlwapi.lib;Version.lib;comctl32.lib;gdi32.lib;shell32.lib;Winmm.lib;Psapi.lib</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
+      <TargetMachine>MachineX86</TargetMachine>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -84,8 +93,6 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WINVER=0x0501;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>true</MinimalRebuild>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeader>
       </PrecompiledHeader>
@@ -93,6 +100,8 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
+      <AdditionalDependencies>Advapi32.lib;kernel32.lib;Ws2_32.lib;user32.lib;Mpr.lib;../../../$(Configuration)/$(Platform)/tClock.lib;ole32.lib;Comdlg32.lib;shlwapi.lib;Version.lib;comctl32.lib;gdi32.lib;shell32.lib;Winmm.lib;Psapi.lib</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -113,24 +122,17 @@
       <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Advapi32.lib;kernel32.lib;Ws2_32.lib;user32.lib;Mpr.lib;../../../Release/Win32/tClock.lib;ole32.lib;Comdlg32.lib;shlwapi.lib;Version.lib;comctl32.lib;gdi32.lib;shell32.lib;Winmm.lib;Psapi.lib</AdditionalDependencies>
-      <OutputFile>$(OutDir)Clock.exe</OutputFile>
+      <AdditionalDependencies>Advapi32.lib;kernel32.lib;Ws2_32.lib;user32.lib;Mpr.lib;../../../$(Configuration)/$(Platform)/tClock.lib;ole32.lib;Comdlg32.lib;shlwapi.lib;Version.lib;comctl32.lib;gdi32.lib;shell32.lib;Winmm.lib;Psapi.lib</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <EntryPointSymbol>
-      </EntryPointSymbol>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
-    <Manifest>
-      <AdditionalManifestFiles>..\DeclareDPIAware.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
-      <AssemblyIdentity>
-      </AssemblyIdentity>
-    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Midl>
@@ -147,13 +149,12 @@
       <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>Advapi32.lib;kernel32.lib;Ws2_32.lib;user32.lib;tClock.lib;ole32.lib;Comdlg32.lib;shlwapi.lib;Version.lib;comctl32.lib;gdi32.lib;shell32.lib;Winmm.lib</AdditionalDependencies>
+      <AdditionalDependencies>Advapi32.lib;kernel32.lib;Ws2_32.lib;user32.lib;Mpr.lib;../../../$(Configuration)/$(Platform)/tClock.lib;ole32.lib;Comdlg32.lib;shlwapi.lib;Version.lib;comctl32.lib;gdi32.lib;shell32.lib;Winmm.lib;Psapi.lib</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <EntryPointSymbol>
-      </EntryPointSymbol>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
       </DataExecutionPrevention>
@@ -164,7 +165,6 @@
     <ClCompile Include="..\alarm.c" />
     <ClCompile Include="..\alarmday.c" />
     <ClCompile Include="..\BounceWind.c" />
-    <ClCompile Include="..\DeskCalendar.c" />
     <ClCompile Include="..\ExitWindows.c" />
     <ClCompile Include="..\GetSetTimePerms.c" />
     <ClCompile Include="..\main.c" />
@@ -200,10 +200,11 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\tClock.rc" />
-    <ResourceCompile Include="..\version.rc" />
+    <ResourceCompile Condition="'$(Platform)'=='Win32'" Include="..\version.rc" />
+    <ResourceCompile Condition="'$(Platform)'=='x64'" Include="..\version64.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DLL\Win32\Win32.DLL.vcxproj">
+    <ProjectReference Include="..\..\DLL\$(Platform)\Win32.DLL.vcxproj">
       <Project>{6e055518-fdc0-4b59-beb8-60a3874c8f76}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>

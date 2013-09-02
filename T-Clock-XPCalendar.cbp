@@ -37,6 +37,37 @@
 					<Add directory="Debug/Win32" />
 				</Linker>
 			</Target>
+			<Target title="release64">
+				<Option output="Release/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj64/" />
+				<Option type="0" />
+				<Option compiler="microsoft_visual_c_2010_64bit" />
+				<Compiler>
+					<Add option="/MD" />
+					<Add option="/GL" />
+					<Add option="/Gy" />
+					<Add option="/Ox" />
+					<Add option="/DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add directory="Release/Win32" />
+				</Linker>
+			</Target>
+			<Target title="debug64">
+				<Option output="Debug/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj64/dbg/" />
+				<Option type="0" />
+				<Option compiler="microsoft_visual_c_2010_64bit" />
+				<Compiler>
+					<Add option="/MDd" />
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/DEBUG" />
+					<Add directory="Debug/Win32" />
+				</Linker>
+			</Target>
 		</Build>
 		<Compiler>
 			<Add option="/Wall" />

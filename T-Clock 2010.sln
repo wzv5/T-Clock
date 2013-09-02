@@ -8,25 +8,28 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32.Clock", "Source\Clock\Win32\Win32.Clock.vcxproj", "{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "x64.Clock", "Source\Clock\x64\x64.Clock.vcxproj", "{2127B3B4-AC19-403F-B2DC-C9B9B1739A95}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Win32.DLL", "Source\DLL\Win32\Win32.DLL.vcxproj", "{6E055518-FDC0-4B59-BEB8-60A3874C8F76}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "x64.DLL", "Source\DLL\x64\x64.DLL.vcxproj", "{BFA5225B-699A-43A1-859D-57722173A44B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Calendar", "Source\Calendar\Calendar.vcxproj", "{1f5284e0-13ef-11e3-8ffd-0800200c9a66}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Release|Mixed platforms = Release|Mixed platforms
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|Mixed platforms.ActiveCfg = Release|Win32
-		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|Mixed platforms.Build.0 = Release|Win32
-		{2127B3B4-AC19-403F-B2DC-C9B9B1739A95}.Release|Mixed platforms.ActiveCfg = Release|x64
-		{2127B3B4-AC19-403F-B2DC-C9B9B1739A95}.Release|Mixed platforms.Build.0 = Release|x64
-		{6E055518-FDC0-4B59-BEB8-60A3874C8F76}.Release|Mixed platforms.ActiveCfg = Release|Win32
-		{6E055518-FDC0-4B59-BEB8-60A3874C8F76}.Release|Mixed platforms.Build.0 = Release|Win32
-		{BFA5225B-699A-43A1-859D-57722173A44B}.Release|Mixed platforms.ActiveCfg = Release|x64
-		{BFA5225B-699A-43A1-859D-57722173A44B}.Release|Mixed platforms.Build.0 = Release|x64
+		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|Win32.ActiveCfg = Release|Win32
+		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|Win32.Build.0 = Release|Win32
+		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|x64.ActiveCfg = Release|x64
+		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|x64.Build.0 = Release|x64
+		{6E055518-FDC0-4B59-BEB8-60A3874C8F76}.Release|Win32.ActiveCfg = Release|Win32
+		{6E055518-FDC0-4B59-BEB8-60A3874C8F76}.Release|Win32.Build.0 = Release|Win32
+		{6E055518-FDC0-4B59-BEB8-60A3874C8F76}.Release|x64.ActiveCfg = Release|x64
+		{6E055518-FDC0-4B59-BEB8-60A3874C8F76}.Release|x64.Build.0 = Release|x64
+		{1f5284e0-13ef-11e3-8ffd-0800200c9a66}.Release|Win32.ActiveCfg = Release|Win32
+		{1f5284e0-13ef-11e3-8ffd-0800200c9a66}.Release|Win32.Build.0 = Release|Win32
+		{1f5284e0-13ef-11e3-8ffd-0800200c9a66}.Release|x64.ActiveCfg = Release|x64
+		{1f5284e0-13ef-11e3-8ffd-0800200c9a66}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
