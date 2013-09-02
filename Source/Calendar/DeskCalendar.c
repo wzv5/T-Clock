@@ -183,8 +183,8 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	hwnd=CreateWindowEx(0,(LPCSTR)MAKELPARAM(calclass,0),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,NULL,hInstance,NULL);
 //	hwnd=CreateWindowEx(WS_EX_TOOLWINDOW, (LPCSTR)MAKELPARAM(calclass,0), "T-Clock: Calendar", WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE, 0,0,100,100, NULL, NULL, hInstance, NULL);
 //	ForceForegroundWindow(hwnd);
-//	if(bAutoClose && GetForegroundWindow()!=hwnd)
-//		PostMessage(hwnd,WM_CLOSE,0,0);
+	if(bAutoClose && GetForegroundWindow()!=hwnd)
+		PostMessage(hwnd,WM_CLOSE,0,0);
 	return hwnd;
 }
 
