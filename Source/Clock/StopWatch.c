@@ -145,7 +145,7 @@ BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 	switch(msg) {
 	case WM_INITDIALOG:
 		OnInit(hDlg, hList);
-		SetMyDialgPos(hDlg);
+		SetMyDialgPos(hDlg,21);
 		return TRUE;
 		
 	case WM_TIMER:

@@ -446,7 +446,7 @@ BOOL CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch(msg)  {
 	case WM_INITDIALOG:
-		SetMyDialgPos(hDlg);
+		SetMyDialgPos(hDlg,21);
 		OnInit(hDlg);
 		return TRUE;
 		

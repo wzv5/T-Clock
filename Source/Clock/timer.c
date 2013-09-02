@@ -70,7 +70,7 @@ BOOL CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 	case WM_INITDIALOG:
 		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)g_hIconTClock);
 		OnInit(hDlg);
-		SetMyDialgPos(hDlg);
+		SetMyDialgPos(hDlg,21);
 		return TRUE;
 		
 	case WM_COMMAND: {
@@ -797,7 +797,7 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 	case WM_INITDIALOG:
 		OnInitTimeView(hDlg, hList);
 		SetTimer(hDlg, 3, 285, NULL); // Timer Refresh Times Above 400ms Make
-		SetMyDialgPos(hDlg); //-----+++--> Timer Watch Dialog Appear Sluggish.
+		SetMyDialgPos(hDlg,21); //-----+++--> Timer Watch Dialog Appear Sluggish.
 		return TRUE; //-------------------------------+++--> END of Case WM_INITDOALOG
 //================//================================================================
 	case WM_TIMER:

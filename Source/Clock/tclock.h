@@ -128,7 +128,7 @@ void RefreshUs(void);
 extern BOOL g_bApplyClock;
 void MyPropertySheet(void);
 extern BOOL g_bApplyTaskbar;
-void SetMyDialgPos(HWND hwnd);
+void SetMyDialgPos(HWND hwnd,int padding);
 BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
 
 // alarm.c

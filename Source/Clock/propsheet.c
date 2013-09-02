@@ -7,7 +7,7 @@
 
 #define MAX_PAGE  9
 
-void SetMyDialgPos(HWND hwnd);
+void SetMyDialgPos(HWND hwnd,int padding);
 int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam);
 LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
@@ -121,7 +121,7 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 	switch(message) {
 	
 	case WM_SHOWWINDOW: // adjust the window position
-		SetMyDialgPos(hwnd);
+		SetMyDialgPos(hwnd,21);
 		return FALSE; // Returning FALSE Allows it to Maintain Caret Focus
 	}
 	
@@ -173,46 +173,41 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 	return l;
 }
 
-//================================================================================================
+//=================================================================================================
 //------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
-void SetMyDialgPos(HWND hwnd)   //----------------------------------------------------------+++-->
+void SetMyDialgPos(HWND hwnd,int padding)   //-----------------------------------------------+++-->
 {
 	int wscreen, hscreen, wProp, hProp;
-	int wTray, hTray, x, y;
-	RECT rc, rcTray;
+	RECT rc;
 	HWND hwndTray;
 	
-	GetWindowRect(hwnd, &rc); // Properties Dialog Dimensions
-	wProp = rc.right - rc.left;  //----------+++--> Width
-	hProp = rc.bottom - rc.top; //----------+++--> Height
+	GetWindowRect(hwnd,&rc); // Properties Dialog Dimensions
+	wProp = rc.right-rc.left;  //----------+++--> Width
+	hProp = rc.bottom-rc.top; //----------+++--> Height
 	
 	wscreen = GetSystemMetrics(SM_CXSCREEN);  // Desktop Width
 	hscreen = GetSystemMetrics(SM_CYSCREEN); // Desktop Height
 	
 	hwndTray = FindWindow("Shell_TrayWnd", NULL);
-	if(hwndTray == NULL) return;
+	if(!hwndTray) return;
+	GetWindowRect(hwndTray,&rc);
 	
-	GetWindowRect(hwndTray, &rcTray);
-	wTray = rcTray.right - rcTray.left;
-	hTray = rcTray.bottom - rcTray.top;
-	
-	if(wTray > hTray) { // IF Width is Greater Than Height, Taskbar is
-		x = wscreen - wProp - 21; // at Either Top or Bottom of Screen
-		if(rcTray.top < hscreen / 2)
-			y = rcTray.bottom + 21; // Taskbar is on Top of Screen
+	if(rc.right-rc.left > rc.bottom-rc.top) { // IF Width is Greater Than Height, Taskbar is
+		rc.left=wscreen-wProp-padding; // at Either Top or Bottom of Screen
+		if(rc.top < hscreen/2)
+			rc.top=rc.bottom+padding; // Taskbar is on Top of Screen
 		else // ELSE Taskbar is Where it Belongs! (^^^Mac Fag?^^^)
-			y = rcTray.top - hProp - 21;
-		if(y < 0) y = 0;
+			rc.top-=hProp+padding;
+		if(rc.top<0) rc.top=0;
 	} else { //---+++--> ELSE Taskbar is on Left or Right Side of Screen
-		y = hscreen - hProp - 21; // Down is a Fixed Position
-		if(rcTray.left < wscreen / 2)
-			x = rcTray.right + 21; //--+++--> Taskbar is on Left Side of Screen
+		rc.top=hscreen-hProp-padding; // Down is a Fixed Position
+		if(rc.left < wscreen/2)
+			rc.left=rc.right+padding; //--+++--> Taskbar is on Left Side of Screen
 		else
-			x = rcTray.left - wProp - 21; // Taskbar is on Right Side of Screen
-		if(x < 0) x = 0;
+			rc.left-=wProp+padding; // Taskbar is on Right Side of Screen
+		if(rc.left<0) rc.left=0;
 	}
-	
-	MoveWindow(hwnd, x, y, wProp, hProp, FALSE);
+	MoveWindow(hwnd,rc.left,rc.top,wProp,hProp,FALSE);
 }
 /*------------------------------------------------
    select file
