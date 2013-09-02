@@ -111,7 +111,7 @@ char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
 /*------------------------------------------------
 	自分のレジストリから文字列を得る
 --------------------------------------------------*/
-int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
+int GetMyRegStr(char* section, char* entry, char* val, int len, char* defval)
 {
 	char key[80];
 	HKEY hkey;
@@ -134,12 +134,12 @@ int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 		r = GetPrivateProfileString(key,
 									entry, defval,
 									val,
-									cbData,
+									len,
 									g_inifile);
 	} else {
 		b = FALSE;
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
-			size = cbData;
+			size = len;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
 							   (LPBYTE)val, &size) == 0) {
 				if(size == 0) *val = 0;
@@ -157,7 +157,7 @@ int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 	return r;
 }
 
-int GetMyRegStrEx(char* section, char* entry, char* val, int cbData,
+int GetMyRegStrEx(char* section, char* entry, char* val, int len,
 				  char* defval)
 {
 	char key[80];
@@ -179,13 +179,13 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData,
 	
 	if(g_bIniSetting) {
 		r = GetPrivateProfileString(key, entry, defval, val,
-									cbData, g_inifile);
-		if(r == cbData)
+									len, g_inifile);
+		if(r == len)
 			SetMyRegStr(section, entry, defval);
 	} else {
 		b = FALSE;
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
-			size = cbData;
+			size = len;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
 							   (LPBYTE)val, &size) == 0) {
 				if(size == 0) *val = 0;
@@ -211,10 +211,6 @@ LONG GetMyRegLong(char* section, char* entry, LONG defval)
 {
 	char key[80];
 	HKEY hkey;
-	DWORD regtype;
-	DWORD size;
-	BOOL b;
-	LONG r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -227,20 +223,48 @@ LONG GetMyRegLong(char* section, char* entry, LONG defval)
 	}
 	
 	if(g_bIniSetting) {
-		r = GetPrivateProfileInt(key, entry, defval, g_inifile);
+		return GetPrivateProfileInt(key, entry, defval, g_inifile);
 	} else {
-		b = FALSE;
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
-			size = 4;
-			if(RegQueryValueEx(hkey, entry, 0, &regtype,
-							   (LPBYTE)&r, &size) == 0) {
-				if(size == 4) b = TRUE;
+			DWORD regtype,size=sizeof(LONG);
+			LONG dw=0;
+			if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
+				defval=dw;
+			RegCloseKey(hkey);
+		}
+	}
+	return defval;
+}
+LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
+{
+	char key[80];
+	HKEY hkey;
+	
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
+	
+	if(section && *section) {
+		if(!g_bIniSetting) strcat(key, "\\");
+		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
+	}
+	
+	if(g_bIniSetting) {
+		return GetPrivateProfileInt(key,entry,defval,g_inifile);
+	} else {
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
+			DWORD regtype,size=sizeof(LONG);
+			LONG dw=0;
+			if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
+				defval=dw;
+			}else{
+				SetMyRegLong(section,entry,defval);
 			}
 			RegCloseKey(hkey);
 		}
-		if(b == FALSE) r = defval;
 	}
-	return r;
+	return defval;
 }
 
 COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
@@ -281,50 +305,10 @@ COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
 	return r;
 }
 
-LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
-{
-	char key[80];
-	HKEY hkey;
-	DWORD regtype;
-	DWORD size;
-	BOOL b;
-	LONG r=0;
-	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		r = GetPrivateProfileInt(key, entry, defval, g_inifile);
-		if(r == defval)
-			SetMyRegLong(section, entry, defval);
-	} else {
-		b = FALSE;
-		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
-			size = 4;
-			if(RegQueryValueEx(hkey, entry, 0, &regtype,
-							   (LPBYTE)&r, &size) == 0) {
-				if(size == 4) b = TRUE;
-			}
-			RegCloseKey(hkey);
-		}
-		if(b == FALSE) {
-			r = defval;
-			SetMyRegLong(section, entry, defval);
-		}
-	}
-	return r;
-}
-
 /*------------------------------------------------
   get DWORD value from registry
 --------------------------------------------------*/
+/*
 LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 {
 	HKEY hkey;
@@ -345,13 +329,13 @@ LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 	}
 	if(b == FALSE) r = defval;
 	return r;
-}
+}// */
 
 /*------------------------------------------------
 	レジストリから文字列を得る
 --------------------------------------------------*/
 int GetRegStr(HKEY rootkey, char* subkey, char* entry,
-			  char* val, int cbData, char* defval)
+			  char* val, int len, char* defval)
 {
 	HKEY hkey;
 	DWORD regtype;
@@ -361,7 +345,7 @@ int GetRegStr(HKEY rootkey, char* subkey, char* entry,
 	
 	b = FALSE;
 	if(RegOpenKey(rootkey, subkey, &hkey) == 0) {
-		size = cbData;
+		size = len;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype,
 						   (LPBYTE)val, &size) == 0) {
 			if(size == 0) *val = 0;
@@ -440,8 +424,7 @@ BOOL SetMyRegLong(char* section, char* entry, DWORD val)
 	} else {
 		r = FALSE;
 		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
-			if(RegSetValueEx(hkey, entry, 0, REG_DWORD,
-							 (CONST BYTE*)&val, 4) == 0) {
+			if(RegSetValueEx(hkey,entry,0,REG_DWORD,(CONST BYTE*)&val,4)==ERROR_SUCCESS) {
 				r = TRUE;
 			}
 			RegCloseKey(hkey);

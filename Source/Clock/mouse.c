@@ -4,24 +4,21 @@
 ---------------------------------------------*/
 // Last Modified by Stoic Joker: Sunday, 01/09/2011 @ 4:34:56pm
 #include "tclock.h"
-/*
-// XButton Messages
-#ifndef WM_XBUTTONDOWN
-#define WM_XBUTTONDOWN 0x020B
-#define WM_XBUTTONUP   0x020C
-#define XBUTTON1       0x0001
-#define XBUTTON2       0x0002
-#endif
-*/
 static char reg_section[] = "Mouse";
-static UINT last_mousedown  = 0;
-static WORD last_xmousedown = 0;
 static DWORD last_tickcount;
-static int num_click = 0;
-static int exec_button = -1;
-static BOOL timer = FALSE;
+static char bTimer = 0;
+static char last_mousedown = -1;
+static char num_click = 0;
+static char exec_button = -1;
+//static int exec_func = 0;
 
-static int GetMouseFuncNum(int button, int nclick);
+static int GetMouseFuncNum(char button, char nclick) {
+	char entry[3];
+	entry[0]='0'+button;
+	entry[1]='0'+nclick;
+	entry[2]='\0';
+	return GetMyRegLong(reg_section,entry,0);
+}
 
 /*------------------------------------------------
    when files dropped to the clock
@@ -76,19 +73,6 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
 		strcat(command, " ");
 		strcat(command, buf);
 		ExecFile(hwnd, command);
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-		/*-----------------------------------------------------------+++--> Will Need to Modify This Function:
-		BOOL ExecFile(HWND hwnd, char* command) {
-			char fname[MAX_PATH], opt[MAX_PATH]; int FUCK = 0;
-		
-		  if(*command == 0) return FALSE;
-		  GetFileAndOption(command, fname, opt);
-		  FUCK = (int)(UINT_PTR)(HINSTANCE)ShellExecute(hwnd, NULL, fname, opt[0]?opt:NULL, "", SW_SHOW);
-		  if(FUCK <= 32) return FALSE;
-		 return TRUE;
-		}
-		*/
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 	}
 	free(buf);
 }
@@ -105,20 +89,23 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
 void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	UINT doubleclick_time;
-	BOOL bDown = FALSE;
-	int button, i;
-	LONG n_func;
+	char bDown=0;
+	char button, iter;
 	
-	if(timer) KillTimer(hwnd, IDTIMER_MOUSE);
-	timer = FALSE;
+	if(bTimer){
+		KillTimer(hwnd,IDTIMER_MOUSE);
+		bTimer=0;
+	}
 	
 	switch(message) {
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:   button = 0; break;
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:   button = 1; break;
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:   button = 2; break;
+	case WM_LBUTTONDOWN: case WM_LBUTTONUP:
+		button=0; break;
+	case WM_RBUTTONDOWN: case WM_RBUTTONUP:
+		button=1; break;
+	case WM_MBUTTONDOWN: case WM_MBUTTONUP:
+		button=2; break;
+	case WM_XBUTTONDOWN: case WM_XBUTTONUP:
+		button=(lParam==XBUTTON1?3:4); break;
 	default: return;
 	}
 	
@@ -126,63 +113,53 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
-		if(last_mousedown != message) num_click = 0;
-		last_mousedown = message;
-		bDown = TRUE;
+	case WM_XBUTTONDOWN:
+		if(last_mousedown!=button) num_click=0;
+		last_mousedown=button;
+		bDown=1;
 		break;
-		
 	case WM_LBUTTONUP:
-		if(last_mousedown != WM_LBUTTONDOWN) last_mousedown = 0;
-		break;
-		
 	case WM_RBUTTONUP:
-		if(last_mousedown != WM_RBUTTONDOWN) last_mousedown = 0;
-		break;
-		
 	case WM_MBUTTONUP:
-		if(last_mousedown != WM_MBUTTONDOWN) last_mousedown = 0;
+	case WM_XBUTTONUP:
+		if(last_mousedown!=button){
+			last_mousedown=-1;
+			num_click=0;
+			return;
+		}
 		break;
 	}
+	if(last_mousedown&0x80) {num_click=0;return;}
 	
-	if(last_mousedown == 0) {
-		num_click = 0;
-		return;
-	}
-	
-	// Mouse double click speed
-	doubleclick_time = GetDoubleClickTime();
-	if(doubleclick_time < (GetTickCount() - last_tickcount)) num_click = 0;
+	doubleclick_time = GetDoubleClickTime();// Mouse double click speed
+	if(doubleclick_time < (GetTickCount() - last_tickcount)) num_click=0;
 	last_tickcount = GetTickCount();
 	
 	if(bDown) {
-		n_func = GetMouseFuncNum(button, num_click + 1);
-		if(n_func >= 0 && n_func != MOUSEFUNC_SCREENSAVER) {
-			for(i = num_click + 1; i <= 2; i++) {
-				n_func = GetMouseFuncNum(button, i);
-				if(n_func >= 0) return;
+		int n_func=GetMouseFuncNum(button, num_click+1);
+		if(n_func && n_func!=MOUSEFUNC_SCREENSAVER) {
+			for(iter=num_click+2; iter<=2; ++iter) {
+				if(GetMouseFuncNum(button, iter)) return;
 			}
-			num_click++;
-			exec_button = button;
+			++num_click;
+			exec_button=button;
 			OnTimerMouse(hwnd);
 		}
 		return;
 	}
+	++num_click;
+	if(!GetMouseFuncNum(button, num_click)) return;
 	
-	num_click++;
-	n_func = GetMouseFuncNum(button, num_click);
-	if(n_func < 0) return;
-	
-	for(i = num_click + 1; i <= 2; i++) {
-		n_func = GetMouseFuncNum(button, i);
-		if(n_func >= 0) {
-			exec_button = button;
-			timer = TRUE;
+	for(iter=num_click+1; iter<=2; ++iter) {
+		if(GetMouseFuncNum(button,iter)){
+			exec_button=button;
+			bTimer=1;
 			SetTimer(hwnd, IDTIMER_MOUSE, doubleclick_time, 0);
 			return;
 		}
 	}
 	
-	exec_button = button;
+	exec_button=button;
 	OnTimerMouse(hwnd);
 }
 
@@ -191,46 +168,28 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 --------------------------------------------------*/
 void OnTimerMouse(HWND hwnd)
 {
-	int button;
-	LONG n_func;
+	if(bTimer){KillTimer(hwnd, IDTIMER_MOUSE); bTimer=0;}
 	
-	button = exec_button;
-	if(timer) KillTimer(hwnd, IDTIMER_MOUSE); timer = FALSE;
-	
-	n_func = GetMouseFuncNum(button, num_click);
-	
-	if(n_func < 0) return;
-	
-	switch(n_func) {
+	switch(GetMouseFuncNum(exec_button, num_click)){
 	case MOUSEFUNC_TIMER:
 		DialogTimer(hwnd);
 		break;
-		
 	case MOUSEFUNC_SHOWCALENDER:
-		DialogCalender(hwnd);
+		if(FindWindowEx(NULL, NULL, "ClockFlyoutWindow", NULL)) break;
+		if(bV7up && !GetMyRegLong("Calendar","bCustom",0)){
+			PostMessage(g_hwndClock, WM_USER+102,1,0);//1=open, 0=close
+		}else{
+			ExecFile(g_hwndClock,"XPCalendar.exe");
+		}
 		break;
-		
 	case MOUSEFUNC_SHOWPROPERTY:
 		MyPropertySheet();
 		break;
-		
-	case MOUSEFUNC_CLIPBOARD: {
-			LPARAM lParam;
-			lParam = MAKELONG((WORD)button, (WORD)num_click);
-			PostMessage(g_hwndClock, CLOCKM_COPY, 0, lParam);
-			break;
-		}
-		
-	case MOUSEFUNC_SCREENSAVER: {
-			SendMessage(GetDesktopWindow(), WM_SYSCOMMAND, SC_SCREENSAVE, 0);
-			break;
-		}
+	case MOUSEFUNC_CLIPBOARD:
+		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKELONG(exec_button,num_click));
+		break;
+	case MOUSEFUNC_SCREENSAVER:
+		SendMessage(GetDesktopWindow(),WM_SYSCOMMAND,SC_SCREENSAVE,0);
+		break;
 	}
-}
-
-int GetMouseFuncNum(int button, int nclick)
-{
-	char entry[20];
-	wsprintf(entry, "%d%d", button, nclick);
-	return GetMyRegLong(reg_section, entry, -1);
 }

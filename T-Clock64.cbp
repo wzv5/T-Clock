@@ -11,16 +11,15 @@
 				<Option object_output=".obj64/" />
 				<Option type="1" />
 				<Option compiler="microsoft_visual_c_2010_64bit" />
+				<Option use_console_runner="0" />
 				<Compiler>
 					<Add option="/MD" />
 					<Add option="/GL" />
 					<Add option="/Gy" />
 					<Add option="/Ox" />
-					<Add option="/Zi" />
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="/DEBUG" />
 					<Add library="Psapi" />
 					<Add library="ole32" />
 					<Add library="Comdlg32" />
@@ -46,11 +45,9 @@
 					<Add option="/GL" />
 					<Add option="/Gy" />
 					<Add option="/Ox" />
-					<Add option="/Zi" />
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="/DEBUG" />
 					<Add option="/def:Source\DLL\DLL.def" />
 				</Linker>
 			</Target>
@@ -59,6 +56,7 @@
 				<Option object_output=".obj64/dbg/" />
 				<Option type="1" />
 				<Option compiler="microsoft_visual_c_2010_64bit" />
+				<Option use_console_runner="0" />
 				<Compiler>
 					<Add option="/MDd" />
 					<Add option="/Zi" />
@@ -102,9 +100,16 @@
 			<Add alias="release" targets="dll;app;" />
 		</VirtualTargets>
 		<Compiler>
-			<Add option="/W4" />
+			<Add option="/Wall" />
 			<Add option="/wd4100" />
 			<Add option="/wd4244" />
+			<Add option="/wd4242" />
+			<Add option="/w34101" />
+			<Add option="/wd4668" />
+			<Add option="/wd4820" />
+			<Add option="/wd4255" />
+			<Add option="/wd4711" />
+			<Add option="/wd4710" />
 			<Add option="/DWINVER=0x0501" />
 		</Compiler>
 		<Linker>

@@ -370,13 +370,13 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 --------------------------------------------------*/
 BOOL ExecFile(HWND hwnd, char* command)
 {
-	char fname[MAX_PATH], opt[MAX_PATH]; int FUCK = 0;
+	char fname[MAX_PATH], opt[MAX_PATH];
 	
-	if(*command == 0) return FALSE;
-	GetFileAndOption(command, fname, opt);
-	FUCK = (int)(UINT_PTR)(HINSTANCE)ShellExecute(hwnd, NULL, fname, opt[0]?opt:NULL, "", SW_SHOW);
-	if(FUCK <= 32) return FALSE;
-	return TRUE;
+	if(*command){
+		GetFileAndOption(command,fname,opt);
+		if((size_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOW)>32) return TRUE;
+	}
+	return FALSE;
 }
 //================================================================================================
 //------------------------------------------------------//----+++--> Load & Play a Wave Audio File:

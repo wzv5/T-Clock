@@ -22,12 +22,14 @@ static char reg_section[] = "Mouse";
 #define COL_ACTION 2 // Action to Take (Run Program?)
 #define COL_OTHERD 3 // Other Format / App Path Data
 
+#define MAX_CLICKS 2 // maximum mouse clicks (single and double only)
+
 //----------------------+++--> Mouse Click Date Configuration,
 typedef struct { //--+++--> Manipulation, & Storage Structure.
 	BOOL disable;
-	int func[4];
-	char format[4][256];
-	char fname[4][256];
+	int func[MAX_CLICKS];
+	char format[MAX_CLICKS][256];
+	char fname[MAX_CLICKS][256];
 } CLICKDATA;
 
 static CLICKDATA* pData = NULL;
@@ -43,9 +45,9 @@ void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------
 	int c; // Click (Number of Times)									2 = Middle
 	
 	ListView_DeleteAllItems(hList); // Clear ListView Control (Refresh Function)
-	for(m = 0; m <= 2; m++) {
-		if(m == 1) continue; // We're Skipping the Right Mouse Button
-		for(c = 0; c <= 2; c++) {
+	for(m=0; m<=4; ++m) {
+		if(m==1) continue; // We're Skipping the Right Mouse Button
+		for(c=0; c<MAX_CLICKS; ++c) {
 			int iBtn;
 			iBtn = pData[m].func[c];
 			if(iBtn > MOUSEFUNC_NONE) {
@@ -53,10 +55,13 @@ void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------
 				lvItem.mask = LVIF_TEXT;
 				lvItem.iItem = 0;
 				
-				if(m == 0) lvItem.pszText = "Left";
-				if(m == 1) lvItem.pszText = "Right";
-				if(m == 2) lvItem.pszText = "Middle";
-				
+				switch(m){
+				case 0: lvItem.pszText = "Left";break;
+				case 1: lvItem.pszText = "Right";break;
+				case 2: lvItem.pszText = "Middle";break;
+				case 3: lvItem.pszText = "Button 4";break;
+				case 4: lvItem.pszText = "Button 5";break;
+				}
 				// FIRST Insert A New Row THEN Populate Its COLUMNS
 				ListView_InsertItem(hList, &lvItem);
 				
@@ -67,40 +72,34 @@ void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------
 						if(c == 0) lvItem.pszText = "Single";
 						else lvItem.pszText = "Double";
 						break;
-						
 					case COL_ACTION:
 						switch(iBtn) {
 						case MOUSEFUNC_TIMER:			// 5
 							lvItem.pszText = "Timer";
 							break;
-							
 						case MOUSEFUNC_CLIPBOARD:		// 6
 							lvItem.pszText = "Copy To Clipboard";
 							break;
-							
 						case MOUSEFUNC_SCREENSAVER:	// 7
 							lvItem.pszText = "Screen Save";
 							break;
-							
 						case MOUSEFUNC_SHOWCALENDER:	// 8
 							lvItem.pszText = "Show Calendar";
 							break;
-							
 						case MOUSEFUNC_SHOWPROPERTY:	// 9
 							lvItem.pszText = "T-Clock Properties";
 							break;
-							
 						default:
-							lvItem.pszText = "Fail!";
+							lvItem.pszText = "<unknown>";
 							break;
-						} break;
-						
+						}
+						break;
 					case COL_OTHERD:
-						if(iBtn == MOUSEFUNC_CLIPBOARD) {
-							lvItem.pszText = pData[m].format[c];
-						} else {
-							lvItem.pszText = " ";
-						} break;
+						if(iBtn==MOUSEFUNC_CLIPBOARD)
+							lvItem.pszText=pData[m].format[c];
+						else
+							lvItem.pszText=" ";
+						break;
 					}
 					ListView_SetItem(hList, &lvItem);
 				} //---------------+++--> End of for(;;) Columns LOOP
@@ -148,22 +147,19 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 				switch(iCol) {
 				case COL_BUTTON:
 					lvCol.pszText = "Button"; // Column Header Text
-					lvCol.fmt = LVCFMT_LEFT; // Column Text Alignment
-					lvCol.cx = 50;		// Set Column Width in Pixels
+					lvCol.fmt = LVCFMT_CENTER; // Column Text Alignment
+					lvCol.cx = 60;		// Set Column Width in Pixels
 					break;
-					
 				case COL_CLKTYP:
 					lvCol.pszText = "Click Type"; // Column Header Text
 					lvCol.fmt = LVCFMT_CENTER;   // Column Text Alignment
 					lvCol.cx = 75;			// Set Column Width in Pixels
 					break;
-					
 				case COL_ACTION:
 					lvCol.pszText = "Action"; // Column Header Text
 					lvCol.fmt = LVCFMT_LEFT; // Column Text Alignment
 					lvCol.cx = 113;		// Set Column Width in Pixels
 					break;
-					
 				case COL_OTHERD:
 					lvCol.pszText = "Other";  // Column Header Text
 					lvCol.fmt = LVCFMT_LEFT; // Column Text Alignment
@@ -186,7 +182,7 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			if(id == IDC_DROPFILES && code == CBN_SELCHANGE) {
 				OnDropFilesChange(hDlg);
 				g_bApplyClock = TRUE;
-			} else if(id == IDC_DROPFILESAPP && code == EN_CHANGE) SendPSChanged(hDlg);
+			}else if(id==IDC_DROPFILESAPP && code==EN_CHANGE) SendPSChanged(hDlg);
 			// "..."
 			else if(id == IDC_DROPFILESAPPSANSHO) OnSansho(hDlg, id);
 			//  "Button"
@@ -202,7 +198,8 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			else if(id == IDC_MOUSEFILE && code == EN_CHANGE) {
 				OnMouseFileChange(hDlg);
 				SendPSChanged(hDlg);
-			} else if(id == IDC_TOOLTIP && code == EN_CHANGE) {
+			} else if((id==IDC_TOOLTIP && code==EN_CHANGE) || id==IDCB_TOOLTIP) {
+				if(id==IDCB_TOOLTIP) EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 				g_bApplyClock = TRUE; SendPSChanged(hDlg);
 			} return TRUE;
 		}
@@ -227,12 +224,12 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 //------------------------//----------------------------++--> Initialize Mouse Tab Dialog Controls:
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
-	char entry[TNY_BUFF] = {0};
+	char entry[3+4];
 	char s[LRG_BUFF] = {0};
 	HWND hDlgPage;
 	HFONT hfont;
 	int i, j;
-	BOOL b;
+	entry[2]='\0';
 	
 	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 	if(hfont) {
@@ -247,31 +244,31 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	GetMyRegStr(reg_section, "DropFilesApp", s, 256, "");
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP, s);
 	
-	pData = malloc(sizeof(CLICKDATA) * 5);
+	pData=malloc(sizeof(CLICKDATA) * 5);
 	
-	for(i = 0; i < 5; i++) { // i is Actually Only "Valid" as a 0 or 2 at Run-Time
-		if(i == 1) continue; // Execute ALL Loops EXCEPT Loop #1
-		for(j = 0; j < 4; j++) { // Which is Skipped by continue.
-			wsprintf(entry, "%d%d", i, j+1);
+	for(i=0; i<=4; ++i) {
+		if(i==1) continue; // skip right mouse
+		for(j=0; j<MAX_CLICKS; ++j) {
+			entry[0]='0'+i;
+			entry[1]='1'+j;
 			pData[i].disable = FALSE;
 			pData[i].func[j] = GetMyRegLong(reg_section, entry, MOUSEFUNC_NONE);
 			pData[i].format[j][0] = 0; // Clipboard
 			pData[i].fname[j][0] = 0; // Open With...
 			if(pData[i].func[j] == MOUSEFUNC_CLIPBOARD) {
-				wsprintf(entry, "%d%dClip", i, j+1);
+				memcpy(entry+2,"Clip",5);
 				GetMyRegStr(reg_section, entry, pData[i].format[j], 256, "");
 			}
 		}
 	}
 	
-	b = GetMyRegLong("StartMenu", "StartMenuClock", FALSE);
 	hDlgPage = GetTopWindow(GetParent(hDlg));
 	while(hDlgPage) {
 		hDlgPage = GetNextWindow(hDlgPage, GW_HWNDNEXT);
 	}
-	pData[0].disable = b;
+	pData[0].disable = GetMyRegLong("StartMenu", "StartMenuClock", FALSE);
 	
-	for(i = IDS_LEFTBUTTON; i <= IDS_RIGHTBUTTONM; i++)
+	for(i = IDS_LEFTBUTTON; i<=IDS_XBUTTON2; ++i)
 		CBAddString(hDlg, IDC_MOUSEBUTTON, (LPARAM)MyString(i));
 		
 	// set mouse functions to combo box
@@ -280,38 +277,41 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	OnDropFilesChange(hDlg);
 	CBSetCurSel(hDlg, IDC_MOUSEBUTTON, 0);
 	OnMouseButton(hDlg);
-	
+	if(!bV7up)
+		EnableDlgItem(hDlg, IDCB_TOOLTIP, FALSE);
+	CheckDlgButton(hDlg,IDCB_TOOLTIP, GetMyRegLongEx("Tooltip","bCustom",0));
 	GetMyRegStr("Tooltip", "Tooltip", s, LRG_BUFF, "");
-	if(s[0] == 0) strcpy(s, "\"T-Clock\" LDATE");
+	if(!*s) strcpy(s, "\"T-Clock\" LDATE");
 	SetDlgItemText(hDlg, IDC_TOOLTIP, s);
 }
 //================================================================================================
 //-------------------------//-------------------------+++--> Apply (Settings) Button Event Handler:
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
-	char s[LRG_BUFF], entry[TNY_BUFF];
+	char s[LRG_BUFF], entry[3+4];
 	int n, i, j;
-	
+	entry[2]='\0';
 	n = (int)(LRESULT)CBGetCurSel(hDlg, IDC_DROPFILES);
 	SetMyRegLong("", "DropFiles", (n > 0));
 	SetMyRegLong(reg_section, "DropFiles", n);
 	GetDlgItemText(hDlg, IDC_DROPFILESAPP, s, 256);
 	SetMyRegStr(reg_section, "DropFilesApp", s);
 	
-	for(i = 0; i < 5; i++) {
-		if(i == 1) continue;
-		for(j = 0; j < 4; j++) {
-			wsprintf(entry, "%d%d", i, j+1);
-			if(pData[i].func[j] >= 0)
+	for(i=0; i<=4; ++i) {
+		if(i==1) continue;
+		for(j=0; j<MAX_CLICKS; ++j) {
+			entry[0]='0'+i;
+			entry[1]='1'+j;
+			if(pData[i].func[j])
 				SetMyRegLong(reg_section, entry, pData[i].func[j]);
 			else DelMyReg(reg_section, entry);
 			if(pData[i].func[j] == MOUSEFUNC_CLIPBOARD) {
-				wsprintf(entry, "%d%dClip", i, j+1);
+				memcpy(entry+2,"Clip",5);
 				SetMyRegStr(reg_section, entry, pData[i].format[j]);
 			}
 		}
 	}
-	
+	SetMyRegLong("Tooltip","bCustom", IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	GetDlgItemText(hDlg, IDC_TOOLTIP, s, 256);
 	SetMyRegStr("Tooltip", "Tooltip", s);
 }
@@ -342,11 +342,11 @@ void OnDropFilesChange(HWND hDlg)   //------------------------------------------
 //-------------------------------//----------+++--> When Mouse Button is Selected (Left or Middle):
 void OnMouseButton(HWND hDlg)   //----------------------------------------------------------+++-->
 {
-	int button, j;
-	
-	button = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEBUTTON);
-	for(j = 0; j < 2; j++) {
-		if(pData[button].func[j] >= 0) break;
+	int j;
+	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	if(button>0) ++button;
+	for(j=0; j<MAX_CLICKS; ++j) {
+		if(pData[button].func[j]) break;
 	}
 	
 	if(j == 2) j = 0;
@@ -358,9 +358,9 @@ void OnMouseButton(HWND hDlg)   //----------------------------------------------
 //------------------------------------------//+++--> T-Clock's Reaction to Single or Double Clicks:
 void OnMouseClickTime(HWND hDlg, int id)   //-----------------------------------------------+++-->
 {
-	int click, i, count, func, button;
-	
-	button = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEBUTTON);
+	int click, i, count, func;
+	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	if(button>0) ++button;
 	
 	click = id - IDC_RADSINGLE;
 	func = pData[button].func[click];
@@ -378,18 +378,16 @@ void OnMouseClickTime(HWND hDlg, int id)   //-----------------------------------
 //-----------------------------//----------------------------------+++--> Mouse Functions ComboBox:
 void OnMouseFunc(HWND hDlg)   //------------------------------------------------------------+++-->
 {
-	int button, click;
-	int j, index, func;
+	int click, j, index, func;
+	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	if(button>0) ++button;
 	
-	button = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEBUTTON);
-	if(button > 0) button += 1;
-	
-	for(j = 0; j < 2; j++) {
+	for(j=0; j<MAX_CLICKS; ++j) {
 		if(IsDlgButtonChecked(hDlg, IDC_RADSINGLE + j))
 			break;
 	}
 	
-	if(j == 2) return;
+	if(j==MAX_CLICKS) return;
 	click = j;
 	
 	index = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEFUNC);
@@ -402,9 +400,9 @@ void OnMouseFunc(HWND hDlg)   //------------------------------------------------
 	if(func == MOUSEFUNC_CLIPBOARD) {
 		SetDlgItemText(hDlg, IDC_LABMOUSEFILE, MyString(IDS_FORMAT));
 		
-		if(pData[button].format[click][0] == 0)
+		if(!*pData[button].format[click])
 			GetMyRegStr("Format", "Format", pData[button].format[click], LRG_BUFF, "");
-			
+		
 		SetDlgItemText(hDlg, IDC_MOUSEFILE, pData[button].format[click]);
 	}
 }
@@ -412,14 +410,14 @@ void OnMouseFunc(HWND hDlg)   //------------------------------------------------
 //-----------------------------+++--> Clipboard Format -&- Open File Mouse Function Event Handling:
 void OnMouseFileChange(HWND hDlg)   //------------------------------------------------------+++-->
 {
-	int button, j, click, index, func;
-	
-	button = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEBUTTON);
-	for(j = 0; j < 2; j++) {
+	int j, click, index, func;
+	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	if(button>0) ++button;
+	for(j=0; j<MAX_CLICKS; ++j) {
 		if(IsDlgButtonChecked(hDlg, IDC_RADSINGLE + j)) break;
 	}
 	
-	if(j == 2) return;
+	if(j==MAX_CLICKS) return;
 	click = j;
 	
 	index = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEFUNC);

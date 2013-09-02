@@ -81,7 +81,7 @@
 #define CLOCKM_REFRESHCLEARTASKBAR	(WM_USER+6)
 
 // for mouse.c and pagemouse.c
-#define MOUSEFUNC_NONE		   -1
+#define MOUSEFUNC_NONE			0
 #define MOUSEFUNC_TIMER			5
 #define MOUSEFUNC_CLIPBOARD		6
 #define MOUSEFUNC_SCREENSAVER	7
@@ -107,16 +107,15 @@
 #define JRMSG_BOING 15000
 
 //--+++--> main.c - Application Global Values:
-extern char      g_mydir[];         // Path to Clock.exe
-extern HWND      g_hwndClock;       // Main Clock Window Handle
-extern HWND      g_hDlgTimer;       // Timer Dialog Window Handle
-extern HWND      g_hDlgCalender;    // Calender Dialog Window Handle
-extern HWND		 g_hDlgStopWatch;	// Stopwatch Dialog Window Handle
-extern HWND		 g_hDlgTimerWatch;  // Timwe Watch Dialog Window Handle
-extern HWND      g_hwndSheet;       // (TCM Property Sheet Window Handle
-extern HWND      g_hWnd;			// Main Window Anchor for HotKeys Only!
-extern HICON     g_hIconTClock, g_hIconPlay, // Frequently Used Icon Handles
-	   g_hIconStop, g_hIconDel, g_hIconLogo; // Frequently Used Icon Handles
+extern char		g_mydir[];			// Path to Clock.exe
+extern HWND		g_hwndClock;		// Main Clock Window Handle
+extern HWND		g_hDlgTimer;		// Timer Dialog Window Handle
+extern HWND		g_hDlgStopWatch;	// Stopwatch Dialog Window Handle
+extern HWND		g_hDlgTimerWatch;	// Timwe Watch Dialog Window Handle
+extern HWND		g_hwndSheet;		// (TCM Property Sheet Window Handle
+extern HWND		g_hWnd;				// Main Window Anchor for HotKeys Only!
+extern HICON	g_hIconTClock, g_hIconPlay, // Frequently Used Icon Handles
+				g_hIconStop, g_hIconDel, g_hIconLogo; // Frequently Used Icon Handles
 extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
 extern BOOL bV7up; //--------------+++--> OS Version is Vista/7 or Better.
 extern BOOL b2000; //--------------+++--> OS is Windows 2000.
@@ -163,9 +162,6 @@ void OnTimerMouse(HWND hwnd);
 void OnDropFiles(HWND hwnd, HDROP hdrop);
 void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-// deskcal.c
-void DialogCalender(HWND hwnd);
-
 // timer.c
 #define MAX_TIMER  7
 void WatchTimer(void);
@@ -192,9 +188,9 @@ int ext_cmp(const char* fname, const char* ext);
 void parsechar(char* dst, char* src, char ch, int n);
 COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval);
 int MyMessageBox(HWND hwnd, char* msg, char* title, UINT uType, UINT uBeep);
-int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval);
-int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defval);
-int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, char* defval);
+int GetMyRegStr(char* section, char* entry, char* val, int len, char* defval);
+int GetMyRegStrEx(char* section, char* entry, char* val, int len, char* defval);
+int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int len, char* defval);
 LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval);
 BOOL SetRegStr(HKEY rootkey, char* subkey, char* entry, char* val);
 LONG GetMyRegLongEx(char* section, char* entry, LONG defval);

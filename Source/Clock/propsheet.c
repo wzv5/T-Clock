@@ -159,8 +159,6 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			if(id == IDOK || id == IDCANCEL) {
 				if(g_hDlgTimer && IsWindow(g_hDlgTimer))
 					PostMessage(g_hDlgTimer, WM_CLOSE, 0, 0);
-				if(g_hDlgCalender && IsWindow(g_hDlgCalender))
-					PostMessage(g_hDlgCalender, WM_CLOSE, 0, 0);
 			}
 			EmptyWorkingSet(GetCurrentProcess());
 			break;

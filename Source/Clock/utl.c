@@ -491,39 +491,3 @@ COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
 	if(r & 0x80000000) r = GetSysColor(r & 0x00ffffff);
 	return r;
 }
-#ifndef TCLOCK_LIGHT
-void OnChooseColor(HWND hDlg, WORD id, WORD idCombo)
-{
-	CHOOSECOLOR cc;
-	COLORREF col, colarray[16];
-	int i;
-	
-	col = (COLORREF)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo));
-	if(col & 0x80000000) col = GetSysColor(col & 0x00ffffff);
-	
-	for(i = 0; i < 16; i++) colarray[i] = RGB(255,255,255);
-	
-	memset(&cc, 0, sizeof(CHOOSECOLOR));
-	cc.lStructSize = sizeof(CHOOSECOLOR);
-	cc.hwndOwner = hDlg;
-	cc.hInstance = (HWND)(HINSTANCE)GetModuleHandle(NULL);
-	cc.rgbResult = col;
-	cc.lpCustColors = colarray;
-	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-	
-	if(!ChooseColor(&cc)) return;
-	
-	for(i = 0; i < 16; i++) {
-		if(cc.rgbResult == (COLORREF)CBGetItemData(hDlg, idCombo, i))
-			break;
-	}
-	if(i == 16) { //基本16色ではないとき
-		if(CBGetCount(hDlg, idCombo) == 20)
-			CBAddString(hDlg, idCombo, cc.rgbResult);
-		else
-			CBSetItemData(hDlg, idCombo, 20, cc.rgbResult);
-		i = 20;
-	}
-	CBSetCurSel(hDlg, idCombo, i);
-}
-#endif //!TCLOCK_LIGHT

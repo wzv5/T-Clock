@@ -8,7 +8,6 @@ void EndClock(void);
 void OnTimer(HWND hwnd);
 void ReadData(HWND hwnd);
 void InitClock(HWND hwnd);
-void CreateTip(HWND hwnd);
 void CreateClockDC(HWND hwnd);
 LRESULT OnCalcRect(HWND hwnd);
 void InitDaylightTimeTransition(void);
@@ -37,7 +36,9 @@ HDC hdcClock = NULL;
 HBITMAP hbmpClock = NULL;
 HBITMAP hbmpClockSkin = NULL;
 HFONT hFon = NULL;
-HWND hwndTip = NULL;
+int g_TipState=0;
+HWND g_Tip = NULL;
+TOOLINFO g_TipInfo;
 COLORREF colback, colback2, colfore;
 char format[1024];
 BOOL bHour12, bHourZero;
@@ -60,7 +61,35 @@ int tEdgeBottom;
 int tEdgeRight;
 
 BOOL bRefreshClearTaskbar = FALSE;
-//static BOOL bClockUseTrans = FALSE;
+//================================================================================================
+//---------------------------------------------------------+++--> Create Mouse-Over ToolTip Window:
+void CreateTip(HWND hwnd)   //--------------------------------------------------------------+++-->
+{
+//	hwndTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX|TTS_BALLOON,
+	g_Tip = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
+							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,hmod,NULL);
+	if(!g_Tip) return;
+	memset(&g_TipInfo,0,sizeof(TOOLINFO));
+	g_TipInfo.cbSize = sizeof(TOOLINFO);
+	g_TipInfo.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_TRANSPARENT;
+	g_TipInfo.hwnd = hwnd;
+	g_TipInfo.uId = (UINT_PTR)hwnd;
+	g_TipInfo.lpszText = LPSTR_TEXTCALLBACK;
+	
+	SendMessage(g_Tip,TTM_ADDTOOL,0,(LPARAM)&g_TipInfo);
+	SendMessage(g_Tip,TTM_SETMAXTIPWIDTH,0,300);
+	SendMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));
+}
+void ShowTip(){
+	RECT rc; GetClientRect(hwndClock,&rc);
+	ClientToScreen(hwndClock,(LPPOINT)&rc.left);
+	if(rc.left<32){//is left
+		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0,0x7FFF));
+	}else{
+		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));//it's some magic vodoo.. will always be over the clock and right^^
+	}
+	PostMessage(g_Tip,TTM_TRACKACTIVATE,TRUE,(LPARAM)&g_TipInfo);
+}
 //================================================================================================
 //---------------------------------------------------------------------+++--> Initialize the Clock:
 void InitClock(HWND hWnd)   //--------------------------------------------------------------+++-->
@@ -68,7 +97,7 @@ void InitClock(HWND hWnd)   //--------------------------------------------------
 	BOOL b;
 	
 	hwndClock = hWnd;
-	PostMessage(hwndTClockMain, WM_USER, 0, (LPARAM)hWnd);
+	PostMessage(hwndTClockMain, WM_USER, 0, (LPARAM)hwndClock);
 	
 	ReadData(hwndClock); //-+-> Get Configuration Information From Registry
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
@@ -80,17 +109,8 @@ void InitClock(HWND hWnd)   //--------------------------------------------------
 	  SetClassLong(hwndClock, GCL_STYLE, GetClassLong(hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
 	 <--+++-----------------------------------------------------------------------------*/
 	
-	oldWndProc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwndClock, GWL_WNDPROC);
-//==================================================================================
-#if defined _M_IX86 //---------------+++--> IF Compiling This as a 32-bit Clock Use:
-	SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG)(LRESULT)WndProc);
-	
-//==================================================================================
-#else //-------------------+++--> ELSE Assume: _M_X64 - IT's a 64-bit Clock and Use:
-	SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)(LRESULT)WndProc);
-
-#endif
-//==================================================================================
+	oldWndProc = (WNDPROC)GetWindowLongPtr(hwndClock, GWL_WNDPROC);
+	SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)WndProc);
 	SetClassLong(hwndClock, GCL_STYLE, GetClassLong(hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
 	
 	CreateTip(hwndClock); // Create Mouse-Over ToolTip Window & Contents
@@ -117,7 +137,7 @@ void DeleteClockRes(void)   //--------------------------------------------------
 void EndClock(void)   //--------------------------------------------------------------------+++-->
 {
 	DragAcceptFiles(hwndClock, FALSE);
-	if(hwndTip) DestroyWindow(hwndTip); hwndTip = NULL;
+	if(g_Tip) DestroyWindow(g_Tip); g_Tip = NULL;
 	
 	DeleteClockRes();
 	EndNewAPI(hwndClock);
@@ -148,40 +168,15 @@ void EndClock(void)   //--------------------------------------------------------
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
-	case WM_LBUTTONDOWN:
-	case WM_RBUTTONDOWN:
-	case WM_MBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONUP:
-	case WM_MBUTTONUP:
-	case WM_MOUSEMOVE: {
-			MSG msg;
-			msg.hwnd = hwnd;
-			msg.message = message;
-			msg.wParam = wParam;
-			msg.lParam = lParam;
-			msg.time = GetMessageTime();
-			msg.pt.x = LOWORD(GetMessagePos());
-			msg.pt.y = HIWORD(GetMessagePos());
-			if(hwndTip) {
-				SendMessage(hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
-			}
-		}
-	}
-	
-	switch(message) {
 	case WM_DESTROY:
 		DeleteClockRes();
 		break;
-		
 	case(WM_USER+100):
 		if(bNoClock) break;
 		return OnCalcRect(hwnd);
-		
 	case WM_SYSCOLORCHANGE:
 		CreateClockDC(hwnd);
 	case WM_TIMECHANGE:
-	
 	case(WM_USER+101): {
 			HDC hdc;
 			if(bNoClock) break;
@@ -193,10 +188,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		CreateClockDC(hwnd);
 		break;
-		
 	case WM_ERASEBKGND:
 		return 0;
-		
 	case WM_PAINT: {
 			PAINTSTRUCT ps;
 			HDC hdc;
@@ -213,24 +206,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if(bNoClock) break;
 		}
 		return 0;
-		
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
-		if(nBlink) {
-			nBlink = 0; InvalidateRect(hwnd, NULL, TRUE);
+	case WM_XBUTTONDOWN:
+		if(nBlink){
+			nBlink=0; InvalidateRect(hwnd, NULL, TRUE);
 		}
-		
 		PostMessage(hwndTClockMain, message, wParam, lParam);
 		return 0;
-		
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
+	case WM_XBUTTONUP:
 		PostMessage(hwndTClockMain, message, wParam, lParam);
 		if(message == WM_RBUTTONUP) break;
 		return 0;
 	case WM_MOUSEMOVE:
+		if(!g_TipState){
+			TRACKMOUSEEVENT tme;
+			tme.cbSize=sizeof(TRACKMOUSEEVENT);
+			tme.dwFlags=TME_HOVER|TME_LEAVE;
+			tme.hwndTrack=hwnd;
+			tme.dwHoverTime=HOVER_DEFAULT;
+			g_TipState=1;
+			TrackMouseEvent(&tme);
+		}
+		return 0;
+	case WM_MOUSEHOVER:
+		g_TipState=2;
+		if(GetMyRegLong("Tooltip","bCustom",0)){
+			ShowTip();//show custom tooltip
+		}else{
+			PostMessage(hwndClock, WM_USER+103,1,0);//show system tooltip
+		}
+		return 0;
+	case WM_MOUSELEAVE:
+		if(g_TipState==2) if(GetMyRegLong("Tooltip","bCustom",0)){
+			PostMessage(g_Tip, TTM_TRACKACTIVATE , FALSE, (LPARAM)&g_TipInfo);//hide custom tooltip
+		}else{
+			PostMessage(hwndClock, WM_USER+103,0,0);//hide system tooltip
+		}
+		g_TipState=0;
 		return 0;
 	case WM_CONTEXTMENU:
 		PostMessage(hwndTClockMain, message, wParam, lParam);
@@ -239,17 +256,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	case WM_MOUSEACTIVATE:
 		return MA_ACTIVATE;
-		
 	case WM_DROPFILES:
 		PostMessage(hwndTClockMain, WM_DROPFILES, wParam, lParam);
 		return 0;
 	case WM_NOTIFY: {
-			UINT code;
-			code = ((LPNMHDR)lParam)->code;
-			if(code == TTN_NEEDTEXT || code == TTN_NEEDTEXTW) {
-				OnTooltipNeedText(code, lParam);
-				return 0;
-			}
+			UINT code=((LPNMHDR)lParam)->code;
+			if(code==TTN_NEEDTEXT || code==TTN_NEEDTEXTW)
+				OnTooltipNeedText(code,lParam);
 			return 0;
 		}
 	case WM_COMMAND:
@@ -361,31 +374,6 @@ void ReadData(HWND hwnd)   //---------------------------------------------------
 	iClockWidth = -1;
 	
 //  bClockUseTrans = GetMyRegLong("Clock", "ClockUseTrans", FALSE);
-}
-//================================================================================================
-//---------------------------------------------------------+++--> Create Mouse-Over ToolTip Window:
-void CreateTip(HWND hwnd)   //--------------------------------------------------------------+++-->
-{
-	TOOLINFO ti;
-	
-	hwndTip = CreateWindow(TOOLTIPS_CLASS, (LPSTR)NULL, TTS_ALWAYSTIP,
-						   CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, hmod, NULL);
-	if(!hwndTip) return;
-	
-	ti.cbSize = sizeof(TOOLINFO);
-	ti.uFlags = 0;
-	ti.hwnd = hwnd;
-	ti.hinst = NULL;
-	ti.uId = 1;
-	ti.lpszText = LPSTR_TEXTCALLBACK;
-	ti.rect.left = 0;
-	ti.rect.top = 0;
-	ti.rect.right = 480;
-	ti.rect.bottom = 480;
-	
-	SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)(LPTOOLINFO)&ti);
-	SendMessage(hwndTip, TTM_ACTIVATE, TRUE, 0);
-	SendMessage(hwndTip, TTM_SETMAXTIPWIDTH, 0, 300);
 }
 //=========================================================
 void CreateClockDC(HWND hwnd)
@@ -703,7 +691,6 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 	else {
 		MultiByteToWideChar(CP_ACP, 0, s, -1, ((LPTOOLTIPTEXTW)lParam)->szText, 80);
 	}
-	SetWindowPos(hwndTip, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE|SWP_NOMOVE|SWP_NOACTIVATE);
 }
 
 /*--------------------------------------------------
@@ -712,13 +699,15 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 void OnCopy(HWND hwnd, LPARAM lParam)
 {
 	SYSTEMTIME t;	HGLOBAL hg;
-	char entry[20], fmt[256], s[1024], *pbuf;
+	char entry[7], fmt[256], s[1024], *pbuf;
 	int beat100;
 	
 	GetDisplayTime(&t, &beat100);
-	wsprintf(entry, "%d%dClip", (int)LOWORD(lParam), (int)HIWORD(lParam));
-	GetMyRegStr("Mouse", entry, fmt, 256, "");
-	if(fmt[0] == 0) strcpy(fmt, format);
+	entry[0]='0'+LOWORD(lParam);
+	entry[1]='0'+HIWORD(lParam);
+	memcpy(entry+2,"Clip",5);
+	GetMyRegStr("Mouse",entry,fmt,256,"");
+	if(!*fmt) strcpy(fmt,format);
 	
 	MakeFormat(s, &t, beat100, fmt);
 	

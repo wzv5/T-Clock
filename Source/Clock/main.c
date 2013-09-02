@@ -10,7 +10,6 @@
 HWND	g_hwndClock;		// clock window
 HWND	g_hwndSheet;		// property sheet window
 HWND	g_hDlgTimer;		// Timer Dialog Handle
-HWND	g_hDlgCalender;		// Calender Dialog Handle
 HWND	g_hDlgStopWatch;	// Stopwatch Dialog Handle
 HWND	g_hDlgTimerWatch;	// Timer Watch Dialog Handle
 HWND	g_hWnd;	 // Main Window Anchor for HotKeys Only!
@@ -139,7 +138,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	g_hIconPlay = LoadImage(hInstance, MAKEINTRESOURCE(IDI_PLAY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconStop = LoadImage(hInstance, MAKEINTRESOURCE(IDI_STOP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconDel  = LoadImage(hInstance, MAKEINTRESOURCE(IDI_DEL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	g_hwndSheet = g_hDlgTimer = g_hDlgCalender = NULL;
+	g_hwndSheet = g_hDlgTimer = NULL;
 	
 	// register a window class
 	wndclass.style         = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
@@ -172,9 +171,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	}
 	
 	while(GetMessage(&msg, NULL, 0, 0)) {
-		if(g_hwndSheet && IsWindow(g_hwndSheet) && IsDialogMessage(g_hwndSheet, &msg)) ;
-		else if(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer, &msg)) ;
-		else if(g_hDlgCalender && IsWindow(g_hDlgCalender) && IsDialogMessage(g_hDlgCalender, &msg)) ;
+		if(g_hwndSheet && IsWindow(g_hwndSheet) && IsDialogMessage(g_hwndSheet, &msg));
+		else if(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer, &msg));
 		else {
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -350,14 +348,9 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			PostMessage(g_hwndSheet, WM_CLOSE, 0, 0);
 		if(g_hDlgTimer && IsWindow(g_hDlgTimer))
 			PostMessage(g_hDlgTimer, WM_CLOSE, 0, 0);
-		if(g_hDlgCalender && IsWindow(g_hDlgCalender))
-			PostMessage(g_hDlgCalender, WM_CLOSE, 0, 0);
 		if(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch))
 			PostMessage(g_hDlgStopWatch, WM_CLOSE, 0, 0);
-		g_hwndSheet = NULL;
-		g_hDlgTimer = NULL;
-		g_hDlgCalender = NULL;
-		g_hDlgStopWatch = NULL;
+		g_hwndSheet = g_hDlgTimer = g_hDlgStopWatch = NULL;
 		PostMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
 		
@@ -417,10 +410,12 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
+	case WM_XBUTTONDOWN:
 		if(!bPlayingNonstop) PostMessage(hwnd, WM_USER+3, 0, 0);
 	case WM_LBUTTONUP: // <^ Code is Designed to "Fall Through" Here.
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
+	case WM_XBUTTONUP:
 		OnMouseMsg(hwnd, message, wParam, lParam); // mouse.c
 		return 0;
 		
@@ -428,7 +423,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		switch(wParam) {
 		case WTS_SESSION_LOCK:
 			Sleep(500); // Eliminate user's interaction for 500 ms
-			SendMessage(HWND_BROADCAST, WM_SYSCOMMAND,SC_MONITORPOWER, (LPARAM) 2);
+			SendMessage(HWND_BROADCAST, WM_SYSCOMMAND,SC_MONITORPOWER, (LPARAM)2);
 			return 0;
 		}
 	}
