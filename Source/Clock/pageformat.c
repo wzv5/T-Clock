@@ -92,14 +92,14 @@ char* entrydate[] = { "Year4", "Year", "Month", "MonthS", "Day", "Weekday",
 void InitLocale(HWND hwnd)
 {
 	char s[21];
-	int i, sel;
+	int i;
 	int aLangDayOfWeekIsLast[] =
 	{ LANG_JAPANESE, LANG_KOREAN, 0 };
 	int aTimeMarkerIsFirst[] =
 	{ LANG_CHINESE, LANG_JAPANESE, LANG_KOREAN, 0 };
 	
 	if(hwnd) {
-		sel = (int)(LRESULT)CBGetCurSel(hwnd, IDC_LOCALE);
+		int sel = (int)(LRESULT)CBGetCurSel(hwnd, IDC_LOCALE);
 		ilang = (int)(LRESULT)CBGetItemData(hwnd, IDC_LOCALE, sel);
 	} else {
 		ilang = GetMyRegLong("Format", "Locale", (int)GetUserDefaultLangID());

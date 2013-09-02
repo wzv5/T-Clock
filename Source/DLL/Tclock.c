@@ -545,7 +545,7 @@ void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100)
 	int hf, y, w;
 	char s[1024], *p, *sp;
 	SIZE sz;
-	int xclock, yclock, wclock, hclock, xsrc, ysrc, wsrc, hsrc;
+	int wclock, hclock, xsrc, ysrc, wsrc, hsrc;
 	int xcenter;
 	
 	if(!hdcClock) CreateClockDC(hwnd);
@@ -561,9 +561,6 @@ void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100)
 	MakeFormat(s, pt, beat100, format);
 	
 	GetClientRect(hwndClock, &rcClock);
-	
-	xclock = 0;
-	yclock = 0;
 	
 	wclock = rcClock.right;  hclock = rcClock.bottom;
 	
@@ -608,7 +605,6 @@ void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100)
 --------------------------------------------------*/
 void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink)
 {
-	HBRUSH hbr;
 	COLORREF col;
 	
 	if(nblink == 0 || (nblink % 2)) col = colfore;
@@ -619,6 +615,7 @@ void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink)
 		DrawXPClockBackground(hwnd, hdc, 0);
 	} else { // -------------- fill the clock/tray with simple colors
 		if(nblink || colback == colback2) { // - only a single color
+			HBRUSH hbr;
 			if(nblink == 0 || (nblink % 2)) col = colback;
 			else col = colfore;
 			hbr = CreateSolidBrush(col);

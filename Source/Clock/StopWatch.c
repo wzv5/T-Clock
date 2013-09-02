@@ -136,11 +136,8 @@ void InsertLapTime(HWND hList)   //---------------------------------------------
 // --------------------------------------------------+++--> Message Processor for Stopwatch Dialog:
 BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
-	WORD id, code; HWND hList;
+	 HWND hList;
 	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
-	
-	id = LOWORD(wParam);
-	code = HIWORD(wParam);
 	
 	switch(msg) {
 	case WM_INITDIALOG:
@@ -153,6 +150,7 @@ BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 		return TRUE;
 		
 	case WM_COMMAND: {
+			WORD id = LOWORD(wParam);
 			switch(id) {
 			
 			case IDOK: // Start

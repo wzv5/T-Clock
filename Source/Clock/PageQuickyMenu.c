@@ -23,9 +23,7 @@ BOOL CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		return TRUE;
 		
 	case WM_COMMAND: {
-			WORD id, code;
-			id = LOWORD(wParam);
-			code = HIWORD(wParam);
+			WORD id = LOWORD(wParam);
 			
 			if(id == IDC_MID_SAVE) {
 				char szmText[TNY_BUFF]= {0};

@@ -36,15 +36,14 @@ void StopWave(void);
 //-------------------------------------------------+++--> Load Configured Alarm Data From Registry:
 void InitAlarm(void)   //-------------------------------------------------------------------+++-->
 {
-	char subkey[20];
-	int i;
-	
 	maxAlarm = GetMyRegLong("", "AlarmNum", 0);
 	if(maxAlarm < 1) maxAlarm = 0;
 	if(pAS) free(pAS); pAS = NULL;
 	if(maxAlarm > 0) {
+		int i;
 		pAS = malloc(sizeof(ALARMSTRUCT) * maxAlarm);
 		for(i = 0; i < maxAlarm; i++) {
+			char subkey[20];
 			wsprintf(subkey, "Alarm%d", i + 1);
 			GetMyRegStr(subkey, "Name", pAS[i].name, 40, "");
 			pAS[i].bAlarm = GetMyRegLong(subkey, "Alarm", FALSE);
@@ -146,17 +145,18 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 //-----+++--> For Computers WithOut Speakers, Play a NoSound (PC Beep) File Through the PC Speaker:
 BOOL PlayNoSound(char* fname, DWORD iLoops)   //-----------------------------------+++-->
 {
-	char szTmp[TNY_BUFF];  FILE* file;
-	char* szLine, *szToken, *nxToken;
-	char seps[] = ", \r\n";
+	static const char seps[] = ", \r\n";
+	FILE* file;
 	
 	if(fopen_s(&file, fname, "r") > 0) {
 		bKillPCBeep = TRUE;
 		return FALSE;
 	} else {
+		char* szToken,*nxToken;
 		while(!bKillPCBeep) {
 			// If We Have a Line, Play Its Beep!
-			while((szLine=fgets(szTmp, TNY_BUFF, file))!=0) {
+			char szTmp[TNY_BUFF];
+			while(fgets(szTmp, TNY_BUFF, file)) {
 				int iDur=0, iFeq=0, i = 0;
 				szToken = strtok_s(szTmp, seps, &nxToken);
 				while(szToken != NULL) {
@@ -280,11 +280,11 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 //===================================================*
 int PlayMCI(HWND hwnd, int nt)
 {
-	char command[80], s[80];
-	char start[40], end[40];
+	char command[80];
 	
 	strcpy(command, "play myfile");
 	if(nt >= 0) {
+		char s[80],start[40],end[40];
 		wsprintf(s, "status myfile position track %d", nt);
 		if(mciSendString(s, start, 40, NULL) == 0) {
 			strcat(command, " from ");

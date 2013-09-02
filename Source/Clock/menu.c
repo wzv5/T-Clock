@@ -11,13 +11,13 @@ void UpdateTimerMenu(HMENU hMenu);
 -----------------------------------------------------------------*/
 void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 {
-	BOOL g_bQMDisplay = TRUE;
-	BOOL g_bQMExitWin = TRUE;
-	BOOL g_bQMLaunch = TRUE;
-	HMENU hPopupMenu = NULL;
-	BOOL g_bQMAudio = TRUE;
-	BOOL g_bQMNet = TRUE;
-	HMENU hMenu = NULL;
+	BOOL g_bQMDisplay;
+	BOOL g_bQMExitWin;
+	BOOL g_bQMLaunch;
+	HMENU hPopupMenu;
+	BOOL g_bQMAudio;
+	BOOL g_bQMNet;
+	HMENU hMenu;
 	
 	g_bQMDisplay = GetMyRegLong("QuickyMenu", "DisplayProperties", TRUE);
 	g_bQMExitWin = GetMyRegLong("QuickyMenu", "ExitWindows",       TRUE);

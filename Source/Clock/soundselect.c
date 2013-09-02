@@ -87,7 +87,7 @@ BOOL IsMMFile(const char* fname)
 	}
 	return FALSE;
 }
-
+/*
 void OnInitDialog(HWND hDlg)
 {
 	HWND hwndStatic;
@@ -117,8 +117,8 @@ void OnInitDialog(HWND hDlg)
 	pt.x = rc2.left + dx; pt.y = rc2.top;
 	ScreenToClient(hDlg, &pt);
 	SetWindowPos(GetDlgItem(hDlg, IDC_TESTSOUND), NULL, pt.x, pt.y, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
-}
-
+}// */
+/*
 void OnFileNameChanged(HWND hDlg)
 {
 	char fname[MAX_PATH];
@@ -135,8 +135,8 @@ void OnFileNameChanged(HWND hDlg)
 		}
 	}
 	EnableDlgItem(hDlg, IDC_TESTSOUND, b);
-}
-
+}// */
+/*
 void OnTestSound(HWND hDlg)
 {
 	char fname[MAX_PATH];
@@ -152,4 +152,4 @@ void OnTestSound(HWND hDlg)
 			StopFile(); bPlaying = FALSE;
 		}
 	}
-}
+}// */

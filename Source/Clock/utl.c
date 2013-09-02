@@ -101,7 +101,7 @@ int ext_cmp(const char* fname, const char* ext)
 		sp++; ext++;
 	}
 }
-
+/*
 void parse(char* dst, char* src, int n)
 {
 	char* dp;
@@ -126,8 +126,8 @@ void parse(char* dst, char* src, int n)
 		if(*dst == ' ') *dst = 0;
 		else break;
 	}
-}
-
+}// */
+/*
 void parsechar(char* dst, char* src, char ch, int n)
 {
 	char* dp;
@@ -152,7 +152,7 @@ void parsechar(char* dst, char* src, char ch, int n)
 		if(*dst == ' ') *dst = 0;
 		else break;
 	}
-}
+}// */
 
 void str0cat(char* dst, const char* src)
 {
@@ -346,6 +346,7 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 /*------------------------------------------------
   get DWORD value from registry
 --------------------------------------------------*/
+/*
 LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 {
 	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
@@ -359,7 +360,7 @@ LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 	}
 	if(b == FALSE) r = defval;
 	return r;
-}
+}// */
 
 int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, char* defval)
 {
@@ -400,7 +401,7 @@ BOOL SetMyRegStr(char* section, char* entry, char* val)
 	}
 	return r;
 }
-
+/*
 BOOL SetRegStr(HKEY rootkey, char* subkey, char* entry, char* val)
 {
 	HKEY hkey;	BOOL r = FALSE;
@@ -412,7 +413,7 @@ BOOL SetRegStr(HKEY rootkey, char* subkey, char* entry, char* val)
 		RegCloseKey(hkey);
 	}
 	return r;
-}
+}// */
 
 BOOL SetMyRegLong(char* section, char* entry, DWORD val)
 {

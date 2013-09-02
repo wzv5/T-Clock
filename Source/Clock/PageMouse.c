@@ -430,12 +430,10 @@ void OnMouseFileChange(HWND hDlg)   //------------------------------------------
 --------------------------------------------------*/
 void OnSansho(HWND hDlg, WORD id)
 {
-	int n;
 	char filter[80], deffile[MAX_PATH], fname[MAX_PATH];
 	
 	if(id == IDC_DROPFILESAPPSANSHO) {
-		n = (int)(LRESULT)CBGetCurSel(hDlg, IDC_DROPFILES);
-		if(n >= 3) {
+		if((int)CBGetCurSel(hDlg, IDC_DROPFILES) >= 3) {
 			BROWSEINFO bi;
 			LPITEMIDLIST pidl;
 			memset(&bi, 0, sizeof(BROWSEINFO));

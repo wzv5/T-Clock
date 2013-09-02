@@ -255,13 +255,15 @@ typedef struct _tagAlarmStruct {
 	BOOL bBlink;
 	BOOL bPM;
 	int days;
-} ALARMSTRUCT;
-typedef ALARMSTRUCT* PALARMSTRUCT;
+};
+typedef struct _tagAlarmStruct ALARMSTRUCT;
+typedef struct _tagAlarmStruct* PALARMSTRUCT;
 
 //----------------//--------------+++--> HotKey Configuration,
-typedef struct { //--+++--> Manipulation, & Storage Structure.
+typedef struct _tagTCHOTKEY { //--+++--> Manipulation, & Storage Structure.
 	UINT vk;
 	UINT fsMod;
 	BOOL bValid;
 	char szText[TNY_BUFF];
-} TCHOTKEY;
+};
+typedef struct _tagTCHOTKEY TCHOTKEY;

@@ -89,10 +89,8 @@ void MyPropertySheet(void)   //-------------------------------------------------
 //--------------------------------------------------------+++--> Property Sheet Callback Procedure:
 int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------------------+++-->
 {
-	LONG style;
-	
 	if(uMsg == PSCB_INITIALIZED) {
-		style = GetWindowLong(hDlg, GWL_EXSTYLE);
+		LONG style = GetWindowLong(hDlg, GWL_EXSTYLE);
 		style ^= WS_EX_CONTEXTHELP; // Hide ? Button
 		SetWindowLong(hDlg, GWL_EXSTYLE, style);
 		

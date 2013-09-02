@@ -125,17 +125,18 @@ void OnApply(HWND hDlg)
 --------------------------------------------------*/
 void OnLinkClicked(HWND hDlg, UINT id)
 {
-	char str[1024], *p;
+	char str[1024];
 	BOOL bOutlook = FALSE;
 	
 	if(id == IDC_MAILTO) {
+		char* p;
 		GetRegStr(HKEY_CLASSES_ROOT, "mailto\\shell\\open\\command", "", str, 1024, "");
 		p = str;
 		while(*p) {
 			if(_strnicmp(p, "MSIMN.EXE", 9) == 0) {
 				bOutlook = TRUE; break;
 			}
-			p++;
+			++p;
 		}
 		
 		strcpy(str, "mailto:");
@@ -165,7 +166,7 @@ BOOL FileExists(HWND hDlg)   //-------------------------------------------------
 {
 	LPITEMIDLIST pidl;
 	char dstpath[MAX_PATH], path[MAX_PATH], path2[MAX_PATH];
-	char* lpStr1, *lpStr2;
+	char* lpStr1;
 	int	retval;
 	
 	if(SHGetSpecialFolderLocation(hDlg, CSIDL_STARTUP, &pidl) == NOERROR
@@ -180,6 +181,7 @@ BOOL FileExists(HWND hDlg)   //-------------------------------------------------
 	retval = PathFileExists(lpStr1);
 	if(retval == 1) return TRUE;
 	else {
+		char* lpStr2;
 		strcpy(path2, dstpath);
 		strcat(path2, "\\");
 		strcat(path2, CONF_START);
@@ -196,7 +198,7 @@ void RemoveStartup(HWND hDlg)   //----------------------------------------------
 {
 	LPITEMIDLIST pidl;
 	char dstpath[MAX_PATH], path[MAX_PATH], path2[MAX_PATH];
-	char* lpStr1, *lpStr2;
+	char* lpStr1;
 	int	retval;
 	
 	if(!FileExists(hDlg)) return;
@@ -214,6 +216,7 @@ void RemoveStartup(HWND hDlg)   //----------------------------------------------
 	retval = DeleteFile(lpStr1);
 	if(retval == 1) return;
 	else {
+		char* lpStr2;
 		strcpy(path2, dstpath);
 		strcat(path2, "\\");
 		strcat(path2, CONF_START);

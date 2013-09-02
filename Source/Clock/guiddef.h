@@ -10,7 +10,7 @@
 
 // ------------------------------------------------------------------------
 */
-
+/*
 // Scope Filter Found Below
 // ---------------------------------------------------------------------------
 #ifndef GUID_DEFINED
@@ -21,7 +21,7 @@ typedef struct _GUID {
 	unsigned short Data3;
 	unsigned char Data4[ 8 ];
 } GUID;
-#endif
+#endif // */
 
 #define DECLSPEC_SELECTANY
 #define EXTERN_C extern

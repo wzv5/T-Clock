@@ -454,13 +454,13 @@ void OnDropDownAlarm(HWND hDlg)
 {
 	PALARMSTRUCT pAS;
 	char name[40];
-	int index;
 	
 	if(curAlarm < 0) return;
 	pAS = (PALARMSTRUCT)CBGetItemData(hDlg, IDC_COMBOALARM, curAlarm);
 	if(pAS == 0) return;
 	GetDlgItemText(hDlg, IDC_COMBOALARM, name, 40);
 	if(strcmp(name, pAS->name) != 0) {
+		int index;
 		strcpy(pAS->name, name);
 		CBDeleteString(hDlg, IDC_COMBOALARM, curAlarm);
 		index = (int)(LRESULT)CBInsertString(hDlg, IDC_COMBOALARM, curAlarm, name);
@@ -569,7 +569,6 @@ void On12Hour(HWND hDlg)
 	
 	h = (WORD)SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_GETPOS, 0, 0);
 	if(h > 23) h = 23;
-	if(h <  0) h = 0;
 	
 	// set limits to spin controls
 	u = 23; l = 0;

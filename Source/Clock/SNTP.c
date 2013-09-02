@@ -202,7 +202,6 @@ void ReceiveSNTPReply(SOCKET Sntp)   //-----------------------------------------
 {
 	struct sockaddr_in FromAddr;
 	struct NTP_Packet NTP_Recv;
-	char szErr[MIN_BUFF] = {0};
 	int sockaddr_Size;
 	int nRet;
 	
@@ -211,6 +210,7 @@ void ReceiveSNTPReply(SOCKET Sntp)   //-----------------------------------------
 	nRet = recvfrom(Sntp, (char*)&NTP_Recv, sizeof(NTP_Recv), 0,
 					(struct sockaddr*)&FromAddr, &sockaddr_Size);
 	if(nRet == SOCKET_ERROR) {
+		char szErr[MIN_BUFF];
 		wsprintf(szErr, "Receive SOCKET ERROR: %d", WSAGetLastError());
 		MessageBox(0, szErr, "Time Sync Failed:", MB_OK|MB_ICONERROR);
 		SocketClose(Sntp, szErr);
@@ -227,7 +227,6 @@ void ReceiveSNTPReply(SOCKET Sntp)   //-----------------------------------------
 int SNTPSend(SOCKET Sntp, LPSOCKADDR_IN lpstToAddr)
 {
 	struct NTP_Packet NTP_Send;
-	char szErr[MIN_BUFF] = {0};
 	int nRet;
 	
 	// init a packet
@@ -239,6 +238,7 @@ int SNTPSend(SOCKET Sntp, LPSOCKADDR_IN lpstToAddr)
 				  0, (LPSOCKADDR)lpstToAddr, sizeof(SOCKADDR_IN));
 				  
 	if(nRet == SOCKET_ERROR) { // Tell Us if "We" Failed!
+		char szErr[MIN_BUFF];
 		wsprintf(szErr, "Send SOCKET ERROR: %d", WSAGetLastError());
 		MessageBox(0, szErr, "Time Sync Failed:", MB_OK|MB_ICONERROR);
 		SocketClose(Sntp, szErr);
@@ -395,7 +395,7 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	char szSound[MAX_PATH] = {0};
 	char entry[TNY_BUFF] = {0};
 	char subkey[] = "SNTP";
-	int i, index, count;
+	int i, count;
 	
 	SetMyRegLong(subkey, "SaveLog", IsDlgButtonChecked(hDlg, IDCBX_SNTPLOG));
 	SetMyRegLong(subkey, "MessageBox", IsDlgButtonChecked(hDlg, IDCBX_SNTPMESSAGE));
@@ -423,7 +423,7 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	SetMyRegStr(subkey, "Server", szServer);
 	
 	if(szServer[0]) {
-		index = (int)CBFindStringExact(hDlg, IDCBX_NTPSERVER, szServer);
+		int index = (int)CBFindStringExact(hDlg, IDCBX_NTPSERVER, szServer);
 		if(index != LB_ERR)
 			CBDeleteString(hDlg, IDCBX_NTPSERVER, index);
 		CBInsertString(hDlg, IDCBX_NTPSERVER, 0, szServer);
@@ -578,15 +578,13 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		MessageBox(0, "Open SNTP.log Failed!", "ERROR:", MB_OK|MB_ICONERROR);
 		return;
 	} else {
-		char* iGot;
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
 		lvItem.iItem = 0; //-----+++--> Which Puts the Most Recent Info on Top.
 		
 		for(; ;) {   // (for) Ever Basically.
-			char szLine[MAX_BUFF] = {0};
-			iGot = fgets(szLine, MAX_BUFF, stReport);
-			if(iGot) {
+			char szLine[MAX_BUFF]={0};
+			if(fgets(szLine, MAX_BUFF, stReport)) {
 				szLine[strcspn(szLine, "\n")] = '\0'; // Remove the Newline Character
 				lvItem.pszText = szLine;
 				ListView_InsertItem(hLogView, &lvItem);

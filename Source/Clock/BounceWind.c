@@ -53,8 +53,7 @@ BOOL CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 		return TRUE;
 		
 	case WM_COMMAND: {
-			WORD id, code;
-			id = LOWORD(wParam); code = HIWORD(wParam);
+			WORD id = LOWORD(wParam);
 			switch(id) {
 			case IDC_JRMSG_TEST:
 				iBounce = GetDlgItemInt(hDlg, IDC_JRMSG_BOUN, NULL, TRUE); // Get Users Attention!!!

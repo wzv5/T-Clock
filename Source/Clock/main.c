@@ -98,13 +98,12 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
 	BOOL SessionReged = FALSE; // IS Session Registered to Receive Session Change Notifications?
-	BOOL bWin2000 = FALSE; // OS Must be Windows 2000 or Higher!
 	WNDCLASS wndclass;
 	HWND hwnd;
 	MSG msg;
 	
-	bWin2000 = CheckSystemVersion(); // Make Sure We're Running Windows 2000 or Newer!
-	if(!bWin2000) { //---//---------// If it's Older Then Windows 2000, it is too Old!
+	// Make Sure We're Running Windows 2000 or Newer!
+	if(!CheckSystemVersion()) { //---//---------// If it's Older Then Windows 2000, it is too Old!
 		MessageBox(0, "T-Clock Requires Windows 2000 or Newer OS!\nSorry, Your Computer is To Old to Run This Program", "ERROR: Age Limit", MB_OK|MB_ICONERROR);
 		ExitProcess(1); //---------// Die Laughing...
 	}
@@ -296,13 +295,11 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		} break;
 		
 	case WM_PAINT: {
-			HDC hdc;
-			PAINTSTRUCT ps;
-			hdc = BeginPaint(hwnd, &ps);
-			EndPaint(hwnd, &ps);
-			return 0;
-		}
-		
+//			HDC hdc;
+//			PAINTSTRUCT ps;
+//			hdc = BeginPaint(hwnd, &ps);
+//			EndPaint(hwnd, &ps);
+			return 0;}
 	case WM_HOTKEY: // Feature Requested From eweoma at DonationCoder.com
 		switch(wParam) { // And a Damn Fine Request it Was... :-)
 		case HOT_WATCH:
@@ -488,14 +485,13 @@ BOOL CheckTCDLL(void)   //------------------------------------------------------
 BOOL CheckDLL(char* fname)   //-----------------------------{ 2.0.2.1 }--------------------+++-->
 {
 	DWORD size;
-	char* pBlock;
 	char szVersion[32] = {0};
 	VS_FIXEDFILEINFO* pffi;
 	BOOL br = FALSE;
 	
 	size = GetFileVersionInfoSize(fname, 0);
 	if(size > 0) {
-		pBlock = malloc(size);
+		char* pBlock = malloc(size);
 		if(GetFileVersionInfo(fname, 0, size, pBlock)) {
 			UINT tmp;
 			if(VerQueryValue(pBlock, "\\\0", &pffi, &tmp)) {

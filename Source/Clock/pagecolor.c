@@ -251,14 +251,13 @@ void OnDrawItemColorCombo(LPARAM lParam)
 	HBRUSH hbr;
 	COLORREF col;
 	TEXTMETRIC tm;
-	int y;
 	
 	pdis = (LPDRAWITEMSTRUCT)lParam;
 	
 	if(IsWindowEnabled(pdis->hwndItem)) {
 		col = (COLORREF)(ULONG_PTR)pdis->itemData;
 		if(col & 0x80000000) col = GetSysColor(col & 0x00ffffff);
-	} else col = col = GetSysColor(COLOR_3DFACE);
+	} else col = GetSysColor(COLOR_3DFACE);
 	
 	switch(pdis->itemAction) {
 	case ODA_DRAWENTIRE:
@@ -270,7 +269,7 @@ void OnDrawItemColorCombo(LPARAM lParam)
 			// print color names
 			if(16 <= pdis->itemID && pdis->itemID <= 19) {
 				char s[80];
-				
+				int y;
 				strcpy(s, MyString(IDS_BTNFACE + pdis->itemID - 16));
 				SetBkMode(pdis->hDC, TRANSPARENT);
 				GetTextMetrics(pdis->hDC, &tm);

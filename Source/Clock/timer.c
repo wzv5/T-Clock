@@ -541,15 +541,13 @@ void EndTimer(void)   //--------------------------------------------------------
 //---------+++--> Get Active Timer Name(s) to Populate Menu -or- Mark Selected Timer as "Homeless":
 int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------------------+++-->
 {
-	DWORD tick;
-	int iTCount, days, hours, minutes, seconds;
-	
 	if(num < nTimerCount) {
 		if(bNameOnly) {
 			wsprintf(dst, " %s", pTimersWorking[num].name);
 		} else {
-			tick = GetTickCount();
-			iTCount = (tick - pTimersWorking[num].tickonstart) / 1000;
+			DWORD tick = GetTickCount();
+			int iTCount = (tick - pTimersWorking[num].tickonstart) / 1000;
+			int days,hours,minutes,seconds;
 			iTCount = pTimersWorking[num].seconds - iTCount;
 			pTimersWorking[num].bHomeless = TRUE; // Homeless Timers Are Automatically Picked-Up
 			if(iTCount <= 0) {					  //-++--> By the Timer Watch Window for Display.
@@ -572,12 +570,11 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------
 void StopTimer(HWND hwnd, int tostop)   //--------------------------------------------------+++-->
 {
 	PTIMERSTRUCT2 temp;
-	int i, j;
-	
 	if(tostop >= nTimerCount) return;
 	
 	temp = pTimersWorking;
 	if(nTimerCount > 1) {
+		int i, j;
 		pTimersWorking = (PTIMERSTRUCT2)malloc(sizeof(TIMERSTRUCT2)*(nTimerCount - 1));
 		
 		for(i = 0, j = 0; i < nTimerCount; i++) {
@@ -787,11 +784,10 @@ void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 // -----------------------+++--> Message Processor for the Selected Running Timers Watching Dialog:
 BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
-	WORD id, code; HWND hList;
+	WORD id; HWND hList;
 	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
 	
 	id = LOWORD(wParam);
-	code = HIWORD(wParam);
 	
 	switch(msg) {
 	case WM_INITDIALOG:
@@ -821,14 +817,14 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 			//--------------------------------------------------------------------+++-->
 			if(((LPNMHDR)lParam)->code == LVN_KEYDOWN) { //-+> Capture Key Strokes Here.
 				LPNMLVKEYDOWN nmkey = (LPNMLVKEYDOWN)lParam;
-				char szTimer[GEN_BUFF] = {0};	int i;
 				switch(nmkey->wVKey) {
-				case VK_DELETE:
+				case VK_DELETE:{
+					char szTimer[GEN_BUFF] = {0};	int i;
 					if((i = ListView_GetNextItem (hList,-1,LVNI_SELECTED)) != -1) {
 						ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
 						RemoveFromWatch(hDlg, hList, szTimer, i);
-					} return TRUE; // Delete Key Handled
-//					return FALSE; // ALL Other Keys Ignored!
+					}
+					return TRUE;}// Delete Key Handled
 				}
 			} break;
 		} //------------------------------------------------+++--> END of Case WM_NOTIFY
