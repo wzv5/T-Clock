@@ -485,7 +485,7 @@ BOOL CheckTCDLL(void)   //------------------------------------------------------
 }
 //================================================================================================
 //----------------------------//--------+++--> Verify the Correct Version of tClock.dll is Present:
-BOOL CheckDLL(char* fname)   //-----------------------------{ 2.0.1.98 }--------------------+++-->
+BOOL CheckDLL(char* fname)   //-----------------------------{ 2.0.2.1 }--------------------+++-->
 {
 	DWORD size;
 	char* pBlock;
@@ -501,8 +501,8 @@ BOOL CheckDLL(char* fname)   //-----------------------------{ 2.0.1.98 }--------
 			if(VerQueryValue(pBlock, "\\\0", &pffi, &tmp)) {
 				if(HIWORD(pffi->dwFileVersionMS) == 2 &&
 				   LOWORD(pffi->dwFileVersionMS) == 0 &&
-				   HIWORD(pffi->dwFileVersionLS) == 1 &&
-				   LOWORD(pffi->dwFileVersionLS) == 98) {
+				   HIWORD(pffi->dwFileVersionLS) == 2 &&
+				   LOWORD(pffi->dwFileVersionLS) == 1) {
 					br = TRUE; //--+++--> Correct tClock.dll File Version Found!
 				} else {
 					wsprintf(szVersion, "Version: %d.%d.%d.%d",

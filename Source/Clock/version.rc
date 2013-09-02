@@ -30,8 +30,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,1,98
- PRODUCTVERSION 2,0,1,98
+ FILEVERSION 2,0,2,1
+ PRODUCTVERSION 2,0,2,1
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -58,11 +58,11 @@ BEGIN
             VALUE "InternalName", "T-Clock 2010"
             VALUE "ProductName", "T-Clock 2010"
 #endif //_WIN64
-            VALUE "FileVersion", "2, 0, 1, 98"
+            VALUE "FileVersion", "2, 0, 2, 1"
             VALUE "LegalCopyright", "Stoic Joker's Network  2006 - 2013"
             VALUE "LegalTrademarks", "Stoic Joker's Network 2000 - 2013"
             VALUE "OriginalFilename", "Clock.exe"
-            VALUE "ProductVersion", "2, 0, 1, 98"
+            VALUE "ProductVersion", "2, 0, 2, 1"
         END
     END
     BLOCK "VarFileInfo"

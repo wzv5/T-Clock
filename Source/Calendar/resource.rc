@@ -19,6 +19,45 @@ IDI_MAIN           ICON           ".\\calendar.ico"
 
 
 //
+// Version Information resources
+//
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+2 VERSIONINFO
+    FILEVERSION     1,0,0,0
+    PRODUCTVERSION  1,0,0,0
+    FILEOS          VOS_NT
+    FILETYPE        VFT_APP
+    FILESUBTYPE     VFT2_UNKNOWN
+    FILEFLAGSMASK   0x00000000
+    FILEFLAGS       0x00000000
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "04090025"
+        {
+            VALUE "Comments", ""
+            VALUE "CompanyName", "Stoic Joker's Network"
+            VALUE "FileDescription", "T-Clock 2010's Calendar"
+            VALUE "FileVersion", "1,0,0,0"
+            VALUE "InternalName", "XPCalendar"
+            VALUE "LegalCopyright", "Stoic Joker's Network  2006 - 2013"
+            VALUE "LegalTrademarks", "Stoic Joker's Network 2000 - 2013"
+            VALUE "OriginalFilename", "XPCalendar.exe"
+            VALUE "PrivateBuild", ""
+            VALUE "ProductName", "XPCalendar"
+            VALUE "ProductVersion", "1,0,0,0"
+            VALUE "SpecialBuild", ""
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 0x0025
+    }
+}
+
+
+
+//
 // Manifest resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
