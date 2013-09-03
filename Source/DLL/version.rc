@@ -29,8 +29,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 2,0,2,1
- PRODUCTVERSION 2,0,2,1
+ FILEVERSION 2,0,2,99
+ PRODUCTVERSION 2,0,2,99
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -48,7 +48,7 @@ BEGIN
             VALUE "Comments", "Used by T-Clock to Insert a ""Hook"" into the SystemTray Clock"
             VALUE "CompanyName", "Stoic Joker's Network"
             VALUE "FileDescription", "SystemTray Clock (T-Clock) Helper File"
-            VALUE "FileVersion", "2, 0, 2, 1"
+            VALUE "FileVersion", "2, 0, 2, 99"
             VALUE "InternalName", "tClock.dll"
             VALUE "LegalCopyright", "Stoic Joker's Network 2006 - 2013"
             VALUE "LegalTrademarks", "Stoic Joker's Network 2000 - 2013"
@@ -58,7 +58,7 @@ BEGIN
 #else
             VALUE "ProductName", "T-Clock 2010"
 #endif // _WIN64
-            VALUE "ProductVersion", "2, 0, 2, 1"
+            VALUE "ProductVersion", "2, 0, 2, 99"
         END
     END
     BLOCK "VarFileInfo"

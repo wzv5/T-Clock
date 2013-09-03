@@ -21,8 +21,8 @@
 #if defined _M_IX86
 
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#define ABT_TCLOCK "T-Clock 2010 - build 98"
-#define ABT_ME "T-Clock 2010 is my rewrite of their code which allows it to run on Windows 7, Vista, XP, && 2000. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
+#define ABT_TCLOCK "T-Clock 2010 - 2.0.2 build 99"
+#define ABT_ME "T-Clock 2010 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
 #define AUTO_START "Start T-Clock 2010 When Windows Starts"
 #define CONF_START "Stoic Joker's T-Clock 2010"
 
@@ -33,7 +33,7 @@
 #elif defined _M_X64
 
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#define ABT_TCLOCK "T-Clock 2010 x64 - build 98"
+#define ABT_TCLOCK "T-Clock 2010 x64 - 2.0.2 build 99"
 #define ABT_ME "T-Clock 2010 x64 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7 x64 Editions. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
 #define AUTO_START "Start T-Clock 2010 x64 When Windows Starts"
 #define CONF_START "Stoic Joker's T-Clock 2010 x64"

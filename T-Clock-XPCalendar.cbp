@@ -6,7 +6,7 @@
 		<Option pch_mode="2" />
 		<Option compiler="msvc10" />
 		<Build>
-			<Target title="release">
+			<Target title="app">
 				<Option output="Release/Win32/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/" />
 				<Option type="0" />
@@ -22,22 +22,7 @@
 					<Add directory="Release/Win32" />
 				</Linker>
 			</Target>
-			<Target title="debug">
-				<Option output="Debug/Win32/XPCalendar" prefix_auto="1" extension_auto="1" />
-				<Option object_output=".obj/dbg/" />
-				<Option type="0" />
-				<Option compiler="msvc10" />
-				<Compiler>
-					<Add option="/MDd" />
-					<Add option="/Zi" />
-					<Add option="/D_DEBUG" />
-				</Compiler>
-				<Linker>
-					<Add option="/DEBUG" />
-					<Add directory="Debug/Win32" />
-				</Linker>
-			</Target>
-			<Target title="release64">
+			<Target title="app64">
 				<Option output="Release/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64/" />
 				<Option type="0" />
@@ -53,7 +38,22 @@
 					<Add directory="Release/Win32" />
 				</Linker>
 			</Target>
-			<Target title="debug64">
+			<Target title="app debug">
+				<Option output="Debug/Win32/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj/dbg/" />
+				<Option type="0" />
+				<Option compiler="msvc10" />
+				<Compiler>
+					<Add option="/MDd" />
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/DEBUG" />
+					<Add directory="Debug/Win32" />
+				</Linker>
+			</Target>
+			<Target title="app64 debug">
 				<Option output="Debug/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64/dbg/" />
 				<Option type="0" />
@@ -69,6 +69,10 @@
 				</Linker>
 			</Target>
 		</Build>
+		<VirtualTargets>
+			<Add alias="debug" targets="app debug;app64 debug;" />
+			<Add alias="release" targets="app;app64;" />
+		</VirtualTargets>
 		<Compiler>
 			<Add option="/Wall" />
 			<Add option="/wd4100" />

@@ -134,19 +134,19 @@ CAPTION "About"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     ICON            IDI_ICON1,1701,36,17,20,20
-    CTEXT           "T-Clock 2010 -(32/64)- build 00",IDC_ABT_TCLOCK,70,17,151,11,0,WS_EX_TRANSPARENT
-    CTEXT           "Stoic Joker 2006 - 2010",IDC_STATIC,103,28,84,10,0,WS_EX_TRANSPARENT
-    RTEXT           "E-mail:",IDC_ABT_MAIL,178,45,26,11,0,WS_EX_TRANSPARENT
+    GROUPBOX        "About T-Clock 2010",IDC_STATIC,7,3,295,56
+    CTEXT           "T-Clock 2010 -(32/64)- build 00",IDC_ABT_TCLOCK,68,17,151,11,0,WS_EX_TRANSPARENT
+    CTEXT           "Stoic Joker 2006 - 2013",IDC_STATIC,103,28,84,10,0,WS_EX_TRANSPARENT
+    RTEXT           "email:",IDC_ABT_MAIL,178,45,26,11,0,WS_EX_TRANSPARENT
     LTEXT           "Admin@StoicJoker.com",1702,206,45,92,11,SS_NOTIFY,WS_EX_TRANSPARENT
-    RTEXT           "www:",IDC_ABT_WEB,12,45,24,11,0,WS_EX_TRANSPARENT
-    LTEXT           "http://www.StoicJoker.com/TClock",1703,38,45,138,11,SS_NOTIFY,WS_EX_TRANSPARENT
+    RTEXT           "web:",IDC_ABT_WEB,12,45,24,11,0,WS_EX_TRANSPARENT
+    LTEXT           "http://StoicJoker.com/TClock",1703,38,45,116,11,SS_NOTIFY,WS_EX_TRANSPARENT
+    GROUPBOX        "T-Clock's History",IDC_STATIC,7,64,295,115
     LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features",IDC_STATIC,14,75,281,20,0,WS_EX_TRANSPARENT
     LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.",IDC_STATIC,14,98,281,28
     LTEXT           "T-Clock 2010 is my rewrite of their code...",IDC_ABT_ME,14,128,281,44
     ICON            IDI_ICON2,42666,232,17,20,20
     CONTROL         "Start T-Clock When Windows Starts",IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,184,226,11
-    GROUPBOX        "About T-Clock 2010",IDC_STATIC,7,3,295,56
-    GROUPBOX        "T-Clock's History",IDC_STATIC,7,64,295,115
 END
 
 IDD_PAGECLOCKTEXT DIALOGEX 0, 0, 310, 200

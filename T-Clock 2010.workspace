@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="T-Clock 2010">
+		<Project filename="../../_SVNs/T-Clock NG/T-Clock.cbp" />
+		<Project filename="../../_SVNs/T-Clock NG/T-Clock64.cbp" />
+		<Project filename="../../_SVNs/T-Clock NG/T-Clock-XPCalendar.cbp" />
+	</Workspace>
+</CodeBlocks_workspace_file>
