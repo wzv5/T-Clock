@@ -204,7 +204,7 @@
     <ResourceCompile Condition="'$(Platform)'=='x64'" Include="..\version64.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DLL\$(Platform)\Win32.DLL.vcxproj">
+    <ProjectReference Include="..\..\DLL\Win32\Win32.DLL.vcxproj">
       <Project>{6e055518-fdc0-4b59-beb8-60a3874c8f76}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>

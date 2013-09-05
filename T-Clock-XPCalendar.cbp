@@ -19,6 +19,7 @@
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/LTCG" />
 					<Add directory="Release/Win32" />
 				</Linker>
 			</Target>
@@ -35,6 +36,7 @@
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/LTCG" />
 					<Add directory="Release/Win32" />
 				</Linker>
 			</Target>

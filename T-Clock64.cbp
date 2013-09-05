@@ -20,6 +20,7 @@
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/LTCG" />
 					<Add library="Psapi" />
 					<Add library="ole32" />
 					<Add library="Comdlg32" />
@@ -48,6 +49,7 @@
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/LTCG" />
 					<Add option="/def:Source\DLL\DLL.def" />
 				</Linker>
 			</Target>

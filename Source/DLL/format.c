@@ -15,7 +15,7 @@ static char AM[11], PM[11], SDate[5], STime[5];
 static char EraStr[11];
 static int AltYear;
 
-extern BOOL bHour12, bHourZero;
+extern char bHour12, bHourZero;
 
 //================================================================================================
 //---------------------------------//+++--> load Localized Strings for Month, Day, & AM/PM Symbols:
