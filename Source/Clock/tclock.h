@@ -18,30 +18,16 @@
 #define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
 #endif
 
-#if defined _M_IX86
-
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#define ABT_TCLOCK "T-Clock 2010 - 2.0.2 build 99"
-#define ABT_ME "T-Clock 2010 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
-#define AUTO_START "Start T-Clock 2010 When Windows Starts"
-#define CONF_START "Stoic Joker's T-Clock 2010"
-
-#elif defined _M_IA64
-
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='ia64' publicKeyToken='6595b64144ccf1df' language='*'\"")
-
-#elif defined _M_X64
-
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='amd64' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#define ABT_TCLOCK "T-Clock 2010 x64 - 2.0.2 build 99"
-#define ABT_ME "T-Clock 2010 x64 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7 x64 Editions. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
-#define AUTO_START "Start T-Clock 2010 x64 When Windows Starts"
-#define CONF_START "Stoic Joker's T-Clock 2010 x64"
-
+#ifdef _WIN64
+#	define ABT_TCLOCK "T-Clock 2010 - 2.0.2 build 99"
+#	define ABT_ME "T-Clock 2010 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
+#	define AUTO_START "Start T-Clock 2010 When Windows Starts"
+#	define CONF_START "Stoic Joker's T-Clock 2010"
 #else
-
-#pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-
+#	define ABT_TCLOCK "T-Clock 2010 x64 - 2.0.2 build 99"
+#	define ABT_ME "T-Clock 2010 x64 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7 x64 Editions. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
+#	define AUTO_START "Start T-Clock 2010 x64 When Windows Starts"
+#	define CONF_START "Stoic Joker's T-Clock 2010 x64"
 #endif
 
 #include <windows.h>
@@ -181,25 +167,25 @@ int atox(const char* p);
 void del_title(char* path);
 void ForceForegroundWindow(HWND hWnd);
 DWORDLONG M32x32to64(DWORD a, DWORD b);
-void parse(char* dst, char* src, int n);
-void add_title(char* path, char* titile);
+void parse(char* dst, const char* src, int n);
+void add_title(char* path, const char* title);
 void get_title(char* dst, const char* path);
 int ext_cmp(const char* fname, const char* ext);
-void parsechar(char* dst, char* src, char ch, int n);
-COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval);
-int MyMessageBox(HWND hwnd, char* msg, char* title, UINT uType, UINT uBeep);
-int GetMyRegStr(char* section, char* entry, char* val, int len, char* defval);
-int GetMyRegStrEx(char* section, char* entry, char* val, int len, char* defval);
-int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int len, char* defval);
-LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval);
-BOOL SetRegStr(HKEY rootkey, char* subkey, char* entry, char* val);
-LONG GetMyRegLongEx(char* section, char* entry, LONG defval);
-LONG GetMyRegLong(char* section, char* entry, LONG defval);
-BOOL SetMyRegLong(char* subkey, char* entry, DWORD val);
-BOOL SetMyRegStr(char* subkey, char* entry, char* val);
-BOOL DelMyReg(char* subkey, char* entry);
+void parsechar(char* dst, const char* src, char ch, int n);
+COLORREF GetMyRegColor(const char* section, const char* entry, COLORREF defval);
+int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT uBeep);
+int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval);
+int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, const char* defval);
+int GetRegStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval);
+LONG GetRegLong(HKEY rootkey, const char* section, const char* entry, LONG defval);
+BOOL SetRegStr(HKEY rootkey, const char* section, const char* entry, const char* val);
+LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval);
+LONG GetMyRegLong(const char* section, const char* entry, LONG defval);
+BOOL SetMyRegLong(const char* section, const char* entry, DWORD val);
+BOOL SetMyRegStr(const char* section, const char* entry, const char* val);
+BOOL DelMyReg(const char* section, const char* entry);
 void str0cat(char* dst, const char* src);
-BOOL DelMyRegKey(char* subkey);
+BOOL DelMyRegKey(const char* section);
 char* MyString(UINT id);
 
 // ExitWindows.c
@@ -239,7 +225,7 @@ void ReleaseTheHound(HWND hWnd, BOOL);
 #define CBGetCurSel(hDlg,id) SendDlgItemMessage((hDlg),(id),CB_GETCURSEL,0,0)
 #define CBGetCount(hDlg,id) SendDlgItemMessage((hDlg),(id),CB_GETCOUNT,0,0)
 
-typedef struct _tagAlarmStruct {
+struct _tagAlarmStruct {
 	char name[TNY_BUFF];
 	BOOL bAlarm;
 	int hour;
@@ -260,7 +246,7 @@ typedef struct _tagAlarmStruct ALARMSTRUCT;
 typedef struct _tagAlarmStruct* PALARMSTRUCT;
 
 //----------------//--------------+++--> HotKey Configuration,
-typedef struct _tagTCHOTKEY { //--+++--> Manipulation, & Storage Structure.
+struct _tagTCHOTKEY { //--+++--> Manipulation, & Storage Structure.
 	UINT vk;
 	UINT fsMod;
 	BOOL bValid;

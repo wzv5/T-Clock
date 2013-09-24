@@ -253,7 +253,7 @@ BOOL CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 	
 	CoInitialize(NULL);
 	
-	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, &psl);
+	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
 	if(SUCCEEDED(hres)) {
 		IPersistFile* ppf;
 		char path[MAX_PATH];
@@ -264,7 +264,7 @@ BOOL CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 		del_title(path);
 		psl->lpVtbl->SetWorkingDirectory(psl, path);
 		
-		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, &ppf);
+		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
 		
 		if(SUCCEEDED(hres)) {
 			WORD wsz[MAX_PATH];

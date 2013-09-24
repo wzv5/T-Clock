@@ -91,7 +91,14 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 {
 	char szWave[MAX_BUFF] = {0};
 	SYSTEMTIME st, st_dif;
-	FILETIME ft, ftold;
+	union{
+		FILETIME ft;
+		DWORDLONG ftqw;
+	} tnew;
+	union{
+		FILETIME ft;
+		DWORDLONG ftqw;
+	} told;
 	char s[GEN_BUFF];
 	DWORD sr_time;
 	DWORDLONG dif;
@@ -105,12 +112,10 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	}
 	
 	// current time
-	GetSystemTimeAsFileTime(&ftold);
+	GetSystemTimeAsFileTime(&told.ft);
 	
 	// NTP data -> FILETIME
-	*(DWORDLONG*)&ft =
-		// seconds from 1900/01/01 ¨ 100 nano-seconds from 1601/01/01
-		M32x32to64(seconds, 10000000) + 94354848000000000i64;
+	tnew.ftqw=M32x32to64(seconds, 10000000) + 94354848000000000ULL;// seconds from 1900/01/01 ¨ 100 nano-seconds from 1601/01/01
 	/*
 		// difference
 		if(nMinuteDif > 0)
@@ -119,7 +124,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 			*(DWORDLONG*)&ft -= M32x32to64(-nMinuteDif * 60, 10000000);
 	*/
 	// set system time
-	b = FileTimeToSystemTime(&ft, &st);
+	b = FileTimeToSystemTime(&tnew.ft, &st);
 	if(b) {
 		// 200 pico-seconds -> milli-seconds
 		st.wMilliseconds = (WORD)(fractions / 5000000);
@@ -133,12 +138,12 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 		nLastDay = lt.wDay;
 		SetMyRegLong("SNTP", "LastDay", nLastDay);
 	*/
-	SystemTimeToFileTime(&st, &ft);
+	SystemTimeToFileTime(&st, &tnew.ft);
 	// delayed or advanced
-	b = (*(DWORDLONG*)&ft > *(DWORDLONG*)&ftold);
+	b = (tnew.ftqw > told.ftqw);
 	// get difference
-	if(b) dif = *(DWORDLONG*)&ft - *(DWORDLONG*)&ftold;
-	else  dif = *(DWORDLONG*)&ftold - *(DWORDLONG*)&ft;
+	if(b) dif = tnew.ftqw - told.ftqw;
+	else  dif = told.ftqw - tnew.ftqw;
 	FileTimeToSystemTime((FILETIME*)&dif, &st_dif);
 	
 	// save log

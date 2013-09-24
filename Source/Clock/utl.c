@@ -23,7 +23,7 @@ __inline int toupper(int c)
 	return c;
 }
 
-void add_title(char* path, char* title)
+void add_title(char* path, const char* title)
 {
 	char* p;
 	
@@ -175,7 +175,7 @@ char* MyString(UINT id)
 	return buf;
 }
 
-int MyMessageBox(HWND hwnd, char* msg, char* title, UINT uType, UINT uBeep)
+int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT uBeep)
 {
 	MSGBOXPARAMS mbp;
 	memset(&mbp, 0, sizeof(MSGBOXPARAMS));
@@ -235,7 +235,7 @@ void ForceForegroundWindow(HWND hwnd)
 }
 //===============================================================================
 //--+++-->
-int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
+int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
 	
@@ -247,11 +247,11 @@ int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 	}
 	
 	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
-		size = cbData;
+		size = len;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
 			r=size;
 		}else{
-			if((r=(int)strlen(defval))<=cbData){
+			if((r=(int)strlen(defval))<=len){
 				strcpy(val,defval);
 			}else{
 				r=0;
@@ -263,7 +263,7 @@ int GetMyRegStr(char* section, char* entry, char* val, int cbData, char* defval)
 	return r;
 }
 
-int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defval)
+int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, const char* defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
 	
@@ -275,11 +275,11 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defva
 	}
 	
 	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
-		size = cbData;
+		size = len;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
 			r=size;
 		}else{
-			if((r=(int)strlen(defval))<=cbData){
+			if((r=(int)strlen(defval))<=len){
 				SetMyRegStr(section, entry, defval);
 				strcpy(val,defval);
 			}else{
@@ -292,7 +292,7 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int cbData, char* defva
 	return r;
 }
 
-LONG GetMyRegLong(char* section, char* entry, LONG defval)
+LONG GetMyRegLong(const char* section, const char* entry, LONG defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;
 	BOOL b = FALSE;	LONG r=0;
@@ -316,7 +316,7 @@ LONG GetMyRegLong(char* section, char* entry, LONG defval)
 	return r;
 }
 
-LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
+LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;
 	BOOL b = FALSE;	LONG r=0;
@@ -347,11 +347,11 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
   get DWORD value from registry
 --------------------------------------------------*/
 /*
-LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
+LONG GetRegLong(HKEY rootkey, char* section, char* entry, LONG defval)
 {
 	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
 	
-	if(RegOpenKey(rootkey, subkey, &hkey) == ERROR_SUCCESS) {
+	if(RegOpenKey(rootkey, section, &hkey) == ERROR_SUCCESS) {
 		size = 4;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)&r, &size) == ERROR_SUCCESS) {
 			if(size == 4) b = TRUE;
@@ -362,12 +362,12 @@ LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 	return r;
 }// */
 
-int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, char* defval)
+int GetRegStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval)
 {
 	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
 	
-	if(RegOpenKey(rootkey, subkey, &hkey) == ERROR_SUCCESS) {
-		size = cbData;
+	if(RegOpenKey(rootkey, section, &hkey) == ERROR_SUCCESS) {
+		size = len;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
 			if(size == 0) *val = 0;
 			b = TRUE;
@@ -382,7 +382,7 @@ int GetRegStr(HKEY rootkey, char* subkey, char* entry, char* val, int cbData, ch
 	return r;
 }
 
-BOOL SetMyRegStr(char* section, char* entry, char* val)
+BOOL SetMyRegStr(const char* section, const char* entry, const char* val)
 {
 	HKEY hkey;	char key[80];	BOOL r=FALSE;
 	
@@ -402,11 +402,11 @@ BOOL SetMyRegStr(char* section, char* entry, char* val)
 	return r;
 }
 /*
-BOOL SetRegStr(HKEY rootkey, char* subkey, char* entry, char* val)
+BOOL SetRegStr(HKEY rootkey, char* section, char* entry, char* val)
 {
 	HKEY hkey;	BOOL r = FALSE;
 	
-	if(RegCreateKey(rootkey, subkey, &hkey) == ERROR_SUCCESS) {
+	if(RegCreateKey(rootkey, section, &hkey) == ERROR_SUCCESS) {
 		if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)(int)strlen(val)) == ERROR_SUCCESS) {
 			r = TRUE;
 		}
@@ -415,7 +415,7 @@ BOOL SetRegStr(HKEY rootkey, char* subkey, char* entry, char* val)
 	return r;
 }// */
 
-BOOL SetMyRegLong(char* section, char* entry, DWORD val)
+BOOL SetMyRegLong(const char* section, const char* entry, DWORD val)
 {
 	HKEY hkey;	char key[80];	BOOL r = FALSE;
 	
@@ -435,7 +435,7 @@ BOOL SetMyRegLong(char* section, char* entry, DWORD val)
 	return r;
 }
 
-BOOL DelMyReg(char* section, char* entry)
+BOOL DelMyReg(const char* section, const char* entry)
 {
 	HKEY hkey;	char key[80];	BOOL r = FALSE;
 	
@@ -453,7 +453,7 @@ BOOL DelMyReg(char* section, char* entry)
 	return r;
 }
 
-BOOL DelMyRegKey(char* section)
+BOOL DelMyRegKey(const char* section)
 {
 	char key[80];	BOOL r = FALSE;
 	
@@ -468,7 +468,7 @@ BOOL DelMyRegKey(char* section)
 	return r;
 }
 
-COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
+COLORREF GetMyRegColor(const char* section, const char* entry, COLORREF defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;
 	BOOL b = FALSE; LONG r=0;

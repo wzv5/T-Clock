@@ -21,16 +21,16 @@
     <ClCompile Include="..\format.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\MAIN.C">
+    <ClCompile Include="..\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\NEWAPI.C">
+    <ClCompile Include="..\newapi.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Tclock.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\UTL.C">
+    <ClCompile Include="..\utl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,7 +38,7 @@
     <ClInclude Include="..\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\TCDLL.H">
+    <ClInclude Include="..\tcdll.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

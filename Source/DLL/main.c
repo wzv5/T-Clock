@@ -18,20 +18,18 @@ extern HHOOK hhook;
   globals
 --------------------------------------------------*/
 extern WNDPROC oldWndProc;
-extern HANDLE hmod;
+extern HINSTANCE hInstance;
 
 //================================================================================================
 //-------------------------------------+++--> Entry Point of This (SystemTray Clock ShellHook) DLL:
-BOOL WINAPI DllMain(HANDLE hModule, DWORD dwFunction, LPVOID lpNot)   //--------------------+++-->
+BOOL WINAPI DllMain(HINSTANCE hInst, ULONG ulReason, LPVOID Reserved)   //---------------+++-->
 {
-	hmod = hModule;
-	switch(dwFunction) {
+	hInstance = hInst;
+	switch(ulReason) {
 	case DLL_PROCESS_ATTACH:
 		break;
-		
 	case DLL_PROCESS_DETACH:
 		break;
-		
 	default: break;
 	}
 	return TRUE;
@@ -62,7 +60,7 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 	}
 	
 	// install an hook to thread of taskbar
-	hhook = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CallWndProc, hmod, (DWORD)(DWORD_PTR)(HANDLE)hThread);
+	hhook = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CallWndProc, hInstance, (DWORD)(DWORD_PTR)(HANDLE)hThread);
 	if(!hhook) {
 		SendMessage(hwnd, WM_USER+1, 0, 3);
 		return;

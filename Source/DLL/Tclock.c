@@ -18,17 +18,23 @@ void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 //================================================================================================
 //----------------------------------------+++--> Definition of Data Segment Shared Among Processes:
+#ifndef __GNUC__
 #pragma data_seg(".MYDATA") //--------------------------------------------------------------+++-->
 //char szShareBuf[81] = { 0 }; WTF DOES THIS DO??!!?? 2010
 HWND hwndTClockMain = NULL;
 HWND hwndClock = NULL;
 HHOOK hhook = 0;
 #pragma data_seg()
+#else
+__attribute__((section(".MYDATA"),shared)) HWND hwndTClockMain = NULL;
+__attribute__((section(".MYDATA"),shared)) HWND hwndClock = NULL;
+__attribute__((section(".MYDATA"),shared)) HHOOK hhook = 0;
+#endif // __GNUC__
 
 /*------------------------------------------------
   globals
 --------------------------------------------------*/
-HANDLE hmod = 0;
+HINSTANCE hInstance = 0;
 WNDPROC oldWndProc = NULL;
 HDC hdcClock = NULL;
 HBITMAP hbmpClock = NULL;
@@ -68,7 +74,7 @@ void CreateTip(HWND hwnd)   //--------------------------------------------------
 {
 //	hwndTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX|TTS_BALLOON,
 	g_Tip = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
-							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,hmod,NULL);
+							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,hInstance,NULL);
 	if(!g_Tip) return;
 	memset(&g_TipInfo,0,sizeof(TOOLINFO));
 	g_TipInfo.cbSize = sizeof(TOOLINFO);
@@ -245,10 +251,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 	case WM_MOUSELEAVE:
-		if(g_TipState==2) if(!bV7up || GetMyRegLong("Tooltip","bCustom",0)){
-			PostMessage(g_Tip, TTM_TRACKACTIVATE , FALSE, (LPARAM)&g_TipInfo);//hide custom tooltip
-		}else{
-			PostMessage(hwndClock, WM_USER+103,0,0);//hide system tooltip
+		if(g_TipState==2){
+			if(!bV7up || GetMyRegLong("Tooltip","bCustom",0))
+				PostMessage(g_Tip, TTM_TRACKACTIVATE , FALSE, (LPARAM)&g_TipInfo);//hide custom tooltip
+			else
+				PostMessage(hwndClock, WM_USER+103,0,0);//hide system tooltip
 		}
 		g_TipState=0;
 		return 0;
@@ -433,12 +440,16 @@ void GetDisplayTime(SYSTEMTIME* pt, int* beat100)
 	GetSystemTimeAsFileTime(&ft);
 	
 	if(beat100) {
-		DWORDLONG dl;
+		DWORDLONG ftqw;
 		SYSTEMTIME st;
 		int sec;
 		
-		dl = *(DWORDLONG*)&ft + 36000000000;
-		FileTimeToSystemTime((FILETIME*)&dl, &st);
+//		ftqw = *(DWORDLONG*)&ft + 36000000000;// it's unsave :(
+		ftqw=(((DWORDLONG)ft.dwHighDateTime<<32) | ft.dwLowDateTime) +36000000000ULL;
+		ft.dwLowDateTime=ftqw&0xFFFFFFFF;
+		ft.dwHighDateTime=ftqw>>32;
+		
+		FileTimeToSystemTime(&ft, &st);
 		
 		sec = st.wHour * 3600 + st.wMinute * 60 + st.wSecond;
 		*beat100 = (sec * 1000) / 864;
@@ -455,11 +466,11 @@ void GetDisplayTime(SYSTEMTIME* pt, int* beat100)
 void OnTimer(HWND hwnd)
 {
 	SYSTEMTIME t;
-	int beat100;
+	int beat100=0;
 	HDC hdc;
 	BOOL bRedraw;
 	
-	GetDisplayTime(&t, nDispBeat?(&beat100):NULL);
+	GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
 	
 	if(t.wMilliseconds > 200) {
 		KillTimer(hwnd, 1);
@@ -473,7 +484,7 @@ void OnTimer(HWND hwnd)
 	
 	if(CheckDaylightTimeTransition(&t)) {
 		CallWindowProc(oldWndProc, hwnd, WM_TIMER, 0, 0);
-		GetDisplayTime(&t, nDispBeat?(&beat100):NULL);
+		GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
 	}
 	
 	bRedraw = FALSE;
@@ -531,9 +542,9 @@ void OnTimer(HWND hwnd)
 void DrawClock(HWND hwnd, HDC hdc)
 {
 	SYSTEMTIME t;
-	int beat100;
+	int beat100=0;
 	
-	GetDisplayTime(&t, nDispBeat?(&beat100):NULL);
+	GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
 	DrawClockSub(hwnd, hdc, &t, beat100);
 }
 
@@ -633,7 +644,7 @@ void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink)
 LRESULT OnCalcRect(HWND hwnd)
 {
 	SYSTEMTIME t;
-	int beat100;
+	int beat100=0;
 	LRESULT w, h;
 	HDC hdc;
 	TEXTMETRIC tm;
@@ -648,7 +659,7 @@ LRESULT OnCalcRect(HWND hwnd)
 	if(hFon) SelectObject(hdc, hFon);
 	GetTextMetrics(hdc, &tm);
 	
-	GetDisplayTime(&t, nDispBeat?(&beat100):NULL);
+	GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
 	MakeFormat(s, &t, beat100, format);
 	
 	p = s; w = 0; h = 0;
@@ -762,8 +773,12 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 		}
 	} else if(plt && plt->wDay == 5) {
 		FILETIME ft;
-		SystemTimeToFileTime(&lt, &ft);
-		*(DWORDLONG*)&ft += 6048000000000i64;
+		DWORDLONG ftqw;
+		SystemTimeToFileTime(&lt,&ft);
+//		*(DWORDLONG*)&ft += 6048000000000ULL;// it's unsave :(
+		ftqw=(((DWORDLONG)ft.dwHighDateTime<<32) | ft.dwLowDateTime) + 6048000000000ULL;
+		ft.dwLowDateTime=ftqw&0xFFFFFFFF;
+		ft.dwHighDateTime=ftqw>>32;
 		FileTimeToSystemTime(&ft, &lt);
 		if(lt.wDay < 8) {
 			iHourTransition = plt->wHour;

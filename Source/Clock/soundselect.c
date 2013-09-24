@@ -5,8 +5,6 @@
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 #include "tclock.h"
 
-static BOOL bPlaying = FALSE;
-
 void GetMMFileExts(char* dst)
 {
 	char s[1024], *sp, *dp;
@@ -88,6 +86,7 @@ BOOL IsMMFile(const char* fname)
 	return FALSE;
 }
 /*
+static BOOL bPlaying = FALSE;
 void OnInitDialog(HWND hDlg)
 {
 	HWND hwndStatic;

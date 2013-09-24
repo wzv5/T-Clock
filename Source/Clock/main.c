@@ -486,15 +486,15 @@ BOOL CheckDLL(char* fname)   //-----------------------------{ 2.0.2.99 }--------
 {
 	DWORD size;
 	char szVersion[32] = {0};
-	VS_FIXEDFILEINFO* pffi;
 	BOOL br = FALSE;
 	
 	size = GetFileVersionInfoSize(fname, 0);
 	if(size > 0) {
 		char* pBlock = malloc(size);
 		if(GetFileVersionInfo(fname, 0, size, pBlock)) {
-			UINT tmp;
-			if(VerQueryValue(pBlock, "\\\0", &pffi, &tmp)) {
+			VS_FIXEDFILEINFO* pffi;
+			UINT uLen;
+			if(VerQueryValue(pBlock, "\\\0", (LPVOID*)&pffi, &uLen)) {
 				if(HIWORD(pffi->dwFileVersionMS) == 2 &&
 				   LOWORD(pffi->dwFileVersionMS) == 0 &&
 				   HIWORD(pffi->dwFileVersionLS) == 2 &&

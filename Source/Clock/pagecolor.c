@@ -17,8 +17,7 @@ static void OnMeasureItemColorCombo(LPARAM lParam);
 static HFONT hfontb;  // for IDC_BOLD
 static HFONT hfonti;  // for IDC_ITALIC
 
-__inline void SendPSChanged(HWND hDlg)
-{
+static __inline void SendPSChanged(HWND hDlg){
 	g_bApplyTaskbar = TRUE;
 	g_bApplyClock = TRUE;
 	SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)(hDlg), 0);

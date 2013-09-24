@@ -168,14 +168,14 @@
   <ItemGroup>
     <ClCompile Include="..\font.c" />
     <ClCompile Include="..\format.c" />
-    <ClCompile Include="..\MAIN.C" />
-    <ClCompile Include="..\NEWAPI.C" />
+    <ClCompile Include="..\main.c" />
+    <ClCompile Include="..\newapi.c" />
     <ClCompile Include="..\Tclock.c" />
-    <ClCompile Include="..\UTL.C" />
+    <ClCompile Include="..\utl.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\resource.h" />
-    <ClInclude Include="..\TCDLL.H" />
+    <ClInclude Include="..\tcdll.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Condition="'$(Platform)'=='Win32'" Include="..\version.rc" />

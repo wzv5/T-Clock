@@ -31,7 +31,7 @@ BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf, //-------------------------
 }
 //================================================================================================
 //--------------------------------------------------------------+++--> Create a Font For the Clock:
-HFONT CreateMyFont(char* fontname, int fontsize, LONG weight, LONG italic, int angle)   //--+++-->
+HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic, int angle)   //--+++-->
 {
 	LOGFONT lf;	POINT pt;	HDC hdc;	WORD langid;
 	char s[11];	int cp, i;	BYTE charset;

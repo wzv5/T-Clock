@@ -2,6 +2,9 @@
 //
 #include <CommCtrl.h>
 #include "resource.h"
+#ifdef __GNUC__ //sadly we can't do this for MSVC as it's not smart enough to detect if it's 64 bit or 32 bit
+#	include "version.rc"
+#endif
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////

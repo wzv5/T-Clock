@@ -5,26 +5,25 @@
 
 #include "tcdll.h"
 
-extern HANDLE hmod;
+extern HINSTANCE hInstance;
 
 char g_bIniSetting = 0;
 char g_inifile[MAX_PATH];
-
-int _strncmp(const char* d, const char* s, size_t n)
+///* @todo : why do we use this? faster???
+int _strncmp(const char* str1, const char* str2, size_t num)
 {
-	unsigned int i;
-	for(i = 0; i < n; i++) {
-		if(*s == 0 && *d == 0) break;
-		if(*d != *s) return (*d - *s);
-		d++; s++;
+	const char* end=str1+num;
+	for(; str1<end; ++str1,++str2) {
+		if(*str1!=*str2) return (*str1-*str2);
+		if(!*str1) break;
 	}
 	return 0;
-}
+}// */
 
 /*-------------------------------------------
 	パス名にファイル名をつける
 ---------------------------------------------*/
-void add_title(char* path, char* title)
+void add_title(char* path, const char* title)
 {
 	char* p;
 	
@@ -67,7 +66,7 @@ void del_title(char* path)
 /*------------------------------------------------
 	カンマで区切られた文字列を取り出す
 --------------------------------------------------*/
-void parse(char* dst, char* src, int n)
+void parse(char* dst, const char* src, int n)
 {
 	char* dp;
 	int i;
@@ -100,7 +99,7 @@ char* MyString(UINT id)
 {
 	static char buf[80];
 	
-	if(LoadString(hmod, id, buf, 80) == 0)
+	if(LoadString(hInstance, id, buf, 80) == 0)
 		buf[0] = 0;
 		
 	return buf;
@@ -108,10 +107,46 @@ char* MyString(UINT id)
 
 char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
 
+/*-------------------------------------------
+	レジストリに文字列を書き込む
+---------------------------------------------*/
+BOOL SetMyRegStr(const char* section, const char* entry, const char* val)
+{
+	HKEY hkey;
+	BOOL r;
+	char key[80];
+	
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
+	
+	if(section && *section) {
+		if(!g_bIniSetting) strcat(key, "\\");
+		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
+	}
+	
+	if(g_bIniSetting) {
+		r = FALSE;
+		if(WritePrivateProfileString(key, entry, val, g_inifile))
+			r = TRUE;
+	} else {
+		r = FALSE;
+		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
+			if(RegSetValueEx(hkey, entry, 0, REG_SZ,
+							 (CONST BYTE*)val, (INT)strlen(val)) == 0) {
+				r = TRUE;
+			}
+			RegCloseKey(hkey);
+		}
+	}
+	return r;
+}
+
 /*------------------------------------------------
 	自分のレジストリから文字列を得る
 --------------------------------------------------*/
-int GetMyRegStr(char* section, char* entry, char* val, int len, char* defval)
+int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval)
 {
 	char key[80];
 	HKEY hkey;
@@ -157,8 +192,8 @@ int GetMyRegStr(char* section, char* entry, char* val, int len, char* defval)
 	return r;
 }
 
-int GetMyRegStrEx(char* section, char* entry, char* val, int len,
-				  char* defval)
+int GetMyRegStrEx(const char* section, const char* entry, char* val, int len,
+				  const char* defval)
 {
 	char key[80];
 	HKEY hkey;
@@ -204,10 +239,47 @@ int GetMyRegStrEx(char* section, char* entry, char* val, int len,
 	return r;
 }
 
+/*-------------------------------------------
+	レジストリにDWORD値を書き込む
+---------------------------------------------*/
+BOOL SetMyRegLong(const char* section, const char* entry, DWORD val)
+{
+	HKEY hkey;
+	BOOL r;
+	char key[80];
+	
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
+	
+	if(section && *section) {
+		if(!g_bIniSetting) strcat(key, "\\");
+		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
+	}
+	
+	if(g_bIniSetting) {
+		char s[20];
+		wsprintf(s, "%d", val);
+		r = FALSE;
+		if(WritePrivateProfileString(key, entry, s, g_inifile))
+			r = TRUE;
+	} else {
+		r = FALSE;
+		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
+			if(RegSetValueEx(hkey,entry,0,REG_DWORD,(CONST BYTE*)&val,4)==ERROR_SUCCESS) {
+				r = TRUE;
+			}
+			RegCloseKey(hkey);
+		}
+	}
+	return r;
+}
+
 /*------------------------------------------------
 	自分のレジストリからLONG値を得る
 --------------------------------------------------*/
-LONG GetMyRegLong(char* section, char* entry, LONG defval)
+LONG GetMyRegLong(const char* section, const char* entry, LONG defval)
 {
 	char key[80];
 	HKEY hkey;
@@ -235,7 +307,7 @@ LONG GetMyRegLong(char* section, char* entry, LONG defval)
 	}
 	return defval;
 }
-LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
+LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval)
 {
 	char key[80];
 	HKEY hkey;
@@ -267,7 +339,7 @@ LONG GetMyRegLongEx(char* section, char* entry, LONG defval)
 	return defval;
 }
 
-COLORREF GetMyRegColor(char* section, char* entry, COLORREF defval)
+COLORREF GetMyRegColor(const char* section, const char* entry, COLORREF defval)
 {
 	char key[80];
 	HKEY hkey;
@@ -334,8 +406,8 @@ LONG GetRegLong(HKEY rootkey, char* subkey, char* entry, LONG defval)
 /*------------------------------------------------
 	レジストリから文字列を得る
 --------------------------------------------------*/
-int GetRegStr(HKEY rootkey, char* subkey, char* entry,
-			  char* val, int len, char* defval)
+int GetRegStr(HKEY rootkey, const char* subkey, const char* entry,
+			  char* val, int len, const char* defval)
 {
 	HKEY hkey;
 	DWORD regtype;
@@ -356,79 +428,6 @@ int GetRegStr(HKEY rootkey, char* subkey, char* entry,
 	if(b == FALSE) {
 		strcpy(val, defval);
 		r = (INT)strlen(defval);
-	}
-	return r;
-}
-
-/*-------------------------------------------
-	レジストリに文字列を書き込む
----------------------------------------------*/
-BOOL SetMyRegStr(char* section, char* entry, char* val)
-{
-	HKEY hkey;
-	BOOL r;
-	char key[80];
-	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		r = FALSE;
-		if(WritePrivateProfileString(key, entry, val, g_inifile))
-			r = TRUE;
-	} else {
-		r = FALSE;
-		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
-			if(RegSetValueEx(hkey, entry, 0, REG_SZ,
-							 (CONST BYTE*)val, (INT)strlen(val)) == 0) {
-				r = TRUE;
-			}
-			RegCloseKey(hkey);
-		}
-	}
-	return r;
-}
-
-/*-------------------------------------------
-	レジストリにDWORD値を書き込む
----------------------------------------------*/
-BOOL SetMyRegLong(char* section, char* entry, DWORD val)
-{
-	HKEY hkey;
-	BOOL r;
-	char key[80];
-	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		char s[20];
-		wsprintf(s, "%d", val);
-		r = FALSE;
-		if(WritePrivateProfileString(key, entry, s, g_inifile))
-			r = TRUE;
-	} else {
-		r = FALSE;
-		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
-			if(RegSetValueEx(hkey,entry,0,REG_DWORD,(CONST BYTE*)&val,4)==ERROR_SUCCESS) {
-				r = TRUE;
-			}
-			RegCloseKey(hkey);
-		}
 	}
 	return r;
 }
@@ -460,12 +459,12 @@ void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest,
 					   xDest,
 					   yDest + y,
 					   cxDest,
-					   min(cyDest - y, cySrc),
+					   __min(cyDest - y, cySrc),
 					   hdcSrc,
 					   xSrc,
 					   ySrc,
 					   cxSrc,
-					   min(cyDest - y, cySrc),
+					   __min(cyDest - y, cySrc),
 					   useTrans);
 		}
 	}
@@ -545,7 +544,7 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 /*------------------------------------------------
   Open a file
 --------------------------------------------------*/
-BOOL ExecFile(HWND hwnd, char* command)
+BOOL ExecFile(HWND hwnd, const char* command)
 {
 	char fname[MAX_PATH], opt[MAX_PATH];
 	

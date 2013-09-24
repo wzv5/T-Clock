@@ -22,7 +22,7 @@ static char* pCustomFormat = NULL;
 static char sMon[11];  //
 
 
-__inline void SendPSChanged(HWND hDlg)
+static __inline void SendPSChanged(HWND hDlg)
 {
 	g_bApplyClock = TRUE;
 	g_bApplyTaskbar = TRUE;

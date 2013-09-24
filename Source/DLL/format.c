@@ -80,9 +80,9 @@ void InitFormat(SYSTEMTIME* lt)   //--------------------------------------------
 }
 //================================================================================================
 //--+++-->
-BOOL GetNumFormat(char** sp, char x, int* len, int* slen)
+BOOL GetNumFormat(const char** sp, char x, int* len, int* slen)
 {
-	char* p;
+	const char* p;
 	int n, ns;
 	
 	p = *sp;
@@ -132,9 +132,10 @@ void SetNumFormat(char** dp, int n, int len, int slen)
 }
 //================================================================================================
 //-------------+++--> Format T-Clock's OutPut String From Current Date, Time, & System Information:
-void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------------------+++-->
+void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //------------------+++-->
 {
-	char* sp, *dp, *p;
+	const char* sp, *p;
+	char* dp;
 	DWORD TickCount = 0;
 	
 	sp = fmt; dp = s;
@@ -424,7 +425,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 			struct tm today;
 			time_t ltime;
 			time(&ltime);
-			_localtime64_s(&today, &ltime);
+			localtime_s(&today, &ltime);
 			if(*(sp + 1) == 's') { // Week-Of-Year Starts Sunday
 				strftime(szWkNum, 8, "%U", &today);
 				Wk = szWkNum;
@@ -437,11 +438,9 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 				sp++;
 			} else if(*(sp + 1) == 'i') { // Week ISO-8601 (by henriko.se)
 				int ISOWeek;
-				struct tm* ptrtmLocalTime;
 				struct tm tmCurrentTime;
 				struct tm tmStartOfCurrentYear;
-				ptrtmLocalTime = localtime(&ltime);
-				tmCurrentTime = *ptrtmLocalTime;
+				localtime_s(&tmCurrentTime,&ltime);
 				mktime(&tmCurrentTime);
 				if(tmCurrentTime.tm_wday == 0) {
 					tmCurrentTime.tm_wday = 7;
@@ -529,7 +528,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 			time_t UTC;
 			
 			time(&UTC);
-			_gmtime64_s(&Julian, &UTC);
+			gmtime_s(&Julian, &UTC);
 			
 			y = Julian.tm_year +1900;	// Year
 			M = Julian.tm_mon +1;		// Month
@@ -569,7 +568,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 			char* od;
 			
 			time(&UTC);
-			_gmtime64_s(&today, &UTC);
+			gmtime_s(&today, &UTC);
 			strftime(szOD, 16, "%Y-%j", &today);
 			od = szOD;
 			while(*od) *dp++ = *od++;
@@ -583,7 +582,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 			char* od;
 			
 			time(&ltime);
-			_localtime64_s(&today, &ltime);
+			localtime_s(&today, &ltime);
 			strftime(szOD, 16, "%Y-%j", &today);
 			od = szOD;
 			while(*od) *dp++ = *od++;
@@ -597,7 +596,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 			char* doy;
 			
 			time(&ltime);
-			_localtime64_s(&today, &ltime);
+			localtime_s(&today, &ltime);
 			strftime(szDoy, 8, "%j", &today);
 			doy = szDoy;
 			while(*doy) *dp++ = *doy++;
@@ -643,33 +642,31 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, char* fmt)   //-----------
 /*--------------------------------------------------
 --------------------------------------- Check Format
 --------------------------------------------------*/
-DWORD FindFormat(char* fmt)
+DWORD FindFormat(const char* fmt)
 {
 	DWORD ret = 0;
-	char* sp;
 	
-	sp = fmt;
-	while(*sp) {
-		if(*sp == '\"') {
-			sp++;
-			while(*sp != '\"' && *sp) sp++;
-			if(*sp == '\"') sp++;
+	while(*fmt) {
+		if(*fmt == '\"') {
+			fmt++;
+			while(*fmt != '\"' && *fmt) fmt++;
+			if(*fmt == '\"') fmt++;
 		}
 		
-		else if(*sp == 's') {
-			sp++;
+		else if(*fmt == 's') {
+			fmt++;
 			ret |= FORMAT_SECOND;
 		}
 		
-		else if(*sp == '@' && *(sp + 1) == '@' && *(sp + 2) == '@') {
-			sp += 3;
-			if(*sp == '.' && *(sp + 1) == '@') {
+		else if(*fmt == '@' && *(fmt + 1) == '@' && *(fmt + 2) == '@') {
+			fmt += 3;
+			if(*fmt == '.' && *(fmt + 1) == '@') {
 				ret |= FORMAT_BEAT2;
-				sp += 2;
+				fmt += 2;
 			} else ret |= FORMAT_BEAT1;
 		}
 		
-		else sp = CharNext(sp);
+		else fmt = CharNext(fmt);
 	}
 	return ret;
 }
