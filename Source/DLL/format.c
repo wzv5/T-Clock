@@ -374,32 +374,30 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			p = s;
 			while(*p) *dp++ = *p++;
 			sp += 4;
-		}
-		
-		else if(*sp == 'S') { // <--+++--<<<<< WTF (If AnyThing) Does This Do?!?!?!?
+		} else if(*sp == 'S') { // uptime
 			int len, slen, st;
 			sp++;
-			if(GetNumFormat(&sp, 'd', &len, &slen) == TRUE) {
+			if(GetNumFormat(&sp, 'd', &len, &slen) == TRUE) {//days
 				if(!TickCount) TickCount = GetTickCount();
-				st = TickCount/86400000;		//day
+				st = TickCount/86400000;
 				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 'a', &len, &slen) == TRUE) {
+			} else if(GetNumFormat(&sp, 'a', &len, &slen) == TRUE) {//hours total
 				if(!TickCount) TickCount = GetTickCount();
-				st = TickCount/3600000;		//hour
+				st = TickCount/3600000;
 				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 'h', &len, &slen) == TRUE) {
+			} else if(GetNumFormat(&sp, 'h', &len, &slen) == TRUE) {//hours (max 24)
 				if(!TickCount) TickCount = GetTickCount();
 				st = (TickCount/3600000)%24;
 				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 'n', &len, &slen) == TRUE) {
+			} else if(GetNumFormat(&sp, 'n', &len, &slen) == TRUE) {//minutes
 				if(!TickCount) TickCount = GetTickCount();
 				st = (TickCount/60000)%60;
 				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 's', &len, &slen) == TRUE) {
+			} else if(GetNumFormat(&sp, 's', &len, &slen) == TRUE) {//seconds
 				if(!TickCount) TickCount = GetTickCount();
 				st = (TickCount/1000)%60;
 				SetNumFormat(&dp, st, len, slen);
-			} else if(*sp == 'T') {
+			} else if(*sp == 'T') { // ST, uptime as h:mm:ss
 				DWORD dw;
 				int sth, stm, sts;
 				if(!TickCount) TickCount = GetTickCount();
@@ -416,8 +414,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 				SetNumFormat(&dp, sts, 2, 0);
 				
 				sp++;
-			} // <--+++--<<<<< END of - WTF (If AnyThing) Does This Do?!?!?!?
-			else
+			} else
 				*dp++ = 'S';
 		} else if(*sp == 'W') { //----//--+++--> 3/21/2010 is 80th day of year
 			char szWkNum[8] = {0}; //-----+++--> WEEK NUMBER CODE IS HERE!!!

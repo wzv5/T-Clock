@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1f5284e0-13ef-11e3-8ffd-0800200c9a66}</ProjectGuid>
-    <RootNamespace>Clock</RootNamespace>
+    <RootNamespace>Calendar</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />

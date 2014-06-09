@@ -112,13 +112,6 @@ void InitClock(HWND hWnd)   //--------------------------------------------------
 	ReadData(hwndClock); //-+-> Get Configuration Information From Registry
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
-	/*------------------{ This Code Will Crash After MSVS2005 SP1 }-------------------+++--> S-h-i-t...!
-	  oldWndProc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hwndClock, GWL_WNDPROC); // The x64 Bugg Was Here
-	  // SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG)(LONG_PTR)WndProc); <--+++----<<<<< FAIL Code!!!
-	  SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)(LRESULT)WndProc); //----+++--> This Fixed IT!!
-	  SetClassLong(hwndClock, GCL_STYLE, GetClassLong(hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
-	 <--+++-----------------------------------------------------------------------------*/
-	
 	oldWndProc = (WNDPROC)GetWindowLongPtr(hwndClock, GWL_WNDPROC);
 	SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)WndProc);
 	SetClassLong(hwndClock, GCL_STYLE, GetClassLong(hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
@@ -152,19 +145,7 @@ void EndClock(void)   //--------------------------------------------------------
 	EndNewAPI(hwndClock);
 	if(hwndClock && IsWindow(hwndClock)) {
 		if(bTimer) KillTimer(hwndClock, 1); bTimer = FALSE;
-//     SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG)(LONG_PTR)oldWndProc);
-
-//==================================================================================
-#if defined _M_IX86 //---------------+++--> IF Compiling This as a 32-bit Clock Use:
-		SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG)(LRESULT)oldWndProc);
-		
-//==================================================================================
-#else //-------------------+++--> ELSE Assume: _M_X64 - IT's a 64-bit Clock and Use:
-		SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)(LRESULT)oldWndProc);
-
-#endif
-//==================================================================================
-
+		SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)oldWndProc);
 		oldWndProc = NULL;
 	}
 	

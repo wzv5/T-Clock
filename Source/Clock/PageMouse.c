@@ -137,6 +137,7 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			hMouseView = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|
 									  LVS_REPORT|LVS_SINGLESEL, 17, 117,
 									  430, 160, hDlg, NULL, 0, 0);
+			SetWindowTheme(hMouseView,_T("Explorer"),NULL);
 			ListView_SetExtendedListViewStyle(hMouseView,
 											  LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 											  
