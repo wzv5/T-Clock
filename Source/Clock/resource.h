@@ -8,11 +8,11 @@
 #define IDS_MMFILE                      10
 #define IDS_ALLFILE                     11
 #define IDS_PROGRAMFILE                 12
-#define IDS_NONE                        13
+#define IDS_NONE                        13 // group
 #define IDS_RECYCLE                     14
 #define IDS_OPENBY                      15
 #define IDS_COPYTO                      16
-#define IDS_MOVETO                      17
+#define IDS_MOVETO                      17 // end group
 #define IDS_PLAY                        18
 #define IDS_LABPROGRAM                  19
 #define IDS_LABFOLDER                   20
@@ -24,7 +24,6 @@
 #define IDS_SCREENSAVER                 31
 #define IDS_SHOWCALENDER                32
 #define IDS_MOUSECOPY                   33
-#define IDS_FORMAT                      34
 #define IDS_FILE                        35
 #define IDS_BMPFILE                     36
 #define IDS_BMPICONFILE                 37
@@ -50,29 +49,36 @@
 #define IDS_LIST_TASKNAME               76
 #define IDS_LIST_TASKTARGET             77
 #define IDS_LIST_TASKSWITCHES           78
-#define IDC_SHOWPROP                    100
-#define IDR_MENU                        101
-#define IDC_EXIT                        102
-#define IDC_QUICKYS                     104
-#define IDC_REFRESHTCLOCK               105
-#define IDC_SHOWCALENDER                106
-#define IDD_PAGECLOCKTEXT               107
-#define IDC_STOPTIMER                   108
-#define IDD_PAGEFORMAT                  110
-#define IDD_PAGEALARM                   111
-#define IDD_PAGEMOUSE                   112
-#define IDD_PAGEABOUT                   113
-#define IDD_TIMER                       114
-#define IDD_ALARMDAY                    115
-#define IDD_PAGETARGETFILE              116
-#define IDD_PAGEQUICKY                  117
+#define IDC_SHOWPROP                    90
+#define IDR_MENU                        91
+#define IDC_EXIT                        92
+#define IDC_QUICKYS                     93
+#define IDC_REFRESHTCLOCK               94
+#define IDC_SHOWCALENDER                95
+#define IDC_STOPTIMER                   96
+#define PROPERTY_BASE                   100
+#define PROPERTY_NUM                    9
+#define IDD_PAGEABOUT                   100 // group
+#define IDD_PAGEALARM                   101
+#define IDD_PAGECLOCKTEXT               102
+#define IDD_PAGEFORMAT                  103
+#define IDD_PAGEMOUSE                   104
+#define IDD_PAGEQUICKY                  105
+#define IDD_PAGETARGETFILE              106
+#define IDD_PAGEHOTKEY                  107
+#define IDD_PAGEMISC                    108 // end group
+#define IDD_TIMER                       120
+#define IDD_ALARMDAY                    121
 #define IDD_STOPWATCH                   124
 #define IDD_TIMERVIEW                   125
-#define IDD_PAGEHOTKEY                  126
-#define IDD_PAGEMISC                    127
 #define IDD_SNTPCONFIG                  130
 #define IDB_BITMAP1                     131
 #define IDD_ALARMMSG                    132
+#define IDI_MAIN                        190
+#define IDI_STOICJOKER                  191
+#define IDI_PLAY                        192
+#define IDI_STOP                        193
+#define IDI_DEL                         194
 #define IDC_RUNAPP                      401
 #define IDC_CASCADE                     403
 #define IDC_TILEHORZ                    404
@@ -82,10 +88,14 @@
 #define IDC_MINALL                      415
 #define IDC_TASKMAN                     420
 #define IDC_EXITWIN                     506
-#define IDC_ABT_TCLOCK                  1000
-#define IDC_ABT_MAIL                    1001
-#define IDC_ABT_WEB                     1002
-#define IDC_ABT_ME                      1003
+#define IDC_ABT_TITLE                   600 // group
+#define IDC_ABT_StoicJoker              601
+#define IDC_ABT_StoicJoker2             602
+#define IDC_ABT_WEB                     603
+#define IDC_ABT_MAIL                    604 // end group
+#define IDC_ABT_WEBuri                  605
+#define IDC_ABT_MAILuri                 606
+#define IDC_ABT_TCLOCK                  607
 #define IDC_MID_MENUTEXT                1004
 #define IDC_MID_TARGET                  1005
 #define IDC_MID_SWITCHES                1006
@@ -260,9 +270,6 @@
 #define IDC_TONIKAKU                    1611
 #define IDC_WATCHWALL                   1612
 #define IDC_STARTUP                     1613
-#define IDC_ABOUTICON                   1701
-#define IDC_MAILTO                      1702
-#define IDC_HOMEPAGE                    1703
 #define IDC_LABTESTSOUND                1801
 #define IDC_TESTSOUND                   1802
 #define IDC_TIMERNAME                   1900
@@ -315,11 +322,6 @@
 #define IDC_CLOCKSKINFILE               3527
 #define IDC_CLOCKSKINSELECT             3528
 #define IDC_CLOCKSKINTRANS              3529
-#define IDI_ICON1                       3610
-#define IDI_PLAY                        3612
-#define IDI_STOP                        3613
-#define IDI_DEL                         3614
-#define IDI_ICON2                       3615
 #define IDM_TIMEWATCH                   3999
 #define IDC_TIMER                       4000
 #define ID_T_TIMER1                     4001

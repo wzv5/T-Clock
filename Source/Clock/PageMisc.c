@@ -122,9 +122,9 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS,0,GetMyRegLongEx("Calendar","ViewMonths",1));
 	
 	CBResetContent(hDlg, IDC_FIRSTWEEK);
-	CBAddString(hDlg, IDC_FIRSTWEEK, (LPARAM)"0");
-	CBAddString(hDlg, IDC_FIRSTWEEK, (LPARAM)"1");
-	CBAddString(hDlg, IDC_FIRSTWEEK, (LPARAM)"2");
+	CBAddString(hDlg, IDC_FIRSTWEEK, "0");
+	CBAddString(hDlg, IDC_FIRSTWEEK, "1");
+	CBAddString(hDlg, IDC_FIRSTWEEK, "2");
 	CBSetCurSel(hDlg, IDC_FIRSTWEEK, GetMySysWeek());
 	
 	if(b2000) {

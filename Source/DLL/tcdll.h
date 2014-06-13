@@ -16,6 +16,8 @@
 #include <time.h>     // Required by time functions in Format.c
 #include <math.h>     // Required by use of floor() in Format.c
 
+#include "../Clock/resource.h" // common resource defines
+
 #define AC_SRC_ALPHA	0x01
 #define TZNAME_MAX		  256//10
 
@@ -67,7 +69,6 @@ void del_title(char* path);
 int ext_cmp(const char* fname, const char* ext);
 void add_title(char* path, const char* title);
 void parse(char* dst, const char* src, int n);
-int _strncmp(const char* str1, const char* str2, size_t num);
 BOOL SetMyRegLong(const char* subkey, const char* entry, DWORD val);
 LONG GetMyRegLong(const char* section, const char* entry, LONG defval);
 LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval);

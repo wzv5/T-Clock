@@ -1,6 +1,6 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
-set sdkenv="C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd"
+set sdkenv="C:\Program Files\Microsoft SDKs\Windows\v7.1\Bin\SetEnv.cmd" /x86
 rem call %sdkenv% /debug
 call %sdkenv% /release
 set xmsbuild=msbuild /p:TargetFrameworkMoniker=".NETFramework,Version=v3.5" /p:Configuration="Release" /p:Platform="Win32"

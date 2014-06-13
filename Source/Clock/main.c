@@ -14,7 +14,7 @@ HWND	g_hDlgStopWatch;	// Stopwatch Dialog Handle
 HWND	g_hDlgTimerWatch;	// Timer Watch Dialog Handle
 HWND	g_hWnd;	 // Main Window Anchor for HotKeys Only!
 
-HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel, g_hIconLogo;
+HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 // icons to use frequently
 char	g_mydir[MAX_PATH]; // path to tclock.exe
 
@@ -24,8 +24,8 @@ BOOL bTrans2kIcons; //-------+++--> (For Windows 2000 Only)
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-char szClassName[] = "TClockMainClass"; // window class name
-char szWindowText[] = "TClock";        // caption of the window
+const char g_szClassName[] = "TClockMainClass"; // window class name
+const char g_szWindowText[] = "TClock";        // caption of the window
 
 void CheckCommandLine(HWND, BOOL);
 static void OnTimerMain(HWND hwnd);
@@ -62,12 +62,11 @@ BOOL CheckSystemVersion()   //--------------------------------------------------
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
 void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 2000 }--------+++-->
 {
-	typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
-	WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification=NULL;
 	HINSTANCE handle = LoadLibrary("Wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
 	// ...Or Support This Feature.
 	if(handle){
-		WTSUnRegisterSessionNotification=(WTSUnRegisterSessionNotification_t)GetProcAddress(handle,"WTSUnRegisterSessionNotification");
+		typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
+		WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification=(WTSUnRegisterSessionNotification_t)GetProcAddress(handle,"WTSUnRegisterSessionNotification");
 		if(WTSUnRegisterSessionNotification){
 			WTSUnRegisterSessionNotification(hwnd);
 			bMonOffOnLock=FALSE;
@@ -79,12 +78,11 @@ void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 20
 //--------------------------------+++--> Register the Clock For Login Session Change Notifications:
 void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 2000 }---------+++-->
 {
-	typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);
-	WTSRegisterSessionNotification_t WTSRegisterSessionNotification=NULL;
 	HINSTANCE handle = LoadLibrary("Wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
 	// ...Or Support This Feature.
 	if(handle){
-		WTSRegisterSessionNotification=(WTSRegisterSessionNotification_t)GetProcAddress(handle,"WTSRegisterSessionNotification");
+		typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);
+		WTSRegisterSessionNotification_t WTSRegisterSessionNotification=(WTSRegisterSessionNotification_t)GetProcAddress(handle,"WTSRegisterSessionNotification");
 		if(WTSRegisterSessionNotification) {
 			WTSRegisterSessionNotification(hwnd,NOTIFY_FOR_THIS_SESSION);
 			bMonOffOnLock=TRUE;
@@ -103,22 +101,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	MSG msg;
 	
 	// Make Sure We're Running Windows 2000 or Newer!
-	if(!CheckSystemVersion()) { //---//---------// If it's Older Then Windows 2000, it is too Old!
-		MessageBox(0, "T-Clock Requires Windows 2000 or Newer OS!\nSorry, Your Computer is To Old to Run This Program", "ERROR: Age Limit", MB_OK|MB_ICONERROR);
-		ExitProcess(1); //---------// Die Laughing...
+	if(!CheckSystemVersion()) {
+		MessageBox(NULL,"T-Clock requires Windows 2000 or newer","old OS",MB_OK|MB_ICONERROR);
+		ExitProcess(1);
 	}
 	
-	// make sure ObjectBar isn't running -> From Original Code/Unclear if This is Still a Conflict.
-	if(FindWindow("ObjectBar Main", "ObjectBar") != NULL) { // However Nobody Has Ever Complained...
+	// make sure ObjectBar isn't running -> From Original Code/Unclear if This is Still a Conflict. (test suggested not really.. no crash but no clock either :P)
+	if(FindWindow("ObjectBar Main","ObjectBar")) {
+		MessageBox(NULL,"ObjectBar and T-Clock can't be run together","ObjectBar detected!",MB_OK|MB_ICONERROR);
 		ExitProcess(1);
 	}
 	
 	// Do Not Allow the Program to Execute Twice!
-	hwnd = FindWindow(szClassName, szWindowText);
+	hwnd = FindWindow(g_szClassName, g_szWindowText);
 	FindTrayServer(hwnd);
-	if(hwnd != NULL) { // This One Sends Commands to the Instance
+	if(hwnd) { // This One Sends Commands to the Instance
 		CheckCommandLine(hwnd, TRUE); // That is Currently Running.
-		ExitProcess(1);
+		ExitProcess(0);
 	}
 	
 	// get the path where .exe is positioned
@@ -127,13 +126,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	
 	CheckRegistry();
 	CancelAllTimersOnStartUp();
-	if(!CheckTCDLL()) { ExitProcess(1);}
+	if(!CheckTCDLL()) { ExitProcess(2);}
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
 	s_uTaskbarRestart = RegisterWindowMessage("TaskbarCreated");
 	// Load ALL of the Global Resources
-	g_hIconTClock = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON1));
-	g_hIconLogo   = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ICON2));
+	g_hIconTClock = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MAIN));
 	g_hIconPlay = LoadImage(hInstance, MAKEINTRESOURCE(IDI_PLAY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconStop = LoadImage(hInstance, MAKEINTRESOURCE(IDI_STOP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconDel  = LoadImage(hInstance, MAKEINTRESOURCE(IDI_DEL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
@@ -149,11 +147,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	wndclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
 	wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
 	wndclass.lpszMenuName  = NULL;
-	wndclass.lpszClassName = szClassName;
+	wndclass.lpszClassName = g_szClassName;
 	RegisterClass(&wndclass);
 	
 	// create a hidden window
-	hwnd = CreateWindowEx(WS_EX_TOOLWINDOW, szClassName, szWindowText,
+	hwnd = CreateWindowEx(WS_EX_TOOLWINDOW, g_szClassName, g_szWindowText,
 						  0, 0, 0, 0, 0, NULL, NULL, hInstance, NULL);
 						  
 	CheckCommandLine(hwnd, FALSE); // This Checks for First Instance Startup Options
@@ -187,7 +185,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	
 	if((SessionReged) || (bMonOffOnLock)) UnregisterSession(hwnd);
 	
-	ExitProcess((UINT)msg.wParam);
+	ExitProcess(msg.wParam);
 }
 //========================================================================================
 //   /exit	: Exit T-Clock 2010

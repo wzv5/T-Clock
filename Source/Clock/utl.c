@@ -185,7 +185,7 @@ int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT
 	mbp.lpszText = msg;
 	mbp.lpszCaption = title;
 	mbp.dwStyle = MB_USERICON | uType;
-	mbp.lpszIcon = MAKEINTRESOURCE(IDI_ICON1);
+	mbp.lpszIcon = MAKEINTRESOURCE(IDI_MAIN);
 	mbp.dwLanguageId = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
 	if(uBeep != 0xFFFFFFFF) MessageBeep(uBeep);
 	return MessageBoxIndirect(&mbp);

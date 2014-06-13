@@ -172,7 +172,7 @@ void OnInit(HWND hDlg)
 						   WM_SETFONT, (WPARAM)hfont, 0);
 	}
 	
-	index = (int)(LRESULT)CBAddString(hDlg, IDC_COMBOALARM, (LPARAM)MyString(IDS_ADDALARM));
+	index = (int)CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM));
 	CBSetItemData(hDlg, IDC_COMBOALARM, index, 0);
 	
 	count = GetMyRegLong("", "AlarmNum", 0);
@@ -181,8 +181,8 @@ void OnInit(HWND hDlg)
 		PALARMSTRUCT pAS;
 		pAS = malloc(sizeof(ALARMSTRUCT));
 		ReadAlarmFromReg(pAS, i);
-		index = (int)(LRESULT)CBAddString(hDlg, IDC_COMBOALARM, (LPARAM)pAS->name);
-		CBSetItemData(hDlg, IDC_COMBOALARM, index, (LPARAM)pAS);
+		index = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->name);
+		CBSetItemData(hDlg, IDC_COMBOALARM, index, pAS);
 		if(i == 0)  SetAlarmToDlg(hDlg, pAS);
 	}
 	if(count > 0) {
@@ -246,8 +246,8 @@ void OnApply(HWND hDlg)
 			if(pAS) {
 				int index;
 				GetAlarmFromDlg(hDlg, pAS);
-				index = (int)(LRESULT)CBAddString(hDlg, IDC_COMBOALARM, (LPARAM)pAS->name);
-				CBSetItemData(hDlg, IDC_COMBOALARM, index, (LPARAM)pAS);
+				index = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->name);
+				CBSetItemData(hDlg, IDC_COMBOALARM, index, pAS);
 				curAlarm = index;
 				CBSetCurSel(hDlg, IDC_COMBOALARM, index);
 				EnableDlgItem(hDlg, IDC_DELALARM, TRUE);
@@ -259,7 +259,7 @@ void OnApply(HWND hDlg)
 			GetAlarmFromDlg(hDlg, pAS);
 	}
 	
-	count = (int)(LRESULT)CBGetCount(hDlg, IDC_COMBOALARM);
+	count = (int)CBGetCount(hDlg, IDC_COMBOALARM);
 	for(i = 0; i < count; i++) {
 		PALARMSTRUCT pAS;
 		pAS = (PALARMSTRUCT)CBGetItemData(hDlg, IDC_COMBOALARM, i);
@@ -352,8 +352,8 @@ void GetAlarmFromDlg(HWND hDlg, PALARMSTRUCT pAS)   //--------------------------
 	GetDlgItemText(hDlg, IDC_COMBOALARM, pAS->name, 40);
 	pAS->bAlarm = IsDlgButtonChecked(hDlg, IDC_ALARM);
 	
-	pAS->hour = (int)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_GETPOS, 0, 0);
-	pAS->minute = (int)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_GETPOS, 0, 0);
+	pAS->hour = (int)SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_GETPOS, 0, 0);
+	pAS->minute = (int)SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_GETPOS, 0, 0);
 	GetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname, MAX_PATH);
 	
 	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, pAS->jrMessage, MAX_BUFF);
@@ -411,7 +411,7 @@ void OnChangeAlarm(HWND hDlg)
 	PALARMSTRUCT pAS;
 	int index;
 	
-	index = (int)(LRESULT)CBGetCurSel(hDlg, IDC_COMBOALARM);
+	index = (int)CBGetCurSel(hDlg, IDC_COMBOALARM);
 	if(curAlarm >= 0 && index == curAlarm) return;
 	
 	if(curAlarm < 0) {
@@ -422,8 +422,8 @@ void OnChangeAlarm(HWND hDlg)
 			if(pAS) {
 				int index;
 				GetAlarmFromDlg(hDlg, pAS);
-				index = (int)(LRESULT)CBAddString(hDlg, IDC_COMBOALARM, (LPARAM)pAS->name);
-				CBSetItemData(hDlg, IDC_COMBOALARM, index, (LPARAM)pAS);
+				index = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->name);
+				CBSetItemData(hDlg, IDC_COMBOALARM, index, pAS);
 				curAlarm = index;
 			}
 		}
@@ -463,8 +463,8 @@ void OnDropDownAlarm(HWND hDlg)
 		int index;
 		strcpy(pAS->name, name);
 		CBDeleteString(hDlg, IDC_COMBOALARM, curAlarm);
-		index = (int)(LRESULT)CBInsertString(hDlg, IDC_COMBOALARM, curAlarm, name);
-		CBSetItemData(hDlg, IDC_COMBOALARM, index, (LPARAM)pAS);
+		index = (int)CBInsertString(hDlg, IDC_COMBOALARM, curAlarm, name);
+		CBSetItemData(hDlg, IDC_COMBOALARM, index, pAS);
 		CBSetCurSel(hDlg, IDC_COMBOALARM, index);
 		curAlarm = index;
 	}

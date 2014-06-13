@@ -28,7 +28,7 @@ BOOL CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 //==================================================================================
 		hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
 							 LVS_SINGLESEL, 17, 117, 430, 191, hDlg, NULL, 0, 0);
-		SetWindowTheme(hList,_T("Explorer"),NULL);
+		SetWindowTheme(hList,L"Explorer",NULL);
 		ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 		
 		lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;		 // Load the Column Headers.

@@ -19,24 +19,21 @@
 #endif
 
 #ifdef _WIN64
-#	define ABT_TCLOCK "T-Clock 2010 - 2.0.2 build 99"
-#	define ABT_ME "T-Clock 2010 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
-#	define AUTO_START "Start T-Clock 2010 When Windows Starts"
-#	define CONF_START "Stoic Joker's T-Clock 2010"
+#	define TCLOCK_SUFFIX " x64"
 #else
-#	define ABT_TCLOCK "T-Clock 2010 x64 - 2.0.2 build 99"
-#	define ABT_ME "T-Clock 2010 x64 is my rewrite of their code which allows it to run on Windows XP, Vista, && 7 x64 Editions. While I have removed some of T-Clock's previous functionality. I feel this makes it a more \"Administrator Friendly\" application as it no longer requires elevated privileges to run."
-#	define AUTO_START "Start T-Clock 2010 x64 When Windows Starts"
-#	define CONF_START "Stoic Joker's T-Clock 2010 x64"
+#	define TCLOCK_SUFFIX ""
 #endif
+#define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - 2.0.2 build 99"
+#define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux continues what Stoic Joker's T-Clock 2010 started and will be further improved and kept up-to-date."
+#define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
+#define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
 
-#include <windows.h>
-#include <windowsx.h>
-#include <mmsystem.h>
-#include <shlobj.h>
-#include <stdlib.h>
-#include <Shlwapi.h>
-#include <psapi.h>
+#include <Windows.h>
+#include <Uxtheme.h>//SetWindowTheme
+#include <WindowsX.h>//Edit_SetText
+#include <ShlObj.h>//IShellDispatch4
+#include <Shlwapi.h>//PathFileExists
+#include <Psapi.h>//EmptyWorkingSet
 #include "resource.h"
 
 #ifndef GWL_WNDPROC
@@ -101,7 +98,7 @@ extern HWND		g_hDlgTimerWatch;	// Timwe Watch Dialog Window Handle
 extern HWND		g_hwndSheet;		// (TCM Property Sheet Window Handle
 extern HWND		g_hWnd;				// Main Window Anchor for HotKeys Only!
 extern HICON	g_hIconTClock, g_hIconPlay, // Frequently Used Icon Handles
-				g_hIconStop, g_hIconDel, g_hIconLogo; // Frequently Used Icon Handles
+				g_hIconStop, g_hIconDel; // Frequently Used Icon Handles
 extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
 extern BOOL bV7up; //--------------+++--> OS Version is Vista/7 or Better.
 extern BOOL b2000; //--------------+++--> OS is Windows 2000.
@@ -214,10 +211,10 @@ void ReleaseTheHound(HWND hWnd, BOOL);
 
 #define CBFindStringExact(hDlg,id,s) SendDlgItemMessage((hDlg),(id),CB_FINDSTRINGEXACT,0,(LPARAM)(s))
 #define CBInsertString(hDlg,id,i,s) SendDlgItemMessage((hDlg),(id),CB_INSERTSTRING,(i),(LPARAM)(s))
-#define CBSetItemData(hDlg,id,i,lParam) SendDlgItemMessage((hDlg),(id),CB_SETITEMDATA,(i),(lParam))
+#define CBSetItemData(hDlg,id,i,lParam) SendDlgItemMessage((hDlg),(id),CB_SETITEMDATA,(i),(LPARAM)(lParam))
 #define CBGetLBText(hDlg,id,i,s) SendDlgItemMessage((hDlg),(id),CB_GETLBTEXT,(i),(LPARAM)(s))
-#define CBAddString(hDlg,id,lParam) SendDlgItemMessage((hDlg),(id),CB_ADDSTRING,0,(lParam))
-#define CBFindString(hDlg,id,s) SendDlgItemMessage((hDlg),(id),CB_FINDSTRING,0,(LPARAM)(s))
+#define CBAddString(hDlg,id,lParam) SendDlgItemMessage((hDlg),(id),CB_ADDSTRING,0,(LPARAM)(lParam))
+//#define CBFindString(hDlg,id,s) SendDlgItemMessage((hDlg),(id),CB_FINDSTRING,0,(LPARAM)(s))
 #define CBDeleteString(hDlg,id, i) SendDlgItemMessage((hDlg),(id),CB_DELETESTRING,(i),0)
 #define CBGetItemData(hDlg,id,i) SendDlgItemMessage((hDlg),(id),CB_GETITEMDATA,(i),0)
 #define CBResetContent(hDlg,id) SendDlgItemMessage((hDlg),(id),CB_RESETCONTENT,0,0)

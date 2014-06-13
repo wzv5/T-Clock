@@ -502,13 +502,13 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		
 		wsprintf(entry, "Server%d", i);
 		GetMyRegStr(subkey, entry, s, 80, "");
-		if(s[0]) CBAddString(hDlg, IDCBX_NTPSERVER, (LPARAM)s);
+		if(s[0]) CBAddString(hDlg, IDCBX_NTPSERVER, s);
 	}
 	
 	if(server[0]) {
 		i = (int)CBFindStringExact(hDlg, IDCBX_NTPSERVER, server);
 		if(i == LB_ERR) {
-			CBInsertString(hDlg, IDCBX_NTPSERVER, 0, (LPARAM)server);
+			CBInsertString(hDlg, IDCBX_NTPSERVER, 0, server);
 			i = 0;
 		}
 		CBSetCurSel(hDlg, IDCBX_NTPSERVER, i);
@@ -547,15 +547,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	// Subclass the Edit Controls
 	OldEditClassProc  = (WNDPROC)(LONG_PTR)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWL_WNDPROC);
-//==================================================================================
-#if defined _M_IX86 //---------------+++--> IF Compiling This as a 32-bit Clock Use:
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWL_WNDPROC, (LONG)(LRESULT)SubClassEditProc);
-	
-//==================================================================================
-#else //-------------------+++--> ELSE Assume: _M_X64 - IT's a 64-bit Clock and Use:
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWL_WNDPROC, (LONG_PTR)(LRESULT)SubClassEditProc);
-
-#endif
+	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWL_WNDPROC, (LONG_PTR)SubClassEditProc);
 	//-+> Create & Show the Log File ListView Control:
 //===============================//=================================================
 	hLogView = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|

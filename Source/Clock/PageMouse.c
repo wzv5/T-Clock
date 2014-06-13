@@ -39,23 +39,21 @@ static CLICKDATA* pData = NULL;
 //------------------+++--> Populate ListView Control With Currently Configured Mouse Click Options:
 void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------------------+++-->
 {
-	LVITEM lvItem; // ListView Control Row Identifier				Mouse Buttons:
-	int col = 0;  // ListView Control Column to Populate				0 = Left
-	int m;  // Mouse (Button Clicked)									1 = Right
-	int c; // Click (Number of Times)									2 = Middle
-	
+	LVITEM lvItem; // ListView Control Row Identifier			Mouse Buttons:
+	int col;  // ListView Control Column to Populate				0 = Left
+	int mbtn;  // Mouse (Button Clicked)							1 = Right
+	int cnt; // Click (Number of Times)								2 = Middle
 	ListView_DeleteAllItems(hList); // Clear ListView Control (Refresh Function)
-	for(m=0; m<=4; ++m) {
-		if(m==1) continue; // We're Skipping the Right Mouse Button
-		for(c=0; c<MAX_CLICKS; ++c) {
-			int iBtn;
-			iBtn = pData[m].func[c];
+	for(mbtn=0; mbtn<=4; ++mbtn) {
+		if(mbtn==1) continue; // We're Skipping the Right Mouse Button
+		for(cnt=0; cnt<MAX_CLICKS; ++cnt) {
+			int iBtn = pData[mbtn].func[cnt];
 			if(iBtn > MOUSEFUNC_NONE) {
 				lvItem.iSubItem = COL_BUTTON;
 				lvItem.mask = LVIF_TEXT;
 				lvItem.iItem = 0;
 				
-				switch(m){
+				switch(mbtn){
 				case 0: lvItem.pszText = "Left";break;
 				case 1: lvItem.pszText = "Right";break;
 				case 2: lvItem.pszText = "Middle";break;
@@ -69,7 +67,7 @@ void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------
 					lvItem.iSubItem = col;
 					switch(col) {
 					case COL_CLKTYP:
-						if(c == 0) lvItem.pszText = "Single";
+						if(cnt == 0) lvItem.pszText = "Single";
 						else lvItem.pszText = "Double";
 						break;
 					case COL_ACTION:
@@ -96,7 +94,7 @@ void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------
 						break;
 					case COL_OTHERD:
 						if(iBtn==MOUSEFUNC_CLIPBOARD)
-							lvItem.pszText=pData[m].format[c];
+							lvItem.pszText=pData[mbtn].format[cnt];
 						else
 							lvItem.pszText=" ";
 						break;
@@ -137,7 +135,7 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			hMouseView = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|
 									  LVS_REPORT|LVS_SINGLESEL, 17, 117,
 									  430, 160, hDlg, NULL, 0, 0);
-			SetWindowTheme(hMouseView,_T("Explorer"),NULL);
+			SetWindowTheme(hMouseView,L"Explorer",NULL);
 			ListView_SetExtendedListViewStyle(hMouseView,
 											  LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 											  
@@ -189,14 +187,14 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			//  "Button"
 			else if(id == IDC_MOUSEBUTTON && code == CBN_SELCHANGE) OnMouseButton(hDlg);
 			// single .... quadruple
-			else if(IDC_RADSINGLE <= id && id <= IDC_RADDOUBLE) OnMouseClickTime(hDlg, id);
+			else if(id >= IDC_RADSINGLE && id <= IDC_RADDOUBLE) OnMouseClickTime(hDlg, id);
 			//  Mouse Function
 			else if(id == IDC_MOUSEFUNC && code == CBN_SELCHANGE) {
 				OnMouseFunc(hDlg);
 				SendPSChanged(hDlg);
 			}
 			// Mouse Function - File
-			else if(id == IDC_MOUSEFILE && code == EN_CHANGE) {
+			else if(id == IDC_MOUSEFILE && code==EN_CHANGE) {
 				OnMouseFileChange(hDlg);
 				SendPSChanged(hDlg);
 			} else if((id==IDC_TOOLTIP && code==EN_CHANGE) || id==IDCB_TOOLTIP) {
@@ -239,7 +237,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		SendDlgItemMessage(hDlg, IDC_TOOLTIP,		WM_SETFONT, (WPARAM)hfont, 0);
 	}
 	
-	for(i = IDS_NONE; i <= IDS_MOVETO; i++) CBAddString(hDlg, IDC_DROPFILES, (LPARAM)MyString(i));
+	for(i = IDS_NONE; i <= IDS_MOVETO; i++) CBAddString(hDlg, IDC_DROPFILES, MyString(i));
 	
 	CBSetCurSel(hDlg, IDC_DROPFILES, GetMyRegLong(reg_section, "DropFiles", 0));
 	GetMyRegStr(reg_section, "DropFilesApp", s, 256, "");
@@ -270,7 +268,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	pData[0].disable = GetMyRegLong("StartMenu", "StartMenuClock", FALSE);
 	
 	for(i = IDS_LEFTBUTTON; i<=IDS_XBUTTON2; ++i)
-		CBAddString(hDlg, IDC_MOUSEBUTTON, (LPARAM)MyString(i));
+		CBAddString(hDlg, IDC_MOUSEBUTTON, MyString(i));
 		
 	// set mouse functions to combo box
 	InitMouseFuncList(hDlg); // Populate Mouse Click Action DropDown Menu
@@ -296,7 +294,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	char s[LRG_BUFF], entry[3+4];
 	int n, i, j;
 	entry[2]='\0';
-	n = (int)(LRESULT)CBGetCurSel(hDlg, IDC_DROPFILES);
+	n = (int)CBGetCurSel(hDlg, IDC_DROPFILES);
 	SetMyRegLong("", "DropFiles", (n > 0));
 	SetMyRegLong(reg_section, "DropFiles", n);
 	GetDlgItemText(hDlg, IDC_DROPFILESAPP, s, 256);
@@ -335,7 +333,7 @@ void OnDropFilesChange(HWND hDlg)   //------------------------------------------
 {
 	int i, n;
 	
-	n = (int)(LRESULT)CBGetCurSel(hDlg, IDC_DROPFILES);
+	n = (int)CBGetCurSel(hDlg, IDC_DROPFILES);
 	SetDlgItemText(hDlg, IDC_LABDROPFILESAPP, MyString(n >= 3?IDS_LABFOLDER:IDS_LABPROGRAM));
 	
 	for(i = IDC_LABDROPFILESAPP; i <= IDC_DROPFILESAPPSANSHO; i++)
@@ -348,7 +346,7 @@ void OnDropFilesChange(HWND hDlg)   //------------------------------------------
 void OnMouseButton(HWND hDlg)   //----------------------------------------------------------+++-->
 {
 	int j;
-	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
 	if(button>0) ++button;
 	for(j=0; j<MAX_CLICKS; ++j) {
 		if(pData[button].func[j]) break;
@@ -364,13 +362,13 @@ void OnMouseButton(HWND hDlg)   //----------------------------------------------
 void OnMouseClickTime(HWND hDlg, int id)   //-----------------------------------------------+++-->
 {
 	int click, i, count, func;
-	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
 	if(button>0) ++button;
 	
 	click = id - IDC_RADSINGLE;
 	func = pData[button].func[click];
 	
-	count = (int)(LRESULT)CBGetCount(hDlg, IDC_MOUSEFUNC);
+	count = (int)CBGetCount(hDlg, IDC_MOUSEFUNC);
 	for(i = 0; i < count; i++) {
 		if(func == CBGetItemData(hDlg, IDC_MOUSEFUNC, i)) {
 			CBSetCurSel(hDlg, IDC_MOUSEFUNC, i);
@@ -384,7 +382,7 @@ void OnMouseClickTime(HWND hDlg, int id)   //-----------------------------------
 void OnMouseFunc(HWND hDlg)   //------------------------------------------------------------+++-->
 {
 	int click, j, index, func;
-	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
 	if(button>0) ++button;
 	
 	for(j=0; j<MAX_CLICKS; ++j) {
@@ -395,16 +393,14 @@ void OnMouseFunc(HWND hDlg)   //------------------------------------------------
 	if(j==MAX_CLICKS) return;
 	click = j;
 	
-	index = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEFUNC);
-	func = (int)(LRESULT)CBGetItemData(hDlg, IDC_MOUSEFUNC, index);
+	index = (int)CBGetCurSel(hDlg, IDC_MOUSEFUNC);
+	func = (int)CBGetItemData(hDlg, IDC_MOUSEFUNC, index);
 	pData[button].func[click] = func;
 	
 	EnableWindow(GetDlgItem(hDlg, IDC_MOUSEFILE), (func == MOUSEFUNC_CLIPBOARD));
 	EnableWindow(GetDlgItem(hDlg, IDC_LABMOUSEFILE), (func == MOUSEFUNC_CLIPBOARD));
 	
 	if(func == MOUSEFUNC_CLIPBOARD) {
-		SetDlgItemText(hDlg, IDC_LABMOUSEFILE, MyString(IDS_FORMAT));
-		
 		if(!*pData[button].format[click])
 			GetMyRegStr("Format", "Format", pData[button].format[click], LRG_BUFF, "");
 		
@@ -416,7 +412,7 @@ void OnMouseFunc(HWND hDlg)   //------------------------------------------------
 void OnMouseFileChange(HWND hDlg)   //------------------------------------------------------+++-->
 {
 	int j, click, index, func;
-	int button=(int)(LRESULT)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+	int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
 	if(button>0) ++button;
 	for(j=0; j<MAX_CLICKS; ++j) {
 		if(IsDlgButtonChecked(hDlg, IDC_RADSINGLE + j)) break;
@@ -425,8 +421,8 @@ void OnMouseFileChange(HWND hDlg)   //------------------------------------------
 	if(j==MAX_CLICKS) return;
 	click = j;
 	
-	index = (int)(LRESULT)CBGetCurSel(hDlg, IDC_MOUSEFUNC);
-	func = (int)(LRESULT)CBGetItemData(hDlg, IDC_MOUSEFUNC, index);
+	index = (int)CBGetCurSel(hDlg, IDC_MOUSEFUNC);
+	func = (int)CBGetItemData(hDlg, IDC_MOUSEFUNC, index);
 	
 	if(func == MOUSEFUNC_CLIPBOARD) GetDlgItemText(hDlg, IDC_MOUSEFILE, pData[button].format[click], 1024);
 }
@@ -443,7 +439,7 @@ void OnSansho(HWND hDlg, WORD id)
 			LPITEMIDLIST pidl;
 			memset(&bi, 0, sizeof(BROWSEINFO));
 			bi.hwndOwner = hDlg;
-			bi.ulFlags = BIF_RETURNONLYFSDIRS;
+			bi.ulFlags = BIF_RETURNONLYFSDIRS|BIF_USENEWUI;
 			pidl = SHBrowseForFolder(&bi);
 			if(pidl) {
 				SHGetPathFromIDList(pidl, fname);
@@ -458,7 +454,7 @@ void OnSansho(HWND hDlg, WORD id)
 	filter[0] = 0;
 	if(id == IDC_DROPFILESAPPSANSHO) {
 		str0cat(filter, MyString(IDS_PROGRAMFILE));
-		str0cat(filter, "*.exe");
+		str0cat(filter, "*.exe;*.cmd");
 	}
 	str0cat(filter, MyString(IDS_ALLFILE));
 	str0cat(filter, "*.*");
@@ -478,21 +474,21 @@ void InitMouseFuncList(HWND hDlg)   //------------------------------------------
 {
 	int index;
 	
-	index = (int)(LRESULT)CBAddString(hDlg, IDC_MOUSEFUNC, (LPARAM)MyString(IDS_NONE));
+	index = (int)CBAddString(hDlg, IDC_MOUSEFUNC, MyString(IDS_NONE));
 	CBSetItemData(hDlg, IDC_MOUSEFUNC, index, MOUSEFUNC_NONE);
 	
-	index = (int)(LRESULT)CBAddString(hDlg, IDC_MOUSEFUNC, (LPARAM)MyString(IDS_TIMER));
+	index = (int)CBAddString(hDlg, IDC_MOUSEFUNC, MyString(IDS_TIMER));
 	CBSetItemData(hDlg, IDC_MOUSEFUNC, index, MOUSEFUNC_TIMER);
 	
-	index = (int)(LRESULT)CBAddString(hDlg, IDC_MOUSEFUNC,(LPARAM)MyString(IDS_SCREENSAVER));
+	index = (int)CBAddString(hDlg, IDC_MOUSEFUNC,MyString(IDS_SCREENSAVER));
 	CBSetItemData(hDlg, IDC_MOUSEFUNC, index, MOUSEFUNC_SCREENSAVER);
 	
-	index = (int)(LRESULT)CBAddString(hDlg, IDC_MOUSEFUNC, (LPARAM)MyString(IDS_SHOWCALENDER));
+	index = (int)CBAddString(hDlg, IDC_MOUSEFUNC, MyString(IDS_SHOWCALENDER));
 	CBSetItemData(hDlg, IDC_MOUSEFUNC, index, MOUSEFUNC_SHOWCALENDER);
 	
-	index = (int)(LRESULT)CBAddString(hDlg, IDC_MOUSEFUNC, (LPARAM)MyString(IDS_MOUSECOPY));
+	index = (int)CBAddString(hDlg, IDC_MOUSEFUNC, MyString(IDS_MOUSECOPY));
 	CBSetItemData(hDlg, IDC_MOUSEFUNC, index, MOUSEFUNC_CLIPBOARD);
 	
-	index = (int)(LRESULT)CBAddString(hDlg, IDC_MOUSEFUNC, (LPARAM)MyString(IDS_PROPERTY));
+	index = (int)CBAddString(hDlg, IDC_MOUSEFUNC, MyString(IDS_PROPERTY));
 	CBSetItemData(hDlg, IDC_MOUSEFUNC, index, MOUSEFUNC_SHOWPROPERTY);
 }

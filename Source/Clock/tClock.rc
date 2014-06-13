@@ -30,25 +30,12 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-IDI_ICON1               ICON                    "Clock.ico"
-IDI_ICON2               ICON                    "Logo.ico"
-IDI_PLAY                ICON                    "PLAY.ico"
-IDI_STOP                ICON                    "stop.ico"
-IDI_DEL                 ICON                    "del.ico"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Menu
 //
 
 IDR_MENU MENU 
 BEGIN
-    POPUP "TClock"
+    POPUP ""
     BEGIN
         MENUITEM "&Adjust Date/Time",           408
         MENUITEM SEPARATOR
@@ -101,31 +88,6 @@ BEGIN
     END
 END
 
-
-#ifdef APSTUDIO_INVOKED
-/////////////////////////////////////////////////////////////////////////////
-//
-// TEXTINCLUDE
-//
-
-1 TEXTINCLUDE 
-BEGIN
-    "resource.h\0"
-END
-
-3 TEXTINCLUDE 
-BEGIN
-    "\r\0"
-END
-
-2 TEXTINCLUDE 
-BEGIN
-    "#include ""afxres.h""\r\0"
-END
-
-#endif    // APSTUDIO_INVOKED
-
-
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
@@ -136,20 +98,22 @@ STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "About"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    ICON            IDI_ICON1,1701,36,17,20,20
-    GROUPBOX        "About T-Clock 2010",IDC_STATIC,7,3,295,56
-    CTEXT           "T-Clock 2010 -(32/64)- build 00",IDC_ABT_TCLOCK,68,17,151,11,0,WS_EX_TRANSPARENT
-    CTEXT           "Stoic Joker 2006 - 2013",IDC_STATIC,103,28,84,10,0,WS_EX_TRANSPARENT
-    RTEXT           "email:",IDC_ABT_MAIL,178,45,26,11,0,WS_EX_TRANSPARENT
-    LTEXT           "Admin@StoicJoker.com",1702,206,45,92,11,SS_NOTIFY,WS_EX_TRANSPARENT
-    RTEXT           "web:",IDC_ABT_WEB,12,45,24,11,0,WS_EX_TRANSPARENT
-    LTEXT           "http://StoicJoker.com/TClock",1703,38,45,116,11,SS_NOTIFY,WS_EX_TRANSPARENT
+    GROUPBOX        "About T-Clock Redux",IDC_STATIC,7,3,295,56
+    ICON            IDI_MAIN,IDC_STATIC,26,13,32,32,SS_ICON|SS_REALSIZEIMAGE
+    CTEXT           "",IDC_ABT_TITLE,68,17,151,11
+    CTEXT           "White-Tiger 2014 - 2015",IDC_STATIC,103,28,84,10
+    ICON            IDI_STOICJOKER,IDC_STATIC,230,12,32,32,SS_ICON|SS_REALSIZEIMAGE
+    CTEXT           "Stoic",IDC_ABT_StoicJoker,260,19,34,8,SS_CENTER
+    CTEXT           "Joker",IDC_ABT_StoicJoker2,260,28,34,8,SS_CENTER
+    RTEXT           "web:",IDC_ABT_WEB,11,45,21,11
+    LTEXT           "https://github.com/White-Tiger/T-Clock",IDC_ABT_WEBuri,34,45,130,11,SS_NOTIFY
+    RTEXT           "email:",IDC_ABT_MAIL,162,45,25,11
+    LTEXT           "T-Clock@WhiteTiger.e4ward.com",IDC_ABT_MAILuri,189,45,110,11,SS_NOTIFY
     GROUPBOX        "T-Clock's History",IDC_STATIC,7,64,295,115
-    LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features",IDC_STATIC,14,75,281,20,0,WS_EX_TRANSPARENT
-    LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.",IDC_STATIC,14,98,281,28
-    LTEXT           "T-Clock 2010 is my rewrite of their code...",IDC_ABT_ME,14,128,281,44
-    ICON            IDI_ICON2,42666,232,17,20,20
-    CONTROL         "Start T-Clock When Windows Starts",IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,184,226,11
+    LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features",IDC_STATIC,13,74,283,20
+    LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.",IDC_STATIC,13,97,283,28
+    LTEXT           "",IDC_ABT_TCLOCK,13,127,283,50
+    CONTROL         "Start T-Clock Redux when Windows starts",IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,39,184,226,11
 END
 
 IDD_PAGECLOCKTEXT DIALOGEX 0, 0, 310, 200
@@ -186,7 +150,7 @@ BEGIN
     GROUPBOX        "T-Clock Text Options",IDC_STATIC,7,3,295,78
     GROUPBOX        "Clock Size and Text Position",IDC_STATIC,7,86,295,65
     LTEXT           "Use this to increase the size of the Clock's ""face"" and then reposition the text within it.",IDC_STATIC,188,97,110,25
-    EDITTEXT        IDC_ALPHATB,116,170,28,13,ES_AUTOHSCROLL
+    EDITTEXT        IDC_ALPHATB,116,170,28,13,ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_SPINALPHA,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,133,170,11,13
     GROUPBOX        "Transparent Taskbar",IDC_STATIC,7,156,295,35
     RTEXT           "Percentage of transparency:",IDC_STATIC,21,171,90,8
@@ -267,7 +231,7 @@ BEGIN
     CTEXT           "AM",IDC_AMPM_DISPLAY,135,43,30,8
     CONTROL         "PM",IDC_AMPM_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,168,42,27,11
     CONTROL         "Chime Hour",IDC_CHIMEALARM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,85,53,11
-    EDITTEXT        IDC_REPEATIMES,266,84,26,13,ES_CENTER | ES_AUTOHSCROLL
+    EDITTEXT        IDC_REPEATIMES,266,84,26,13,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "",IDC_SPINTIMES,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS,255,12,11,12
     CONTROL         "Show Message Window",IDC_MSG_ALARM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,109,93,10
     PUSHBUTTON      "Message Window Options",IDCB_MSG_ALARM,198,107,94,14,WS_DISABLED
@@ -506,6 +470,101 @@ BEGIN
     CONTROL         "",IDC_SPIN_JRPAW,"msctls_updown32",UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS,220,118,11,12
 END
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAIN                ICON                    "Clock.ico"
+IDI_STOICJOKER          ICON                    "Logo.ico"
+IDI_PLAY                ICON                    "PLAY.ico"
+IDI_STOP                ICON                    "stop.ico"
+IDI_DEL                 ICON                    "del.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "JackRussel.bmp"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE 
+BEGIN
+    IDS_LIST_TASKNUMBER     "Item #"
+    IDS_LIST_TASKNAME       "Menu Text"
+    IDS_LIST_TASKTARGET     "Target File"
+    IDS_LIST_TASKSWITCHES   "Switches"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_NOTFOUNDCLOCK       "Failed to customize clock"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_ADDALARM            "( Add )"
+    IDS_MMFILE              "Multimedia  (*.wav,*.mid,*.pcb,...)"
+    IDS_ALLFILE             "All (*.*)"
+    IDS_PROGRAMFILE         "Program (*.exe,*.cmd)"
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_NONE                "(none)"
+    IDS_RECYCLE             "Recycle Bin"
+    IDS_OPENBY              "Open with..."
+    IDS_COPYTO              "Copy To..."
+    IDS_MOVETO              "Move To..."
+    IDS_TIMER               "Timer"
+    IDS_SCREENSAVER         "Screen Saver"
+    IDS_SHOWCALENDER        "Show Calender"
+    IDS_MOUSECOPY           "Copy To Clipboard"
+    IDS_PROPERTY            "T-Clock Properties"
+    IDS_LABPROGRAM          "Application"
+    IDS_LABFOLDER           "Folder"
+    IDS_LEFTBUTTON          "Left Button"
+    IDS_RIGHTBUTTONM        "Middle Button"
+    IDS_XBUTTON1            "Button 4"
+    IDS_XBUTTON2            "Button 5"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -596,87 +655,6 @@ BEGIN
     END
 END
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Bitmap
-//
-
-IDB_BITMAP1             BITMAP                  "JackRussel.bmp"
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// String Table
-//
-
-STRINGTABLE 
-BEGIN
-    IDS_3DFACE              "Button Face"
-    IDS_BUTTONTEXT          "Button Text"
-    IDS_TASKBAREDGENORMAL   "Normal"
-    IDS_TASKBAREDGEFLAT     "Flat"
-    IDS_TASKBAREDGESKINNED  "Skinned"
-    IDS_DESKTOPICONSIZESMALL "Small (16x16)"
-    IDS_DESKTOPICONSIZENORMAL "Normal (32x32)"
-    IDS_CLOCKROTATEFONTNONE "None"
-    IDS_CLOCKROTATEFONTLEFT "Left"
-    IDS_CLOCKROTATEFONTRIGHT "Right"
-    IDS_LIST_TASKNUMBER     "Item #"
-    IDS_LIST_TASKNAME       "Menu Text"
-    IDS_LIST_TASKTARGET     "Target File"
-    IDS_LIST_TASKSWITCHES   "Switches"
-END
-
-STRINGTABLE 
-BEGIN
-    IDS_SHOWCALENDER        "Show Calender"
-    IDS_MOUSECOPY           "Copy To Clipboard"
-    IDS_FORMAT              "Format"
-    IDS_FILE                "File"
-    IDS_BMPFILE             "Bitmap (*.bmp)"
-    IDS_BMPICONFILE         "Bitmap, Icon (*.bmp, *.ico)"
-    IDS_EXEDLLFILE          "Program (*.exe, *.dll, *.icl)"
-    IDS_NOICON              "No icons in this file"
-    IDS_START               "Start"
-    IDS_NOTFOUNDCLOCK       "Failed to customize clock"
-END
-
-STRINGTABLE 
-BEGIN
-    IDS_PROPERTY            "T-Clock Properties"
-    IDS_ADDALARM            "( Add )"
-    IDS_MMFILE              "Multimedia  (*.wav, *.mid,...)"
-    IDS_ALLFILE             "All (*.*)"
-    IDS_PROGRAMFILE         "Program (*.exe)"
-    IDS_NONE                "(none)"
-    IDS_RECYCLE             "Recycle Bin"
-    IDS_OPENBY              "Open with..."
-END
-
-STRINGTABLE 
-BEGIN
-    IDS_COPYTO              "Copy To..."
-    IDS_MOVETO              "Move To..."
-    IDS_LABPROGRAM          "Application"
-    IDS_LABFOLDER           "Folder"
-    IDS_LEFTBUTTON          "Left Button"
-    IDS_RIGHTBUTTONM        "Middle Button"
-    IDS_XBUTTON1            "Button 4"
-    IDS_XBUTTON2            "Button 5"
-    IDS_TIMER               "Timer"
-    IDS_SCREENSAVER         "Screen Saver"
-END
-
-STRINGTABLE 
-BEGIN
-    IDS_FILLCLOCK           "FillClock"
-    IDS_SKINCLOCK           "SkinClock"
-    IDS_FILLTRAY            "FillTray"
-    IDS_SKINTRAY            "SkinTray"
-END
-
-#endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

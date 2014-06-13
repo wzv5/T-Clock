@@ -339,17 +339,16 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 				n /= 10;
 			}
 		} else if(*sp == 'g') {
-			char* p2;
 			p = EraStr;
 			while(*p && *sp == 'g') {
-				p2 = CharNextExA((WORD)codepage, p, 0);
+				char* p2 = CharNextExA((WORD)codepage, p, 0);
 				while(p != p2) *dp++ = *p++;
 				sp++;
 			}
 			while(*sp == 'g') sp++;
 		}
 		
-		else if(*sp == 'L' && _strncmp(sp, "LDATE", 5) == 0) {
+		else if(*sp == 'L' && strncmp(sp, "LDATE", 5) == 0) {
 			char s[80], *p;
 			GetDateFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
 						  DATE_LONGDATE, pt, NULL, s, 80);
@@ -358,7 +357,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			sp += 5;
 		}
 		
-		else if(*sp == 'D' && _strncmp(sp, "DATE", 4) == 0) {
+		else if(*sp == 'D' && strncmp(sp, "DATE", 4) == 0) {
 			char s[80], *p;
 			GetDateFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
 						  DATE_SHORTDATE, pt, NULL, s, 80);
@@ -367,7 +366,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			sp += 4;
 		}
 		
-		else if(*sp == 'T' && _strncmp(sp, "TIME", 4) == 0) {
+		else if(*sp == 'T' && strncmp(sp, "TIME", 4) == 0) {
 			char s[80], *p;
 			GetTimeFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
 						  TIME_FORCE24HOURFORMAT, pt, NULL, s, 80);
@@ -586,7 +585,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			sp +=2;
 		}
 		//==========================================================================
-		else if(*sp == 'D' && _strncmp(sp, "DOY", 3) == 0) { //--+++--> Day-Of-Year:
+		else if(*sp == 'D' && strncmp(sp, "DOY", 3) == 0) { //--+++--> Day-Of-Year:
 			char szDoy[8] = {0};
 			struct tm today;
 			time_t ltime;
@@ -600,7 +599,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			sp +=3;
 		}
 		//==========================================================================
-		else if(*sp == 'P' && _strncmp(sp, "POSIX", 5) == 0) { //-> Posix/Unix Time:
+		else if(*sp == 'P' && strncmp(sp, "POSIX", 5) == 0) { //-> Posix/Unix Time:
 			char szPosix[16] = {0}; // This will Give the Number of Seconds That Have
 			char* posix; //--+++--> Elapsed Since the Unix Epoch: 1970-01-01 00:00:00
 			
@@ -610,7 +609,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			sp +=5;
 		}
 		//==========================================================================
-		else if(*sp == 'T' && _strncmp(sp, "TZN", 3) == 0) { //--++-> TimeZone Name:
+		else if(*sp == 'T' && strncmp(sp, "TZN", 3) == 0) { //--++-> TimeZone Name:
 			char szTZName[TZNAME_MAX] = {0};
 			size_t lRet;
 			char* tzn;

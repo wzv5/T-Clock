@@ -44,8 +44,8 @@ double getElapsedTime(stopWatch* timer)   //------------------------------------
 void OnInit(HWND hDlg, HWND hList)   //-----------------------------------------------------+++-->
 {
 	LVCOLUMN lvCol;
-	
-	SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)g_hIconTClock);
+	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
+	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	
 	hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
 						 LVS_SINGLESEL, 9, 55, 261, 104, hDlg, NULL, 0, 0);

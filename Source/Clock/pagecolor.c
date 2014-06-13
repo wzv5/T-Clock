@@ -134,7 +134,7 @@ void OnInit(HWND hDlg)
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
 	
 	for(i = 72; i <= 74; i++)
-		CBAddString(hDlg, IDC_CLOCKROTATE, (LPARAM)MyString(i));
+		CBAddString(hDlg, IDC_CLOCKROTATE, MyString(i));
 		
 	GetMyRegStr("Clock", "FontRotateDirection", s, 80, MyString(72));
 	if(_strnicmp(s, "LEFT", 4) == 0)
@@ -147,13 +147,13 @@ void OnInit(HWND hDlg)
 		CBSetCurSel(hDlg, IDC_CLOCKROTATE, 0);
 		
 	i = GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY);
-	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"Default (Win2000)");	// DEFAULT_QUALITY			 = 0
-	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"Draft");				// DRAFT_QUALITY			 = 1
-	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"Proof");				// PROOF_QUALITY			 = 2
-	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"NonAntiAliased");		// NONANTIALIASED_QUALITY	 = 3
-	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"AntiAliased (Win7)");	// ANTIALIASED_QUALITY		 = 4
-	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"ClearType (WinXP)");	// CLEARTYPE_QUALITY		 = 5
-	CBAddString(hDlg, IDC_FONTQUAL, (LPARAM)"ClearType Natural");	// CLEARTYPE_NATURAL_QUALITY = 6
+	CBAddString(hDlg, IDC_FONTQUAL, "Default");				// DEFAULT_QUALITY			 = 0
+	CBAddString(hDlg, IDC_FONTQUAL, "Draft");				// DRAFT_QUALITY			 = 1
+	CBAddString(hDlg, IDC_FONTQUAL, "Proof");				// PROOF_QUALITY			 = 2
+	CBAddString(hDlg, IDC_FONTQUAL, "NonAntiAliased");		// NONANTIALIASED_QUALITY	 = 3
+	CBAddString(hDlg, IDC_FONTQUAL, "AntiAliased (Win7)");	// ANTIALIASED_QUALITY		 = 4
+	CBAddString(hDlg, IDC_FONTQUAL, "ClearType (WinXP+)");	// CLEARTYPE_QUALITY		 = 5
+	CBAddString(hDlg, IDC_FONTQUAL, "ClearType Natural");	// CLEARTYPE_NATURAL_QUALITY = 6
 	CBSetCurSel(hDlg, IDC_FONTQUAL, i);
 }
 
@@ -166,7 +166,7 @@ void OnApply(HWND hDlg)
 	char s[80];
 	char ss[1024];
 	
-	dw = (DWORD)(LRESULT)CBGetItemData(hDlg, IDC_COLFORE, CBGetCurSel(hDlg, IDC_COLFORE));
+	dw = (DWORD)CBGetItemData(hDlg, IDC_COLFORE, CBGetCurSel(hDlg, IDC_COLFORE));
 	SetMyRegLong("Clock", "ForeColor", dw);
 	
 	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), s);
@@ -182,12 +182,12 @@ void OnApply(HWND hDlg)
 	
 	SetMyRegLong("Clock", "FontQuality", (DWORD)CBGetCurSel(hDlg, IDC_FONTQUAL));
 	
-	SetMyRegLong("Clock", "ClockHeight", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "ClockWidth", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINCWIDTH,  UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "LineHeight", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "VertPos", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINVPOS,    UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "HorizPos", (DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINHPOS,    UDM_GETPOS, 0, 0));
-	SetMyRegLong("Taskbar","AlphaTaskbar",(DWORD)(LRESULT)SendDlgItemMessage(hDlg, IDC_SPINALPHA,  UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "ClockHeight", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "ClockWidth", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINCWIDTH,  UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "LineHeight", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "VertPos", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINVPOS,    UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "HorizPos", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINHPOS,    UDM_GETPOS, 0, 0));
+	SetMyRegLong("Taskbar","AlphaTaskbar",(DWORD)SendDlgItemMessage(hDlg, IDC_SPINALPHA,  UDM_GETPOS, 0, 0));
 	
 	GetDlgItemText(hDlg, IDC_CLOCKROTATE, ss, 1024);
 	if(_strnicmp(ss, "LEFT", 4) == 0)		  SetMyRegStr("Clock", "FontRotateDirection", "Left");
@@ -305,7 +305,7 @@ void OnChooseColor(HWND hDlg, WORD id)
 	
 	idCombo = id - 1;
 	
-	col = (COLORREF)(LRESULT)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo));
+	col = (COLORREF)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo));
 	if(col & 0x80000000) col = GetSysColor(col & 0x00ffffff);
 	
 	for(i = 0; i < 16; i++) colarray[i] = RGB(255,255,255);
@@ -339,7 +339,6 @@ void OnChooseColor(HWND hDlg, WORD id)
 
 BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf, NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo);
 BOOL CALLBACK EnumSizeProcEx(ENUMLOGFONTEX* pelf, NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo);
-int nFontSizes[] = {4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72};
 int logpixelsy;
 /*------------------------------------------------
    Initialization of "Font" combo box
@@ -372,7 +371,7 @@ void InitComboFont(HWND hDlg)
 	
 	GetMyRegStrEx("Clock", "Font", s, 80, "Arial");
 	
-	i = (int)(LRESULT)CBFindStringExact(hDlg, IDC_FONT, s);
+	i = (int)CBFindStringExact(hDlg, IDC_FONT, s);
 	if(i == LB_ERR) i = 0;
 	CBSetCurSel(hDlg, IDC_FONT, i);
 }
@@ -382,19 +381,18 @@ void InitComboFont(HWND hDlg)
 void SetComboFontSize(HWND hDlg, BOOL bInit)
 {
 	HDC hdc;
-	char s[160];
+	char str[160];
 	DWORD size;
 	LOGFONT lf;
-	int i;
 	
 	//以前のsizeを保存
 	if(bInit) { // WM_INITDIALOGのとき
 		size = GetMyRegLong("Clock", "FontSize", 10);
-		if(size == 0) size = 9;
+		if(size<=0) size = 10;
 	} else { // IDC_FONTが変更されたとき
 		CBGetLBText(hDlg, IDC_FONTSIZE,
-					CBGetCurSel(hDlg, IDC_FONTSIZE), (LPARAM)s);
-		size = atoi(s);
+					CBGetCurSel(hDlg, IDC_FONTSIZE), str);
+		size = atoi(str);
 	}
 	
 	CBResetContent(hDlg, IDC_FONTSIZE);
@@ -402,22 +400,22 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	hdc = GetDC(NULL);
 	logpixelsy = GetDeviceCaps(hdc, LOGPIXELSY);
 	
-	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), (LPARAM)s);
+	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), str);
 	
 	memset(&lf, 0, sizeof(LOGFONT));
-	strcpy(lf.lfFaceName, s);
+	strcpy(lf.lfFaceName, str);
 	lf.lfCharSet = (BYTE)CBGetItemData(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT));
 	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumSizeProcEx,
 					   (LPARAM)GetDlgItem(hDlg, IDC_FONTSIZE), 0);
 					   
 	ReleaseDC(NULL, hdc);
 	
-	// size
-	for(; size > 0; size--) {
-		wsprintf(s, "%d", size);
-		i = (int)(LRESULT)CBFindStringExact(hDlg, IDC_FONTSIZE, s);
-		if(i != LB_ERR) {
-			CBSetCurSel(hDlg, IDC_FONTSIZE, i); return;
+	for(; size; --size) {
+		int pos;
+		wsprintf(str, "%d", size);
+		pos = (int)CBFindStringExact(hDlg, IDC_FONTSIZE, str);
+		if(pos != LB_ERR) {
+			CBSetCurSel(hDlg, IDC_FONTSIZE, pos); return;
 		}
 	}
 	CBSetCurSel(hDlg, IDC_FONTSIZE, 0);
@@ -434,7 +432,7 @@ BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf,
 	   SendMessage((HWND)hCombo, CB_FINDSTRINGEXACT, 0,
 				   (LPARAM)pelf->elfLogFont.lfFaceName) == LB_ERR) {
 		int index;
-		index = (int)(LRESULT)SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)pelf->elfLogFont.lfFaceName);
+		index = (int)SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)pelf->elfLogFont.lfFaceName);
 		if(index >= 0)
 			SendMessage((HWND)hCombo, CB_SETITEMDATA,
 						index, (LPARAM)pelf->elfLogFont.lfCharSet);
@@ -447,30 +445,31 @@ BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf,
 BOOL CALLBACK EnumSizeProcEx(ENUMLOGFONTEX* pelf,
 							 NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo)
 {
-	char s[80];
-	int num, i, count;
+	const unsigned char nFontSizes[] = {4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,36,48,72};
+	char str[8];
+	int i;
 	
 	if((FontType & TRUETYPE_FONTTYPE) ||
 	   !((FontType & TRUETYPE_FONTTYPE) || (FontType & RASTER_FONTTYPE))) {
-		for(i = 0; i < 20; i++) {
-			wsprintf(s, "%d", nFontSizes[i]);
-			SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)s);
+		for(i=0; i<sizeof(nFontSizes); ++i) {
+			wsprintf(str,"%hu",nFontSizes[i]);
+			SendMessage((HWND)hCombo,CB_ADDSTRING,0,(LPARAM)str);
 		}
 		return FALSE;
-	}
-	
-	num = (lpntm->ntmTm.tmHeight - lpntm->ntmTm.tmInternalLeading) * 72 / logpixelsy;
-	count = (int)(LRESULT)SendMessage((HWND)hCombo, CB_GETCOUNT, 0, 0);
-	for(i = 0; i < count; i++) {
-		SendMessage((HWND)hCombo, CB_GETLBTEXT, i, (LPARAM)s);
-		if(num == atoi(s)) return TRUE;
-		else if(num < atoi(s)) {
-			wsprintf(s, "%d", num);
-			SendMessage((HWND)hCombo, CB_INSERTSTRING, i, (LPARAM)s);
-			return TRUE;
+	}else{
+		int num = (lpntm->ntmTm.tmHeight - lpntm->ntmTm.tmInternalLeading) * 72 / logpixelsy;
+		int count = (int)SendMessage((HWND)hCombo, CB_GETCOUNT, 0, 0);
+		for(i = 0; i < count; ++i) {
+			SendMessage((HWND)hCombo, CB_GETLBTEXT, i, (LPARAM)str);
+			if(num == atoi(str)) return TRUE;
+			else if(num < atoi(str)) {
+				wsprintf(str, "%d", num);
+				SendMessage((HWND)hCombo, CB_INSERTSTRING, i, (LPARAM)str);
+				return TRUE;
+			}
 		}
+		wsprintf(str, "%d", num);
+		SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)str);
+		return TRUE;
 	}
-	wsprintf(s, "%d", num);
-	SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)s);
-	return TRUE;
 }

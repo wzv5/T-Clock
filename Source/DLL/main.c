@@ -40,7 +40,7 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 {
 	char classname[80] = {0};
 	HWND hwndBar, hwndChild;
-	HANDLE hThread;
+	DWORD dwThreadId;
 	
 	hwndTClockMain = hwnd;
 	
@@ -52,15 +52,15 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 	}
 	
 	// get thread ID of taskbar (explorer) - Specal thanks to T.Iwata.
-	hThread = (HANDLE)(DWORD_PTR)(DWORD)GetWindowThreadProcessId(hwndBar, NULL);
+	dwThreadId = GetWindowThreadProcessId(hwndBar, NULL);
 	
-	if(!hThread) {
+	if(!dwThreadId) {
 		SendMessage(hwnd, WM_USER+1, 0, 2);
 		return;
 	}
 	
 	// install an hook to thread of taskbar
-	hhook = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CallWndProc, hInstance, (DWORD)(DWORD_PTR)(HANDLE)hThread);
+	hhook = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CallWndProc, hInstance, dwThreadId);
 	if(!hhook) {
 		SendMessage(hwnd, WM_USER+1, 0, 3);
 		return;
@@ -92,17 +92,19 @@ void WINAPI HookEnd(void)   //--------------------------------------------------
 {
 	HWND hwnd;
 	
-	// force the clock to end cunstomizing
+	// force the clock to end customizing
 	if(hwndClock && IsWindow(hwndClock))
-		SendMessage(hwndClock, WM_COMMAND, 102, 0);
+		SendMessage(hwndClock, WM_COMMAND, IDC_EXIT, 0);
 	// uninstall my hook
-	if(hhook != NULL) UnhookWindowsHookEx(hhook);
-	hhook = NULL;
-	
+	if(hhook){
+		UnhookWindowsHookEx(hhook);
+		hhook = NULL;
+	}
 	// refresh the clock
-	if(hwndClock && IsWindow(hwndClock)) PostMessage(hwndClock, WM_TIMER, 0, 0);
+	if(hwndClock && IsWindow(hwndClock)){
+		PostMessage(hwndClock, WM_TIMER, 0, 0);
+	}
 	hwndClock = NULL;
-	
 	// refresh the taskbar
 	hwnd = FindWindow("Shell_TrayWnd", NULL);
 	if(hwnd) {
@@ -113,13 +115,11 @@ void WINAPI HookEnd(void)   //--------------------------------------------------
 //================================================================================================
 //-----------------------------------------------------+++--> SystemTray Clock ShellHook Procedure:
 LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)   //------------------+++-->
-{
-	LPCWPSTRUCT pcwps;
-	char classname[80];
-	
-	pcwps = (LPCWPSTRUCT)lParam;
+{/// @todo : rewrite hooking code (use wrapper exe to hook it)
+	LPCWPSTRUCT pcwps = (LPCWPSTRUCT)lParam;
 	if(nCode >= 0 && pcwps && pcwps->hwnd) { // if this message is sent to the clock
-		if(hwndClock == NULL && oldWndProc == NULL
+		char classname[80];
+		if(!hwndClock && !oldWndProc
 		   && GetClassName(pcwps->hwnd, classname, 80) > 0
 		   && lstrcmpi(classname, "TrayClockWClass") == 0) {
 			InitClock(pcwps->hwnd); // initialize  cf. wndproc.c

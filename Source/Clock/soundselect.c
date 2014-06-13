@@ -7,18 +7,14 @@
 
 void GetMMFileExts(char* dst)
 {
-	char s[1024], *sp, *dp;
-	
-	GetProfileString("mci extensions", NULL, "", s, 1024);
-	
-	sp = s; dp = dst;
-	while(*sp) {
-		if(dp != dst) *dp++ = ';';
-		*dp++ = '*'; *dp++ = '.';
-		while(*sp) *dp++ = *sp++;
-		sp++;
+	char extlist[1024], *ext, *pout;
+	GetProfileString("mci extensions",NULL,"",extlist,1024);
+	for(pout=dst,ext=extlist; *ext; ++ext) {
+		*pout++='*';*pout++='.';
+		while(*ext) *pout++=*ext++;
+		*pout++=';';
 	}
-	*dp = 0;
+	memcpy(pout,"*.pcb",6);
 }
 
 /*------------------------------------------------------------------
@@ -33,18 +29,18 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 	ZeroMemory(&ofn, sizeof(ofn)); // Initialize OPENFILENAME
 	ofn.lStructSize = sizeof(ofn);
 	
-	filter[0] = filter[1] = 0;
+	filter[0] = filter[1] = '\0';
 	str0cat(filter, MyString(IDS_MMFILE));
 	GetMMFileExts(mmfileexts);
 	str0cat(filter, mmfileexts);
 	str0cat(filter, MyString(IDS_ALLFILE));
 	str0cat(filter, "*.*");
 	
-	if(deffile[0] == 0 || IsMMFile(deffile)) ofn.nFilterIndex = 1;
+	if(!*deffile || IsMMFile(deffile)) ofn.nFilterIndex = 1;
 	else ofn.nFilterIndex = 2;
 	
 	strcpy(initdir, g_mydir);
-	if(deffile[0]) {
+	if(*deffile) {
 		WIN32_FIND_DATA fd;
 		HANDLE hfind;
 		hfind = FindFirstFile(deffile, &fd);
@@ -55,7 +51,7 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 		}
 	}
 	
-	fname[0] = 0;
+	*fname = '\0';
 	
 	ofn.hwndOwner = hDlg;
 	ofn.hInstance = NULL;
@@ -72,16 +68,13 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 
 BOOL IsMMFile(const char* fname)
 {
-	char s[1024], *sp;
-	
-	if(lstrcmpi(fname, "cdaudio") == 0) return TRUE;
-	GetProfileString("mci extensions", NULL, "", s, 1024);
-	
-	sp = s;
-	while(*sp) {
-		if(ext_cmp(fname, sp) == 0) return TRUE;
-		if(ext_cmp(fname, "pcb") == 0) return TRUE;
-		while(*sp) sp++; sp++;
+	char extlist[1024], *ext;
+	if(!lstrcmpi(fname,"cdaudio")) return TRUE;
+	if(!ext_cmp(fname,"pcb")) return TRUE;
+	GetProfileString("mci extensions",NULL,"",extlist,sizeof(extlist));
+	for(ext=extlist; *ext; ++ext) {
+		if(!ext_cmp(fname,ext)) return TRUE;
+		while(*++ext);
 	}
 	return FALSE;
 }

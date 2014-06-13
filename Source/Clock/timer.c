@@ -68,7 +68,8 @@ BOOL CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 	
 	switch(message) {
 	case WM_INITDIALOG:
-		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)g_hIconTClock);
+		SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
+		SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 		OnInit(hDlg);
 		SetMyDialgPos(hDlg,21);
 		return TRUE;
@@ -246,8 +247,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 			pts->bActive = GetMyRegLong(subkey, "Active", FALSE);
 		else // The New Timer Dummy Menu Item MUST Always Remain FALSE!
 			pts->bActive = FALSE;
-		index = (int)(LRESULT)CBAddString(hDlg, IDC_TIMERNAME, (LPARAM)pts->name);
-		CBSetItemData(hDlg, IDC_TIMERNAME, index, (LPARAM)pts);
+		index = (int)CBAddString(hDlg, IDC_TIMERNAME, pts->name);
+		CBSetItemData(hDlg, IDC_TIMERNAME, index, pts);
 	}
 	if(count > 0)
 		CBSetCurSel(hDlg, IDC_TIMERNAME, 0);
@@ -264,7 +265,7 @@ void OnDestroy(HWND hDlg)
 {
 	int i, count;
 	
-	count = (int)(LRESULT)CBGetCount(hDlg, IDC_TIMERNAME);
+	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	for(i = 0; i < count; i++) {
 		PTIMERSTRUCT pts;
 		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
@@ -286,7 +287,7 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	// Save Settings as Needed - IF Needed.
 	j = 1; id = -1;
 	
-	count = (int)(LRESULT)CBGetCount(hDlg, IDC_TIMERNAME);
+	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	count -=1; // Skip the Last One Because It's the New Timer Dummy Item
 	
 	for(i = 0; i < count; i++) {
@@ -382,7 +383,7 @@ void OnTimerName(HWND hDlg)   //------------------------------------------------
 	int i, count;
 	
 	GetDlgItemText(hDlg, IDC_TIMERNAME, s, TNY_BUFF);
-	count = (int)(LRESULT)CBGetCount(hDlg, IDC_TIMERNAME);
+	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	for(i = 0; i < count; i++) {
 		PTIMERSTRUCT pts;
 		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
@@ -427,7 +428,7 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 	int i, k, count;
 	
 	GetDlgItemText(hDlg, IDC_TIMERNAME, s, TNY_BUFF);
-	count = (int)(LRESULT)CBGetCount(hDlg, IDC_TIMERNAME);
+	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	for(i = 0; i < count; i++) {
 		PTIMERSTRUCT pts;
 		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
@@ -655,8 +656,8 @@ void OnInitTimeView(HWND hDlg, HWND hList)   //---------------------------------
 {
 	LVCOLUMN lvCol;
 	RECT rc;
-	
-	SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)g_hIconTClock);
+	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
+	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	
 	hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
 						 LVS_SINGLESEL, 0, 0, 261, 104, hDlg, NULL, 0, 0);
@@ -686,13 +687,14 @@ BOOL OnWatchTimer(HWND hDlg, HWND hList)   //-----------------------------------
 	char szStatus[MIN_BUFF] = {0};
 	BOOL bNeeded = FALSE;
 	LVFINDINFO lvFind;
-	int iTc, iTn, iF;
+	int iTc;
 	LVITEM lvItem;
 	
 	iTc = nTimerCount;
 	for(; iTc > 0; --iTc) {
-		iTn = (iTc - 1);
+		int iTn = (iTc - 1);
 		if(pTimersWorking[iTn].bHomeless) {
+			int iF;
 			GetTimerInfo(szStatus, iTn, FALSE);
 			
 			lvFind.flags = LVFI_STRING;
@@ -819,7 +821,8 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 				LPNMLVKEYDOWN nmkey = (LPNMLVKEYDOWN)lParam;
 				switch(nmkey->wVKey) {
 				case VK_DELETE:{
-					char szTimer[GEN_BUFF] = {0};	int i;
+					char szTimer[GEN_BUFF];
+					int i;
 					if((i = ListView_GetNextItem (hList,-1,LVNI_SELECTED)) != -1) {
 						ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
 						RemoveFromWatch(hDlg, hList, szTimer, i);

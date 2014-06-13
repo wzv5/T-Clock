@@ -46,23 +46,14 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "Stoic Joker's Network"
-#ifdef _WIN64
-            VALUE "Comments", "64-Bit SystemTray Clock Utility"
-            VALUE "FileDescription", "SystemTray Clock Utility for Windows x64 Editions"
-            VALUE "InternalName", "T-Clock 2010 x64"
-            VALUE "ProductName", "T-Clock 2010 x64"
-#else
             VALUE "Comments", "SystemTray Clock Utility"
-            VALUE "FileDescription", "SystemTray Clock Utility for Windows x86 Editions"
-            VALUE "InternalName", "T-Clock 2010"
-            VALUE "ProductName", "T-Clock 2010"
-#endif //_WIN64
-            VALUE "FileVersion", "2, 0, 2, 99"
-            VALUE "LegalCopyright", "Stoic Joker's Network  2006 - 2013"
-            VALUE "LegalTrademarks", "Stoic Joker's Network 2000 - 2013"
+            VALUE "CompanyName", "-"
+            VALUE "FileDescription", "T-Clock Redux"
+            VALUE "FileVersion", "2.0.2 #99"
+            VALUE "InternalName", "Clock.exe"
             VALUE "OriginalFilename", "Clock.exe"
-            VALUE "ProductVersion", "2, 0, 2, 99"
+            VALUE "ProductName", "T-Clock Redux"
+            VALUE "ProductVersion", "2.0.2 #99"
         END
     END
     BLOCK "VarFileInfo"

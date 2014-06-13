@@ -99,8 +99,8 @@ void InitLocale(HWND hwnd)
 	{ LANG_CHINESE, LANG_JAPANESE, LANG_KOREAN, 0 };
 	
 	if(hwnd) {
-		int sel = (int)(LRESULT)CBGetCurSel(hwnd, IDC_LOCALE);
-		ilang = (int)(LRESULT)CBGetItemData(hwnd, IDC_LOCALE, sel);
+		int sel = (int)CBGetCurSel(hwnd, IDC_LOCALE);
+		ilang = (int)CBGetItemData(hwnd, IDC_LOCALE, sel);
 	} else {
 		ilang = GetMyRegLong("Format", "Locale", (int)GetUserDefaultLangID());
 	}
@@ -132,9 +132,9 @@ BOOL CALLBACK EnumLocalesProc(LPTSTR lpLocaleString)
 	
 	x = atox(lpLocaleString);
 	if(GetLocaleInfo(x, LOCALE_SLANGUAGE, s, 80) > 0)
-		index = (int)(LRESULT)CBAddString(hwndPage, IDC_LOCALE, (LPARAM)s);
+		index = (int)CBAddString(hwndPage, IDC_LOCALE, s);
 	else
-		index = (int)(LRESULT)CBAddString(hwndPage, IDC_LOCALE, (LPARAM)lpLocaleString);
+		index = (int)CBAddString(hwndPage, IDC_LOCALE, lpLocaleString);
 	CBSetItemData(hwndPage, IDC_LOCALE, index, x);
 	return TRUE;
 }
@@ -170,10 +170,10 @@ void OnInit(HWND hDlg)
 	EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);
 	CBSetCurSel(hDlg, IDC_LOCALE, 0);
 	ilang = GetMyRegLong("Format", "Locale", (int)GetUserDefaultLangID());
-	count = (int)(LRESULT)CBGetCount(hDlg, IDC_LOCALE);
+	count = (int)CBGetCount(hDlg, IDC_LOCALE);
 	for(i = 0; i < count; i++) {
 		int x;
-		x = (int)(LRESULT)CBGetItemData(hDlg, IDC_LOCALE, i);
+		x = (int)CBGetItemData(hDlg, IDC_LOCALE, i);
 		if(x == ilang) {
 			CBSetCurSel(hDlg, IDC_LOCALE, i); break;
 		}
@@ -227,44 +227,44 @@ void OnInit(HWND hDlg)
 	// "AM Symbol" and "PM Symbol"
 	CBResetContent(hDlg, IDC_AMSYMBOL);
 	GetMyRegStr("Format", "AMsymbol", s3, TNY_BUFF, "");
-	if(s3[0]) CBAddString(hDlg, IDC_AMSYMBOL, (LPARAM)s3);
+	if(s3[0]) CBAddString(hDlg, IDC_AMSYMBOL, s3);
 	GetLocaleInfo(ilang, LOCALE_S1159, s2, 10);
 	if(s2[0] && strcmp(s, s2) != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, (LPARAM)s2);
+		CBAddString(hDlg, IDC_AMSYMBOL, s2);
 	if(strcmp(s, "AM") != 0 && strcmp(s2, "AM") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, (LPARAM)"AM");
+		CBAddString(hDlg, IDC_AMSYMBOL, "AM");
 		
 	if(strcmp(s, "am") != 0 && strcmp(s2, "am") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, (LPARAM)"am");
+		CBAddString(hDlg, IDC_AMSYMBOL, "am");
 		
 	if(strcmp(s, "A") != 0 && strcmp(s2, "A") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, (LPARAM)"A");
+		CBAddString(hDlg, IDC_AMSYMBOL, "A");
 		
 	if(strcmp(s, "a") != 0 && strcmp(s2, "a") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, (LPARAM)"a");
+		CBAddString(hDlg, IDC_AMSYMBOL, "a");
 		
 	if(strcmp(s, " ") != 0 && strcmp(s2, " ") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, (LPARAM)" ");
+		CBAddString(hDlg, IDC_AMSYMBOL, " ");
 		
 	CBSetCurSel(hDlg, IDC_AMSYMBOL, 0);
 	
 	CBResetContent(hDlg, IDC_PMSYMBOL);
 	GetMyRegStr("Format", "PMsymbol", s3, 80, "");
-	if(s3[0]) CBAddString(hDlg, IDC_PMSYMBOL, (LPARAM)s3);
+	if(s3[0]) CBAddString(hDlg, IDC_PMSYMBOL, s3);
 	GetLocaleInfo(ilang, LOCALE_S2359, s2, 10);
 	if(s2[0] && strcmp(s, s2) != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, (LPARAM)s2);
+		CBAddString(hDlg, IDC_PMSYMBOL, s2);
 	if(strcmp(s, "PM") != 0 && strcmp(s2, "PM") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, (LPARAM)"PM");
+		CBAddString(hDlg, IDC_PMSYMBOL, "PM");
 		
 	if(strcmp(s, "pm") != 0 && strcmp(s2, "pm") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, (LPARAM)"pm");
+		CBAddString(hDlg, IDC_PMSYMBOL, "pm");
 		
 	if(strcmp(s, "P") != 0 && strcmp(s2, "P") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, (LPARAM)"P");
+		CBAddString(hDlg, IDC_PMSYMBOL, "P");
 		
 	if(strcmp(s, "p") != 0 && strcmp(s2, "p") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, (LPARAM)"p");
+		CBAddString(hDlg, IDC_PMSYMBOL, "p");
 		
 	CBSetCurSel(hDlg, IDC_PMSYMBOL, 0);
 	
@@ -283,7 +283,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	int i;
 	
 	SetMyRegLong("Format", "Locale",
-				 (DWORD)(LRESULT)CBGetItemData(hDlg, IDC_LOCALE, CBGetCurSel(hDlg, IDC_LOCALE)));
+				 (DWORD)CBGetItemData(hDlg, IDC_LOCALE, CBGetCurSel(hDlg, IDC_LOCALE)));
 				 
 	for(i = IDC_YEAR4; i <= IDC_CUSTOM; i++) {
 		SetMyRegLong("Format", ENTRY(i), IsDlgButtonChecked(hDlg, i));

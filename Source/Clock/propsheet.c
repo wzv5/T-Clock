@@ -5,8 +5,6 @@
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "tclock.h"
 
-#define MAX_PAGE  9
-
 void SetMyDialgPos(HWND hwnd,int padding);
 int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam);
 LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -35,45 +33,36 @@ BOOL g_bApplyClear = FALSE;
 //----------------------------//-----------------------+++--> Show the (Tab Dialog) Property Sheet:
 void MyPropertySheet(void)   //-------------------------------------------------------------+++-->
 {
-	PROPSHEETPAGE psp[MAX_PAGE];
+	PROPSHEETPAGE psp[PROPERTY_NUM];
 	PROPSHEETHEADER psh;  int i;
-	DLGPROC PageProc[MAX_PAGE] = { (DLGPROC)PageAboutProc, (DLGPROC)PageAlarmProc,
+	DLGPROC PageProc[PROPERTY_NUM] = { (DLGPROC)PageAboutProc, (DLGPROC)PageAlarmProc,
 								   (DLGPROC)PageColorProc, (DLGPROC)PageFormatProc, (DLGPROC)PageMouseProc,
 								   (DLGPROC)PageQuickyProc, (DLGPROC)PageQuickyMenuProc,
 								   (DLGPROC)PageHotKeyProc, (DLGPROC)PageMiscProc
 								 };
-								 
+	HMODULE hInstance=GetModuleHandle(NULL); 
 	if(g_hwndSheet && IsWindow(g_hwndSheet)) { // IF Already Open...
 		ForceForegroundWindow(g_hwndSheet); // <--+++--> Stick it on Top!
 		return;
 	}
 	
 	// Allocate Clean Memory for Each Page
-	for(i = 0; i < MAX_PAGE; i++) {
+	for(i=0; i<PROPERTY_NUM; ++i) {
 		memset(&psp[i], 0, sizeof(PROPSHEETPAGE));
 		psp[i].dwSize = sizeof(PROPSHEETPAGE);
+		psp[i].hInstance = hInstance;
 		psp[i].pfnDlgProc = PageProc[i];
+		psp[i].pszTemplate = MAKEINTRESOURCE(PROPERTY_BASE+i);
 	}
-	
-	psp[0].pszTemplate = MAKEINTRESOURCE(IDD_PAGEABOUT);		// - PageAboutProc
-	psp[1].pszTemplate = MAKEINTRESOURCE(IDD_PAGEALARM);		// - PageAlarmProc
-	psp[2].pszTemplate = MAKEINTRESOURCE(IDD_PAGECLOCKTEXT);	// - PageColorProc
-	psp[3].pszTemplate = MAKEINTRESOURCE(IDD_PAGEFORMAT);		// - PageFormatProc
-	psp[4].pszTemplate = MAKEINTRESOURCE(IDD_PAGEMOUSE);		// - PageMouseProc
-	psp[5].pszTemplate = MAKEINTRESOURCE(IDD_PAGEQUICKY);		// - PageQuickyProc
-	psp[6].pszTemplate = MAKEINTRESOURCE(IDD_PAGETARGETFILE);	// - PageQuickyMenuProc
-	psp[7].pszTemplate = MAKEINTRESOURCE(IDD_PAGEHOTKEY);		// - PageHotKeyProc
-	psp[8].pszTemplate = MAKEINTRESOURCE(IDD_PAGEMISC);		// - PageMiscProc
-	// Need to Add: Miscellaneous Tab.
 	
 	// set data of property sheet
 	memset(&psh, 0, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.dwFlags = PSH_USEICONID | PSH_PROPSHEETPAGE | PSH_MODELESS | PSH_USECALLBACK;
-	psh.hInstance = GetModuleHandle(NULL);
-	psh.pszIcon = MAKEINTRESOURCE(IDI_ICON1);
-	psh.pszCaption = "T-Clock 2010 Properties";
-	psh.nPages = MAX_PAGE;
+	psh.dwFlags = PSH_USEICONID | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK;
+	psh.hInstance = hInstance;
+	psh.pszIcon = MAKEINTRESOURCE(IDI_MAIN);
+	psh.pszCaption = "T-Clock Redux";
+	psh.nPages = PROPERTY_NUM;
 	psh.nStartPage = startpage;
 	psh.ppsp = psp;
 	psh.pfnCallback = PropSheetProc;
@@ -95,18 +84,8 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 		SetWindowLong(hDlg, GWL_EXSTYLE, style);
 		
 		// subclass the window
-		oldWndProc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(hDlg, GWL_WNDPROC);
-//==================================================================================
-#if defined _M_IX86 //---------------+++--> IF Compiling This as a 32-bit Clock Use:
-		SetWindowLongPtr(hDlg, GWL_WNDPROC, (LONG)(LRESULT)SubclassProc);
-		
-//==================================================================================
-#else //-------------------+++--> ELSE Assume: _M_X64 - IT's a 64-bit Clock and Use:
-		SetWindowLongPtr(hDlg, GWL_WNDPROC, (LONG_PTR)(LRESULT)SubclassProc);
-
-#endif
-//==================================================================================
-//		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)g_hIconTClock);
+		oldWndProc = (WNDPROC)GetWindowLongPtr(hDlg, GWL_WNDPROC);
+		SetWindowLongPtr(hDlg, GWL_WNDPROC, (LONG_PTR)SubclassProc);
 	}
 	return 0;
 }
@@ -216,7 +195,7 @@ BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char*
 	OPENFILENAME ofn;
 	BOOL r;
 	
-	memset(&ofn, '\0', sizeof(OPENFILENAME));
+	memset(&ofn, 0, sizeof(OPENFILENAME));
 	
 	strcpy(initdir, g_mydir);
 	if(deffile[0]) {
@@ -230,7 +209,7 @@ BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char*
 		}
 	}
 	
-	fname[0] = 0;
+	fname[0] = '\0';
 	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = hDlg;
 	ofn.hInstance = GetModuleHandle(NULL);

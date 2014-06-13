@@ -20,7 +20,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 //----------------------------------------+++--> Definition of Data Segment Shared Among Processes:
 #ifndef __GNUC__
 #pragma data_seg(".MYDATA") //--------------------------------------------------------------+++-->
-//char szShareBuf[81] = { 0 }; WTF DOES THIS DO??!!?? 2010
 HWND hwndTClockMain = NULL;
 HWND hwndClock = NULL;
 HHOOK hhook = 0;
@@ -71,7 +70,7 @@ BOOL bRefreshClearTaskbar = FALSE;
 //================================================================================================
 //---------------------------------------------------------+++--> Create Mouse-Over ToolTip Window:
 void CreateTip(HWND hwnd)   //--------------------------------------------------------------+++-->
-{
+{/// @todo : add remove function to cleanup stuff... http://msdn.microsoft.com/en-us/library/windows/desktop/bb760365%28v=vs.85%29.aspx
 //	hwndTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX|TTS_BALLOON,
 	g_Tip = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,hInstance,NULL);
@@ -257,7 +256,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 	case WM_COMMAND:
-		if(LOWORD(wParam) == 102) EndClock();
+		if(LOWORD(wParam) == IDC_EXIT) EndClock();
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
 			BOOL b;
@@ -626,7 +625,7 @@ LRESULT OnCalcRect(HWND hwnd)
 {
 	SYSTEMTIME t;
 	int beat100=0;
-	LRESULT w, h;
+	LRESULT width, height;
 	HDC hdc;
 	TEXTMETRIC tm;
 	char s[1024], *p, *sp;
@@ -643,7 +642,7 @@ LRESULT OnCalcRect(HWND hwnd)
 	GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
 	MakeFormat(s, &t, beat100, format);
 	
-	p = s; w = 0; h = 0;
+	p = s; width = 0; height = 0;
 	hf = tm.tmHeight - tm.tmInternalLeading;
 	while(*p) {
 		sp = p;
@@ -651,20 +650,20 @@ LRESULT OnCalcRect(HWND hwnd)
 		if(*p == 0x0d) { *p = 0; p += 2; }
 		if(GetTextExtentPoint32(hdc, sp, (int)strlen(sp), &sz) == 0)
 			sz.cx = (LONG)strlen(sp) * tm.tmAveCharWidth;
-		if(w < sz.cx) w = sz.cx;
-		h += hf; if(*p) h += 2 + dlineheight;
+		if(width < sz.cx) width = sz.cx;
+		height += hf; if(*p) height += 2 + dlineheight;
 	}
-	w += tm.tmAveCharWidth * 2;
-	if(iClockWidth < 0) iClockWidth = (int)(LRESULT)w;
-	else w = iClockWidth;
-	w += dwidth;
+	width += tm.tmAveCharWidth * 2;
+	if(iClockWidth < 0) iClockWidth = (int)width;
+	else width = iClockWidth;
+	width += dwidth;
 	
-	h += hf / 2 + dheight;
-	if(h < 4) h = 4;
+	height += hf / 2 + dheight;
+	if(height < 4) height = 4;
 	
 	ReleaseDC(hwnd, hdc);
 	
-	return (h << 16) + w;
+	return (height << 16) + width;
 }
 
 void OnTooltipNeedText(UINT code, LPARAM lParam)

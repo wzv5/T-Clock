@@ -2,23 +2,11 @@
   utl.c - KAZUBON 1997-1999
   misc functions
 ---------------------------------------------*/
-
 #include "tcdll.h"
-
 extern HINSTANCE hInstance;
 
 char g_bIniSetting = 0;
 char g_inifile[MAX_PATH];
-///* @todo : why do we use this? faster???
-int _strncmp(const char* str1, const char* str2, size_t num)
-{
-	const char* end=str1+num;
-	for(; str1<end; ++str1,++str2) {
-		if(*str1!=*str2) return (*str1-*str2);
-		if(!*str1) break;
-	}
-	return 0;
-}// */
 
 /*-------------------------------------------
 	パス名にファイル名をつける
@@ -152,7 +140,6 @@ int GetMyRegStr(const char* section, const char* entry, char* val, int len, cons
 	HKEY hkey;
 	DWORD regtype;
 	DWORD size;
-	BOOL b;
 	int r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
@@ -172,7 +159,7 @@ int GetMyRegStr(const char* section, const char* entry, char* val, int len, cons
 									len,
 									g_inifile);
 	} else {
-		b = FALSE;
+		BOOL b = FALSE;
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			size = len;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
@@ -199,7 +186,6 @@ int GetMyRegStrEx(const char* section, const char* entry, char* val, int len,
 	HKEY hkey;
 	DWORD regtype;
 	DWORD size;
-	BOOL b;
 	int r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
@@ -218,7 +204,7 @@ int GetMyRegStrEx(const char* section, const char* entry, char* val, int len,
 		if(r == len)
 			SetMyRegStr(section, entry, defval);
 	} else {
-		b = FALSE;
+		BOOL b = FALSE;
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			size = len;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
@@ -345,7 +331,6 @@ COLORREF GetMyRegColor(const char* section, const char* entry, COLORREF defval)
 	HKEY hkey;
 	DWORD regtype;
 	DWORD size;
-	BOOL b;
 	LONG r=0;
 	
 	if(g_bIniSetting) key[0] = 0;
@@ -361,7 +346,7 @@ COLORREF GetMyRegColor(const char* section, const char* entry, COLORREF defval)
 	if(g_bIniSetting) {
 		r = GetPrivateProfileInt(key, entry, defval, g_inifile);
 	} else {
-		b = FALSE;
+		BOOL b = FALSE;
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
 			size = 4;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype,
