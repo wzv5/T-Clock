@@ -5,9 +5,7 @@
 //------------------------------------------------------------------------------
 /* Modified by Stoic Joker: Sunday, 03/14/2010 @ 10:48:18AM */
 
-static void OnInit(HWND hDlg);
 void DisableTabControls(HWND);
-static void OnApply(HWND hDlg);
 void BrowseForTargetFile(HWND);
 void DeleteMenuItem(HWND, char*);
 void SaveNewMenuOptions(HWND, char*, char*, char*, char*);
@@ -17,11 +15,10 @@ void SaveNewMenuOptions(HWND, char*, char*, char*, char*);
 //-----------------------------------+++--> Dialog Procedure for Menu Item Details Dialog Messages:
 BOOL CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-++-->
 {
+	(void)lParam;
 	switch(message) {
 	case WM_INITDIALOG:
-		OnInit(hDlg);
 		return TRUE;
-		
 	case WM_COMMAND: {
 			WORD id = LOWORD(wParam);
 			
@@ -56,27 +53,15 @@ BOOL CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		}
 		
 	case WM_NOTIFY:
-		if(((NMHDR*)lParam)->code == PSN_APPLY) {
-			OnApply(hDlg);
-		} return TRUE;
-		
+//		if(((NMHDR*)lParam)->code == PSN_APPLY) {
+//			OnApply(hDlg);
+//		}
+		return TRUE;
 	case WM_DESTROY:
 		DestroyWindow(hDlg);
 		break;
 	}
 	return FALSE;
-}
-/*--------------------------------------------------
-  initialize --------------------- IS NOT USED HERE!
---------------------------------------------------*/
-static void OnInit(HWND hDlg)
-{
-}
-/*--------------------------------------------------
-  "Apply" button ----------------- IS NOT USED HERE!
---------------------------------------------------*/
-void OnApply(HWND hDlg)
-{
 }
 /*-------------------------------------------------
 Disable & Clear ALL Menu Item Details Tab Controls.

@@ -337,8 +337,8 @@ void OnChooseColor(HWND hDlg, WORD id)
 	SendPSChanged(hDlg);
 }
 
-BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf, NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo);
-BOOL CALLBACK EnumSizeProcEx(ENUMLOGFONTEX* pelf, NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo);
+int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam);
+int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam);
 int logpixelsy;
 /*------------------------------------------------
    Initialization of "Font" combo box
@@ -357,7 +357,7 @@ void InitComboFont(HWND hDlg)
 	memset(&lf, 0, sizeof(LOGFONT));
 	hcombo = GetDlgItem(hDlg, IDC_FONT);
 	
-	lf.lfCharSet = GetTextCharset(hdc);  // MS UI Gothic, ...
+	lf.lfCharSet = (BYTE)GetTextCharset(hdc);  // MS UI Gothic, ...
 	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
 	
 	lf.lfCharSet = OEM_CHARSET;   // Small Fonts, Terminal...
@@ -405,7 +405,7 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	memset(&lf, 0, sizeof(LOGFONT));
 	strcpy(lf.lfFaceName, str);
 	lf.lfCharSet = (BYTE)CBGetItemData(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT));
-	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumSizeProcEx,
+	EnumFontFamiliesEx(hdc, &lf, EnumSizeProcEx,
 					   (LPARAM)GetDlgItem(hDlg, IDC_FONTSIZE), 0);
 					   
 	ReleaseDC(NULL, hdc);
@@ -425,51 +425,48 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
   Callback function for enumerating fonts.
   To set a font name in the combo box.
 --------------------------------------------------*/
-BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf,
-								NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo)
+int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
-	if(pelf->elfLogFont.lfFaceName[0] != '@' &&
-	   SendMessage((HWND)hCombo, CB_FINDSTRINGEXACT, 0,
-				   (LPARAM)pelf->elfLogFont.lfFaceName) == LB_ERR) {
-		int index;
-		index = (int)SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)pelf->elfLogFont.lfFaceName);
+	(void)lpntme; (void)FontType;
+	if(lpelfe->lfFaceName[0]!='@' && SendMessage((HWND)lParam, CB_FINDSTRINGEXACT, 0, (LPARAM)lpelfe->lfFaceName)==LB_ERR) {
+		int index = (int)SendMessage((HWND)lParam, CB_ADDSTRING, 0, (LPARAM)lpelfe->lfFaceName);
 		if(index >= 0)
-			SendMessage((HWND)hCombo, CB_SETITEMDATA,
-						index, (LPARAM)pelf->elfLogFont.lfCharSet);
+			SendMessage((HWND)lParam, CB_SETITEMDATA, index, lpelfe->lfCharSet);
 	}
 	return 1;
 }
 
 /*------------------------------------------------
 --------------------------------------------------*/
-BOOL CALLBACK EnumSizeProcEx(ENUMLOGFONTEX* pelf,
-							 NEWTEXTMETRICEX* lpntm, int FontType, LPARAM hCombo)
+int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
 	const unsigned char nFontSizes[] = {4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,36,48,72};
 	char str[8];
 	int i;
 	
+	(void)lpelfe;
+	
 	if((FontType & TRUETYPE_FONTTYPE) ||
 	   !((FontType & TRUETYPE_FONTTYPE) || (FontType & RASTER_FONTTYPE))) {
 		for(i=0; i<sizeof(nFontSizes); ++i) {
 			wsprintf(str,"%hu",nFontSizes[i]);
-			SendMessage((HWND)hCombo,CB_ADDSTRING,0,(LPARAM)str);
+			SendMessage((HWND)lParam,CB_ADDSTRING,0,(LPARAM)str);
 		}
 		return FALSE;
 	}else{
-		int num = (lpntm->ntmTm.tmHeight - lpntm->ntmTm.tmInternalLeading) * 72 / logpixelsy;
-		int count = (int)SendMessage((HWND)hCombo, CB_GETCOUNT, 0, 0);
+		int num = (lpntme->tmHeight - lpntme->tmInternalLeading) * 72 / logpixelsy;
+		int count = (int)SendMessage((HWND)lParam, CB_GETCOUNT, 0, 0);
 		for(i = 0; i < count; ++i) {
-			SendMessage((HWND)hCombo, CB_GETLBTEXT, i, (LPARAM)str);
+			SendMessage((HWND)lParam, CB_GETLBTEXT, i, (LPARAM)str);
 			if(num == atoi(str)) return TRUE;
 			else if(num < atoi(str)) {
 				wsprintf(str, "%d", num);
-				SendMessage((HWND)hCombo, CB_INSERTSTRING, i, (LPARAM)str);
+				SendMessage((HWND)lParam, CB_INSERTSTRING, i, (LPARAM)str);
 				return TRUE;
 			}
 		}
 		wsprintf(str, "%d", num);
-		SendMessage((HWND)hCombo, CB_ADDSTRING, 0, (LPARAM)str);
+		SendMessage((HWND)lParam, CB_ADDSTRING, 0, (LPARAM)str);
 		return TRUE;
 	}
 }

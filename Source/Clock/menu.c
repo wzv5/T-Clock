@@ -19,6 +19,8 @@ void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 	BOOL g_bQMNet;
 	HMENU hMenu;
 	
+	(void)hwndClicked;
+	
 	g_bQMDisplay = GetMyRegLong("QuickyMenu", "DisplayProperties", TRUE);
 	g_bQMExitWin = GetMyRegLong("QuickyMenu", "ExitWindows",       TRUE);
 	g_bQMLaunch  = GetMyRegLong("QuickyMenu", "QuickyMenu",        TRUE);
@@ -87,7 +89,7 @@ void ToggleDesk()   //----------------------------------------------------------
 }
 //================================================================================================
 //-----------------------------------------------------+++--> T-Clock Menu Command Message Handler:
-void OnTClockCommand(HWND hwnd, WORD wID, WORD wCode)   //----------------------------------+++-->
+void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------+++-->
 {
 	switch(wID) {
 	case IDC_REFRESHTCLOCK: //-----+++--> RePaint & Size the T-Clock Display Window
@@ -194,18 +196,15 @@ void OnTClockCommand(HWND hwnd, WORD wID, WORD wCode)   //----------------------
 		SHEmptyRecycleBin(0, NULL, SHERB_NOCONFIRMATION);
 		return;
 //-----------------------//--------------------------------------------+++-->
-	case IDCM_SW_START: //-> These Messages are Bounced From the Command Line
-		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDOK, 0); //-+> Through Here
+	case IDCB_SW_START: //-> These Messages are Bounced From the Command Line
+		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_START, 0); //-+> Through Here
 		return; //-+-> Then to the StopWatch Window - IF/When it is/Gets Opened
-		
-	case IDCB_SW_RESET:
-		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_RESET, 0);
-		return;
-		
 	case IDCB_SW_STOP:
 		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_STOP, 0);
 		return;
-		
+	case IDCB_SW_RESET:
+		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_RESET, 0);
+		return;
 	case IDCB_SW_LAP:
 		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_LAP, 0);
 		return; //------------------------+++--> End of Bounce Through Messages
@@ -226,11 +225,11 @@ void OnTClockCommand(HWND hwnd, WORD wID, WORD wCode)   //----------------------
 		return;
 		
 	case IDC_TIMER: // Timer
-		DialogTimer(hwnd);
+		DialogTimer();
 		return;
 		
 	case IDM_STOPWATCH:
-		DialogStopWatch(hwnd);
+		DialogStopWatch();
 		
 	case IDC_MINALL:
 	case IDC_DATETIME:
@@ -264,7 +263,7 @@ void OnTClockCommand(HWND hwnd, WORD wID, WORD wCode)   //----------------------
 	}
 	
 	if((IDC_STOPTIMER <= wID && wID < IDC_STOPTIMER + MAX_TIMER)) {
-		StopTimer(hwnd, wID - IDC_STOPTIMER); //-+-> Stop Timer X!
+		StopTimer(wID - IDC_STOPTIMER); //-+-> Stop Timer X!
 	}
 	return;
 }

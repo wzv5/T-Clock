@@ -547,7 +547,7 @@ BOOL IsXPStyle()
 	if(_strnicmp(temp, "1", 1) == 0) return TRUE;
 	else return FALSE;
 }
-
+/*
 void Pause(HWND hWnd, LPCTSTR pszArgs)
 {
 	LONG lInterval = atoi(pszArgs);
@@ -562,4 +562,4 @@ void Pause(HWND hWnd, LPCTSTR pszArgs)
 			}
 		}
 	}
-}
+}// */

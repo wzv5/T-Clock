@@ -9,7 +9,6 @@ char szMessage[MAX_BUFF]; // Window Text
 char szSettings[TNY_BUFF]; // Hop Settings
 
 static RECT rcMsg;
-static HWND hWndBoing;
 static void OnOK(HWND hDlg);
 static void OnInit(HWND hDlg);
 static void BounceWindow(HWND hWndBoing);
@@ -46,7 +45,7 @@ void OnMsgWindOpt(HWND hDlg)  //---------------------------------------------+++
 // -------------------------------------------+++--> Alarm Message Dialog Procedure:
 BOOL CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-
+	(void)lParam;
 	switch(message) {
 	case WM_INITDIALOG:
 		OnInit(hDlg);
@@ -223,6 +222,8 @@ void ParseSettings(char* szString, int* iBnc, int* iSkw, //--------//--------+++
 //------------------------------------------+++--> Ricochet Doggie Window Procedure:
 VOID CALLBACK DoggieProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)   //
 {
+	static HWND hWndBoing=0;
+	(void)hWnd; (void)uMsg; (void)idEvent; (void)dwTime;
 	iPause += iSpeed;
 	
 	if(iPause >= (iBounce * 1000)) { // Check for Sit! Command.

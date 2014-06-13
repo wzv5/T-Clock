@@ -50,10 +50,10 @@ BOOL CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 //=========================================================================================*
 // ------------------------------------------------------------- Open Add/Edit Timers Dialog
 //===========================================================================================*
-void DialogTimer(HWND hwnd)
+void DialogTimer()
 {
-	if(g_hDlgTimer && IsWindow(g_hDlgTimer));
-	else g_hDlgTimer = CreateDialog(0, MAKEINTRESOURCE(IDD_TIMER), NULL, (DLGPROC)DlgProcTimer);
+	if(!g_hDlgTimer || !IsWindow(g_hDlgTimer))
+		g_hDlgTimer=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMER),NULL,(DLGPROC)DlgProcTimer);
 	ForceForegroundWindow(g_hDlgTimer);
 }
 //==============================================================================*
@@ -355,12 +355,12 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	SetMyRegLong(subkey, "Active",  TRUE);
 	
 	// start timer
-	temp = pTimersWorking;
+	temp=pTimersWorking;
 	pTimersWorking = (PTIMERSTRUCT2)malloc(sizeof(TIMERSTRUCT2)*(nTimerCount + 1));
 	for(i = 0; i < nTimerCount; i++) {
 		pTimersWorking[i] = temp[i];
 	}
-	if(temp) free(temp);
+	free(temp);
 	
 	iTimer = seconds;
 	iTimer += minutes * 60;
@@ -434,9 +434,9 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
 		if(strcmp(s, pts->name) == 0) {
 			//--+++--> Stop Timer on KiLL: Suggested by ewemoa @ DonationCoder.com
-			for(k = 0; k < nTimerCount; k++) {
+			for(k = 0; k < nTimerCount; ++k) {
 				if(strcmp(s, pTimersWorking[k].name) == 0) {
-					StopTimer(hDlg, k);
+					StopTimer(k);
 					MessageBox(hDlg, s, "Timer Stopped!", MB_OK|MB_ICONINFORMATION);
 				}
 			}
@@ -493,7 +493,7 @@ void OnTest(HWND hDlg, WORD id)   //--------------------------------------------
 }
 //================================================================================================
 //------+++--> Called When Main Window Receives WM_TIMER - Sound the Alarm if Clock has Run Out...:
-void OnTimerTimer(HWND hwnd, SYSTEMTIME* st)   //-------------------------------------------+++-->
+void OnTimerTimer(HWND hwnd)   //-------------------------------------------+++-->
 {
 	DWORD tick;
 	int i;
@@ -501,13 +501,12 @@ void OnTimerTimer(HWND hwnd, SYSTEMTIME* st)   //-------------------------------
 	if(nTimerCount == 0) return;
 	
 	tick = GetTickCount();
-	for(i = 0; i < nTimerCount; i++) {
-		DWORD seconds;
-		seconds = (tick - pTimersWorking[i].tickonstart) / 1000;
+	for(i = 0; i < nTimerCount; ++i) {
+		DWORD seconds = (tick - pTimersWorking[i].tickonstart) / 1000;
 		if(seconds >= pTimersWorking[i].seconds) {
 			Ring(hwnd, pTimersWorking[i].id);
-			StopTimer(hwnd, i);
-			i--;
+			StopTimer(i);
+			--i;
 		}
 	}
 }
@@ -535,7 +534,7 @@ void Ring(HWND hwnd, int id)   //-----------------------------------------------
 //---------------------//---------------------------------------------------+++--> Clear All Timer:
 void EndTimer(void)   //--------------------------------------------------------------------+++-->
 {
-	if(pTimersWorking) free(pTimersWorking);
+	free(pTimersWorking),pTimersWorking=NULL;
 	nTimerCount = 0;
 }
 //================================================================================================
@@ -568,22 +567,24 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------
 }
 //================================================================================================
 //---------------------------------------//--------------------+++--> Free Memory to Clear a Timer:
-void StopTimer(HWND hwnd, int tostop)   //--------------------------------------------------+++-->
+void StopTimer(int tostop)   //--------------------------------------------------+++-->
 {
-	PTIMERSTRUCT2 temp;
-	if(tostop >= nTimerCount) return;
-	
-	temp = pTimersWorking;
+	PTIMERSTRUCT2 temp=pTimersWorking;
+	if(tostop >= nTimerCount)
+		return;
 	if(nTimerCount > 1) {
 		int i, j;
-		pTimersWorking = (PTIMERSTRUCT2)malloc(sizeof(TIMERSTRUCT2)*(nTimerCount - 1));
+		pTimersWorking = (PTIMERSTRUCT2)malloc(sizeof(TIMERSTRUCT2)*(nTimerCount-1));
 		
-		for(i = 0, j = 0; i < nTimerCount; i++) {
-			if(tostop != i) pTimersWorking[j++] = temp[i];
+		for(i=0,j=0; i<nTimerCount; ++i) {
+			if(tostop != i)
+				pTimersWorking[j++] = temp[i];
 		}
-	} else pTimersWorking = NULL;
-	if(temp) free(temp);
-	nTimerCount--;
+	}else{
+		pTimersWorking=NULL;
+	}
+	free(temp);
+	--nTimerCount;
 }
 //================================================================================================
 //-------------------------------------+++--> Spoof Control Message to Force Update of Nexe Window:
@@ -614,7 +615,7 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 	for(i = 0; i < nTimerCount; i++) {
 	
 		if(strcmp(s, pTimersWorking[i].name) == 0) {
-			StopTimer(hWnd, i);
+			StopTimer(i);
 			MessageBox(hWnd, s, "Timer Stopped!", MB_OK|MB_ICONINFORMATION);
 			
 			for(i = 0; i < count; i++) {
@@ -663,6 +664,7 @@ void OnInitTimeView(HWND hDlg, HWND hList)   //---------------------------------
 						 LVS_SINGLESEL, 0, 0, 261, 104, hDlg, NULL, 0, 0);
 						 
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+	SetWindowTheme(hList,L"Explorer",NULL);
 	
 	lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvCol.cx = 125;		 // Column Width
@@ -682,7 +684,7 @@ void OnInitTimeView(HWND hDlg, HWND hList)   //---------------------------------
 }
 //================================================================================================
 //-------------------------------------+++--> Gather Status Info About the Timers User is Watching:
-BOOL OnWatchTimer(HWND hDlg, HWND hList)   //-----------------------------------------------+++-->
+BOOL OnWatchTimer(HWND hList)   //-----------------------------------------------+++-->
 {
 	char szStatus[MIN_BUFF] = {0};
 	BOOL bNeeded = FALSE;
@@ -761,7 +763,7 @@ void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 						SetMyRegLong(subkey, "Active", FALSE);
 						pTimersWorking[i].bHomeless = FALSE;
 						ListView_DeleteItem(hList, iLx);
-						StopTimer(hWnd, i); // Does Not Reset Active Flag!
+						StopTimer(i); // Does Not Reset Active Flag!
 						return; // The End...
 					}
 				}
@@ -799,7 +801,7 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 		return TRUE; //-------------------------------+++--> END of Case WM_INITDOALOG
 //================//================================================================
 	case WM_TIMER:
-		if(!OnWatchTimer(hDlg, hList)) { // When the Last Monitored Timer
+		if(!OnWatchTimer(hList)) { // When the Last Monitored Timer
 			KillTimer(hDlg, 3);			 // Expires, Close the Now UnNeeded
 			EndDialog(hDlg, TRUE);		 // Timer Watch/View Dialog Window.
 			g_hDlgTimerWatch = NULL;
@@ -839,9 +841,8 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 // ------------------//---------------------------------------------+++--> Open Timer Watch Dialog:
 void WatchTimer()   //----------------------------------------------------------------------+++-->
 {
-	if(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch)) {
-		ForceForegroundWindow(g_hDlgTimerWatch);
-	} else {
-		g_hDlgTimerWatch = CreateDialog(0, MAKEINTRESOURCE(IDD_TIMERVIEW), NULL, (DLGPROC)DlgTimerViewProc);
+	if(!g_hDlgTimerWatch || !IsWindow(g_hDlgTimerWatch)) {
+		g_hDlgTimerWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMERVIEW),NULL,(DLGPROC)DlgTimerViewProc);
 	}
+	ForceForegroundWindow(g_hDlgTimerWatch);
 }

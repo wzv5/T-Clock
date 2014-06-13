@@ -316,13 +316,13 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 		// internet time
 		else if(*sp == '@' && *(sp + 1) == '@' && *(sp + 2) == '@') {
 			*dp++ = '@';
-			*dp++ = beat100 / 10000 + '0';
-			*dp++ = (beat100 % 10000) / 1000 + '0';
-			*dp++ = (beat100 % 1000) / 100 + '0';
+			*dp++ = (char)(beat100 / 10000) + '0';
+			*dp++ = (char)((beat100 % 10000) / 1000) + '0';
+			*dp++ = (char)((beat100 % 1000) / 100) + '0';
 			sp += 3;
 			if(*sp == '.' && *(sp + 1) == '@') {
 				*dp++ = '.';
-				*dp++ = (beat100 % 100) / 10 + '0';
+				*dp++ = (char)((beat100 % 100) / 10) + '0';
 				sp += 2;
 			}
 		}
@@ -334,7 +334,7 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 				n = 1; while(n < AltYear) n *= 10;
 			}
 			for(;;) {
-				*dp++ = (AltYear % n) / (n/10) + '0';
+				*dp++ = (char)((AltYear % n) / (n/10)) + '0';
 				if(n == 10) break;
 				n /= 10;
 			}

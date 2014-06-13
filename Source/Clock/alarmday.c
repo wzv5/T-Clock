@@ -26,6 +26,7 @@ int SetAlarmDay(HWND hDlg, int n)
 //===================================================*
 BOOL CALLBACK AlarmDayProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	(void)lParam;
 	switch(message) {
 	case WM_INITDIALOG:
 		OnInit(hDlg);

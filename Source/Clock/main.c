@@ -27,9 +27,9 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 const char g_szClassName[] = "TClockMainClass"; // window class name
 const char g_szWindowText[] = "TClock";        // caption of the window
 
-void CheckCommandLine(HWND, BOOL);
+void CheckCommandLine(HWND hwnd,const char* cmdline,int other);
 static void OnTimerMain(HWND hwnd);
-void FindTrayServer(HWND hwnd);
+void FindTrayServer();
 static void InitError(int n);
 static BOOL CheckTCDLL(void);
 static BOOL CheckDLL(char* fname);
@@ -93,12 +93,15 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 
 //================================================================================================
 //--------------------------------------------------==-+++--> Entry Point of Program Using WinMain:
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	BOOL SessionReged = FALSE; // IS Session Registered to Receive Session Change Notifications?
 	WNDCLASS wndclass;
 	HWND hwnd;
 	MSG msg;
+	
+	(void)hPrevInstance;
+	(void)nCmdShow;
 	
 	// Make Sure We're Running Windows 2000 or Newer!
 	if(!CheckSystemVersion()) {
@@ -116,7 +119,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	hwnd = FindWindow(g_szClassName, g_szWindowText);
 	FindTrayServer(hwnd);
 	if(hwnd) { // This One Sends Commands to the Instance
-		CheckCommandLine(hwnd, TRUE); // That is Currently Running.
+		CheckCommandLine(hwnd,lpCmdLine,1); // That is Currently Running.
 		ExitProcess(0);
 	}
 	
@@ -154,7 +157,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	hwnd = CreateWindowEx(WS_EX_TOOLWINDOW, g_szClassName, g_szWindowText,
 						  0, 0, 0, 0, 0, NULL, NULL, hInstance, NULL);
 						  
-	CheckCommandLine(hwnd, FALSE); // This Checks for First Instance Startup Options
+	CheckCommandLine(hwnd,lpCmdLine,0); // This Checks for First Instance Startup Options
 	g_hWnd = hwnd; // Main Window Anchor for HotKeys Only!
 	
 	GetHotKeyInfo(hwnd);
@@ -168,9 +171,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	}
 	
 	while(GetMessage(&msg, NULL, 0, 0)) {
-		if(g_hwndSheet && IsWindow(g_hwndSheet) && IsDialogMessage(g_hwndSheet, &msg));
-		else if(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer, &msg));
-		else {
+		if( !(g_hwndSheet && IsWindow(g_hwndSheet) && IsDialogMessage(g_hwndSheet,&msg)) &&
+			!(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg)) &&
+			!(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg)) &&
+			!(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogMessage(g_hDlgStopWatch,&msg))
+			){
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
@@ -185,7 +190,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 	
 	if((SessionReged) || (bMonOffOnLock)) UnregisterSession(hwnd);
 	
-	ExitProcess(msg.wParam);
+	ExitProcess((UINT)msg.wParam);
 }
 //========================================================================================
 //   /exit	: Exit T-Clock 2010
@@ -197,11 +202,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLin
 //   /lap		: Record a (the current) Lap Time
 //================================================================================================
 //---------------------------------------------//---------------+++--> T-Clock Command Line Option:
-void CheckCommandLine(HWND hwnd, BOOL b2nd)   //--------------------------------------------+++-->
+void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //--------------------------------------------+++-->
 {
-	char* p;
-	
-	p = GetCommandLine();
+	const char* p=cmdline;
 	while(*p) {
 		if(*p == '/') {
 			p++;
@@ -214,7 +217,7 @@ void CheckCommandLine(HWND hwnd, BOOL b2nd)   //--------------------------------
 			} else if(_strnicmp(p, "Start", 5) == 0) {
 				if(!IsWindow(g_hDlgStopWatch))
 					PostMessage(hwnd, WM_COMMAND, IDM_STOPWATCH, 0);
-				SendMessage(hwnd, WM_COMMAND, IDCM_SW_START, 0);
+				SendMessage(hwnd, WM_COMMAND, IDCB_SW_START, 0);
 				p += 5;
 			} else if(_strnicmp(p, "Stop", 4) == 0) {
 				SendMessage(hwnd, WM_COMMAND, IDCB_SW_STOP, 0);
@@ -229,7 +232,7 @@ void CheckCommandLine(HWND hwnd, BOOL b2nd)   //--------------------------------
 				NetTimeConfigDialog();
 				p += 7;
 			} else if(_strnicmp(p, "Sync", 4) == 0) {
-				if(!b2nd) {
+				if(!other) {
 					MessageBox(0,
 							   TEXT("T-Clock Must be Running for Time Synchronization to Succeed\n"
 									"T-Clock Can Not be Started With the /Sync Switch"),
@@ -390,7 +393,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		
 		// context menu
 	case WM_COMMAND:
-		OnTClockCommand(hwnd, LOWORD(wParam), HIWORD(wParam)); // menu.c
+		OnTClockCommand(hwnd, LOWORD(wParam)); // menu.c
 		return 0;
 		
 		// messages transfered from the dll
@@ -463,7 +466,7 @@ void OnTimerMain(HWND hwnd)   //------------------------------------------------
 	else daySaved = st.wDay;
 	
 	if(b) OnTimerAlarm(hwnd, &st); // alarm.c
-	OnTimerTimer(hwnd, &st); // timer.c
+	OnTimerTimer(hwnd); // timer.c
 	if(b) SetDesktopIconTextBk();
 	
 	// the clock window exists ?
@@ -608,8 +611,8 @@ void RefreshUs(void)   //-------------------------------------------------------
 }
 //================================================================================================
 //-----------------------+++--> Go Find the Default Windows Clock Window - So We Can Assimilate it:
-void FindTrayServer(HWND hwnd)   //---------------------------------------------------------+++-->
+void FindTrayServer()   //---------------------------------------------------------+++-->
 {
-	HWND  hwndTrayServer = FindWindow("Shell_TrayWnd", "CTrayServer");
+	HWND hwndTrayServer = FindWindow("Shell_TrayWnd", "CTrayServer");
 	if(hwndTrayServer > 0) SendMessage(hwndTrayServer, WM_CLOSE, 0, 0);
 }

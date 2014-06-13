@@ -6,7 +6,7 @@
 
 void EndClock(void);
 void OnTimer(HWND hwnd);
-void ReadData(HWND hwnd);
+void ReadData();
 void InitClock(HWND hwnd);
 void CreateClockDC(HWND hwnd);
 LRESULT OnCalcRect(HWND hwnd);
@@ -108,7 +108,7 @@ void InitClock(HWND hWnd)   //--------------------------------------------------
 	hwndClock = hWnd;
 	PostMessage(hwndTClockMain, WM_USER, 0, (LPARAM)hwndClock);
 	
-	ReadData(hwndClock); //-+-> Get Configuration Information From Registry
+	ReadData(); //-+-> Get Configuration Information From Registry
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
 	oldWndProc = (WNDPROC)GetWindowLongPtr(hwndClock, GWL_WNDPROC);
@@ -260,7 +260,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
 			BOOL b;
-			ReadData(hwnd);
+			ReadData();
 			CreateClockDC(hwnd);
 			b = GetMyRegLong(NULL, "DropFiles", FALSE);
 			DragAcceptFiles(hwnd, b);
@@ -303,7 +303,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 }
 //================================================================================================
 //---------------------------------+++--> Retreive T-Clock Configuration Information From Registry:
-void ReadData(HWND hwnd)   //---------------------------------------------------------------+++-->
+void ReadData()   //---------------------------------------------------------------+++-->
 {
 	char FontRotateDirection[1024] = {0};
 	char fontname[80] = {0};
@@ -341,7 +341,7 @@ void ReadData(HWND hwnd)   //---------------------------------------------------
 	dhpos = (int)(short)GetMyRegLong("Clock", "HorizPos", 0);
 	dvpos = (int)(short)GetMyRegLong("Clock", "VertPos", 0);
 	
-	bNoClock = GetMyRegLong("Clock", "NoClockCustomize", FALSE);
+	bNoClock = (char)GetMyRegLong("Clock", "NoClockCustomize", FALSE);
 	
 	if(!GetMyRegStr("Format", "Format", format, 1024, "") || !format[0]) {
 		bNoClock = TRUE;
@@ -353,8 +353,8 @@ void ReadData(HWND hwnd)   //---------------------------------------------------
 	if(!bTimer) SetTimer(hwndClock, 1, 1000, NULL);
 	bTimer = TRUE;
 	
-	bHour12 = GetMyRegLong("Format", "Hour12", FALSE);
-	bHourZero = GetMyRegLong("Format", "HourZero", 0);
+	bHour12 = (char)GetMyRegLong("Format", "Hour12", FALSE);
+	bHourZero = (char)GetMyRegLong("Format", "HourZero", 0);
 	
 	GetLocalTime(&lt);
 	LastTime.wDay = lt.wDay;
@@ -694,8 +694,8 @@ void OnCopy(HWND hwnd, LPARAM lParam)
 	int beat100;
 	
 	GetDisplayTime(&t, &beat100);
-	entry[0]='0'+LOWORD(lParam);
-	entry[1]='0'+HIWORD(lParam);
+	entry[0]='0'+(char)LOWORD(lParam);
+	entry[1]='0'+(char)HIWORD(lParam);
 	memcpy(entry+2,"Clip",5);
 	GetMyRegStr("Mouse",entry,fmt,256,"");
 	if(!*fmt) strcpy(fmt,format);

@@ -90,7 +90,7 @@ void GetFileAndOption(const char* command, char* fname, char* opt);
 BOOL ConvertTip(const char* destination, WCHAR* tip, UINT code);
 BOOL SetMyRegStr(const char* subkey, const char* entry, const char* val);
 BOOL ExecFile(HWND hwnd, const char* command);
-void Pause(HWND hWnd, LPCTSTR pszArgs);
+//void Pause(HWND hWnd, LPCTSTR pszArgs);
 BOOL IsXPStyle();
 
 

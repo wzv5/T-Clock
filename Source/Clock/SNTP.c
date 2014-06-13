@@ -179,24 +179,22 @@ void SocketClose(SOCKET Sntp, const char* msgbuf)   //--------------------------
 	get server name and port number from string
 		buf: "ntp.xxxxx.ac.jp:123"
 ---------------------------------------------------*/
-int GetServerPort(const char* buf, char* server)
+unsigned short GetServerPort(const char* uri, char* server)
 {
-	char* p;
-	int port = 123;
-	
-	if(strcmp(buf, "") == 0) return -1;
-	strcpy(server, buf);
-	
-	for(p = server; *p != ':' && *p != '\0'; p++);
-	if(*p == ':') {
-		*p = 0; p++; port = 0;
-		while(*p) {
-			if('0' <= *p && *p <= '9')
-				port = port * 10 + *p - '0';
-			else {
-				port = -1; break;
+	char* pos;
+	unsigned short port = 123;
+	if(!*uri) return 0;
+	strcpy(server,uri);
+	for(pos=server; *pos && *pos!=':'; ++pos);
+	if(*pos++==':') {
+		*pos='\0'; port=0;
+		for(; *pos; ++pos) {
+			if(*pos>='0' && *pos <= '9'){
+				port*=10;
+				port+=*pos-'0';
+			}else{
+				port=0; break;
 			}
-			p++;
 		}
 	}
 	return port;
@@ -260,7 +258,8 @@ SOCKET OpenTimeSocket(char* szRegString)
 	struct sockaddr_in serveraddr;
 	char szServer[256];
 	char szErr[MIN_BUFF] = {0};
-	int nRet, port;
+	int nRet;
+	unsigned short port;
 	SOCKET Sntp;
 	
 	LPHOSTENT lpHost;
@@ -449,6 +448,7 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 //------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
 BOOL CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	(void)lParam;
 	switch(msg)  {
 	case WM_INITDIALOG:
 		SetMyDialgPos(hDlg,21);

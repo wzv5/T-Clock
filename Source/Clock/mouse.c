@@ -92,6 +92,9 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	char bDown=0;
 	char button, iter;
 	
+	(void)wParam;
+	(void)lParam;
+	
 	if(bTimer){
 		KillTimer(hwnd,IDTIMER_MOUSE);
 		bTimer=0;
@@ -172,7 +175,7 @@ void OnTimerMouse(HWND hwnd)
 	
 	switch(GetMouseFuncNum(exec_button, num_click)){
 	case MOUSEFUNC_TIMER:
-		DialogTimer(hwnd);
+		DialogTimer();
 		break;
 	case MOUSEFUNC_SHOWCALENDER:
 		if(FindWindowEx(NULL, NULL, "ClockFlyoutWindow", NULL)) break;

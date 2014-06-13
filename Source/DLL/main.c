@@ -22,10 +22,11 @@ extern HINSTANCE hInstance;
 
 //================================================================================================
 //-------------------------------------+++--> Entry Point of This (SystemTray Clock ShellHook) DLL:
-BOOL WINAPI DllMain(HINSTANCE hInst, ULONG ulReason, LPVOID Reserved)   //---------------+++-->
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   //---------------+++-->
 {
-	hInstance = hInst;
-	switch(ulReason) {
+	(void)lpvReserved;
+	hInstance = hinstDLL;
+	switch(fdwReason) {
 	case DLL_PROCESS_ATTACH:
 		break;
 	case DLL_PROCESS_DETACH:

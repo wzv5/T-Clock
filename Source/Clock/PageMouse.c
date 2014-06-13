@@ -6,7 +6,7 @@
 
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
-static void OnDestroy(HWND hDlg);
+static void OnDestroy();
 static void OnMouseFunc(HWND hDlg);
 static void OnMouseButton(HWND hDlg);
 static void OnDropFilesChange(HWND hDlg);
@@ -248,8 +248,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	for(i=0; i<=4; ++i) {
 		if(i==1) continue; // skip right mouse
 		for(j=0; j<MAX_CLICKS; ++j) {
-			entry[0]='0'+i;
-			entry[1]='1'+j;
+			entry[0]='0'+(char)i;
+			entry[1]='1'+(char)j;
 			pData[i].disable = FALSE;
 			pData[i].func[j] = GetMyRegLong(reg_section, entry, MOUSEFUNC_NONE);
 			pData[i].format[j][0] = 0; // Clipboard
@@ -303,8 +303,8 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	for(i=0; i<=4; ++i) {
 		if(i==1) continue;
 		for(j=0; j<MAX_CLICKS; ++j) {
-			entry[0]='0'+i;
-			entry[1]='1'+j;
+			entry[0]='0'+(char)i;
+			entry[1]='1'+(char)j;
 			if(pData[i].func[j])
 				SetMyRegLong(reg_section, entry, pData[i].func[j]);
 			else DelMyReg(reg_section, entry);
@@ -320,7 +320,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 }
 //================================================================================================
 //---------------------------//---------------------+++--> Free CLICKDATA Structure Memory on Exit:
-void OnDestroy(HWND hDlg)   //--------------------------------------------------------------+++-->
+void OnDestroy()   //--------------------------------------------------------------+++-->
 {
 	if(pData) {
 		free(pData);   // Free, and...? (Crash Unless You Include the Next Line)

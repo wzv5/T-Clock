@@ -23,10 +23,10 @@ struct {
 
 //================================================================================================
 //----------------------+++--> CallBack Function for EnumFontFamiliesEx, to Find a Designated Font:
-BOOL CALLBACK EnumFontFamExProc(ENUMLOGFONTEX* pelf, //-------------------------------------+++-->
-								NEWTEXTMETRICEX* lpntm, int FontType, LPARAM fontname)
+int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
-	if(strcmp((LPSTR)fontname, pelf->elfLogFont.lfFaceName) == 0) return FALSE;
+	(void)lpntme; (void)FontType;
+	if(strcmp((LPSTR)lParam, lpelfe->lfFaceName) == 0) return FALSE;
 	return TRUE;
 }
 //================================================================================================
@@ -58,7 +58,7 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 	hdc = GetDC(NULL);
 	
 	// find a font named "fontname"
-	if(charset == 0) charset = GetTextCharset(hdc);
+	if(!charset) charset = (BYTE)GetTextCharset(hdc);
 	lf.lfCharSet = charset;
 	if(EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)fontname, 0)) {
 		lf.lfCharSet = OEM_CHARSET;
@@ -84,7 +84,7 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 	lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
 	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 	
-	lf.lfQuality = GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY); // This Just HAD To be Adjustable.
+	lf.lfQuality = (BYTE)GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY); // This Just HAD To be Adjustable.
 	
 	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 	strcpy(lf.lfFaceName, fontname);

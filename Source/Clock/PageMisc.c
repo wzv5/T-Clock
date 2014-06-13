@@ -146,7 +146,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	SetMyRegLong("Calendar","ShowWeekNums", IsDlgButtonChecked(hDlg,IDCB_SHOWWEEKNUMS));
 	SetMyRegLong("Calendar","ShowDayOfYear", IsDlgButtonChecked(hDlg,IDCB_SHOW_DOY));
 	SetMyRegLong("Calendar","CalendarTopMost", IsDlgButtonChecked(hDlg,IDCB_CALTOPMOST));
-	SetMyRegLong("Calendar", "ViewMonths", SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS,0,0));
+	SetMyRegLong("Calendar", "ViewMonths", (DWORD)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS,0,0));
 	SetMyRegLong("Desktop","Transparent2kIconText", IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS));
 	
 	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);

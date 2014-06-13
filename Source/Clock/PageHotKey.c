@@ -89,6 +89,8 @@ BOOL ShowHotKey(HWND hWnd, int iCtrlID, char* szKey, BOOL bMod, BOOL bFnKey, BOO
 {
 	char szTmp[TNY_BUFF] = {0};
 	
+	(void)bMod;
+	
 	Edit_GetText(hWnd, szTmp, TNY_BUFF);
 	if(_stricmp("None", szTmp)) { // None = Zero Input - Clear Display.
 		wsprintf(szHotKey, "%s + %s", szTmp, szKey); // HotKey = X + Y
@@ -229,7 +231,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 }
 //================================================================================================
 //----------------------------------//---------------+++--> Free TCHOTKEY Structure Memory on Exit:
-static void OnDestroy(HWND hDlg)   //-------------------------------------------------------+++-->
+static void OnDestroy()   //-------------------------------------------------------+++-->
 {
 	if(tchk) {
 		free(tchk);   // Free, and...? (Crash Unless You Include the Next Line)
@@ -330,7 +332,7 @@ BOOL CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		} return TRUE;
 		
 	case WM_DESTROY:
-		OnDestroy(hDlg);
+		OnDestroy();
 		DestroyWindow(hDlg);
 		break;
 	}

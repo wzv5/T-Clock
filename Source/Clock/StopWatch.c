@@ -2,70 +2,39 @@
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "tclock.h"
 
-typedef struct {
-	LARGE_INTEGER start;
-	LARGE_INTEGER now;
-} stopWatch;
-
-stopWatch tcsw;  // Global Time Structure for Results.
-stopWatch tcLap;// Global Time Structure for Lap Times.
-BOOL bStopped; // Global Pause/Resume Displayed Counter.
-//================================================================================================
-//--------------------------------+++--> Get the High-Resolution Performance Counter Starting Time:
-void startTimer(stopWatch* timer)   //------------------------------------------------------+++-->
-{
-	QueryPerformanceCounter(&timer->start);
-	tcLap.start = timer->start;
-}
-//================================================================================================
-//---------------------------------+++--> Get the High-Resolution Performance Counter Current Time:
-void GetTimeNow(stopWatch* timer)   //------------------------------------------------------+++-->
-{
-	QueryPerformanceCounter(&timer->now);
-}
-//================================================================================================
-//------+++--> Calculate Seconds Passed Based on the High-Resolution Performance Counter Frequency:
-double LIToSecs(LARGE_INTEGER* L)   //------------------------------------------------------+++-->
-{
-	LARGE_INTEGER frequency;
-	QueryPerformanceFrequency(&frequency);
-	return((double)L->QuadPart /(double)frequency.QuadPart);
-}
-//================================================================================================
-//--------------------------------+++--> Calculate the Time That Has Elapsed Between Start and Now:
-double getElapsedTime(stopWatch* timer)   //------------------------------------------------+++-->
-{
-	LARGE_INTEGER time;
-	time.QuadPart = timer->now.QuadPart - timer->start.QuadPart;
-	return LIToSecs(&time);
-}
+LARGE_INTEGER g_frequency={0};
+LARGE_INTEGER g_start;// start time
+LARGE_INTEGER g_lap={0};// latest lap time
+LARGE_INTEGER g_stop;// latest lap time
+BOOL g_paused; // Global Pause/Resume Displayed Counter.
 //================================================================================================
 // ----------------------------------------------------+++--> Initialize Stopwatch Dialog Controls:
-void OnInit(HWND hDlg, HWND hList)   //-----------------------------------------------------+++-->
+void OnInit(HWND hDlg, HWND* hList)   //-----------------------------------------------------+++-->
 {
 	LVCOLUMN lvCol;
 	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
 	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	
-	hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
-						 LVS_SINGLESEL, 9, 55, 261, 104, hDlg, NULL, 0, 0);
+	*hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
+						 LVS_SINGLESEL, 9, 55, 236, 104, hDlg, NULL, 0, 0);
 						 
-	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+	ListView_SetExtendedListViewStyle(*hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+	SetWindowTheme(*hList,L"Explorer",NULL);
 	
 	lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvCol.cx = 42;		 // Column Width
 	lvCol.iSubItem = 0;      // Column Number
 	lvCol.fmt = LVCFMT_CENTER; // Column Alignment
 	lvCol.pszText = TEXT("Lap"); // Column Header Text
-	ListView_InsertColumn(hList, 0, &lvCol);
+	ListView_InsertColumn(*hList, 0, &lvCol);
 	
 	lvCol.cx = 121;
 	lvCol.iSubItem = 1;
 	lvCol.fmt = LVCFMT_LEFT;
 	lvCol.pszText = TEXT("Times");
-	ListView_InsertColumn(hList, 1, &lvCol);
+	ListView_InsertColumn(*hList, 1, &lvCol);
 	
-	ShowWindow(hList, SW_SHOW);
+	ShowWindow(*hList, SW_SHOW);
 	
 	SetDlgItemText(hDlg, IDCE_SW_ELAPSED, "00H: 00M: 00S: 000ms");
 }
@@ -73,122 +42,127 @@ void OnInit(HWND hDlg, HWND hList)   //-----------------------------------------
 //-------------------------//------------------+++--> Updates the Stopwatch's Elapsed Time Display:
 void OnTimer(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
-	char szElapsed[TNY_BUFF] = {0};
-	int hrs, min, sec, ims; //-----------+++--> wsprintf Requires ALL Values be Integers.
-	double dwElapsed; // Need to use a (Floating Point) Double to Get the "Change" Later.
-	double ms; //------------+++--> This is/Will Be the MilliSecond "Change" We're After.
+	char szElapsed[TNY_BUFF];
+	int hrs, min, sec;
+	union{
+		unsigned long elapsed;
+		LARGE_INTEGER end;// latest lap time
+	} un;
 	
-	GetTimeNow(&tcsw); //---------------//-+++--> Get the Current High Resolution Time.
-	dwElapsed = getElapsedTime(&tcsw); // Compare it to the High Resolution Start Time.
+	QueryPerformanceCounter(&un.end);
+	un.end.QuadPart-=g_start.QuadPart;
+	un.elapsed=(unsigned long)(un.end.QuadPart*1000/g_frequency.QuadPart);
 	
-	hrs = (int)dwElapsed / 3600;
-	min = (int)(dwElapsed - (hrs * 3600)) / 60;
-	sec = (int)(dwElapsed - ((hrs * 3600) + (min * 60)));
-	ms  = (dwElapsed - ((hrs * 3600) + (min * 60) + sec));
-	// Now the ms double = .WhatWeAreAfter (e.g. The MilliSecond "Change".)
-	ms *= 1000; //-+> The .Change * 1000 Converts it into an Interger That,
-	ims = (int)ms; //-+-> We Can Now Use to Give Completely Precise Timing.
-	wsprintf(szElapsed, "%02dH: %02dM: %02dS: %003dms", hrs, min, sec, ims);
+	hrs=un.elapsed/3600000; un.elapsed%=3600000;
+	min=un.elapsed/60000; un.elapsed%=60000;
+	sec=un.elapsed/1000; un.elapsed%=1000;
+	sprintf(szElapsed,"%02dH: %02dM: %02dS: %03dms",hrs,min,sec,un.elapsed);
 	SetDlgItemText(hDlg, IDCE_SW_ELAPSED, szElapsed);
 }
 //================================================================================================
 //--------------------------+++--> Get Current Time as Lap Time and Add it to the ListView Control:
 void InsertLapTime(HWND hList)   //---------------------------------------------------------+++-->
 {
-	char szLapTime[TNY_BUFF] = {0};
-	char szLapNum[TNY_BUFF] = {0};
-	int hrs, min, sec, ims; //-----------+++--> wsprintf Requires ALL Values be Integers.
-	double dwElapsed; // Need to use a (Floating Point) Double to Get the "Change" Later.
-	double ms; //------------+++--> This is/Will Be the MilliSecond "Change" We're After.
+	char buf[TNY_BUFF];
+	int hrs, min;
 	LVITEM lvItem; // ListView Control Row Identifier
-//	int col = 0;  // ListView Control Column to Populate
-	int iLap;
+	LARGE_INTEGER end;
+	unsigned long elapsed;
 	
-	GetTimeNow(&tcLap); //---------------//-+++--> Get the Current High Resolution Time.
-	dwElapsed = getElapsedTime(&tcLap); // Compare it to the High Resolution Start Time.
-	tcLap.start = tcLap.now; //-++--> Reset Starting Point to Current Time for Next Lap.
+	if(!g_lap.QuadPart)
+		return;
+	QueryPerformanceCounter(&end);
+	if(g_paused)
+		end=g_stop;
+	elapsed=(unsigned long)((end.QuadPart-g_lap.QuadPart)*1000/g_frequency.QuadPart);
+	g_lap=end;
+	if(g_paused)
+		g_lap.QuadPart=0;
 	
-	hrs = (int)dwElapsed / 3600;
-	min = (int)(dwElapsed - (hrs * 3600)) / 60;
-	sec = (int)(dwElapsed - ((hrs * 3600) + (min * 60)));
-	ms  = (dwElapsed - ((hrs * 3600) + (min * 60) + sec));
-	// Now the ms double = .WhatWeAreAfter (e.g. The MilliSecond "Change".)
-	ms *= 1000; //-+> The .Change * 1000 Converts it into an Interger That,
-	ims = (int)ms; //-+-> We Can Now Use to Give Completely Precise Timing.
-	wsprintf(szLapTime, "%02d:%02d:%02d:%003dms", hrs, min, sec, ims);
+	hrs=elapsed/3600000; elapsed%=3600000;
+	min=elapsed/60000; elapsed%=60000;
 	
-	iLap = ListView_GetItemCount(hList);
-	iLap++;
+	sprintf(buf,"Lap %d",ListView_GetItemCount(hList)+1);
+	lvItem.mask=LVIF_TEXT;
+	lvItem.iSubItem=0;
+	lvItem.iItem=0;
+	lvItem.pszText=buf;
+	ListView_InsertItem(hList,&lvItem);
 	
-	wsprintf(szLapNum, "Lap %d", iLap);
-	lvItem.mask = LVIF_TEXT;
-	lvItem.iSubItem = 0;
-	lvItem.iItem = 0;
-	
-	lvItem.pszText = szLapNum;
-	ListView_InsertItem(hList, &lvItem);
-	
-	lvItem.iSubItem = 1;
-	lvItem.pszText = szLapTime;
-	ListView_SetItem(hList, &lvItem);
+	sprintf(buf,"%02d:%02d:%02d.%03d",hrs,min,elapsed/1000,elapsed%1000);
+	lvItem.iSubItem=1;
+	ListView_SetItem(hList,&lvItem);
 }
 //================================================================================================
 // --------------------------------------------------+++--> Message Processor for Stopwatch Dialog:
 BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
-	 HWND hList;
-	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
+	static HWND hList=NULL;
+	
+	(void)lParam;
 	
 	switch(msg) {
 	case WM_INITDIALOG:
-		OnInit(hDlg, hList);
+		OnInit(hDlg,&hList);
 		SetMyDialgPos(hDlg,21);
 		return TRUE;
-		
 	case WM_TIMER:
-		if(!bStopped) OnTimer(hDlg);
+		if(!g_paused)
+			OnTimer(hDlg);
 		return TRUE;
-		
 	case WM_COMMAND: {
 			WORD id = LOWORD(wParam);
 			switch(id) {
-			
-			case IDOK: // Start
-				if(!bStopped) {
-					startTimer(&tcsw);
-					SetTimer(hDlg, 1, 1, NULL);
+			case IDCB_SW_START: // Start
+				if(!g_paused) {
+					if(!g_frequency.QuadPart)
+						QueryPerformanceFrequency(&g_frequency);
+					QueryPerformanceCounter(&g_start);
+					g_lap=g_start;
+				}else{
+					LARGE_INTEGER end;
+					QueryPerformanceCounter(&end);
+					end.QuadPart-=g_stop.QuadPart;
+					if(g_start.QuadPart)
+						g_start.QuadPart+=end.QuadPart;
+					else
+						QueryPerformanceCounter(&g_start);
+					if(g_lap.QuadPart)
+						g_lap.QuadPart+=end.QuadPart;
+					else
+						QueryPerformanceCounter(&g_lap);
+					g_paused = FALSE;
 				}
-				bStopped = FALSE;
-				EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_SW_STOP), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_SW_RESET), FALSE);
+				SetTimer(hDlg,1,7,NULL);
+				ShowWindow(GetDlgItem(hDlg,IDCB_SW_STOP),1);
+				ShowWindow(GetDlgItem(hDlg,IDCB_SW_START),0);
+				EnableWindow(GetDlgItem(hDlg,IDCB_SW_RESET),1);
 				break;
-				
-			case IDCB_SW_STOP:
-				EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_SW_STOP), FALSE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_SW_RESET), TRUE);
-				bStopped = TRUE;
-				break;
-				
+			case IDCB_SW_STOP:{
+				KillTimer(hDlg,1);
+				ShowWindow(GetDlgItem(hDlg,IDCB_SW_START),1);
+				ShowWindow(GetDlgItem(hDlg,IDCB_SW_STOP),0);
+				g_paused = TRUE;
+				QueryPerformanceCounter(&g_stop);
+				break;}
 			case IDCB_SW_RESET:
-				KillTimer(hDlg, 1);
-				EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_SW_STOP), FALSE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_SW_RESET), FALSE);
-				SetDlgItemText(hDlg, IDCE_SW_ELAPSED, "00H: 00M: 00S: 000ms");
+				SetDlgItemText(hDlg,IDCE_SW_ELAPSED,"00H: 00M: 00S: 000ms");
 				ListView_DeleteAllItems(hList);
-				bStopped = FALSE;
+				if(g_paused){
+					g_start.QuadPart=g_lap.QuadPart=0;
+					EnableWindow(GetDlgItem(hDlg,IDCB_SW_RESET),0);
+				}else{
+					QueryPerformanceCounter(&g_start);
+					g_lap=g_start;
+				}
 				break;
-				
 			case IDCB_SW_LAP:
 				InsertLapTime(hList);
 				break;
-				
 			case IDCANCEL:
 				KillTimer(hDlg, 1);
-				EndDialog(hDlg, TRUE);
 				g_hDlgStopWatch = NULL;
+				EndDialog(hDlg, TRUE);
 			}
 			return TRUE;
 		}
@@ -198,9 +172,9 @@ BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 }
 //================================================================================================
 // -------------------------------------------------------------------+++--> Open Stopwatch Dialog:
-void DialogStopWatch(HWND hWnd)   //--------------------------------------------------------+++-->
+void DialogStopWatch()   //--------------------------------------------------------+++-->
 {
-	if(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch));
-	else g_hDlgStopWatch = CreateDialog(0, MAKEINTRESOURCE(IDD_STOPWATCH), NULL, (DLGPROC)DlgProcStopwatch);
+	if(!g_hDlgStopWatch || !IsWindow(g_hDlgStopWatch))
+		g_hDlgStopWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_STOPWATCH),NULL,(DLGPROC)DlgProcStopwatch);
 	ForceForegroundWindow(g_hDlgStopWatch);
 }

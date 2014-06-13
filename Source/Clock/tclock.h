@@ -28,6 +28,7 @@
 #define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
 #define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
 
+#include <stdio.h>//sprintf
 #include <Windows.h>
 #include <Uxtheme.h>//SetWindowTheme
 #include <WindowsX.h>//Edit_SetText
@@ -137,7 +138,7 @@ void InitFormat(void);
 void CreateFormat(char* s, int* checks);
 
 // menu.c
-void OnTClockCommand(HWND hwnd, WORD wID, WORD wCode);
+void OnTClockCommand(HWND hwnd, WORD wID);
 void OnContextMenu(HWND hwnd, HWND hwndClicked, int xPos, int yPos);
 
 // mouse.c
@@ -151,13 +152,13 @@ void WatchTimer(void);
 void CancelAllTimersOnStartUp(void);
 
 void EndTimer(void);
-void DialogTimer(HWND hwnd);
-void StopTimer(HWND hwnd, int n);
-void OnTimerTimer(HWND hwnd, SYSTEMTIME* st);
+void DialogTimer();
+void StopTimer(int n);
+void OnTimerTimer(HWND hwnd);
 int GetTimerInfo(char* dst, int num, BOOL bNameOnly);
 
 // StopWatch.c
-void DialogStopWatch(HWND);
+void DialogStopWatch();
 
 // utl.c
 int atox(const char* p);
