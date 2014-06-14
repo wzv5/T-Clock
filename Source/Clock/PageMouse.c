@@ -15,7 +15,7 @@ static void OnMouseFileChange(HWND hDlg);
 static void OnSansho(HWND hDlg, WORD id);
 static void InitMouseFuncList(HWND hDlg);
 
-static char reg_section[] = "Mouse";
+static const char g_reg_key[] = "Mouse";
 
 #define COL_BUTTON 0 // Mouse Button (Left or Middle)
 #define COL_CLKTYP 1 // Click Type (Single or Double)
@@ -105,7 +105,7 @@ void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------
 		} //-//-//------------+++--> End of for(c;;) Mouse Clicks LOOP
 	} //-//-//-//-----------+++--> End of for(m;;) Mouse Button LOOP
 	
-	if(GetMyRegLong(reg_section, "DropFiles", 0)) {
+	if(GetMyRegLong(g_reg_key, "DropFiles", 0)) {
 		char szApp[LRG_BUFF] = {0};
 		lvItem.pszText = "Drag";
 		lvItem.iSubItem = COL_BUTTON;
@@ -239,8 +239,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	for(i = IDS_NONE; i <= IDS_MOVETO; i++) CBAddString(hDlg, IDC_DROPFILES, MyString(i));
 	
-	CBSetCurSel(hDlg, IDC_DROPFILES, GetMyRegLong(reg_section, "DropFiles", 0));
-	GetMyRegStr(reg_section, "DropFilesApp", s, 256, "");
+	CBSetCurSel(hDlg, IDC_DROPFILES, GetMyRegLong(g_reg_key, "DropFiles", 0));
+	GetMyRegStr(g_reg_key, "DropFilesApp", s, 256, "");
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP, s);
 	
 	pData=malloc(sizeof(CLICKDATA) * 5);
@@ -251,12 +251,12 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 			entry[0]='0'+(char)i;
 			entry[1]='1'+(char)j;
 			pData[i].disable = FALSE;
-			pData[i].func[j] = GetMyRegLong(reg_section, entry, MOUSEFUNC_NONE);
+			pData[i].func[j] = GetMyRegLong(g_reg_key, entry, MOUSEFUNC_NONE);
 			pData[i].format[j][0] = 0; // Clipboard
 			pData[i].fname[j][0] = 0; // Open With...
 			if(pData[i].func[j] == MOUSEFUNC_CLIPBOARD) {
 				memcpy(entry+2,"Clip",5);
-				GetMyRegStr(reg_section, entry, pData[i].format[j], 256, "");
+				GetMyRegStr(g_reg_key, entry, pData[i].format[j], 256, "");
 			}
 		}
 	}
@@ -296,9 +296,9 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	entry[2]='\0';
 	n = (int)CBGetCurSel(hDlg, IDC_DROPFILES);
 	SetMyRegLong("", "DropFiles", (n > 0));
-	SetMyRegLong(reg_section, "DropFiles", n);
+	SetMyRegLong(g_reg_key, "DropFiles", n);
 	GetDlgItemText(hDlg, IDC_DROPFILESAPP, s, 256);
-	SetMyRegStr(reg_section, "DropFilesApp", s);
+	SetMyRegStr(g_reg_key, "DropFilesApp", s);
 	
 	for(i=0; i<=4; ++i) {
 		if(i==1) continue;
@@ -306,11 +306,11 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			entry[0]='0'+(char)i;
 			entry[1]='1'+(char)j;
 			if(pData[i].func[j])
-				SetMyRegLong(reg_section, entry, pData[i].func[j]);
-			else DelMyReg(reg_section, entry);
+				SetMyRegLong(g_reg_key, entry, pData[i].func[j]);
+			else DelMyReg(g_reg_key, entry);
 			if(pData[i].func[j] == MOUSEFUNC_CLIPBOARD) {
 				memcpy(entry+2,"Clip",5);
-				SetMyRegStr(reg_section, entry, pData[i].format[j]);
+				SetMyRegStr(g_reg_key, entry, pData[i].format[j]);
 			}
 		}
 	}

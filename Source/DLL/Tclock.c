@@ -51,7 +51,7 @@ int nDispBeat = 0;
 int nBlink = 0;
 int dwidth = 0, dheight = 0, dvpos = 0, dlineheight = 0, dhpos = 0;
 int iClockWidth = -1;
-char bTimer=0;
+char g_bTimer=0;
 char bTimerTesting=0;
 char bHour12, bHourZero;
 char bNoClock=0;
@@ -143,7 +143,7 @@ void EndClock(void)   //--------------------------------------------------------
 	DeleteClockRes();
 	EndNewAPI(hwndClock);
 	if(hwndClock && IsWindow(hwndClock)) {
-		if(bTimer) KillTimer(hwndClock, 1); bTimer = FALSE;
+		if(g_bTimer) KillTimer(hwndClock, 1); g_bTimer = FALSE;
 		SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)oldWndProc);
 		oldWndProc = NULL;
 	}
@@ -350,8 +350,8 @@ void ReadData()   //------------------------------------------------------------
 	dwInfoFormat = FindFormat(format);
 	bDispSecond = (dwInfoFormat&FORMAT_SECOND)? TRUE:FALSE;
 	nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!bTimer) SetTimer(hwndClock, 1, 1000, NULL);
-	bTimer = TRUE;
+	if(!g_bTimer) SetTimer(hwndClock, 1, 1000, NULL);
+	g_bTimer = TRUE;
 	
 	bHour12 = (char)GetMyRegLong("Format", "Hour12", FALSE);
 	bHourZero = (char)GetMyRegLong("Format", "HourZero", 0);

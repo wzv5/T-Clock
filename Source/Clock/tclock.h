@@ -120,7 +120,7 @@ void StopFile(void);
 void EndAlarm(void);
 void InitAlarm(void);
 void OnMCINotify(HWND hwnd);
-BOOL ExecFile(HWND hwnd, char* command);
+BOOL ExecFile(HWND hwnd, const char* command);
 void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
 BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
 void GetFileAndOption(const char* command, char* fname, char* opt);
@@ -161,6 +161,7 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly);
 void DialogStopWatch();
 
 // utl.c
+void ToggleCalendar();
 int atox(const char* p);
 void del_title(char* path);
 void ForceForegroundWindow(HWND hWnd);

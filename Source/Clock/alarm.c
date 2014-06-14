@@ -339,7 +339,7 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 	
 	p = command; pd = fname;
 	pe = NULL;
-	for(; ;) {
+	for(;;) {
 		if(*p == ' ' || *p == 0) {
 			*pd = 0;
 			hfind = FindFirstFile(fname, &fd);
@@ -368,13 +368,13 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 /*--------------------------------------------------
  --------------------------------------- Open a file
 --------------------------------------------------*/
-BOOL ExecFile(HWND hwnd, char* command)
+BOOL ExecFile(HWND hwnd, const char* command)
 {
 	char fname[MAX_PATH], opt[MAX_PATH];
-	
 	if(*command){
 		GetFileAndOption(command,fname,opt);
-		if((size_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOW)>32) return TRUE;
+		if((intptr_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOW)>32)
+			return TRUE;
 	}
 	return FALSE;
 }

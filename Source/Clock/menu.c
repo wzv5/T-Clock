@@ -122,11 +122,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		return;
 		
 	case IDC_SHOWCALENDER: //-------------------------------+++--> Display Calender
-		if(bV7up && !GetMyRegLong("Calendar","bCustom",0)){
-			PostMessage(g_hwndClock, WM_USER+102,1,0);//1=open, 0=close
-		}else{
-			ExecFile(g_hwndClock,"XPCalendar.exe");
-		}
+		ToggleCalendar();
 		return;
 		
 	case IDC_DISPLAYPROP: //------------------------------+++--> Display Properties

@@ -115,6 +115,7 @@ BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 			switch(id) {
 			case IDCB_SW_START: // Start
 				if(!g_paused) {
+					ListView_DeleteAllItems(hList);
 					if(!g_frequency.QuadPart)
 						QueryPerformanceFrequency(&g_frequency);
 					QueryPerformanceCounter(&g_start);

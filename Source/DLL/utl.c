@@ -93,7 +93,7 @@ char* MyString(UINT id)
 	return buf;
 }
 
-char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
+const char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
 
 /*-------------------------------------------
 	レジストリに文字列を書き込む
@@ -532,12 +532,14 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 BOOL ExecFile(HWND hwnd, const char* command)
 {
 	char fname[MAX_PATH], opt[MAX_PATH];
-	
-	if(*command == 0) return FALSE;
-	GetFileAndOption(command, fname, opt);
-	if((int)(UINT_PTR)(HINSTANCE)ShellExecute(hwnd, NULL, fname, opt[0]?opt:NULL, "", SW_SHOW) <= 32) return FALSE;
-	return TRUE;
+	if(*command){
+		GetFileAndOption(command,fname,opt);
+		if((intptr_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOW)>32)
+			return TRUE;
+	}
+	return FALSE;
 }
+
 
 BOOL IsXPStyle()
 {

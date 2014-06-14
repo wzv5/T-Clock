@@ -3,7 +3,17 @@
 ---------------------------------------------*/
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "tclock.h"
-char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
+const char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
+
+void ToggleCalendar()
+{
+	if(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL))
+		return;
+	if(bV7up && !GetMyRegLong("Calendar","bCustom",0))
+		PostMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
+	else
+		ExecFile(g_hwndClock,"XPCalendar.exe");
+}
 
 int atox(const char* p)
 {

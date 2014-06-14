@@ -209,14 +209,14 @@ void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //-------------
 		if(*p == '/') {
 			p++;
 			if(_strnicmp(p, "prop", 4) == 0) {
-				PostMessage(hwnd, WM_COMMAND, IDC_SHOWPROP, 0);
+				SendMessage(hwnd, WM_COMMAND, IDC_SHOWPROP, 0);
 				p += 4;
 			} else if(_strnicmp(p, "exit", 4) == 0) {
-				PostMessage(hwnd, WM_CLOSE, 0, 0);
+				SendMessage(hwnd, WM_CLOSE, 0, 0);
 				p += 4;
 			} else if(_strnicmp(p, "Start", 5) == 0) {
 				if(!IsWindow(g_hDlgStopWatch))
-					PostMessage(hwnd, WM_COMMAND, IDM_STOPWATCH, 0);
+					SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH, 0);
 				SendMessage(hwnd, WM_COMMAND, IDCB_SW_START, 0);
 				p += 5;
 			} else if(_strnicmp(p, "Stop", 4) == 0) {

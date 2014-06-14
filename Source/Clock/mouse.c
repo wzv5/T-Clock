@@ -4,20 +4,19 @@
 ---------------------------------------------*/
 // Last Modified by Stoic Joker: Sunday, 01/09/2011 @ 4:34:56pm
 #include "tclock.h"
-static char reg_section[] = "Mouse";
-static DWORD last_tickcount;
-static char bTimer = 0;
-static char last_mousedown = -1;
-static char num_click = 0;
-static char exec_button = -1;
-//static int exec_func = 0;
+static const char g_click_max = 2;
+static const char g_reg_key[] = "Mouse";
+
+static char g_click_button = -1;
+static char g_click = 0;
+static UINT g_doubleclick_time=0;
 
 static int GetMouseFuncNum(char button, char nclick) {
 	char entry[3];
 	entry[0]='0'+button;
 	entry[1]='0'+nclick;
 	entry[2]='\0';
-	return GetMyRegLong(reg_section,entry,0);
+	return GetMyRegLong(g_reg_key,entry,0);
 }
 
 /*------------------------------------------------
@@ -32,7 +31,7 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
 	int i, num;
 	int nType;
 	
-	nType = GetMyRegLong(reg_section, "DropFiles", 0);
+	nType = GetMyRegLong(g_reg_key, "DropFiles", 0);
 	
 	num = DragQueryFile(hdrop, (UINT)-1, NULL, 0);
 	if(num <= 0) return;
@@ -54,7 +53,7 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
 	*p = 0;
 	DragFinish(hdrop);
 	
-	GetMyRegStr(reg_section, "DropFilesApp", app, 1024, "");
+	GetMyRegStr(g_reg_key, "DropFilesApp", app, 1024, "");
 	
 	if(nType == 1 || nType == 3 || nType == 4) {
 		memset(&shfos, 0, sizeof(SHFILEOPSTRUCT));
@@ -88,17 +87,11 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
 --------------------------------------------------------------*/
 void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	UINT doubleclick_time;
 	char bDown=0;
 	char button, iter;
 	
 	(void)wParam;
 	(void)lParam;
-	
-	if(bTimer){
-		KillTimer(hwnd,IDTIMER_MOUSE);
-		bTimer=0;
-	}
 	
 	switch(message) {
 	case WM_LBUTTONDOWN: case WM_LBUTTONUP:
@@ -117,53 +110,51 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		if(last_mousedown!=button) num_click=0;
-		last_mousedown=button;
+		if(g_click_button!=button) g_click=0;
+		g_click_button=button;
 		bDown=1;
 		break;
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		if(last_mousedown!=button){
-			last_mousedown=-1;
-			num_click=0;
+		if(g_click_button!=button){
+			g_click_button=-1;
+			g_click=0;
+			g_doubleclick_time=0;
 			return;
 		}
 		break;
 	}
-	if(last_mousedown&0x80) {num_click=0;return;}
+	if(!g_doubleclick_time)
+		g_doubleclick_time=GetDoubleClickTime(); // get current mouse double click speed
 	
-	doubleclick_time = GetDoubleClickTime();// Mouse double click speed
-	if(doubleclick_time < (GetTickCount() - last_tickcount)) num_click=0;
-	last_tickcount = GetTickCount();
-	
-	if(bDown) {
-		int n_func=GetMouseFuncNum(button, num_click+1);
-		if(n_func && n_func!=MOUSEFUNC_SCREENSAVER) {
-			for(iter=num_click+2; iter<=2; ++iter) {
-				if(GetMouseFuncNum(button, iter)) return;
+	if(bDown) { // click not counted yet (normally we could remove this code and only handle OnUp, but Calendar doesn't hide properly otherwise)
+		int n_func=GetMouseFuncNum(button, g_click+1);
+		if(n_func && n_func!=MOUSEFUNC_SCREENSAVER) { // can we execute this click?
+			for(iter=g_click+2; iter<=g_click_max; ++iter) { // loop thru possible clicks
+				if(GetMouseFuncNum(button,iter))
+					return; // if there's a mouse function set, wait for timeout or more clicks
 			}
-			++num_click;
-			exec_button=button;
-			OnTimerMouse(hwnd);
+			++g_click;
+			OnTimerMouse(hwnd); // execute now, no more clicks expected
 		}
 		return;
 	}
-	++num_click;
-	if(!GetMouseFuncNum(button, num_click)) return;
-	
-	for(iter=num_click+1; iter<=2; ++iter) {
-		if(GetMouseFuncNum(button,iter)){
-			exec_button=button;
-			bTimer=1;
-			SetTimer(hwnd, IDTIMER_MOUSE, doubleclick_time, 0);
+	if(GetMouseFuncNum(button,++g_click)){
+		int waitable=0;
+		for(iter=g_click+1; iter<=g_click_max; ++iter) {
+			if(GetMouseFuncNum(button,iter)){
+				++waitable;
+				break;
+			}
+		}
+		if(!waitable){ // execute now! (should never happen btw.. as of now OnDown executes in that case)
+			OnTimerMouse(hwnd);
 			return;
 		}
 	}
-	
-	exec_button=button;
-	OnTimerMouse(hwnd);
+	SetTimer(hwnd,IDTIMER_MOUSE,g_doubleclick_time,0);
 }
 
 /*--------------------------------------------------
@@ -171,28 +162,24 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 --------------------------------------------------*/
 void OnTimerMouse(HWND hwnd)
 {
-	if(bTimer){KillTimer(hwnd, IDTIMER_MOUSE); bTimer=0;}
-	
-	switch(GetMouseFuncNum(exec_button, num_click)){
+	KillTimer(hwnd,IDTIMER_MOUSE);
+	switch(GetMouseFuncNum(g_click_button,g_click)){
 	case MOUSEFUNC_TIMER:
 		DialogTimer();
 		break;
 	case MOUSEFUNC_SHOWCALENDER:
-		if(FindWindowEx(NULL, NULL, "ClockFlyoutWindow", NULL)) break;
-		if(bV7up && !GetMyRegLong("Calendar","bCustom",0)){
-			PostMessage(g_hwndClock, WM_USER+102,1,0);//1=open, 0=close
-		}else{
-			ExecFile(g_hwndClock,"XPCalendar.exe");
-		}
+		ToggleCalendar();
 		break;
 	case MOUSEFUNC_SHOWPROPERTY:
 		MyPropertySheet();
 		break;
 	case MOUSEFUNC_CLIPBOARD:
-		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKELONG(exec_button,num_click));
+		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKELONG(g_click_button,g_click));
 		break;
 	case MOUSEFUNC_SCREENSAVER:
 		SendMessage(GetDesktopWindow(),WM_SYSCOMMAND,SC_SCREENSAVE,0);
 		break;
 	}
+	g_click_button=-1;
+	g_click=0;
 }
