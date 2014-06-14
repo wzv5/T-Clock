@@ -8,11 +8,11 @@
 #define IDS_MMFILE                      10
 #define IDS_ALLFILE                     11
 #define IDS_PROGRAMFILE                 12
-#define IDS_NONE                        13 // group
+#define IDS_NONE                        13 /* group */
 #define IDS_RECYCLE                     14
 #define IDS_OPENBY                      15
 #define IDS_COPYTO                      16
-#define IDS_MOVETO                      17 // end group
+#define IDS_MOVETO                      17 /* end group */
 #define IDS_PLAY                        18
 #define IDS_LABPROGRAM                  19
 #define IDS_LABFOLDER                   20
@@ -58,7 +58,7 @@
 #define IDC_STOPTIMER                   96
 #define PROPERTY_BASE                   100
 #define PROPERTY_NUM                    9
-#define IDD_PAGEABOUT                   100 // group
+#define IDD_PAGEABOUT                   100 /* group */
 #define IDD_PAGEALARM                   101
 #define IDD_PAGECLOCKTEXT               102
 #define IDD_PAGEFORMAT                  103
@@ -66,7 +66,7 @@
 #define IDD_PAGEQUICKY                  105
 #define IDD_PAGETARGETFILE              106
 #define IDD_PAGEHOTKEY                  107
-#define IDD_PAGEMISC                    108 // end group
+#define IDD_PAGEMISC                    108 /* end group */
 #define IDD_TIMER                       120
 #define IDD_ALARMDAY                    121
 #define IDD_STOPWATCH                   124
@@ -79,20 +79,25 @@
 #define IDI_PLAY                        192
 #define IDI_STOP                        193
 #define IDI_DEL                         194
-#define IDC_RUNAPP                      401
-#define IDC_CASCADE                     403
-#define IDC_TILEHORZ                    404
-#define IDC_TILEVERT                    405
-#define IDC_DATETIME                    408
-#define IDC_TASKBARPROP                 413
-#define IDC_MINALL                      415
-#define IDC_TASKMAN                     420
-#define IDC_EXITWIN                     506
-#define IDC_ABT_TITLE                   600 // group
+#define IDC_FWD_RUNAPP                  401 /* group (forward commands, keep ids) */
+#define IDC_FWD_CASCADE                 403
+#define IDC_FWD_SIDEBYSIDE              404
+#define IDC_FWD_STACKED                 405
+#define IDC_FWD_SHOWDESKTOP             407
+#define IDC_FWD_DATETIME                408
+#define IDC_FWD_TASKBARPROP             413
+#define IDC_FWD_MINALL                  415
+#define IDC_FWD_UNDO                    416
+#define IDC_FWD_TASKMAN                 420
+#define IDC_FWD_CUSTOMNOTIFYICONS       421
+#define IDC_FWD_LOCKTASKBAR             424
+#define IDC_FWD_LOCKALLTASKBAR          425
+#define IDC_FWD_EXITEXPLORER            518 /* end group (forward commands) */
+#define IDC_ABT_TITLE                   600 /* group */
 #define IDC_ABT_StoicJoker              601
 #define IDC_ABT_StoicJoker2             602
 #define IDC_ABT_WEB                     603
-#define IDC_ABT_MAIL                    604 // end group
+#define IDC_ABT_MAIL                    604 /* end group */
 #define IDC_ABT_WEBuri                  605
 #define IDC_ABT_MAILuri                 606
 #define IDC_ABT_TCLOCK                  607
@@ -356,6 +361,10 @@
 #define ID_T_STOPWATCH                  40026
 #define IDM_STOPWATCH                   40027
 #define IDM_SYNCTIME                    40028
+#define IDC_SOUNDAUDIO                  40029
+#define IDC_NETWORK                     40030
+#define IDC_TIMERS                      40031
+#define IDC_EXITWIN                     40032
 
 // Next default values for new objects
 //

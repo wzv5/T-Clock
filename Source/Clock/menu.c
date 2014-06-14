@@ -5,37 +5,46 @@
 
 #define QM_COMMAND 3800
 void UpdateTimerMenu(HMENU hMenu);
+static char g_undo=0; // did we change windows and can undo it?
 
 /*-----------------------------------------------------------------
  ----------------  when the clock is right-clicked show pop-up menu
 -----------------------------------------------------------------*/
 void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 {
-	BOOL g_bQMDisplay;
-	BOOL g_bQMExitWin;
-	BOOL g_bQMLaunch;
-	HMENU hPopupMenu;
 	BOOL g_bQMAudio;
 	BOOL g_bQMNet;
+	BOOL g_bQMLaunch;
+	BOOL g_bQMExitWin;
+	BOOL g_bQMDisplay;
+	HMENU hPopupMenu;
 	HMENU hMenu;
 	
 	(void)hwndClicked;
 	
-	g_bQMDisplay = GetMyRegLong("QuickyMenu", "DisplayProperties", TRUE);
-	g_bQMExitWin = GetMyRegLong("QuickyMenu", "ExitWindows",       TRUE);
-	g_bQMLaunch  = GetMyRegLong("QuickyMenu", "QuickyMenu",        TRUE);
 	g_bQMAudio   = GetMyRegLong("QuickyMenu", "AudioProperties",   TRUE);
 	g_bQMNet     = GetMyRegLong("QuickyMenu", "NetworkDrives",     TRUE);
+	g_bQMLaunch  = GetMyRegLong("QuickyMenu", "QuickyMenu",        TRUE);
+	g_bQMExitWin = GetMyRegLong("QuickyMenu", "ExitWindows",       TRUE);
+	g_bQMDisplay = GetMyRegLong("QuickyMenu", "DisplayProperties", TRUE);
 	
 	hMenu = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU));
 	hPopupMenu = GetSubMenu(hMenu, 0);
 	
-	if(!g_bQMDisplay) DeleteMenu(hPopupMenu, 16, MF_BYPOSITION);
-	if(!g_bQMExitWin) DeleteMenu(hPopupMenu, 13, MF_BYPOSITION);
-	// Timers Menu Item y/n Goes HERE!!!
-	if(!g_bQMLaunch)  DeleteMenu(hPopupMenu, 11, MF_BYPOSITION);
-	if(!g_bQMNet)	    DeleteMenu(hPopupMenu, 10, MF_BYPOSITION);
-	if(!g_bQMAudio)   DeleteMenu(hPopupMenu,  9, MF_BYPOSITION);
+	if(!g_bQMAudio)		DeleteMenu(hPopupMenu, IDC_SOUNDAUDIO,	MF_BYCOMMAND);
+	if(!g_bQMNet)		DeleteMenu(hPopupMenu, IDC_NETWORK,		MF_BYCOMMAND);
+	if(!g_bQMLaunch)	DeleteMenu(hPopupMenu, IDC_QUICKYS,		MF_BYCOMMAND);
+	if(!g_bQMExitWin)	DeleteMenu(hPopupMenu, IDC_EXITWIN,		MF_BYCOMMAND);
+	if(!g_bQMDisplay)	DeleteMenu(hPopupMenu, IDC_DISPLAYPROP,	MF_BYCOMMAND);
+	/// simple implementation of "Undo ..." (eg. Undo Cascade windows)
+	if(!g_undo)			DeleteMenu(hPopupMenu, IDC_FWD_UNDO,	MF_BYCOMMAND);
+	/// special menu items, only shown if SHIFT or CTRL was pressed
+	if(!((GetAsyncKeyState(VK_SHIFT)|GetAsyncKeyState(VK_CONTROL))&0x8000)){
+		DeleteMenu(hPopupMenu, IDS_NONE, MF_BYCOMMAND); // seperator
+		DeleteMenu(hPopupMenu, IDC_FWD_RUNAPP, MF_BYCOMMAND);
+		DeleteMenu(hPopupMenu, IDC_FWD_EXITEXPLORER, MF_BYCOMMAND);
+	}
+	/// Timers Menu Item y/n Goes HERE!!!
 	
 	UpdateTimerMenu(hPopupMenu); // Get the List of Active Timers.
 	
@@ -231,13 +240,12 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case IDM_STOPWATCH:
 		DialogStopWatch();
 		
-	case IDC_MINALL:
-	case IDC_DATETIME:
-	case IDC_CASCADE:
-	case IDC_TILEHORZ:
-	case IDC_TILEVERT:
-	case IDC_TASKMAN:
-	case IDC_TASKBARPROP: {
+	case IDC_FWD_CASCADE: case IDC_FWD_SIDEBYSIDE: case IDC_FWD_STACKED: case IDC_FWD_SHOWDESKTOP: case IDC_FWD_MINALL: case IDC_FWD_UNDO:
+		g_undo=(wID!=IDC_FWD_UNDO);
+	case IDC_FWD_DATETIME: case IDC_FWD_CUSTOMNOTIFYICONS:
+	case IDC_FWD_TASKMAN:
+	case IDC_FWD_LOCKTASKBAR: case IDC_FWD_LOCKALLTASKBAR:
+	case IDC_FWD_TASKBARPROP: case IDC_FWD_RUNAPP: case IDC_FWD_EXITEXPLORER:{
 			HWND hwndTray = FindWindow("Shell_TrayWnd", NULL);
 			if(hwndTray) PostMessage(hwndTray, WM_COMMAND, (WPARAM)wID, 0);
 			return;

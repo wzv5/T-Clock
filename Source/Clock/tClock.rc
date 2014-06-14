@@ -33,58 +33,69 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // Menu
 //
 
-IDR_MENU MENU 
+IDR_MENU MENUEX 
 BEGIN
-    POPUP ""
+    POPUP "",0,0,0
     BEGIN
-        MENUITEM "&Adjust Date/Time",           408
-        MENUITEM SEPARATOR
-        MENUITEM "&Cascade Windows",            403
-        MENUITEM "Tile Windows &Horizontally",  404
-        MENUITEM "Tile Windows &Vertically",    405
-        MENUITEM "Toggle Desktop",              IDC_TOGGLE_DT
-        MENUITEM SEPARATOR
-        MENUITEM "&Task Manager...",            420
-        MENUITEM SEPARATOR
-        POPUP "Sounds && Audio Options"
+        MENUITEM "&Adjust date/time",               IDC_FWD_DATETIME,0,0
+        MENUITEM "&Customize notification icons",   IDC_FWD_CUSTOMNOTIFYICONS,0,0
+        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "Casca&de windows",                IDC_FWD_CASCADE,0,0
+        MENUITEM "Show windows stack&ed",           IDC_FWD_STACKED,0,0
+        MENUITEM "Show windows s&ide by side",      IDC_FWD_SIDEBYSIDE,0,0
+        MENUITEM "Toggle Desktop",                  IDC_TOGGLE_DT,0,0
+//        MENUITEM "&Show the desktop",               IDC_FWD_SHOWDESKTOP,0,0
+        MENUITEM "Minimize all windows",            IDC_FWD_MINALL,0,0
+        MENUITEM "&Undo last window change",                       IDC_FWD_UNDO,0,0
+        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "&Task Manager...",                IDC_FWD_TASKMAN,0,0
+//        MENUITEM "",-1,MFT_SEPARATOR,0
+//        MENUITEM "&Lock the taskbar",               IDC_FWD_LOCKTASKBAR,0,0
+//        MENUITEM "&Lock all taskbars",              IDC_FWD_LOCKALLTASKBAR,0,0
+//        MENUITEM "Taskbar P&roperties",             IDC_FWD_TASKBARPROP,0,0
+        MENUITEM "",-1,MFT_SEPARATOR,0
+        POPUP "Sounds && Audio Options",IDC_SOUNDAUDIO,0,0
         BEGIN
-            MENUITEM "Open Volume Controls",        IDC_VOLUMECONTROL
-            MENUITEM "Adjust Audio Properties",     IDC_AUDIOPROP
+            MENUITEM "Open Volume Controls",        IDC_VOLUMECONTROL,0,0
+            MENUITEM "Adjust Audio Properties",     IDC_AUDIOPROP,0,0
         END
-        POPUP "Network Drive(s)"
+        POPUP "Network Drive(s)",IDC_NETWORK,0,0
         BEGIN
-            MENUITEM "Map Network Drive",           IDC_MAPDRIVE
-            MENUITEM "Disconnect Network Drive",    IDC_DISCONNECT
+            MENUITEM "Map Network Drive",           IDC_MAPDRIVE,0,0
+            MENUITEM "Disconnect Network Drive",    IDC_DISCONNECT,0,0
         END
-        POPUP "T-Clock Quickys"
+        POPUP "T-Clock Quickys",IDC_QUICKYS,0,0
         BEGIN
-            MENUITEM "Windows Explorer",            IDC_QUICKY_WINEXP
-            MENUITEM "Command Prompt",              IDC_QUICKY_DOS
-            MENUITEM SEPARATOR
-            MENUITEM "T-Clock Calendar",            IDC_SHOWCALENDER
-            MENUITEM SEPARATOR
-            MENUITEM "Empty Recycle Bin",           IDC_QUICKY_EMPTYRB
+            MENUITEM "Windows Explorer",            IDC_QUICKY_WINEXP,0,0
+            MENUITEM "Command Prompt",              IDC_QUICKY_DOS,0,0
+            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "T-Clock Calendar",            IDC_SHOWCALENDER,0,0
+            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "Empty Recycle Bin",           IDC_QUICKY_EMPTYRB,0,0
         END
-        POPUP "T-Clock Timers"
+        POPUP "T-Clock Timers",IDC_TIMERS,0,0
         BEGIN
-            MENUITEM "Add/Edit Timer",              IDC_TIMER
-            MENUITEM SEPARATOR
-            MENUITEM "Stopwatch",                   IDM_STOPWATCH
-            MENUITEM SEPARATOR
-            MENUITEM "Running Timers List",         ID_T_TIMER1, GRAYED
+            MENUITEM "Add/Edit Timer",              IDC_TIMER,0,0
+            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "Stopwatch",                   IDM_STOPWATCH,0,0
+            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "Running Timers List",         ID_T_TIMER1,0,MFS_DISABLED
         END
-        POPUP "Exit Windows"
+        POPUP "Exit Windows",IDC_EXITWIN,0,0
         BEGIN
-            MENUITEM "Shutdown",                    IDC_SHUTDOWN
-            MENUITEM "Reboot",                      IDC_REBOOT
-            MENUITEM "Logoff",                      IDC_LOGOFF
+            MENUITEM "Log off",                     IDC_LOGOFF,0,0
+            MENUITEM "Reboot",                      IDC_REBOOT,0,0
+            MENUITEM "Shut Down",                    IDC_SHUTDOWN,0,0
         END
-        MENUITEM SEPARATOR
-        MENUITEM "T-Clock Properties",          IDC_SHOWPROP
-        MENUITEM "Display Properties",          IDC_DISPLAYPROP
-        MENUITEM "Refresh T-Clock",             IDC_REFRESHTCLOCK
-        MENUITEM SEPARATOR
-        MENUITEM "Exit T-Clock",                IDC_EXIT
+        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "T-Clock Properties",              IDC_SHOWPROP,0,0
+        MENUITEM "Display Properties",              IDC_DISPLAYPROP,0,0
+        MENUITEM "Refresh T-Clock",                 IDC_REFRESHTCLOCK,0,0
+        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "Exit T-Clock",                    IDC_EXIT,0,0
+        MENUITEM "",IDS_NONE,MFT_SEPARATOR,0
+        MENUITEM "&Run...",                         IDC_FWD_RUNAPP,0,0
+        MENUITEM "E&xit Explorer",                  IDC_FWD_EXITEXPLORER,0,0
     END
 END
 
