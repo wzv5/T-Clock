@@ -133,12 +133,10 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			OnInit(hDlg);
 //==================================================================================
 			hMouseView = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|
-									  LVS_REPORT|LVS_SINGLESEL, 17, 117,
-									  430, 160, hDlg, NULL, 0, 0);
+									  LVS_REPORT|LVS_SINGLESEL, 17, 117, 430, 160, hDlg, 0, 0, NULL);
+			ListView_SetExtendedListViewStyle(hMouseView,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 			SetWindowTheme(hMouseView,L"Explorer",NULL);
-			ListView_SetExtendedListViewStyle(hMouseView,
-											  LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
-											  
+			
 			lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 			for(iCol = COL_BUTTON; iCol <= COL_OTHERD; iCol++) {
 				lvCol.iSubItem = iCol;	// From the String Table

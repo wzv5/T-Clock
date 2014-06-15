@@ -16,8 +16,7 @@ void OnInit(HWND hDlg, HWND* hList)   //----------------------------------------
 	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	
 	*hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
-						 LVS_SINGLESEL, 9, 55, 236, 104, hDlg, NULL, 0, 0);
-						 
+						 LVS_SINGLESEL, 9, 55, 236, 104, hDlg, 0, 0, NULL);
 	ListView_SetExtendedListViewStyle(*hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 	SetWindowTheme(*hList,L"Explorer",NULL);
 	
