@@ -5,7 +5,7 @@
 // Last Modified by Stoic Joker: Sunday, 01/09/2011 @ 4:34:56pm
 #include "tclock.h"
 static const char g_click_max = 2;
-static const char g_reg_key[] = "Mouse";
+const char g_reg_mouse[] = "Mouse";
 
 static char g_click_button = -1;
 static char g_click = 0;
@@ -16,7 +16,7 @@ static int GetMouseFuncNum(char button, char nclick) {
 	entry[0]='0'+button;
 	entry[1]='0'+nclick;
 	entry[2]='\0';
-	return GetMyRegLong(g_reg_key,entry,0);
+	return GetMyRegLong(g_reg_mouse,entry,0);
 }
 
 /*------------------------------------------------
@@ -31,7 +31,7 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
 	int i, num;
 	int nType;
 	
-	nType = GetMyRegLong(g_reg_key, "DropFiles", 0);
+	nType = GetMyRegLong(g_reg_mouse, "DropFiles", 0);
 	
 	num = DragQueryFile(hdrop, (UINT)-1, NULL, 0);
 	if(num <= 0) return;
@@ -53,7 +53,7 @@ void OnDropFiles(HWND hwnd, HDROP hdrop)
 	*p = 0;
 	DragFinish(hdrop);
 	
-	GetMyRegStr(g_reg_key, "DropFilesApp", app, 1024, "");
+	GetMyRegStr(g_reg_mouse, "DropFilesApp", app, 1024, "");
 	
 	if(nType == 1 || nType == 3 || nType == 4) {
 		memset(&shfos, 0, sizeof(SHFILEOPSTRUCT));

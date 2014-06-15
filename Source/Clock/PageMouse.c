@@ -15,14 +15,14 @@ static void OnMouseFileChange(HWND hDlg);
 static void OnSansho(HWND hDlg, WORD id);
 static void InitMouseFuncList(HWND hDlg);
 
-static const char g_reg_key[] = "Mouse";
+extern const char g_reg_mouse[];
+#define MAX_CLICKS 2 // maximum mouse clicks (single and double only)
 
 #define COL_BUTTON 0 // Mouse Button (Left or Middle)
 #define COL_CLKTYP 1 // Click Type (Single or Double)
 #define COL_ACTION 2 // Action to Take (Run Program?)
 #define COL_OTHERD 3 // Other Format / App Path Data
 
-#define MAX_CLICKS 2 // maximum mouse clicks (single and double only)
 
 //----------------------+++--> Mouse Click Date Configuration,
 typedef struct { //--+++--> Manipulation, & Storage Structure.
@@ -105,7 +105,7 @@ void AddMouseClickSettings(HWND hList, HWND hDlg)   //--------------------------
 		} //-//-//------------+++--> End of for(c;;) Mouse Clicks LOOP
 	} //-//-//-//-----------+++--> End of for(m;;) Mouse Button LOOP
 	
-	if(GetMyRegLong(g_reg_key, "DropFiles", 0)) {
+	if(GetMyRegLong(g_reg_mouse, "DropFiles", 0)) {
 		char szApp[LRG_BUFF] = {0};
 		lvItem.pszText = "Drag";
 		lvItem.iSubItem = COL_BUTTON;
@@ -138,9 +138,8 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			SetWindowTheme(hMouseView,L"Explorer",NULL);
 			
 			lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-			for(iCol = COL_BUTTON; iCol <= COL_OTHERD; iCol++) {
+			for(iCol = COL_BUTTON; iCol <= COL_OTHERD; ++iCol) {
 				lvCol.iSubItem = iCol;	// From the String Table
-				
 				switch(iCol) {
 				case COL_BUTTON:
 					lvCol.pszText = "Button"; // Column Header Text
@@ -198,7 +197,8 @@ BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			} else if((id==IDC_TOOLTIP && code==EN_CHANGE) || id==IDCB_TOOLTIP) {
 				if(id==IDCB_TOOLTIP) EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 				g_bApplyClock = TRUE; SendPSChanged(hDlg);
-			} return TRUE;
+			}
+			return TRUE;
 		}
 		
 	case WM_NOTIFY:
@@ -235,10 +235,10 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		SendDlgItemMessage(hDlg, IDC_TOOLTIP,		WM_SETFONT, (WPARAM)hfont, 0);
 	}
 	
-	for(i = IDS_NONE; i <= IDS_MOVETO; i++) CBAddString(hDlg, IDC_DROPFILES, MyString(i));
+	for(i = IDS_NONE; i <= IDS_MOVETO; ++i) CBAddString(hDlg, IDC_DROPFILES, MyString(i));
 	
-	CBSetCurSel(hDlg, IDC_DROPFILES, GetMyRegLong(g_reg_key, "DropFiles", 0));
-	GetMyRegStr(g_reg_key, "DropFilesApp", s, 256, "");
+	CBSetCurSel(hDlg, IDC_DROPFILES, GetMyRegLong(g_reg_mouse, "DropFiles", 0));
+	GetMyRegStr(g_reg_mouse, "DropFilesApp", s, 256, "");
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP, s);
 	
 	pData=malloc(sizeof(CLICKDATA) * 5);
@@ -249,12 +249,12 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 			entry[0]='0'+(char)i;
 			entry[1]='1'+(char)j;
 			pData[i].disable = FALSE;
-			pData[i].func[j] = GetMyRegLong(g_reg_key, entry, MOUSEFUNC_NONE);
+			pData[i].func[j] = GetMyRegLong(g_reg_mouse, entry, MOUSEFUNC_NONE);
 			pData[i].format[j][0] = 0; // Clipboard
 			pData[i].fname[j][0] = 0; // Open With...
 			if(pData[i].func[j] == MOUSEFUNC_CLIPBOARD) {
 				memcpy(entry+2,"Clip",5);
-				GetMyRegStr(g_reg_key, entry, pData[i].format[j], 256, "");
+				GetMyRegStr(g_reg_mouse, entry, pData[i].format[j], 256, "");
 			}
 		}
 	}
@@ -292,11 +292,11 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	char s[LRG_BUFF], entry[3+4];
 	int n, i, j;
 	entry[2]='\0';
-	n = (int)CBGetCurSel(hDlg, IDC_DROPFILES);
+	n = (int)CBGetCurSel(hDlg,IDC_DROPFILES);
 	SetMyRegLong("", "DropFiles", (n > 0));
-	SetMyRegLong(g_reg_key, "DropFiles", n);
+	SetMyRegLong(g_reg_mouse, "DropFiles", n);
 	GetDlgItemText(hDlg, IDC_DROPFILESAPP, s, 256);
-	SetMyRegStr(g_reg_key, "DropFilesApp", s);
+	SetMyRegStr(g_reg_mouse, "DropFilesApp", s);
 	
 	for(i=0; i<=4; ++i) {
 		if(i==1) continue;
@@ -304,11 +304,12 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			entry[0]='0'+(char)i;
 			entry[1]='1'+(char)j;
 			if(pData[i].func[j])
-				SetMyRegLong(g_reg_key, entry, pData[i].func[j]);
-			else DelMyReg(g_reg_key, entry);
+				SetMyRegLong(g_reg_mouse, entry, pData[i].func[j]);
+			else
+				DelMyReg(g_reg_mouse, entry);
 			if(pData[i].func[j] == MOUSEFUNC_CLIPBOARD) {
 				memcpy(entry+2,"Clip",5);
-				SetMyRegStr(g_reg_key, entry, pData[i].format[j]);
+				SetMyRegStr(g_reg_mouse, entry, pData[i].format[j]);
 			}
 		}
 	}
@@ -331,7 +332,7 @@ void OnDropFilesChange(HWND hDlg)   //------------------------------------------
 {
 	int i, n;
 	
-	n = (int)CBGetCurSel(hDlg, IDC_DROPFILES);
+	n = (int)CBGetCurSel(hDlg,IDC_DROPFILES);
 	SetDlgItemText(hDlg, IDC_LABDROPFILESAPP, MyString(n >= 3?IDS_LABFOLDER:IDS_LABPROGRAM));
 	
 	for(i = IDC_LABDROPFILESAPP; i <= IDC_DROPFILESAPPSANSHO; i++)
@@ -367,7 +368,7 @@ void OnMouseClickTime(HWND hDlg, int id)   //-----------------------------------
 	func = pData[button].func[click];
 	
 	count = (int)CBGetCount(hDlg, IDC_MOUSEFUNC);
-	for(i = 0; i < count; i++) {
+	for(i = 0; i < count; ++i) {
 		if(func == CBGetItemData(hDlg, IDC_MOUSEFUNC, i)) {
 			CBSetCurSel(hDlg, IDC_MOUSEFUNC, i);
 			break;
