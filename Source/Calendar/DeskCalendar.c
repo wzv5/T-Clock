@@ -8,7 +8,9 @@
 #include "resource.h"
 //#include <WinUser.h>
 #include <time.h>
+HWND g_hwndClock=0; // required in utl.c
 //utl.c
+void ForceForegroundWindow(HWND hwnd);
 LONG GetMyRegLongEx(char* section, char* entry, LONG defval);
 LONG GetMyRegLong(char* section, char* entry, LONG defval);
 BOOL SetMyRegLong(char* subkey, char* entry, DWORD val);
@@ -77,17 +79,7 @@ void GetDayOfYearTitle(char* szTitle, int ivMonths)   //------------------------
 		wsprintf(szTitle, "T-Clock: Calendar  Day: %s", szDoY);
 	}
 }
-//#include <stddef.h>
-//void ForceForegroundWindow(HWND hwnd)
-//{
-//	DWORD fgthread=GetWindowThreadProcessId(GetForegroundWindow(),0);
-//	if(fgthread && _threadid^fgthread && AttachThreadInput(_threadid,fgthread,1)){
-//		SetForegroundWindow(hwnd);
-//		AttachThreadInput(_threadid,fgthread,0);
-//		return;
-//	}
-//	SetForegroundWindow(hwnd);
-//}
+static char g_fullinit=0;
 LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch(uMsg) {
@@ -126,7 +118,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			if(rc.right<(LONG)MonthCal_GetMaxTodayWidth(hCal))
 				rc.right=MonthCal_GetMaxTodayWidth(hCal);
 		}
-		SetWindowPos(hCal,NULL,0,0,rc.right,rc.bottom,SWP_NOZORDER);
+		SetWindowPos(hCal,HWND_TOP,0,0,rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
 		AdjustWindowRectEx(&rc,WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,FALSE,0);
 //		AdjustWindowRectEx(&rc,GetWindowLongPtr(hwnd,GWL_STYLE),GetMenu(hwnd)?TRUE:FALSE,GetWindowLongPtr(hwnd,GWL_EXSTYLE));
 		SetWindowPos(hwnd,HWND_TOPMOST,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
@@ -139,7 +131,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 //	case WM_ACTIVATEAPP:
 //		if(uMsg==WM_ACTIVATEAPP && wParam) break;
 	case WM_KILLFOCUS:
-		if(bAutoClose)
+		if(bAutoClose && g_fullinit)
 			PostMessage(hwnd,WM_CLOSE,0,0);//adds a little more delay which is good
 		break;
 	case WM_CLOSE:
@@ -158,6 +150,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 //---------------------------------------------------+++--> Open "Calendar":
 HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 {
+	MSG msg;
 	INITCOMMONCONTROLSEX icex;
 	WNDCLASSEX wcx;
 	ATOM calclass;
@@ -180,9 +173,20 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	wcx.lpszClassName = "ClockFlyoutWindow";
 	wcx.hIconSm=NULL;
 	calclass=RegisterClassEx(&wcx);
-	hwnd=CreateWindowEx(0,(LPCSTR)MAKELPARAM(calclass,0),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,NULL,hInstance,NULL);
-//	hwnd=CreateWindowEx(WS_EX_TOOLWINDOW, (LPCSTR)MAKELPARAM(calclass,0), "T-Clock: Calendar", WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE, 0,0,100,100, NULL, NULL, hInstance, NULL);
-//	ForceForegroundWindow(hwnd);
+	g_fullinit=0;
+	hwnd=CreateWindowEx(0,(LPCSTR)MAKELPARAM(calclass,0),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,hInstance,NULL);
+	while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
+		if(msg.message==WM_QUIT) ExitProcess(0);
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	ForceForegroundWindow(hwnd);
+	while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
+		if(msg.message==WM_QUIT) ExitProcess(0);
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	g_fullinit=1;
 	if(bAutoClose && GetForegroundWindow()!=hwnd)
 		PostMessage(hwnd,WM_CLOSE,0,0);
 	return hwnd;
@@ -191,7 +195,6 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 //int main(int argc,char* argv[])
 int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
 {
-	HWND hiddenwnd;
 	MSG msg;
 	BOOL bRet;
 	OSVERSIONINFOEX osvi;
@@ -202,8 +205,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine
 	if(osvi.dwMajorVersion>=6) bV7up=TRUE;
 //	else if((osvi.dwMajorVersion==5) && (osvi.dwMinorVersion==0)) b2000=TRUE;
 //	if(osvi.dwMajorVersion>=5) return TRUE;
-	hiddenwnd=CreateWindow("Edit","",0,0,0,0,0,NULL,NULL,hInstance,NULL);
-	if(!CreateCalender(hInstance,hiddenwnd)) return 1;
+	if(!CreateCalender(hInstance,0)) return 1;
 	while((bRet=GetMessage(&msg,NULL,0,0))!=0){
 		if(bRet==-1){//handle the error and possibly exit
 			break;
