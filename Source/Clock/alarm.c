@@ -328,56 +328,6 @@ void OnMCINotify(HWND hwnd)
 		} else StopFile();
 	}
 }
-/*-------------------------------------------------------------------
---------------- Retreive a file name and option from a command string
--------------------------------------------------------------------*/
-void GetFileAndOption(const char* command, char* fname, char* opt)
-{
-	const char* p, *pe;	char* pd;
-	WIN32_FIND_DATA fd;
-	HANDLE hfind;
-	
-	p = command; pd = fname;
-	pe = NULL;
-	for(;;) {
-		if(*p == ' ' || *p == 0) {
-			*pd = 0;
-			hfind = FindFirstFile(fname, &fd);
-			if(hfind != INVALID_HANDLE_VALUE) {
-				FindClose(hfind);
-				pe = p;
-			}
-			if(*p == 0) break;
-		}
-		*pd++ = *p++;
-	}
-	
-	if(pe == NULL) pe = p;
-	
-	p = command; pd = fname;
-	for(; p != pe;) {
-		*pd++ = *p++;
-	}
-	*pd = 0;
-	if(*p == ' ') p++;
-	
-	pd = opt;
-	for(; *p;) *pd++ = *p++;
-	*pd = 0;
-}
-/*--------------------------------------------------
- --------------------------------------- Open a file
---------------------------------------------------*/
-BOOL ExecFile(HWND hwnd, const char* command)
-{
-	char fname[MAX_PATH], opt[MAX_PATH];
-	if(*command){
-		GetFileAndOption(command,fname,opt);
-		if((intptr_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOW)>32)
-			return TRUE;
-	}
-	return FALSE;
-}
 //================================================================================================
 //------------------------------------------------------//----+++--> Load & Play a Wave Audio File:
 BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------------------+++-->

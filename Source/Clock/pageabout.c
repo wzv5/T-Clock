@@ -103,7 +103,7 @@ void OnLinkClicked(HWND hDlg, UINT id)
 		strcat(str, "?subject=About "); strcat(str, CONF_START);
 	}else
 		GetDlgItemText(hDlg, id, str, 64);
-	ShellExecute(hDlg, NULL, str, NULL, "", SW_SHOW);
+	ShellExecute(hDlg, NULL, str, NULL, "", SW_SHOWNORMAL);
 }
 //================================================================================================
 //-------{ Give me a Hand...(Icon) }------+++--> Change Curser to Hand When Mousing Over Web Links:
