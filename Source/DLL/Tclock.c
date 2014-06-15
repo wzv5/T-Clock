@@ -632,7 +632,7 @@ LRESULT OnCalcRect(HWND hwnd)
 	SIZE sz;
 	int hf;
 	
-	if(!(GetWindowLong(hwnd, GWL_STYLE)&WS_VISIBLE)) return 0;
+	if(!(GetWindowLongPtr(hwnd, GWL_STYLE)&WS_VISIBLE)) return 0;
 	
 	hdc = GetDC(hwnd);
 	

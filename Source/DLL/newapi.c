@@ -85,13 +85,13 @@ void EndNewAPI(HWND hwndClock)
 	
 	if(pSetLayeredWindowAttributes) {
 		HWND hwnd;
-		LONG exstyle;
+		LONG_PTR exstyle;
 		
 		hwnd = GetParent(GetParent(hwndClock));
-		exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+		exstyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
 		if(exstyle & WS_EX_LAYERED) {
 			exstyle &= ~WS_EX_LAYERED;
-			SetWindowLong(hwnd, GWL_EXSTYLE, exstyle);
+			SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
 			bClearTaskbar = FALSE;
 			RefreshRebar(hwnd);
 		}
@@ -145,7 +145,7 @@ void TransBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy
 
 void SetLayeredTaskbar(HWND hwndClock)
 {
-	LONG exstyle;
+	LONG_PTR exstyle;
 	HWND hwnd;
 	int alpha;
 	
@@ -159,10 +159,10 @@ void SetLayeredTaskbar(HWND hwndClock)
 	
 	hwnd = GetParent(GetParent(hwndClock));
 	
-	exstyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+	exstyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
 	if(alpha < 255 || bClearTaskbar) exstyle |= WS_EX_LAYERED;
 	else exstyle &= ~WS_EX_LAYERED;
-	SetWindowLong(hwnd, GWL_EXSTYLE, exstyle);
+	SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
 	if(bRefreshClearTaskbar) {
 		bRefreshClearTaskbar = FALSE;
 		RefreshUs();
