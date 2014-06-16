@@ -16,22 +16,22 @@ void OnInit(HWND hDlg, HWND* hList)   //----------------------------------------
 	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	
 	*hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
-						 LVS_SINGLESEL, 9, 55, 236, 104, hDlg, 0, 0, NULL);
+						 LVS_NOSORTHEADER|LVS_SINGLESEL, 9, 55, 236, 104, hDlg, 0, 0, NULL);
 	ListView_SetExtendedListViewStyle(*hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 	SetWindowTheme(*hList,L"Explorer",NULL);
 	
 	lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	lvCol.cx = 42;		 // Column Width
-	lvCol.iSubItem = 0;      // Column Number
-	lvCol.fmt = LVCFMT_CENTER; // Column Alignment
-	lvCol.pszText = TEXT("Lap"); // Column Header Text
-	ListView_InsertColumn(*hList, 0, &lvCol);
+	lvCol.cx = 52; // Column Width
+	lvCol.iSubItem = 0;
+	lvCol.fmt = LVCFMT_CENTER;
+	lvCol.pszText = TEXT("Lap");
+	ListView_InsertColumn(*hList,0,&lvCol);
 	
-	lvCol.cx = 121;
+	lvCol.cx = 164;
 	lvCol.iSubItem = 1;
 	lvCol.fmt = LVCFMT_LEFT;
 	lvCol.pszText = TEXT("Times");
-	ListView_InsertColumn(*hList, 1, &lvCol);
+	ListView_InsertColumn(*hList,1,&lvCol);
 	
 	ShowWindow(*hList, SW_SHOW);
 	

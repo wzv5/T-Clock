@@ -27,7 +27,7 @@ BOOL CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		OnInit(hDlg);				// IF We Give IT a Window Caption ... Is IT Easier to Find??!?
 //==================================================================================
 		hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
-							 LVS_SINGLESEL, 17, 117, 430, 191, hDlg, 0, 0, NULL);
+							 LVS_NOSORTHEADER|LVS_SINGLESEL, 17, 117, 430, 191, hDlg, 0, 0, NULL);
 		ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 		SetWindowTheme(hList,L"Explorer",NULL);
 		
