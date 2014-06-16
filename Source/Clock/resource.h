@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by tClock.rc
 //
-#define IDS_PROPERTY                    3
 #define IDS_BTNFACE                     4
 #define IDS_ADDALARM                    8
 #define IDS_MMFILE                      10
@@ -20,31 +19,7 @@
 #define IDS_RIGHTBUTTONM                22
 #define IDS_XBUTTON1                    23
 #define IDS_XBUTTON2                    24
-#define IDS_TIMER                       30
-#define IDS_SCREENSAVER                 31
-#define IDS_SHOWCALENDER                32
-#define IDS_MOUSECOPY                   33
-#define IDS_FILE                        35
-#define IDS_BMPFILE                     36
-#define IDS_BMPICONFILE                 37
-#define IDS_EXEDLLFILE                  38
-#define IDS_NOICON                      39
-#define IDS_START                       40
 #define IDS_NOTFOUNDCLOCK               45
-#define IDS_FILLCLOCK                   56
-#define IDS_SKINCLOCK                   57
-#define IDS_FILLTRAY                    58
-#define IDS_SKINTRAY                    59
-#define IDS_3DFACE                      64
-#define IDS_BUTTONTEXT                  65
-#define IDS_TASKBAREDGENORMAL           66
-#define IDS_TASKBAREDGEFLAT             67
-#define IDS_TASKBAREDGESKINNED          68
-#define IDS_DESKTOPICONSIZESMALL        69
-#define IDS_DESKTOPICONSIZENORMAL       70
-#define IDS_CLOCKROTATEFONTNONE         72
-#define IDS_CLOCKROTATEFONTLEFT         73
-#define IDS_CLOCKROTATEFONTRIGHT        74
 #define IDS_LIST_TASKNUMBER             75
 #define IDS_LIST_TASKNAME               76
 #define IDS_LIST_TASKTARGET             77
@@ -259,13 +234,14 @@
 #define IDC_DROPFILESAPPSANSHO          1404
 #define IDC_LABMOUSEBUTTON              1405
 #define IDC_MOUSEBUTTON                 1406
-#define IDC_RADSINGLE                   1407
-#define IDC_RADDOUBLE                   1408
+#define IDC_RADSINGLE                   1407 /* group */
+#define IDC_RADDOUBLE                   1408 /* end group */
 #define IDC_MOUSEFUNC                   1411
 #define IDC_LABMOUSEFILE                1412
 #define IDC_MOUSEFILE                   1413
 #define IDCB_TOOLTIP                    1414
 #define IDC_TOOLTIP                     1415
+#define IDC_LIST                        1416
 #define IDC_DESKCAL                     1605
 #define IDC_LABDESKCAL                  1606
 #define IDC_COMDESKCAL                  1607
