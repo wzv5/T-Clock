@@ -17,6 +17,13 @@ static void OnMeasureItemColorCombo(LPARAM lParam);
 static HFONT hfontb;  // for IDC_BOLD
 static HFONT hfonti;  // for IDC_ITALIC
 
+static const char* g_rotate[]={
+	"None",
+	"Left",
+	"Right",
+};
+static const int g_rotateCount=sizeof(g_rotate)/sizeof(char*);
+
 static __inline void SendPSChanged(HWND hDlg){
 	g_bApplyTaskbar = TRUE;
 	g_bApplyClock = TRUE;
@@ -78,7 +85,7 @@ void OnInit(HWND hDlg)
 	HDC hdc;
 	LOGFONT logfont;
 	HFONT hfont;
-	char s[1024];
+	char buf[1024];
 	int i;
 	
 	// setting of "background" and "text"
@@ -133,28 +140,24 @@ void OnInit(HWND hDlg)
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE, 0, MAKELONG(100, 0));
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
 	
-	for(i = 72; i <= 74; i++)
-		CBAddString(hDlg, IDC_CLOCKROTATE, MyString(i));
-		
-	GetMyRegStr("Clock", "FontRotateDirection", s, 80, MyString(72));
-	if(_strnicmp(s, "LEFT", 4) == 0)
-		CBSetCurSel(hDlg, IDC_CLOCKROTATE, 1);
-		
-	else if(_strnicmp(s, "RIGHT", 5) == 0)
-		CBSetCurSel(hDlg, IDC_CLOCKROTATE, 2);
-		
+	for(i=0; i<g_rotateCount; ++i)
+		CBAddString(hDlg,IDC_CLOCKROTATE,g_rotate[i]);
+	GetMyRegStr("Clock","FontRotateDirection",buf,80,g_rotate[0]);
+	if(_strnicmp(buf,g_rotate[1],4)==0)
+		CBSetCurSel(hDlg,IDC_CLOCKROTATE,1);
+	else if(_strnicmp(buf,g_rotate[2],5)==0)
+		CBSetCurSel(hDlg,IDC_CLOCKROTATE,2);
 	else
-		CBSetCurSel(hDlg, IDC_CLOCKROTATE, 0);
-		
-	i = GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY);
-	CBAddString(hDlg, IDC_FONTQUAL, "Default");				// DEFAULT_QUALITY			 = 0
-	CBAddString(hDlg, IDC_FONTQUAL, "Draft");				// DRAFT_QUALITY			 = 1
-	CBAddString(hDlg, IDC_FONTQUAL, "Proof");				// PROOF_QUALITY			 = 2
-	CBAddString(hDlg, IDC_FONTQUAL, "NonAntiAliased");		// NONANTIALIASED_QUALITY	 = 3
-	CBAddString(hDlg, IDC_FONTQUAL, "AntiAliased (Win7)");	// ANTIALIASED_QUALITY		 = 4
-	CBAddString(hDlg, IDC_FONTQUAL, "ClearType (WinXP+)");	// CLEARTYPE_QUALITY		 = 5
-	CBAddString(hDlg, IDC_FONTQUAL, "ClearType Natural");	// CLEARTYPE_NATURAL_QUALITY = 6
-	CBSetCurSel(hDlg, IDC_FONTQUAL, i);
+		CBSetCurSel(hDlg,IDC_CLOCKROTATE,0);
+	i=GetMyRegLong("Clock","FontQuality",CLEARTYPE_QUALITY);
+	CBAddString(hDlg,IDC_FONTQUAL,"Default");				// DEFAULT_QUALITY			 = 0
+	CBAddString(hDlg,IDC_FONTQUAL,"Draft");					// DRAFT_QUALITY			 = 1
+	CBAddString(hDlg,IDC_FONTQUAL,"Proof");					// PROOF_QUALITY			 = 2
+	CBAddString(hDlg,IDC_FONTQUAL,"NonAntiAliased");		// NONANTIALIASED_QUALITY	 = 3
+	CBAddString(hDlg,IDC_FONTQUAL,"AntiAliased (Win7)");	// ANTIALIASED_QUALITY		 = 4
+	CBAddString(hDlg,IDC_FONTQUAL,"ClearType (WinXP+)");	// CLEARTYPE_QUALITY		 = 5
+	CBAddString(hDlg,IDC_FONTQUAL,"ClearType Natural");		// CLEARTYPE_NATURAL_QUALITY = 6
+	CBSetCurSel(hDlg,IDC_FONTQUAL,i);
 }
 
 /*------------------------------------------------
@@ -189,10 +192,10 @@ void OnApply(HWND hDlg)
 	SetMyRegLong("Clock", "HorizPos", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINHPOS,    UDM_GETPOS, 0, 0));
 	SetMyRegLong("Taskbar","AlphaTaskbar",(DWORD)SendDlgItemMessage(hDlg, IDC_SPINALPHA,  UDM_GETPOS, 0, 0));
 	
-	GetDlgItemText(hDlg, IDC_CLOCKROTATE, ss, 1024);
-	if(_strnicmp(ss, "LEFT", 4) == 0)		  SetMyRegStr("Clock", "FontRotateDirection", "Left");
-	else if(_strnicmp(ss, "RIGHT", 5) == 0) SetMyRegStr("Clock", "FontRotateDirection", "Right");
-	else									  SetMyRegStr("Clock", "FontRotateDirection", "None");
+	GetDlgItemText(hDlg,IDC_CLOCKROTATE,ss,1024);
+	if(_strnicmp(ss,g_rotate[1],4)==0)			SetMyRegStr("Clock","FontRotateDirection",g_rotate[1]);
+	else if(_strnicmp(ss,g_rotate[2],5)==0)		SetMyRegStr("Clock","FontRotateDirection",g_rotate[2]);
+	else										SetMyRegStr("Clock","FontRotateDirection",g_rotate[0]);
 }
 
 /*------------------------------------------------
