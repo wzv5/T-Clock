@@ -43,12 +43,12 @@ BEGIN
         MENUITEM "Casca&de windows",                IDC_FWD_CASCADE,0,0
         MENUITEM "Show windows stack&ed",           IDC_FWD_STACKED,0,0
         MENUITEM "Show windows s&ide by side",      IDC_FWD_SIDEBYSIDE,0,0
-        MENUITEM "Toggle Desktop",                  IDC_TOGGLE_DT,0,0
+        MENUITEM "Toggle desktop",                  IDC_TOGGLE_DT,0,0
 //        MENUITEM "&Show the desktop",               IDC_FWD_SHOWDESKTOP,0,0
         MENUITEM "Minimize all windows",            IDC_FWD_MINALL,0,0
-        MENUITEM "&Undo last window change",                       IDC_FWD_UNDO,0,0
+        MENUITEM "&Undo last window change",        IDC_FWD_UNDO,0,0
         MENUITEM "",-1,MFT_SEPARATOR,0
-        MENUITEM "&Task Manager...",                IDC_FWD_TASKMAN,0,0
+        MENUITEM "&Task Manager",                   IDC_FWD_TASKMAN,0,0
 //        MENUITEM "",-1,MFT_SEPARATOR,0
 //        MENUITEM "&Lock the taskbar",               IDC_FWD_LOCKTASKBAR,0,0
 //        MENUITEM "&Lock all taskbars",              IDC_FWD_LOCKALLTASKBAR,0,0
