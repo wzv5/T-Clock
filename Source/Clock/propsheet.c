@@ -58,7 +58,7 @@ void MyPropertySheet(void)   //-------------------------------------------------
 	// set data of property sheet
 	memset(&psh, 0, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.dwFlags = PSH_USEICONID | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK;
+	psh.dwFlags = PSH_USEICONID | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
 	psh.hInstance = hInstance;
 	psh.pszIcon = MAKEINTRESOURCE(IDI_MAIN);
 	psh.pszCaption = "T-Clock Redux";
@@ -80,10 +80,6 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 {
 	(void)lParam;
 	if(uMsg == PSCB_INITIALIZED) {
-		LONG style = GetWindowLong(hDlg, GWL_EXSTYLE);
-		style ^= WS_EX_CONTEXTHELP; // Hide ? Button
-		SetWindowLong(hDlg, GWL_EXSTYLE, style);
-		
 		// subclass the window
 		oldWndProc = (WNDPROC)GetWindowLongPtr(hDlg, GWL_WNDPROC);
 		SetWindowLongPtr(hDlg, GWL_WNDPROC, (LONG_PTR)SubclassProc);
@@ -95,21 +91,25 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 ---------------------------------------------------------*/
 LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT l;
+	LRESULT ret;
 	switch(message) {
-	
 	case WM_SHOWWINDOW: // adjust the window position
 		SetMyDialgPos(hwnd,21);
 		return FALSE; // Returning FALSE Allows it to Maintain Caret Focus
 	}
-	
 	// default
-	l = CallWindowProc(oldWndProc, hwnd, message, wParam, lParam);
-	
+	ret = CallWindowProc(oldWndProc, hwnd, message, wParam, lParam);
 	switch(message) {
+	case WM_ACTIVATE:
+		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
+			SetWindowPos(hwnd,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+		}else{
+			SetWindowPos(hwnd,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+			SetWindowPos((HWND)wParam,hwnd,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+		}
+		break;
 	case WM_COMMAND: {
-			WORD id;
-			id = LOWORD(wParam);
+			WORD id = LOWORD(wParam);
 			// close the window by "OK" or "Cancel"
 			if(id == IDOK || id == IDCANCEL) {
 				// MyHelp(hwnd, -1);
@@ -148,7 +148,7 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			break;
 		}
 	}
-	return l;
+	return ret;
 }
 
 //=================================================================================================
