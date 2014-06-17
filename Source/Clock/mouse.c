@@ -101,7 +101,7 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_MBUTTONDOWN: case WM_MBUTTONUP:
 		button=2; break;
 	case WM_XBUTTONDOWN: case WM_XBUTTONUP:
-		button=(lParam==XBUTTON1?3:4); break;
+		button=(HIWORD(wParam)==XBUTTON1?3:4); break;
 	default: return;
 	}
 	
@@ -162,8 +162,9 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 --------------------------------------------------*/
 void OnTimerMouse(HWND hwnd)
 {
+	int func=GetMouseFuncNum(g_click_button,g_click);
 	KillTimer(hwnd,IDTIMER_MOUSE);
-	switch(GetMouseFuncNum(g_click_button,g_click)){
+	switch(func){
 	case MOUSEFUNC_TIMER:
 		DialogTimer();
 		break;
@@ -179,6 +180,8 @@ void OnTimerMouse(HWND hwnd)
 	case MOUSEFUNC_SCREENSAVER:
 		SendMessage(GetDesktopWindow(),WM_SYSCOMMAND,SC_SCREENSAVE,0);
 		break;
+	default:
+		PostMessage(g_hWnd,WM_COMMAND,func,0);
 	}
 	g_click_button=-1;
 	g_click=0;

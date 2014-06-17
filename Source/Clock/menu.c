@@ -108,6 +108,9 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case IDM_SHOWPROP: //---------------------+++--> Show T-Clock Properties Dialog
 		MyPropertySheet(-1);
 		return;
+	case IDM_PROP_ALARM:
+		MyPropertySheet(1);
+		return;
 		
 	case IDM_SYNCTIME:
 		SyncTimeNow();
@@ -245,7 +248,23 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		HWND hwndTray = FindWindow("Shell_TrayWnd", NULL);
 		if(hwndTray) PostMessage(hwndTray, WM_COMMAND, (WPARAM)wID, 0);
 		return;}
-		
+	case IDM_DATETIME_EX:{
+		int wait=40;
+		HWND hwnd1=FindWindow("Shell_TrayWnd",NULL);
+		if(hwnd1){
+			HWND hwnd2;
+			SendMessage(hwnd1,WM_COMMAND,IDM_FWD_DATETIME,0);
+			while((hwnd2=FindWindow(MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
+			if(hwnd2){
+				SetActiveWindow(hwnd2);
+				hwnd1=FindWindowEx(hwnd2,NULL,MAKEINTATOM(32770),"Date and Time");
+				if(hwnd1){
+					hwnd2=GetDlgItem(hwnd1,116);
+					if(hwnd2) PostMessage(hwnd2,BM_CLICK,0,0);
+				}
+			}
+		}
+		return;}
 	case ID_T_TIMER1:
 	case ID_T_TIMER2:
 	case ID_T_TIMER3:

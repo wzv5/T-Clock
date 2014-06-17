@@ -35,10 +35,18 @@ typedef struct{
 static const action_t g_mouseAction[]={
 //	{MOUSEFUNC_NONE,"<unknown>"},
 	{MOUSEFUNC_TIMER,"Timer"},
+	{IDM_TIMEWATCH,"Timer watch"},
 	{MOUSEFUNC_CLIPBOARD,"Copy To Clipboard"},
 	{MOUSEFUNC_SCREENSAVER,"Screensaver"},
 	{MOUSEFUNC_SHOWCALENDER,"Calendar"},
 	{MOUSEFUNC_SHOWPROPERTY,"T-Clock Properties"},
+	{IDM_STOPWATCH,"Stopwatch"},
+	{IDM_PROP_ALARM,"Alarms"},
+	{IDM_FWD_DATETIME,"Adjust date/time"},
+	{IDM_DATETIME_EX,"Adjust date/time ex"},
+	{IDM_FWD_STACKED,"Show windows stacked"},
+	{IDM_FWD_SIDEBYSIDE,"Show windows side by side"},
+	{IDM_FWD_UNDO,"Undo last window change"},
 };
 static const int g_mouseActionCount=sizeof(g_mouseAction)/sizeof(action_t);
 //#define g_mouseActionCount (sizeof(g_mouseAction)/sizeof(action_t))
@@ -338,19 +346,19 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	++lvCol.iSubItem;
 	lvCol.pszText="Click Type";
 	lvCol.fmt=LVCFMT_CENTER;
-	lvCol.cx=75;
+	lvCol.cx=70;
 	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Action";
 	lvCol.fmt=LVCFMT_LEFT;
-	lvCol.cx=113;
+	lvCol.cx=160;
 	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Other";
 	lvCol.fmt=LVCFMT_LEFT;
-	lvCol.cx=182;
+	lvCol.cx=140;
 	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
 	ShowWindow(*hList,SW_SHOW);
 	/// select first mouse setup and UpdateMouseClickList
@@ -441,6 +449,7 @@ void OnSansho(HWND hDlg, WORD id)
 void InitMouseFuncList(HWND hDlg)   //------------------------------------------------------+++-->
 {
 	int iter;
+	CBSetDroppedWidth(hDlg,IDC_MOUSEFUNC,180);
 	CBAddString(hDlg,IDC_MOUSEFUNC,MyString(IDS_NONE));
 	CBSetItemData(hDlg,IDC_MOUSEFUNC,0,0);
 	for(iter=0; iter<g_mouseActionCount; ++iter){

@@ -38,6 +38,7 @@ BEGIN
     POPUP "",0,0,0
     BEGIN
         MENUITEM "&Adjust date/time",               IDM_FWD_DATETIME,0,0
+//        MENUITEM "&Adjust date/time ex",               IDM_DATETIME_EX,0,0
         MENUITEM "&Customize notification icons",   IDM_FWD_CUSTOMNOTIFYICONS,0,0
         MENUITEM "",-1,MFT_SEPARATOR,0
         MENUITEM "Casca&de windows",                IDM_FWD_CASCADE,0,0
