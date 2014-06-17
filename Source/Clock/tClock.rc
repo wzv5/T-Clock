@@ -37,65 +37,65 @@ IDR_MENU MENUEX
 BEGIN
     POPUP "",0,0,0
     BEGIN
-        MENUITEM "&Adjust date/time",               IDC_FWD_DATETIME,0,0
-        MENUITEM "&Customize notification icons",   IDC_FWD_CUSTOMNOTIFYICONS,0,0
+        MENUITEM "&Adjust date/time",               IDM_FWD_DATETIME,0,0
+        MENUITEM "&Customize notification icons",   IDM_FWD_CUSTOMNOTIFYICONS,0,0
         MENUITEM "",-1,MFT_SEPARATOR,0
-        MENUITEM "Casca&de windows",                IDC_FWD_CASCADE,0,0
-        MENUITEM "Show windows stack&ed",           IDC_FWD_STACKED,0,0
-        MENUITEM "Show windows s&ide by side",      IDC_FWD_SIDEBYSIDE,0,0
-        MENUITEM "Toggle desktop",                  IDC_TOGGLE_DT,0,0
-//        MENUITEM "&Show the desktop",               IDC_FWD_SHOWDESKTOP,0,0
-        MENUITEM "Minimize all windows",            IDC_FWD_MINALL,0,0
-        MENUITEM "&Undo last window change",        IDC_FWD_UNDO,0,0
+        MENUITEM "Casca&de windows",                IDM_FWD_CASCADE,0,0
+        MENUITEM "Show windows stack&ed",           IDM_FWD_STACKED,0,0
+        MENUITEM "Show windows s&ide by side",      IDM_FWD_SIDEBYSIDE,0,0
+        MENUITEM "Toggle desktop",                  IDM_TOGGLE_DT,0,0
+//        MENUITEM "&Show the desktop",               IDM_FWD_SHOWDESKTOP,0,0
+        MENUITEM "Minimize all windows",            IDM_FWD_MINALL,0,0
+        MENUITEM "&Undo last window change",        IDM_FWD_UNDO,0,0
         MENUITEM "",-1,MFT_SEPARATOR,0
-        MENUITEM "&Task Manager",                   IDC_FWD_TASKMAN,0,0
+        MENUITEM "&Task Manager",                   IDM_FWD_TASKMAN,0,0
 //        MENUITEM "",-1,MFT_SEPARATOR,0
-//        MENUITEM "&Lock the taskbar",               IDC_FWD_LOCKTASKBAR,0,0
-//        MENUITEM "&Lock all taskbars",              IDC_FWD_LOCKALLTASKBAR,0,0
-//        MENUITEM "Taskbar P&roperties",             IDC_FWD_TASKBARPROP,0,0
+//        MENUITEM "&Lock the taskbar",               IDM_FWD_LOCKTASKBAR,0,0
+//        MENUITEM "&Lock all taskbars",              IDM_FWD_LOCKALLTASKBAR,0,0
+//        MENUITEM "Taskbar P&roperties",             IDM_FWD_TASKBARPROP,0,0
         MENUITEM "",-1,MFT_SEPARATOR,0
         POPUP "Sounds && Audio Options",IDC_SOUNDAUDIO,0,0
         BEGIN
-            MENUITEM "Open Volume Controls",        IDC_VOLUMECONTROL,0,0
-            MENUITEM "Adjust Audio Properties",     IDC_AUDIOPROP,0,0
+            MENUITEM "Open Volume Controls",        IDM_VOLUMECONTROL,0,0
+            MENUITEM "Adjust Audio Properties",     IDM_AUDIOPROP,0,0
         END
         POPUP "Network Drive(s)",IDC_NETWORK,0,0
         BEGIN
-            MENUITEM "Map Network Drive",           IDC_MAPDRIVE,0,0
-            MENUITEM "Disconnect Network Drive",    IDC_DISCONNECT,0,0
+            MENUITEM "Map Network Drive",           IDM_MAPDRIVE,0,0
+            MENUITEM "Disconnect Network Drive",    IDM_DISCONNECT,0,0
         END
         POPUP "T-Clock Quickys",IDC_QUICKYS,0,0
         BEGIN
-            MENUITEM "Windows Explorer",            IDC_QUICKY_WINEXP,0,0
-            MENUITEM "Command Prompt",              IDC_QUICKY_DOS,0,0
+            MENUITEM "Windows Explorer",            IDM_QUICKY_WINEXP,0,0
+            MENUITEM "Command Prompt",              IDM_QUICKY_DOS,0,0
             MENUITEM "",-1,MFT_SEPARATOR,0
-            MENUITEM "T-Clock Calendar",            IDC_SHOWCALENDER,0,0
+            MENUITEM "T-Clock Calendar",            IDM_SHOWCALENDER,0,0
             MENUITEM "",-1,MFT_SEPARATOR,0
-            MENUITEM "Empty Recycle Bin",           IDC_QUICKY_EMPTYRB,0,0
+            MENUITEM "Empty Recycle Bin",           IDM_QUICKY_EMPTYRB,0,0
         END
         POPUP "T-Clock Timers",IDC_TIMERS,0,0
         BEGIN
-            MENUITEM "Add/Edit Timer",              IDC_TIMER,0,0
+            MENUITEM "Add/Edit Timer",              IDM_TIMER,0,0
             MENUITEM "",-1,MFT_SEPARATOR,0
             MENUITEM "Stopwatch",                   IDM_STOPWATCH,0,0
             MENUITEM "",-1,MFT_SEPARATOR,0
-            MENUITEM "Running Timers List",         ID_T_TIMER1,0,MFS_DISABLED
+            MENUITEM "Running Timers List",         IDM_TIMEWATCH,0,MFS_DISABLED
         END
         POPUP "Exit Windows",IDC_EXITWIN,0,0
         BEGIN
-            MENUITEM "Log off",                     IDC_LOGOFF,0,0
-            MENUITEM "Reboot",                      IDC_REBOOT,0,0
-            MENUITEM "Shut Down",                    IDC_SHUTDOWN,0,0
+            MENUITEM "Log off",                     IDM_LOGOFF,0,0
+            MENUITEM "Reboot",                      IDM_REBOOT,0,0
+            MENUITEM "Shut Down",                   IDM_SHUTDOWN,0,0
         END
         MENUITEM "",-1,MFT_SEPARATOR,0
-        MENUITEM "T-Clock Properties",              IDC_SHOWPROP,0,0
-        MENUITEM "Display Properties",              IDC_DISPLAYPROP,0,0
-        MENUITEM "Refresh T-Clock",                 IDC_REFRESHTCLOCK,0,0
+        MENUITEM "T-Clock Properties",              IDM_SHOWPROP,0,0
+        MENUITEM "Display Properties",              IDM_DISPLAYPROP,0,0
+        MENUITEM "Refresh T-Clock",                 IDM_REFRESHTCLOCK,0,0
         MENUITEM "",-1,MFT_SEPARATOR,0
-        MENUITEM "Exit T-Clock",                    IDC_EXIT,0,0
+        MENUITEM "Exit T-Clock",                    IDM_EXIT,0,0
         MENUITEM "",IDS_NONE,MFT_SEPARATOR,0
-        MENUITEM "&Run...",                         IDC_FWD_RUNAPP,0,0
-        MENUITEM "E&xit Explorer",                  IDC_FWD_EXITEXPLORER,0,0
+        MENUITEM "&Run...",                         IDM_FWD_RUNAPP,0,0
+        MENUITEM "E&xit Explorer",                  IDM_FWD_EXITEXPLORER,0,0
     END
 END
 
@@ -297,8 +297,8 @@ STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Quicky Menus"
 FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
-    CONTROL         "Exit Windows Menu",IDC_QMEN_EXITWIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,21,79,10
     GROUPBOX        "Show or Hide Quicky Menus",IDC_STATIC,6,6,298,49
+    CONTROL         "Exit Windows Menu",IDC_QMEN_EXITWIN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,21,79,10
     CONTROL         "Quicky Launch Menu",IDC_QMEN_LAUNCH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,37,84,10
     CONTROL         "Sounds && Audio Options",IDC_QMEN_AUDIO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,122,21,92,10
     CONTROL         "Network Drive(s)",IDC_QMEN_NET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,122,37,69,10

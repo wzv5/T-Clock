@@ -95,7 +95,7 @@ void WINAPI HookEnd(void)   //--------------------------------------------------
 	
 	// force the clock to end customizing
 	if(hwndClock && IsWindow(hwndClock))
-		SendMessage(hwndClock, WM_COMMAND, IDC_EXIT, 0);
+		SendMessage(hwndClock, WM_COMMAND, IDM_EXIT, 0);
 	// uninstall my hook
 	if(hhook){
 		UnhookWindowsHookEx(hhook);

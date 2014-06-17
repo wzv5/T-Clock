@@ -32,7 +32,7 @@ BOOL CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 				GetDlgItemText(hDlg, IDC_MID_TARGET,   szmTarget,   LRG_BUFF);
 				GetDlgItemText(hDlg, IDC_MID_SWITCHES, szmSwitches, LRG_BUFF);
 				SaveNewMenuOptions(hDlg, szmText, szmTarget, szmSwitches, szIndex);
-				SendMessage(PropSheet_IndexToHwnd(g_hwndSheet, 5), WM_COMMAND, IDC_QMEM_REFRESH, 0);
+				SendMessage(PropSheet_IndexToHwnd(g_hwndSheet, 5), WM_COMMAND, IDM_QMEM_REFRESH, 0);
 			}
 			
 			if(id == IDC_MID_CANCEL) {
@@ -44,7 +44,7 @@ BOOL CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 				char szIndex[TNY_BUFF]= {0};
 				GetDlgItemText(hDlg, IDC_MID_INDEX, szIndex, TNY_BUFF);
 				DeleteMenuItem(hDlg, szIndex);
-				SendMessage(PropSheet_IndexToHwnd(g_hwndSheet, 5), WM_COMMAND, IDC_QMEM_REFRESH, 0);
+				SendMessage(PropSheet_IndexToHwnd(g_hwndSheet, 5), WM_COMMAND, IDM_QMEM_REFRESH, 0);
 			}
 			
 			if(id == IDB_LIST_BROWSE) {

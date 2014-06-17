@@ -35,14 +35,14 @@ void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 	if(!g_bQMNet)		DeleteMenu(hPopupMenu, IDC_NETWORK,		MF_BYCOMMAND);
 	if(!g_bQMLaunch)	DeleteMenu(hPopupMenu, IDC_QUICKYS,		MF_BYCOMMAND);
 	if(!g_bQMExitWin)	DeleteMenu(hPopupMenu, IDC_EXITWIN,		MF_BYCOMMAND);
-	if(!g_bQMDisplay)	DeleteMenu(hPopupMenu, IDC_DISPLAYPROP,	MF_BYCOMMAND);
+	if(!g_bQMDisplay)	DeleteMenu(hPopupMenu, IDM_DISPLAYPROP,	MF_BYCOMMAND);
 	/// simple implementation of "Undo ..." (eg. Undo Cascade windows)
-	if(!g_undo)			DeleteMenu(hPopupMenu, IDC_FWD_UNDO,	MF_BYCOMMAND);
+	if(!g_undo)			DeleteMenu(hPopupMenu, IDM_FWD_UNDO,	MF_BYCOMMAND);
 	/// special menu items, only shown if SHIFT or CTRL was pressed
 	if(!((GetAsyncKeyState(VK_SHIFT)|GetAsyncKeyState(VK_CONTROL))&0x8000)){
 		DeleteMenu(hPopupMenu, IDS_NONE, MF_BYCOMMAND); // seperator
-		DeleteMenu(hPopupMenu, IDC_FWD_RUNAPP, MF_BYCOMMAND);
-		DeleteMenu(hPopupMenu, IDC_FWD_EXITEXPLORER, MF_BYCOMMAND);
+		DeleteMenu(hPopupMenu, IDM_FWD_RUNAPP, MF_BYCOMMAND);
+		DeleteMenu(hPopupMenu, IDM_FWD_EXITEXPLORER, MF_BYCOMMAND);
 	}
 	/// Timers Menu Item y/n Goes HERE!!!
 	
@@ -65,7 +65,7 @@ void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 				GetMyRegStr("QuickyMenu\\MenuItems", szmItem, s, TNY_BUFF, "");
 				mii.dwTypeData = s;
 				mii.wID = uItemID;
-				InsertMenuItem(hPopupMenu, IDC_SHOWCALENDER, FALSE, &mii);
+				InsertMenuItem(hPopupMenu, IDM_SHOWCALENDER, FALSE, &mii);
 			}
 			uItemID++;
 		}
@@ -101,11 +101,11 @@ void ToggleDesk()   //----------------------------------------------------------
 void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------+++-->
 {
 	switch(wID) {
-	case IDC_REFRESHTCLOCK: //-----+++--> RePaint & Size the T-Clock Display Window
+	case IDM_REFRESHTCLOCK: //-----+++--> RePaint & Size the T-Clock Display Window
 		RefreshUs();
 		return;
 		
-	case IDC_SHOWPROP: //---------------------+++--> Show T-Clock Properties Dialog
+	case IDM_SHOWPROP: //---------------------+++--> Show T-Clock Properties Dialog
 		MyPropertySheet();
 		return;
 		
@@ -117,15 +117,15 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		ReleaseTheHound(hwnd, TRUE);
 		return;
 		
-	case IDC_EXIT: //--------------------------------------+++--> Exit T-Clock 2010
-		PostMessage(g_hwndClock, WM_COMMAND, IDC_EXIT, 0);
+	case IDM_EXIT: //--------------------------------------+++--> Exit T-Clock 2010
+		PostMessage(g_hwndClock, WM_COMMAND, IDM_EXIT, 0);
 		return;
 		
-	case IDC_SHOWCALENDER: //-------------------------------+++--> Display Calender
+	case IDM_SHOWCALENDER: //-------------------------------+++--> Display Calender
 		ToggleCalendar();
 		return;
 		
-	case IDC_DISPLAYPROP: //------------------------------+++--> Display Properties
+	case IDM_DISPLAYPROP: //------------------------------+++--> Display Properties
 		WinExec(("control.exe desk.cpl, display,1"),SW_SHOW);
 		return;
 //========================================================================
@@ -137,33 +137,33 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 
 #endif
 //========================================================================
-	case IDC_VOLUMECONTROL: //-------------------------------+++--> Volume Controls
+	case IDM_VOLUMECONTROL: //-------------------------------+++--> Volume Controls
 		WinExec((OPEN_VOLUME),SW_SHOW);
 		return;
 		
-	case IDC_AUDIOPROP: //----------------------------------+++--> Audio Properties
+	case IDM_AUDIOPROP: //----------------------------------+++--> Audio Properties
 		WinExec(("control.exe mmsys.cpl"),SW_SHOW);
 		return;
 		
-	case IDC_MAPDRIVE: //----------------------------------+++--> Map Network Drive
+	case IDM_MAPDRIVE: //----------------------------------+++--> Map Network Drive
 		WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
 		return;
 		
-	case IDC_DISCONNECT: //-------------------------+++--> Disconnect Network Drive
+	case IDM_DISCONNECT: //-------------------------+++--> Disconnect Network Drive
 		WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
 		return;
 		
-	case IDC_TOGGLE_DT: //---------------------------+++--> Show / Hide the Desktop
+	case IDM_TOGGLE_DT: //---------------------------+++--> Show / Hide the Desktop
 		ToggleDesk();
 		return;
 		
-	case IDC_QUICKY_WINEXP: { //-----------------//--+++--> Windows Explorer Opened
+	case IDM_QUICKY_WINEXP: { //-----------------//--+++--> Windows Explorer Opened
 			ShellExecute(hwnd, "open","Explorer.exe", //-> Correctly at My Computer Level
 						 "/e, ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",NULL,SW_SHOWNORMAL);
 			return;
 		}
 		
-	case IDC_QUICKY_DOS: { // Command Prompt
+	case IDM_QUICKY_DOS: { // Command Prompt
 			char RooT[MAX_PATH];
 			GetWindowsDirectory(RooT,MAX_PATH);
 			ShellExecute(hwnd, "open","cmd.exe", "/f:on /t:0a", RooT, SW_SHOWNORMAL);
@@ -197,7 +197,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 			return;
 		}
 		
-	case IDC_QUICKY_EMPTYRB:
+	case IDM_QUICKY_EMPTYRB:
 		SHEmptyRecycleBin(0, NULL, SHERB_NOCONFIRMATION);
 		return;
 //-----------------------//--------------------------------------------+++-->
@@ -214,42 +214,37 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_LAP, 0);
 		return; //------------------------+++--> End of Bounce Through Messages
 //-----------//--------------------------------------------------------+++-->
-	case IDC_SHUTDOWN:
+	case IDM_SHUTDOWN:
 		if(!ShutDown())
 			MessageBox(0, "Shutdown Request Failed!", "ERROR:", MB_OK|MB_ICONERROR);
 		return;
 		
-	case IDC_REBOOT:
+	case IDM_REBOOT:
 		if(!ReBoot())
 			MessageBox(0, "Reboot Request Failed!", "ERROR:", MB_OK|MB_ICONERROR);
 		return;
 		
-	case IDC_LOGOFF:
+	case IDM_LOGOFF:
 		if(!LogOff())
 			MessageBox(0, "Logoff Request Failed!", "ERROR:", MB_OK|MB_ICONERROR);
 		return;
 		
-	case IDC_TIMER: // Timer
+	case IDM_TIMER: // Timer
 		DialogTimer();
 		return;
 		
 	case IDM_STOPWATCH:
 		DialogStopWatch();
 		
-	case IDC_FWD_CASCADE: case IDC_FWD_SIDEBYSIDE: case IDC_FWD_STACKED: case IDC_FWD_SHOWDESKTOP: case IDC_FWD_MINALL: case IDC_FWD_UNDO:
-		g_undo=(wID!=IDC_FWD_UNDO);
-	case IDC_FWD_DATETIME: case IDC_FWD_CUSTOMNOTIFYICONS:
-	case IDC_FWD_TASKMAN:
-	case IDC_FWD_LOCKTASKBAR: case IDC_FWD_LOCKALLTASKBAR:
-	case IDC_FWD_TASKBARPROP: case IDC_FWD_RUNAPP: case IDC_FWD_EXITEXPLORER:{
-			HWND hwndTray = FindWindow("Shell_TrayWnd", NULL);
-			if(hwndTray) PostMessage(hwndTray, WM_COMMAND, (WPARAM)wID, 0);
-			return;
-		}
-		
-	case IDM_TIMEWATCH:
-		WatchTimer(); // HotKey Open/View - It Will However,
-		return; //-++--> Auto-Close if it Isn't Really Needed.
+	case IDM_FWD_CASCADE: case IDM_FWD_SIDEBYSIDE: case IDM_FWD_STACKED: case IDM_FWD_SHOWDESKTOP: case IDM_FWD_MINALL: case IDM_FWD_UNDO:
+		g_undo=(wID!=IDM_FWD_UNDO);
+	case IDM_FWD_DATETIME: case IDM_FWD_CUSTOMNOTIFYICONS:
+	case IDM_FWD_TASKMAN:
+	case IDM_FWD_LOCKTASKBAR: case IDM_FWD_LOCKALLTASKBAR:
+	case IDM_FWD_TASKBARPROP: case IDM_FWD_RUNAPP: case IDM_FWD_EXITEXPLORER:{
+		HWND hwndTray = FindWindow("Shell_TrayWnd", NULL);
+		if(hwndTray) PostMessage(hwndTray, WM_COMMAND, (WPARAM)wID, 0);
+		return;}
 		
 	case ID_T_TIMER1:
 	case ID_T_TIMER2:
@@ -257,17 +252,16 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case ID_T_TIMER4:
 	case ID_T_TIMER5:
 	case ID_T_TIMER6:
-	case ID_T_TIMER7: {
-			char szTime[GEN_BUFF] = {0};
-			wID -= ID_T_TIMER1;
-			GetTimerInfo(szTime, wID, FALSE);
-			WatchTimer(); // Shelter All the Homeless Timers.
-			return;
-		}
+	case ID_T_TIMER7:
+		{char szTime[GEN_BUFF];
+		GetTimerInfo(szTime, wID-ID_T_TIMER1, FALSE);}
+	case IDM_TIMEWATCH:
+		WatchTimer(); // Shelter All the Homeless Timers.
+		return;
 	}
 	
-	if((IDC_STOPTIMER <= wID && wID < IDC_STOPTIMER + MAX_TIMER)) {
-		StopTimer(wID - IDC_STOPTIMER); //-+-> Stop Timer X!
+	if((IDM_STOPTIMER <= wID && wID < IDM_STOPTIMER + MAX_TIMER)) {
+		StopTimer(wID-IDM_STOPTIMER); //-+-> Stop Timer X!
 	}
 	return;
 }
@@ -275,11 +269,10 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 //----------+++--> Enumerate & Display ALL Currently Active Timers on The Running Timers Menu List:
 void UpdateTimerMenu(HMENU hMenu)   //------------------------------------------------------+++-->
 {
-	int i, t; char s[GEN_BUFF];
-	
-	i = ID_T_TIMER1; //--+++--> All Timers Are Inserted (just) Above (ID_T_TIMER1)
-	for(t = 0; t <= 7; t++) { //---------+++--> the Running Timers List Menu Item.
-		if(GetTimerInfo(s, t, TRUE) == 0) break; // Get the Timer's Name Only
-		InsertMenu(hMenu, i, MF_BYCOMMAND|MF_STRING, ID_T_TIMER1 + t, s);
+	int tid; char buf[GEN_BUFF];
+	for(tid=0; tid<7; ++tid) { //---------+++--> the Running Timers List Menu Item.
+		if(!GetTimerInfo(buf,tid,TRUE)) break; // Get the Timer's Name Only
+		InsertMenu(hMenu, IDM_TIMEWATCH, MF_BYCOMMAND|MF_STRING, ID_T_TIMER1+tid, buf);
+		EnableMenuItem(hMenu,IDM_TIMEWATCH,MF_BYCOMMAND|MF_ENABLED);
 	}
 }

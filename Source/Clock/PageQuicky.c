@@ -64,7 +64,7 @@ BOOL CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			   ((code == BST_CHECKED) || (code == BST_UNCHECKED))) {
 				SendPSChanged(hDlg);
 			}
-			if(id == IDC_QMEM_REFRESH) {
+			if(id == IDM_QMEM_REFRESH) {
 				AddListBoxRows(hList);
 			}
 			return TRUE;

@@ -209,7 +209,7 @@ void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //-------------
 		if(*p == '/') {
 			p++;
 			if(_strnicmp(p, "prop", 4) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDC_SHOWPROP, 0);
+				SendMessage(hwnd, WM_COMMAND, IDM_SHOWPROP, 0);
 				p += 4;
 			} else if(_strnicmp(p, "exit", 4) == 0) {
 				SendMessage(hwnd, WM_CLOSE, 0, 0);
@@ -237,7 +237,7 @@ void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //-------------
 							   TEXT("T-Clock Must be Running for Time Synchronization to Succeed\n"
 									"T-Clock Can Not be Started With the /Sync Switch"),
 							   "ERROR: Time Sync Failure", MB_OK|MB_ICONERROR);
-					SendMessage(hwnd, WM_COMMAND, IDC_EXIT, 0);
+					SendMessage(hwnd, WM_COMMAND, IDM_EXIT, 0);
 				} else {
 					SyncTimeNow();
 					p += 4;
@@ -308,7 +308,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			return 0;
 			
 		case HOT_TIMER:
-			PostMessage(hwnd, WM_COMMAND, IDC_TIMER, 0);
+			PostMessage(hwnd, WM_COMMAND, IDM_TIMER, 0);
 			return 0;
 			
 		case HOT_STOPW:
@@ -316,11 +316,11 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			return 0;
 			
 		case HOT_PROPR:
-			PostMessage(hwnd, WM_COMMAND, IDC_SHOWPROP, 0);
+			PostMessage(hwnd, WM_COMMAND, IDM_SHOWPROP, 0);
 			return 0;
 			
 		case HOT_CALEN:
-			PostMessage(hwnd, WM_COMMAND, IDC_SHOWCALENDER, 0);
+			PostMessage(hwnd, WM_COMMAND, IDM_SHOWCALENDER, 0);
 			return 0;
 			
 		case HOT_TSYNC:

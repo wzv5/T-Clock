@@ -256,7 +256,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return 0;
 		}
 	case WM_COMMAND:
-		if(LOWORD(wParam) == IDC_EXIT) EndClock();
+		if(LOWORD(wParam) == IDM_EXIT) EndClock();
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
 			BOOL b;

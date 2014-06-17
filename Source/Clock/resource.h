@@ -24,13 +24,6 @@
 #define IDS_LIST_TASKNAME               76
 #define IDS_LIST_TASKTARGET             77
 #define IDS_LIST_TASKSWITCHES           78
-#define IDC_SHOWPROP                    90
-#define IDR_MENU                        91
-#define IDC_EXIT                        92
-#define IDC_QUICKYS                     93
-#define IDC_REFRESHTCLOCK               94
-#define IDC_SHOWCALENDER                95
-#define IDC_STOPTIMER                   96
 #define PROPERTY_BASE                   100
 #define PROPERTY_NUM                    9
 #define IDD_PAGEABOUT                   100 /* group */
@@ -54,20 +47,58 @@
 #define IDI_PLAY                        192
 #define IDI_STOP                        193
 #define IDI_DEL                         194
-#define IDC_FWD_RUNAPP                  401 /* group (forward commands, keep ids) */
-#define IDC_FWD_CASCADE                 403
-#define IDC_FWD_SIDEBYSIDE              404
-#define IDC_FWD_STACKED                 405
-#define IDC_FWD_SHOWDESKTOP             407
-#define IDC_FWD_DATETIME                408
-#define IDC_FWD_TASKBARPROP             413
-#define IDC_FWD_MINALL                  415
-#define IDC_FWD_UNDO                    416
-#define IDC_FWD_TASKMAN                 420
-#define IDC_FWD_CUSTOMNOTIFYICONS       421
-#define IDC_FWD_LOCKTASKBAR             424
-#define IDC_FWD_LOCKALLTASKBAR          425
-#define IDC_FWD_EXITEXPLORER            518 /* end group (forward commands) */
+/// messages / commands (menu, hotkey etc)
+#define IDR_MENU                        200
+#define IDC_SOUNDAUDIO                  201 /* group */
+#define IDC_NETWORK                     202
+#define IDC_QUICKYS                     203
+#define IDC_TIMERS                      204
+#define IDC_EXITWIN                     205 /* end group */
+#define IDM_VOLUMECONTROL               210
+#define IDM_AUDIOPROP                   211
+#define IDM_MAPDRIVE                    220
+#define IDM_DISCONNECT                  221
+#define IDM_QUICKY_WINEXP               230
+#define IDM_QUICKY_DOS                  231
+#define IDM_QUICKY_EMPTYRB              233
+#define IDM_TIMER                       240
+#define IDM_STOPWATCH                   241
+#define ID_T_TIMER1                     242 /* group */
+#define ID_T_TIMER2                     243
+#define ID_T_TIMER3                     244
+#define ID_T_TIMER4                     245
+#define ID_T_TIMER5                     246
+#define ID_T_TIMER6                     247
+#define ID_T_TIMER7                     248 /* end group */
+#define IDM_LOGOFF                      250
+#define IDM_REBOOT                      251
+#define IDM_SHUTDOWN                    252
+#define IDM_TOGGLE_DT                   280
+#define IDM_SHOWCALENDER                281
+#define IDM_SHOWPROP                    282
+#define IDM_PROP_ALARM                  283
+#define IDM_DISPLAYPROP                 284
+#define IDM_REFRESHTCLOCK               285
+#define IDM_SYNCTIME                    286
+#define IDM_TIMEWATCH                   287
+#define IDM_EXIT                        288
+#define IDM_STOPTIMER                   290
+#define IDM_FWD_RUNAPP                  401 /* group (forward commands, keep ids) */
+#define IDM_FWD_CASCADE                 403
+#define IDM_FWD_SIDEBYSIDE              404
+#define IDM_FWD_STACKED                 405
+#define IDM_FWD_SHOWDESKTOP             407
+#define IDM_FWD_DATETIME                408
+#define IDM_DATETIME_EX                 409
+#define IDM_FWD_TASKBARPROP             413
+#define IDM_FWD_MINALL                  415
+#define IDM_FWD_UNDO                    416
+#define IDM_FWD_TASKMAN                 420
+#define IDM_FWD_CUSTOMNOTIFYICONS       421
+#define IDM_FWD_LOCKTASKBAR             424
+#define IDM_FWD_LOCKALLTASKBAR          425
+#define IDM_FWD_EXITEXPLORER            518 /* end group (forward commands) */
+/// misc
 #define IDC_ABT_TITLE                   600 /* group */
 #define IDC_ABT_StoicJoker              601
 #define IDC_ABT_StoicJoker2             602
@@ -76,6 +107,12 @@
 #define IDC_ABT_WEBuri                  605
 #define IDC_ABT_MAILuri                 606
 #define IDC_ABT_TCLOCK                  607
+#define IDC_QMEN_EXITWIN                700 /* group */
+#define IDC_QMEN_AUDIO                  701
+#define IDC_QMEN_LAUNCH                 702
+#define IDC_QMEN_NET                    703
+#define IDC_QMEN_DISPLAY                704 /* end group */
+#define IDM_QMEM_REFRESH                705
 #define IDC_MID_MENUTEXT                1004
 #define IDC_MID_TARGET                  1005
 #define IDC_MID_SWITCHES                1006
@@ -303,44 +340,6 @@
 #define IDC_CLOCKSKINFILE               3527
 #define IDC_CLOCKSKINSELECT             3528
 #define IDC_CLOCKSKINTRANS              3529
-#define IDM_TIMEWATCH                   3999
-#define IDC_TIMER                       4000
-#define ID_T_TIMER1                     4001
-#define ID_T_TIMER2                     4002
-#define ID_T_TIMER3                     4003
-#define ID_T_TIMER4                     4004
-#define ID_T_TIMER5                     4005
-#define ID_T_TIMER6                     4006
-#define ID_T_TIMER7                     4007
-#define IDC_QUICKY_WINEXP               40002
-#define IDC_QUICKY_DOS                  40004
-#define ID_TCLOCK_EXITWINDOWS           40005
-#define ID_EXITWINDOWS_SHUTDOWN         40006
-#define ID_EXITWINDOWS_REBOOT           40007
-#define ID_EXITWINDOWS_LOGOFF           40008
-#define IDC_SHUTDOWN                    40009
-#define IDC_REBOOT                      40010
-#define IDC_LOGOFF                      40011
-#define IDC_DISPLAYPROP                 40012
-#define IDC_VOLUMECONTROL               40013
-#define IDC_AUDIOPROP                   40014
-#define IDC_MAPDRIVE                    40015
-#define IDC_DISCONNECT                  40016
-#define IDC_TOGGLE_DT                   40017
-#define IDC_QUICKY_EMPTYRB              40018
-#define IDC_QMEN_EXITWIN                40019
-#define IDC_QMEN_LAUNCH                 40020
-#define IDC_QMEN_AUDIO                  40021
-#define IDC_QMEN_NET                    40023
-#define IDC_QMEN_DISPLAY                40024
-#define IDC_QMEM_REFRESH                40025
-#define ID_T_STOPWATCH                  40026
-#define IDM_STOPWATCH                   40027
-#define IDM_SYNCTIME                    40028
-#define IDC_SOUNDAUDIO                  40029
-#define IDC_NETWORK                     40030
-#define IDC_TIMERS                      40031
-#define IDC_EXITWIN                     40032
 
 // Next default values for new objects
 //
