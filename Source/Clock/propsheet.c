@@ -31,7 +31,7 @@ BOOL g_bApplyClear = FALSE;
 
 //================================================================================================
 //----------------------------//-----------------------+++--> Show the (Tab Dialog) Property Sheet:
-void MyPropertySheet(void)   //-------------------------------------------------------------+++-->
+void MyPropertySheet(int page)   //---------------------------------------------------------+++-->
 {
 	PROPSHEETPAGE psp[PROPERTY_NUM];
 	PROPSHEETHEADER psh;  int i;
@@ -63,7 +63,7 @@ void MyPropertySheet(void)   //-------------------------------------------------
 	psh.pszIcon = MAKEINTRESOURCE(IDI_MAIN);
 	psh.pszCaption = "T-Clock Redux";
 	psh.nPages = PROPERTY_NUM;
-	psh.nStartPage = startpage;
+	psh.nStartPage = page==-1?startpage:page;
 	psh.ppsp = psp;
 	psh.pfnCallback = PropSheetProc;
 	

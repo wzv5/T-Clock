@@ -171,7 +171,7 @@ void OnTimerMouse(HWND hwnd)
 		ToggleCalendar();
 		break;
 	case MOUSEFUNC_SHOWPROPERTY:
-		MyPropertySheet();
+		MyPropertySheet(-1);
 		break;
 	case MOUSEFUNC_CLIPBOARD:
 		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKELONG(g_click_button,g_click));

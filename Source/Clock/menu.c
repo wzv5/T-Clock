@@ -106,7 +106,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		return;
 		
 	case IDM_SHOWPROP: //---------------------+++--> Show T-Clock Properties Dialog
-		MyPropertySheet();
+		MyPropertySheet(-1);
 		return;
 		
 	case IDM_SYNCTIME:

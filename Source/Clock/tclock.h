@@ -110,7 +110,7 @@ void RefreshUs(void);
 
 // propsheet.c
 extern BOOL g_bApplyClock;
-void MyPropertySheet(void);
+void MyPropertySheet(int page);
 extern BOOL g_bApplyTaskbar;
 void SetMyDialgPos(HWND hwnd,int padding);
 BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
