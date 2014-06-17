@@ -806,32 +806,30 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 			g_hDlgTimerWatch = NULL;
 		} return TRUE; //--------------------------------+++--> END of Case WM_TIMER
 //====================//============================================================
-	case WM_COMMAND: {
-			switch(id) {
-			case IDCANCEL:
-				KillTimer(hDlg, 3);
-				EndDialog(hDlg, TRUE);
-				g_hDlgTimerWatch = NULL;
-				return TRUE;
-			} return FALSE;
-		} //-----------------------------------------------+++--> END of Case WM_COMMAND
+	case WM_COMMAND:
+		switch(id) {
+		case IDCANCEL:
+			KillTimer(hDlg, 3);
+			EndDialog(hDlg, TRUE);
+			g_hDlgTimerWatch = NULL;
+			return TRUE;
+		} return FALSE;//------------------------------+++--> END of Case WM_COMMAND
 //===//=============================================================================
-	case WM_NOTIFY: {
-			//--------------------------------------------------------------------+++-->
-			if(((LPNMHDR)lParam)->code == LVN_KEYDOWN) { //-+> Capture Key Strokes Here.
-				LPNMLVKEYDOWN nmkey = (LPNMLVKEYDOWN)lParam;
-				switch(nmkey->wVKey) {
-				case VK_DELETE:{
-					char szTimer[GEN_BUFF];
-					int i;
-					if((i = ListView_GetNextItem (hList,-1,LVNI_SELECTED)) != -1) {
-						ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
-						RemoveFromWatch(hDlg, hList, szTimer, i);
-					}
-					return TRUE;}// Delete Key Handled
+	case WM_NOTIFY:
+		//--------------------------------------------------------------------+++-->
+		if(((LPNMHDR)lParam)->code == LVN_KEYDOWN) { //-+> Capture Key Strokes Here.
+			LPNMLVKEYDOWN nmkey = (LPNMLVKEYDOWN)lParam;
+			switch(nmkey->wVKey) {
+			case VK_DELETE:{
+				char szTimer[GEN_BUFF];
+				int i;
+				if((i = ListView_GetNextItem (hList,-1,LVNI_SELECTED)) != -1) {
+					ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
+					RemoveFromWatch(hDlg, hList, szTimer, i);
 				}
-			} break;
-		} //------------------------------------------------+++--> END of Case WM_NOTIFY
+				return TRUE;}// Delete Key Handled
+			}
+		} break; //-------------------------------------+++--> END of Case WM_NOTIFY
 //===//=============================================================================
 	}
 	return FALSE;
