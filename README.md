@@ -24,10 +24,10 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] ! some bugfixes
 - [x] * some minor and major rewrites and changes
 - [x] ! can be compiled with MinGW/GCC *(allows more people to work on it and also fixed bugs)*
-- [ ] + default configuration with Windows like behavior and clock with line-break *(easier for first-time users)* *tbd*
+- [x] + default configuration with Windows like behavior and clock with line-break on Vista+ *(easier for first-time users)* *tbd*
+- [x] + more mouse commands / customization *tbd*
 - [ ] + automatically center clock text vertically *tbd*
 - [ ] + enhanced time format editor incl. realtime preview *tbd*
-- [ ] + more mouse commands / customization *tbd*
 - [ ] + ability to use different timezones on modifiers *tbd*
 - [ ] + LClock formating options such as different fonts and positions for time and date *tbd*
 - [ ] + working timezone identifiers *tbd*
