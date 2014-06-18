@@ -90,7 +90,8 @@
 			<Add option="/DTCLOCK_LIGHT" />
 		</Compiler>
 		<Linker>
-			<Add library="user32" />
+			<Add library="User32" />
+			<Add library="Shell32" />
 			<Add library="Advapi32" />
 			<Add library="Comctl32" />
 		</Linker>

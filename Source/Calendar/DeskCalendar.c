@@ -130,7 +130,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if(ivMonthsPast){
 			SYSTEMTIME st,stnew; MonthCal_GetCurSel(hCal,&st); stnew=st;
 			if(stnew.wMonth<ivMonthsPast){ --stnew.wYear; stnew.wMonth+=12; }
-			stnew.wMonth-=ivMonthsPast;
+			stnew.wMonth-=(short)ivMonthsPast;
 			if(stnew.wMonth>12){ ++stnew.wYear; stnew.wMonth-=12; }  // in case ivMonthsPast is negative
 			MonthCal_SetCurSel(hCal,&stnew);
 			MonthCal_SetCurSel(hCal,&st);
