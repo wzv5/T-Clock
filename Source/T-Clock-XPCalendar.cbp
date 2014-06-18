@@ -7,7 +7,7 @@
 		<Option compiler="msvc10" />
 		<Build>
 			<Target title="app">
-				<Option output="Release/Win32/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option output="../Release/Win32/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/" />
 				<Option type="0" />
 				<Option compiler="msvc10" />
@@ -20,11 +20,11 @@
 				</Compiler>
 				<Linker>
 					<Add option="/LTCG" />
-					<Add directory="Release/Win32" />
+					<Add directory="../Release/Win32" />
 				</Linker>
 			</Target>
 			<Target title="app64">
-				<Option output="Release/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option output="../Release/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64/" />
 				<Option type="0" />
 				<Option compiler="microsoft_visual_c_2010_64bit" />
@@ -37,11 +37,11 @@
 				</Compiler>
 				<Linker>
 					<Add option="/LTCG" />
-					<Add directory="Release/Win32" />
+					<Add directory="../Release/Win32" />
 				</Linker>
 			</Target>
 			<Target title="app debug">
-				<Option output="Debug/Win32/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option output="../Debug/Win32/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg/" />
 				<Option type="0" />
 				<Option compiler="msvc10" />
@@ -52,11 +52,11 @@
 				</Compiler>
 				<Linker>
 					<Add option="/DEBUG" />
-					<Add directory="Debug/Win32" />
+					<Add directory="../Debug/Win32" />
 				</Linker>
 			</Target>
 			<Target title="app64 debug">
-				<Option output="Debug/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option output="../Debug/x64/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64/dbg/" />
 				<Option type="0" />
 				<Option compiler="microsoft_visual_c_2010_64bit" />
@@ -67,7 +67,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="/DEBUG" />
-					<Add directory="Debug/Win32" />
+					<Add directory="../Debug/Win32" />
 				</Linker>
 			</Target>
 		</Build>
@@ -95,14 +95,14 @@
 			<Add library="Advapi32" />
 			<Add library="Comctl32" />
 		</Linker>
-		<Unit filename="Source/Calendar/DeskCalendar.c">
+		<Unit filename="Calendar/DeskCalendar.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Source/Calendar/resource.h" />
-		<Unit filename="Source/Calendar/resource.rc">
+		<Unit filename="Calendar/resource.h" />
+		<Unit filename="Calendar/resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
-		<Unit filename="Source/Clock/utl.c">
+		<Unit filename="Clock/utl.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Extensions>

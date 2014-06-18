@@ -2,9 +2,9 @@
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "tclock.h"
 
-LARGE_INTEGER g_frequency={0};
+LARGE_INTEGER g_frequency={{0}};
 LARGE_INTEGER g_start;// start time
-LARGE_INTEGER g_lap={0};// latest lap time
+LARGE_INTEGER g_lap={{0}};// latest lap time
 LARGE_INTEGER g_stop;// latest lap time
 BOOL g_paused; // Global Pause/Resume Displayed Counter.
 //================================================================================================
@@ -55,7 +55,7 @@ void OnTimer(HWND hDlg)   //----------------------------------------------------
 	hrs=un.elapsed/3600000; un.elapsed%=3600000;
 	min=un.elapsed/60000; un.elapsed%=60000;
 	sec=un.elapsed/1000; un.elapsed%=1000;
-	sprintf(szElapsed,"%02dH: %02dM: %02dS: %03dms",hrs,min,sec,un.elapsed);
+	sprintf(szElapsed,"%02dH: %02dM: %02dS: %03lums",hrs,min,sec,un.elapsed);
 	SetDlgItemText(hDlg, IDCE_SW_ELAPSED, szElapsed);
 }
 //================================================================================================
@@ -88,7 +88,7 @@ void InsertLapTime(HWND hList)   //---------------------------------------------
 	lvItem.pszText=buf;
 	ListView_InsertItem(hList,&lvItem);
 	
-	sprintf(buf,"%02d:%02d:%02d.%03d",hrs,min,elapsed/1000,elapsed%1000);
+	sprintf(buf,"%02d:%02d:%02lu.%03lu",hrs,min,elapsed/1000,elapsed%1000);
 	lvItem.iSubItem=1;
 	ListView_SetItem(hList,&lvItem);
 }

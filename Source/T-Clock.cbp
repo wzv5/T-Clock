@@ -2,22 +2,24 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="T-Clock-gcc" />
+		<Option title="T-Clock" />
 		<Option pch_mode="2" />
-		<Option default_target="app" />
-		<Option compiler="gcc" />
+		<Option default_target="app debug" />
+		<Option compiler="msvc10" />
 		<Build>
 			<Target title="app">
-				<Option output="Release/Win32/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../Release/Win32/Clock" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="msvc10" />
 				<Compiler>
-					<Add option="-O2" />
-					<Add option="-DNDEBUG" />
+					<Add option="/MD" />
+					<Add option="/GL" />
+					<Add option="/Ox" />
+					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
+					<Add option="/LTCG" />
 					<Add library="Psapi" />
 					<Add library="ole32" />
 					<Add library="Comdlg32" />
@@ -27,35 +29,41 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
-					<Add library="Uuid" />
 					<Add library="tClock" />
-					<Add directory="Release/Win32" />
+					<Add library="UxTheme" />
+					<Add directory="../Release/Win32" />
 				</Linker>
 			</Target>
 			<Target title="dll">
-				<Option output="Release/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option output="../Release/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/" />
 				<Option type="3" />
-				<Option compiler="gcc" />
+				<Option compiler="msvc10" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="-O2" />
-					<Add option="-DNDEBUG" />
+					<Add option="/MD" />
+					<Add option="/GL" />
+					<Add option="/Ox" />
+					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
+					<Add option="/LTCG" />
+					<Add option="/def:DLL\DLL.def" />
 				</Linker>
 			</Target>
 			<Target title="app debug">
-				<Option output="Debug/Win32/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../Debug/Win32/Clock" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg/" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="msvc10" />
 				<Compiler>
-					<Add option="-g" />
+					<Add option="/MDd" />
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/DEBUG" />
 					<Add library="Psapi" />
 					<Add library="ole32" />
 					<Add library="Comdlg32" />
@@ -65,21 +73,27 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
-					<Add library="Uuid" />
 					<Add library="tClock" />
-					<Add directory="Debug/Win32" />
+					<Add library="UxTheme" />
+					<Add directory="../Debug/Win32" />
 				</Linker>
 			</Target>
 			<Target title="dll debug">
-				<Option output="Debug/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option output="../Debug/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg/" />
 				<Option type="3" />
-				<Option compiler="gcc" />
+				<Option compiler="msvc10" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
-					<Add option="-g" />
+					<Add option="/MDd" />
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
 				</Compiler>
+				<Linker>
+					<Add option="/DEBUG" />
+					<Add option="/def:DLL\DLL.def" />
+				</Linker>
 			</Target>
 		</Build>
 		<VirtualTargets>
@@ -87,195 +101,193 @@
 			<Add alias="release" targets="dll;app;" />
 		</VirtualTargets>
 		<Compiler>
-			<Add option="-std=c99" />
-			<Add option="-Wall" />
-			<Add option="-D__MINGW_USE_VC2005_COMPAT" />
-			<Add option="-DWINVER=0x0501" />
+			<Add option="/Gy" />
+			<Add option="/W4" />
+			<Add option="/DWINVER=0x0501" />
 		</Compiler>
 		<Linker>
+			<Add option="/pdb:$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).pdb" />
 			<Add library="Advapi32" />
 			<Add library="user32" />
 			<Add library="gdi32" />
-			<Add library="msvcr100" />
+			<Add library="shell32" />
 		</Linker>
-		<Unit filename="Source/Clock/BounceWind.c">
+		<Unit filename="Clock/BounceWind.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/ExitWindows.c">
+		<Unit filename="Clock/ExitWindows.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/GetSetTimePerms.c">
+		<Unit filename="Clock/GetSetTimePerms.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/PageHotKey.c">
+		<Unit filename="Clock/PageHotKey.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/PageMisc.c">
+		<Unit filename="Clock/PageMisc.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/PageMouse.c">
+		<Unit filename="Clock/PageMouse.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/PageQuicky.c">
+		<Unit filename="Clock/PageQuicky.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/PageQuickyMenu.c">
+		<Unit filename="Clock/PageQuickyMenu.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/SNTP.c">
+		<Unit filename="Clock/SNTP.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/StopWatch.c">
+		<Unit filename="Clock/StopWatch.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/alarm.c">
+		<Unit filename="Clock/alarm.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/alarmday.c">
+		<Unit filename="Clock/alarmday.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/guiddef.h">
+		<Unit filename="Clock/guiddef.h">
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/main.c">
+		<Unit filename="Clock/main.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/menu.c">
+		<Unit filename="Clock/menu.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/mouse.c">
+		<Unit filename="Clock/mouse.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/pageabout.c">
+		<Unit filename="Clock/pageabout.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/pagealarm.c">
+		<Unit filename="Clock/pagealarm.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/pagecolor.c">
+		<Unit filename="Clock/pagecolor.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/pageformat.c">
+		<Unit filename="Clock/pageformat.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/propsheet.c">
+		<Unit filename="Clock/propsheet.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/resource.h">
+		<Unit filename="Clock/resource.h">
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/soundselect.c">
+		<Unit filename="Clock/soundselect.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/tClock.rc">
+		<Unit filename="Clock/tClock.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/tclock.h">
+		<Unit filename="Clock/tclock.h">
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/timer.c">
+		<Unit filename="Clock/timer.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/utl.c">
+		<Unit filename="Clock/utl.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/Clock/version.rc">
+		<Unit filename="Clock/version.rc">
 			<Option compilerVar="WINDRES" />
-			<Option compile="0" />
-			<Option link="0" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Source/DLL/Tclock.c">
+		<Unit filename="DLL/Tclock.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/font.c">
+		<Unit filename="DLL/font.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/format.c">
+		<Unit filename="DLL/format.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/main.c">
+		<Unit filename="DLL/main.c">
 			<Option compilerVar="CC" />
 			<Option target="dll debug" />
 			<Option target="dll" />
 		</Unit>
-		<Unit filename="Source/DLL/newapi.c">
+		<Unit filename="DLL/newapi.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/resource.h">
+		<Unit filename="DLL/resource.h">
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/tcdll.h">
+		<Unit filename="DLL/tcdll.h">
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/utl.c">
+		<Unit filename="DLL/utl.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="Source/DLL/version.rc">
+		<Unit filename="DLL/version.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="dll" />
 			<Option target="dll debug" />

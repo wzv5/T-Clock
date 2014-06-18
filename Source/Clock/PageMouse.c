@@ -7,7 +7,6 @@
 static void OnInit(HWND hDlg,HWND* hList);
 static void OnApply(HWND hDlg);
 static void OnDestroy();
-static void OnMouseFileChange(HWND hDlg);
 static void OnSansho(HWND hDlg, WORD id);
 static void InitMouseFuncList(HWND hDlg);
 
