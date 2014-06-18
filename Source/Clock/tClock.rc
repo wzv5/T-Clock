@@ -411,21 +411,24 @@ FONT 8, "MS Shell Dlg", 400, 0, 1
 {
     GROUPBOX        "Calendar Options", IDC_STATIC, 7, 3, 295, 102
     AUTOCHECKBOX    "Use custom calendar", IDCB_USECALENDAR, 83, 3, 78, 8, 0, WS_EX_TRANSPARENT
-    AUTOCHECKBOX    "Close Calendar on Lose Focus", IDCB_CLOSECAL, 23, 50, 111, 10
-    AUTOCHECKBOX    "Show Week Numbers", IDCB_SHOWWEEKNUMS, 23, 33, 83, 10
-    GROUPBOX        "For Windows 2000 Only", IDC_STATIC, 7, 109, 295, 40
-    AUTOCHECKBOX    "Transparent Icon Text Labels", IDCB_TRANS2KICONS, 38, 125, 110, 10
-    AUTOCHECKBOX    "Keep Calendar On Top of All Other Windows", IDCB_CALTOPMOST, 23, 65, 157, 10
-    LTEXT           "Calendar Displays:", IDC_CALSTATIC1, 216, 17, 60, 8, SS_LEFT
+    AUTOCHECKBOX    "Show day of year", IDCB_SHOW_DOY, 23, 17, 73, 10
+    AUTOCHECKBOX    "Show week numbers", IDCB_SHOWWEEKNUMS, 23, 33, 83, 10
+    AUTOCHECKBOX    "Close calendar on lose focus", IDCB_CLOSECAL, 23, 50, 111, 10
+    AUTOCHECKBOX    "Keep calendar on top of other windows", IDCB_CALTOPMOST, 23, 65, 157, 10
+    LTEXT           "Calendar, first week of year:", IDC_CALSTATIC1, 23, 84, 96, 8
+    COMBOBOX        IDC_FIRSTWEEK, 120, 82, 23, 125, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
+    LTEXT           "(Note: This is a Windows system setting)", IDC_CALSTATIC2, 146, 84, 132, 8
+    LTEXT           "Calendar displays:", IDC_CALSTATIC3, 216, 17, 60, 8
     EDITTEXT        IDC_CALMONTHS, 217, 29, 25, 14, ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "1", IDC_CALMONTHSPIN, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_WRAP | UDS_AUTOBUDDY | UDS_HOTTRACK | UDS_SETBUDDYINT, 233, 29, 11, 14
-    LTEXT           "Months", IDC_CALSTATIC2, 247, 32, 24, 8, SS_LEFT
-    COMBOBOX        IDC_FIRSTWEEK, 120, 82, 23, 125, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
-    LTEXT           "Calendar: First Week of Year:", IDC_CALSTATIC3, 23, 84, 96, 8, SS_LEFT
-    LTEXT           "(Note: This is a Windows System Setting)", IDC_CALSTATIC4, 146, 84, 132, 8, SS_LEFT
-    GROUPBOX        "For Windows XP/Vista/7 and Above", IDC_STATIC, 7, 153, 295, 40
-    AUTOCHECKBOX    "Locking Workstation Turns Off Monitor(s)", IDCB_MONOFF_ONLOCK, 38, 170, 147, 10
-    AUTOCHECKBOX    "Show Day of Year", IDCB_SHOW_DOY, 23, 17, 73, 10
+    LTEXT           "month(s)", IDC_CALSTATIC4, 247, 32, 30, 8
+    EDITTEXT        IDC_CALMONTHSPAST, 217, 46, 25, 14, ES_AUTOHSCROLL | ES_NUMBER
+    CONTROL         "0", IDC_CALMONTHPASTSPIN, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_WRAP | UDS_AUTOBUDDY | UDS_HOTTRACK | UDS_SETBUDDYINT, 232, 46, 11, 14
+    LTEXT           "past month(s)", IDC_CALSTATIC5, 247, 49, 46, 8
+    GROUPBOX        "Windows 2000 only", IDC_STATIC, 7, 109, 295, 40
+    AUTOCHECKBOX    "Transparent icon text labels", IDCB_TRANS2KICONS, 38, 125, 110, 10
+    GROUPBOX        "Windows XP+", IDC_STATIC, 7, 153, 295, 40
+    AUTOCHECKBOX    "Locking workstation turns off monitor(s)", IDCB_MONOFF_ONLOCK, 38, 170, 147, 10
 }
 
 IDD_SNTPCONFIG DIALOGEX 0, 0, 310, 200

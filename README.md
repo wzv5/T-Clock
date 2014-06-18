@@ -16,6 +16,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] + original Window calendar and tooltip usable
 - [x] + mouse button 4 and 5 supported
 - [x] + calendar hides on 2nd click if opened before *(autohide must be enabled, Windows default behavior)*
+- [x] + custom calendar can now show X past months, additional improvements
 - [x] + extended right-click menu with more Windows like behavior <br>
 *(hold down CTRL or SHIFT to get "Run ..." and "Exit Explorer" items)*
 - [x] + simplified mouse click preferences page

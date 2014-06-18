@@ -152,10 +152,6 @@
 #define IDC_CHIMEALARM                  1046
 #define IDC_REPEATIMES                  1047
 #define IDC_SPINTIMES                   1048
-#define IDCB_USECALENDAR                1050
-#define IDCB_CLOSECAL                   1051
-#define IDCB_SHOWWEEKNUMS               1052
-#define IDCB_TRANS2KICONS               1053
 #define IDC_MSG_ALARM                   1054
 #define IDCB_MSG_ALARM                  1055
 #define IDC_BMPJACK                     1056
@@ -175,16 +171,23 @@
 #define IDC_SPIN_JRPAW                  1070
 #define IDC_JR_SETTINGS                 1071
 #define IDC_FONTQUAL                    1072
-#define IDCB_CALTOPMOST                 1073
-#define IDC_CALMONTHS                   1074
-#define IDC_CALMONTHSPIN                1075
-#define IDC_CALSTATIC1                  1080
-#define IDC_CALSTATIC2                  1081
-#define IDC_CALSTATIC3                  1082
-#define IDC_CALSTATIC4                  1083
-#define IDC_FIRSTWEEK                   1077
-#define IDCB_MONOFF_ONLOCK              1078
-#define IDCB_SHOW_DOY                   1079
+#define IDCB_MONOFF_ONLOCK              1073
+#define IDCB_USECALENDAR                1080
+#define IDCB_SHOW_DOY                   1081 /* group */
+#define IDCB_SHOWWEEKNUMS               1082
+#define IDCB_CLOSECAL                   1083
+#define IDCB_CALTOPMOST                 1084
+#define IDC_FIRSTWEEK                   1085
+#define IDC_CALMONTHS                   1086
+#define IDC_CALMONTHSPIN                1087
+#define IDC_CALMONTHSPAST               1088
+#define IDC_CALMONTHPASTSPIN            1089
+#define IDC_CALSTATIC1                  1090
+#define IDC_CALSTATIC2                  1091
+#define IDC_CALSTATIC3                  1092
+#define IDC_CALSTATIC4                  1093
+#define IDC_CALSTATIC5                  1094 /* end group */
+#define IDCB_TRANS2KICONS               1100
 #define IDC_COLFORE                     1106
 #define IDC_CHOOSECOLFORE               1107
 #define IDC_FONT                        1108
@@ -206,7 +209,7 @@
 #define IDC_LABCLOCKROTATE              1124
 #define IDC_CLOCKROTATE                 1125
 #define IDC_LOCALE                      1200
-#define IDC_YEAR4                       1201
+#define IDC_YEAR4                       1201 /* group */
 #define IDC_YEAR                        1202
 #define IDC_MONTH                       1203
 #define IDC_MONTHS                      1204
@@ -219,7 +222,7 @@
 #define IDC_INTERNETTIME                1211
 #define IDC_AMPM                        1212
 #define IDC_12HOUR                      1213
-#define IDC_CUSTOM                      1214
+#define IDC_CUSTOM                      1214 /* end group */
 #define IDC_FORMAT                      1215
 #define IDC_FORMATDETAIL                1216
 #define IDC_AMSYMBOL                    1251

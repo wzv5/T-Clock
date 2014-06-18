@@ -79,15 +79,15 @@ void GetDayOfYearTitle(char* szTitle, int ivMonths)   //------------------------
 		wsprintf(szTitle, "T-Clock: Calendar  Day: %s", szDoY);
 	}
 }
-static char g_fullinit=0;
 LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch(uMsg) {
 	case WM_CREATE:{
-		int ivMonths;
+		int ivMonths,ivMonthsPast;
 		DWORD dwCalStyle;
 		RECT rc; HWND hCal;
 		ivMonths=GetMyRegLongEx("Calendar","ViewMonths",1);
+		ivMonthsPast=GetMyRegLongEx("Calendar","ViewMonthsPast",0);
 		
 		if(GetMyRegLong("Calendar", "ShowDayOfYear", FALSE)) {
 			char szTitle[32];
@@ -104,7 +104,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		
 		MonthCal_GetMinReqRect(hCal,&rc);//size for a single month
 		if(ivMonths>1){
-			rc.right*=ivMonths;
+			rc.right*=ivMonths; // wrong size for multi calendar...
 			if(ivMonths>5){//multi row
 				rc.right/=3;
 				if(ivMonths==6 || ivMonths==9){//6 or 9
@@ -113,12 +113,29 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					rc.bottom*=4;
 				}
 			}
-			MonthCal_SizeRectToMin(hCal,&rc);//removes some empty space.. (eg at 4 months)
+			if(bV7up)
+				MonthCal_SizeRectToMin(hCal,&rc);//removes some empty space.. (eg at 4 months)
+			else{ // brute force correct size
+				SetWindowPos(hCal,HWND_TOP,0,0,rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
+				while(MonthCal_GetCalendarCount(hCal)>=(DWORD)ivMonths) SetWindowPos(hCal,HWND_TOP,0,0,--rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
+				SetWindowPos(hCal,HWND_TOP,0,0,++rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
+				while(MonthCal_GetCalendarCount(hCal)>=(DWORD)ivMonths) SetWindowPos(hCal,HWND_TOP,0,0,rc.right,--rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
+				++rc.bottom;
+			}
 		}else{
 			if(rc.right<(LONG)MonthCal_GetMaxTodayWidth(hCal))
 				rc.right=MonthCal_GetMaxTodayWidth(hCal);
 		}
 		SetWindowPos(hCal,HWND_TOP,0,0,rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
+		if(ivMonthsPast){
+			SYSTEMTIME st,stnew; MonthCal_GetCurSel(hCal,&st); stnew=st;
+			if(stnew.wMonth<ivMonthsPast){ --stnew.wYear; stnew.wMonth+=12; }
+			stnew.wMonth-=ivMonthsPast;
+			if(stnew.wMonth>12){ ++stnew.wYear; stnew.wMonth-=12; }  // in case ivMonthsPast is negative
+			MonthCal_SetCurSel(hCal,&stnew);
+			MonthCal_SetCurSel(hCal,&st);
+		}
+		SetFocus(hCal);
 		AdjustWindowRectEx(&rc,WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,FALSE,0);
 //		AdjustWindowRectEx(&rc,GetWindowLongPtr(hwnd,GWL_STYLE),GetMenu(hwnd)?TRUE:FALSE,GetWindowLongPtr(hwnd,GWL_EXSTYLE));
 		SetWindowPos(hwnd,HWND_TOPMOST,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
@@ -126,13 +143,11 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			SetWindowPos(hwnd,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 		SetMyDialgPos(hwnd);
 		return 0;}
-//	case WM_ACTIVATE:
-//		if(LOWORD(wParam)!=WA_INACTIVE) break;
-//	case WM_ACTIVATEAPP:
-//		if(uMsg==WM_ACTIVATEAPP && wParam) break;
-	case WM_KILLFOCUS:
-		if(bAutoClose && g_fullinit)
+	case WM_ACTIVATE:
+		if(!bAutoClose) break;
+		if(LOWORD(wParam)!=WA_ACTIVE && LOWORD(wParam)!=WA_CLICKACTIVE){
 			PostMessage(hwnd,WM_CLOSE,0,0);//adds a little more delay which is good
+		}
 		break;
 	case WM_CLOSE:
 		DestroyWindow(hwnd);
@@ -150,7 +165,6 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 //---------------------------------------------------+++--> Open "Calendar":
 HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 {
-	MSG msg;
 	INITCOMMONCONTROLSEX icex;
 	WNDCLASSEX wcx;
 	ATOM calclass;
@@ -173,20 +187,8 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	wcx.lpszClassName = "ClockFlyoutWindow";
 	wcx.hIconSm=NULL;
 	calclass=RegisterClassEx(&wcx);
-	g_fullinit=0;
 	hwnd=CreateWindowEx(0,(LPCSTR)MAKELPARAM(calclass,0),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,hInstance,NULL);
-	while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
-		if(msg.message==WM_QUIT) ExitProcess(0);
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
 	ForceForegroundWindow(hwnd);
-	while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
-		if(msg.message==WM_QUIT) ExitProcess(0);
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-	g_fullinit=1;
 	if(bAutoClose && GetForegroundWindow()!=hwnd)
 		PostMessage(hwnd,WM_CLOSE,0,0);
 	return hwnd;

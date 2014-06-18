@@ -30,18 +30,12 @@ BOOL CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam
 					CheckDlgButton(hDlg, IDCB_CLOSECAL, FALSE);
 			}else if(id==IDCB_USECALENDAR) {
 				UINT iter,enable=IsDlgButtonChecked(hDlg,IDCB_USECALENDAR);
-				for(iter=IDC_CALSTATIC1; iter<=IDC_CALSTATIC4; ++iter) EnableDlgItem(hDlg,iter,enable);
-				EnableDlgItem(hDlg,IDCB_SHOW_DOY,enable);
-				EnableDlgItem(hDlg,IDCB_SHOWWEEKNUMS,enable);
-				EnableDlgItem(hDlg,IDCB_CLOSECAL,enable);
-				EnableDlgItem(hDlg,IDCB_CALTOPMOST,enable);
-				EnableDlgItem(hDlg,IDC_FIRSTWEEK,enable);
-				EnableDlgItem(hDlg,IDC_CALMONTHS,enable);
+				for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,enable);
 				SendPSChanged(hDlg);
 				return TRUE;
 			}
 			
-			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE))
+			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE) || (id==IDC_CALMONTHSPAST&&code==EN_CHANGE))
 				SendPSChanged(hDlg);
 			else if(((id==IDCB_CLOSECAL) ||  // IF Anything Happens to Anything,
 				(id==IDCB_SHOWWEEKNUMS) || //--+++--> Send Changed Message.
@@ -99,14 +93,8 @@ void SetMySysWeek(char* val)   //-----------------------------------------------
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
 	if(bV7up && !GetMyRegLongEx("Calendar","bCustom",0)){
-		UINT iter=IDC_CALSTATIC1;
-		for(; iter<=IDC_CALSTATIC4; ++iter) EnableDlgItem(hDlg,iter,0);
-		EnableDlgItem(hDlg,IDCB_SHOW_DOY,0);
-		EnableDlgItem(hDlg,IDCB_SHOWWEEKNUMS,0);
-		EnableDlgItem(hDlg,IDCB_CLOSECAL,0);
-		EnableDlgItem(hDlg,IDCB_CALTOPMOST,0);
-		EnableDlgItem(hDlg,IDC_FIRSTWEEK,0);
-		EnableDlgItem(hDlg,IDC_CALMONTHS,0);
+		UINT iter=IDCB_SHOW_DOY;
+		for(; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
 	CheckDlgButton(hDlg, IDCB_CLOSECAL,
@@ -120,6 +108,8 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	
 	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETRANGE,0,MAKELONG(1,12));
 	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS,0,GetMyRegLongEx("Calendar","ViewMonths",1));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETRANGE,0,MAKELONG(0,2));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS,0,GetMyRegLongEx("Calendar","ViewMonthsPast",0));
 	
 	CBResetContent(hDlg, IDC_FIRSTWEEK);
 	CBAddString(hDlg, IDC_FIRSTWEEK, "0");
@@ -146,7 +136,8 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	SetMyRegLong("Calendar","ShowWeekNums", IsDlgButtonChecked(hDlg,IDCB_SHOWWEEKNUMS));
 	SetMyRegLong("Calendar","ShowDayOfYear", IsDlgButtonChecked(hDlg,IDCB_SHOW_DOY));
 	SetMyRegLong("Calendar","CalendarTopMost", IsDlgButtonChecked(hDlg,IDCB_CALTOPMOST));
-	SetMyRegLong("Calendar", "ViewMonths", (DWORD)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS,0,0));
+	SetMyRegLong("Calendar","ViewMonths", (DWORD)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS,0,0));
+	SetMyRegLong("Calendar","ViewMonthsPast", (DWORD)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS,0,0));
 	SetMyRegLong("Desktop","Transparent2kIconText", IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS));
 	
 	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);
