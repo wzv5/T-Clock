@@ -525,21 +525,27 @@ BOOL CheckDLL(char* fname)   //-----------------------------{ 2.0.2.99 }--------
 //------------+++--> Initialize With (or set default) Clock.exe Path & Chosen Font Registy Entries:
 void CheckRegistry(void)   //---------------------------------------------------------------+++-->
 {
-	char s[80];
-	
-	SetMyRegStr(NULL, "ExePath", g_mydir);
-	GetMyRegStr("Clock", "Font", s, 80, "");
-	
+	char font[80];
+//	SetMyRegStr(NULL,"ExePath",g_mydir);
+	GetMyRegStr("Clock","Font",font,80,"");
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
 	bTrans2kIcons = GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE);
-	
-	if(s[0] == 0) {
+	if(!*font){ // quess it's a fresh T-Clock
 		HFONT hfont;
-		LOGFONT lf;
+		union{
+			unsigned short entryS;
+			char entry[3];
+		} u;
+		u.entry[2]='\0';
+		u.entryS='0'+('1'<<8); // left, 1 click
+		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_SHOWCALENDER);
+		u.entryS='2'+('1'<<8); // middle, 1 click
+		SetMyRegLong(g_reg_mouse,u.entry,IDM_STOPWATCH);
 		hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-		if(hfont) {
-			GetObject(hfont, sizeof(lf),(LPVOID)&lf);
-			SetMyRegStr("Clock", "Font", lf.lfFaceName);
+		if(hfont){
+			LOGFONT lf;
+			GetObject(hfont,sizeof(lf),(LPVOID)&lf);
+			SetMyRegStr("Clock","Font",lf.lfFaceName);
 		}
 	}
 }

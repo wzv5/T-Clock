@@ -408,19 +408,18 @@ void OnFormatCheck(HWND hDlg, WORD id)
 --------------------------------------------------*/
 void InitFormat(void)
 {
-	char s[1024];
-	int i, checks[15];
+	char format[LRG_BUFF];
+	int iter, checks[15];
 	RECT rc;
 	HWND hwnd;
-	BOOL b;
+	BOOL linebreak;
 	
 	if(GetMyRegLong("Format", ENTRY(IDC_CUSTOM), FALSE))
 		return;
-		
 	InitLocale(NULL);
 	
-	for(i = IDC_YEAR4; i <= IDC_SECOND; i++) {
-		CHECKS(i) = GetMyRegLong("Format", ENTRY(i), TRUE);
+	for(iter=IDC_YEAR4; iter<=IDC_SECOND; ++iter) {
+		CHECKS(iter) = GetMyRegLong("Format", ENTRY(iter), TRUE);
 	}
 	
 	if(CHECKS(IDC_YEAR))  CHECKS(IDC_YEAR4) = FALSE;
@@ -432,18 +431,21 @@ void InitFormat(void)
 	CHECKS(IDC_INTERNETTIME) = GetMyRegLong("Format",
 											ENTRY(IDC_INTERNETTIME), FALSE);
 											
-	b = FALSE;
-	hwnd = FindWindow("Shell_TrayWnd", NULL);
-	if(hwnd != NULL) {
-		GetClientRect(hwnd, &rc);
-		if(rc.right < rc.bottom) b = TRUE;
+	if(bV7up)
+		linebreak = TRUE;
+	else{ /// @todo : measure taskbar height to chose font size and offsets (small vs "normal" taskbar)
+		linebreak = FALSE;
+		hwnd = FindWindow("Shell_TrayWnd", NULL);
+		if(hwnd!=NULL) {
+			GetClientRect(hwnd, &rc);
+			if(rc.right < rc.bottom) linebreak = TRUE;
+		}
 	}
-	CHECKS(IDC_KAIGYO) =
-		GetMyRegLong("Format", ENTRY(IDC_KAIGYO), b);
-	CHECKS(IDC_AMPM) = GetMyRegLong("Format", ENTRY(IDC_AMPM), FALSE);
+	CHECKS(IDC_KAIGYO) = GetMyRegLong("Format",ENTRY(IDC_KAIGYO),linebreak);
+	CHECKS(IDC_AMPM) = GetMyRegLong("Format", ENTRY(IDC_AMPM), bV7up);
 	
-	CreateFormat(s, checks);
-	SetMyRegStr("Format", "Format", s);
+	CreateFormat(format, checks);
+	SetMyRegStr("Format", "Format", format);
 }
 
 /*--------------------------------------------------

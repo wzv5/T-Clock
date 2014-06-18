@@ -11,8 +11,6 @@ static void OnMouseFileChange(HWND hDlg);
 static void OnSansho(HWND hDlg, WORD id);
 static void InitMouseFuncList(HWND hDlg);
 
-extern const char g_reg_mouse[];
-
 static const char* g_mouseButton[]={
 	"Left",
 	"Right",

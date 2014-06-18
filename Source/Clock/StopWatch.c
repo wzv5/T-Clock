@@ -105,6 +105,14 @@ BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 		OnInit(hDlg,&hList);
 		SetMyDialgPos(hDlg,21);
 		return TRUE;
+	case WM_ACTIVATE:
+		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
+			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+		}else{
+			SetWindowPos(hDlg,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+			SetWindowPos((HWND)wParam,hDlg,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+		}
+		break;
 	case WM_TIMER:
 		if(!g_paused)
 			OnTimer(hDlg);

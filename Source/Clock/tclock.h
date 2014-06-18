@@ -142,6 +142,7 @@ void OnTClockCommand(HWND hwnd, WORD wID);
 void OnContextMenu(HWND hwnd, HWND hwndClicked, int xPos, int yPos);
 
 // mouse.c
+extern const char g_reg_mouse[];
 void OnTimerMouse(HWND hwnd);
 void OnDropFiles(HWND hwnd, HDROP hdrop);
 void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
