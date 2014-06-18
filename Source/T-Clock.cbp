@@ -274,10 +274,6 @@
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
-		<Unit filename="DLL/resource.h">
-			<Option target="dll" />
-			<Option target="dll debug" />
-		</Unit>
 		<Unit filename="DLL/tcdll.h">
 			<Option target="dll" />
 			<Option target="dll debug" />
@@ -292,6 +288,7 @@
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
+		<Unit filename="common/version.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

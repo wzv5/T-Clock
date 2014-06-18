@@ -187,6 +187,7 @@
     <ClCompile Include="..\utl.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\common\version.h" />
     <ClInclude Include="..\resource.h" />
     <ClInclude Include="..\tclock.h" />
   </ItemGroup>

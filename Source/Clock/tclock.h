@@ -23,7 +23,7 @@
 #else
 #	define TCLOCK_SUFFIX ""
 #endif
-#define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - 2.0.2 build 99"
+#define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - " VER_SHORT2 " build " STR(VER_REVISION)
 #define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux continues what Stoic Joker's T-Clock 2010 started and will be further improved and kept up-to-date."
 #define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
 #define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
@@ -36,6 +36,7 @@
 #include <Shlwapi.h>//PathFileExists
 #include <Psapi.h>//EmptyWorkingSet
 #include "resource.h"
+#include "../common/version.h"
 
 #ifndef GWL_WNDPROC
 #define GWL_WNDPROC GWLP_WNDPROC

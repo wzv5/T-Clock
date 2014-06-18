@@ -100,7 +100,7 @@ void OnLinkClicked(HWND hDlg, UINT id)
 	if(id==IDC_ABT_MAILuri) {
 		strcpy(str, "mailto:");
 		GetDlgItemText(hDlg, id, str+strlen(str), 64);
-		strcat(str, "?subject=About "); strcat(str, CONF_START);
+		strcat(str, "?subject=About "); strcat(str, ABT_TITLE);
 	}else
 		GetDlgItemText(hDlg, id, str, 64);
 	ShellExecute(hDlg, NULL, str, NULL, "", SW_SHOWNORMAL);
