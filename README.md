@@ -20,12 +20,12 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] + extended right-click menu with more Windows like behavior <br>
 *(hold down CTRL or SHIFT to get "Run ..." and "Exit Explorer" items)*
 - [x] + simplified mouse click preferences page
+- [x] + default configuration with Windows like behavior and clock with line-break on Vista+ *(easier for first-time users)*
+- [x] + more mouse commands / customization
 - [x] * improved Stopwatch
 - [x] ! some bugfixes
 - [x] * some minor and major rewrites and changes
 - [x] ! can be compiled with MinGW/GCC *(allows more people to work on it and also fixed bugs)*
-- [x] + default configuration with Windows like behavior and clock with line-break on Vista+ *(easier for first-time users)* *tbd*
-- [x] + more mouse commands / customization *tbd*
 - [ ] + automatically center clock text vertically *tbd*
 - [ ] + enhanced time format editor incl. realtime preview *tbd*
 - [ ] + ability to use different timezones on modifiers *tbd*
