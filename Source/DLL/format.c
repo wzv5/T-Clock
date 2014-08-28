@@ -249,17 +249,15 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 				sp++;
 			}
 			*dp++ = (char)(hour % 10) + '0';
-		} else if(*sp == 'w') {
-			char xs_diff[3];
-			int xdiff;
-			int hour;
-			
-			xs_diff[0] = (char)(*(sp+2));
-			xs_diff[1] = (char)(*(sp+3));
-			xs_diff[2] = (char)'\x0';
-			xdiff = atoi(xs_diff);
-			if(*(sp+1) == '-') xdiff = -xdiff;
-			hour = (pt->wHour + xdiff)%24;
+		} else if(*sp == 'w' && (sp[1]=='+'||sp[1]=='-')) {
+			char bAdd=*++sp=='+';
+			int hour=0;
+			for(; *++sp<='9'&&*sp>='0'; ){
+				hour*=10;
+				hour+=*sp-'0';
+			}
+			if(!bAdd) hour=-hour;
+			hour = (pt->wHour + hour)%24;
 			if(hour < 0) hour += 24;
 			if(bHour12) {
 				if(hour > 12) hour -= 12;
@@ -268,7 +266,6 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			}
 			*dp++ = (char)(hour / 10) + '0';
 			*dp++ = (char)(hour % 10) + '0';
-			sp += 4;
 		} else if(*sp == 'n') {
 			if(*(sp + 1) == 'n') {
 				*dp++ = (char)((int)pt->wMinute / 10) + '0';
@@ -314,16 +311,20 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			sp += 2;
 		}
 		// internet time
-		else if(*sp == '@' && *(sp + 1) == '@' && *(sp + 2) == '@') {
+		else if(*sp == '@' && sp[1] == '@' && sp[2] == '@') {
 			*dp++ = '@';
 			*dp++ = (char)(beat100 / 10000) + '0';
 			*dp++ = (char)((beat100 % 10000) / 1000) + '0';
 			*dp++ = (char)((beat100 % 1000) / 100) + '0';
 			sp += 3;
-			if(*sp == '.' && *(sp + 1) == '@') {
+			if(*sp=='.' && sp[1]=='@') {
 				*dp++ = '.';
 				*dp++ = (char)((beat100 % 100) / 10) + '0';
 				sp += 2;
+				if(*sp=='@'){
+					*dp++ = (char)((beat100 % 10)) + '0';
+					++sp;
+				}
 			}
 		}
 		// alternate calendar
@@ -654,9 +655,9 @@ DWORD FindFormat(const char* fmt)
 			ret |= FORMAT_SECOND;
 		}
 		
-		else if(*fmt == '@' && *(fmt + 1) == '@' && *(fmt + 2) == '@') {
+		else if(*fmt == '@' && fmt[1] == '@' && fmt[2] == '@') {
 			fmt += 3;
-			if(*fmt == '.' && *(fmt + 1) == '@') {
+			if(*fmt == '.' && fmt[1] == '@') {
 				ret |= FORMAT_BEAT2;
 				fmt += 2;
 			} else ret |= FORMAT_BEAT1;

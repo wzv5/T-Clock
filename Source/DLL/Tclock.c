@@ -414,30 +414,14 @@ void CreateClockDC(HWND hwnd)
 --------------------------------------------------*/
 void GetDisplayTime(SYSTEMTIME* pt, int* beat100)
 {
-	FILETIME ft, lft;
-	SYSTEMTIME lt;
-	
-	GetSystemTimeAsFileTime(&ft);
-	
 	if(beat100) {
-		DWORDLONG ftqw;
-		SYSTEMTIME st;
-		int sec;
-		
-//		ftqw = *(DWORDLONG*)&ft + 36000000000;// it's unsave :(
-		ftqw=(((DWORDLONG)ft.dwHighDateTime<<32) | ft.dwLowDateTime) +36000000000ULL;
-		ft.dwLowDateTime=ftqw&0xFFFFFFFF;
-		ft.dwHighDateTime=ftqw>>32;
-		
-		FileTimeToSystemTime(&ft, &st);
-		
-		sec = st.wHour * 3600 + st.wMinute * 60 + st.wSecond;
-		*beat100 = (sec * 1000) / 864;
+		GetSystemTime(pt);
+		if(++pt->wHour>23)
+			pt->wHour=0;
+		*beat100 = pt->wHour*3600 + pt->wMinute*60 + pt->wSecond;
+		*beat100 = (*beat100 * 1000) / 864;
 	}
-	
-	FileTimeToLocalFileTime(&ft, &lft);
-	FileTimeToSystemTime(&lft, &lt);
-	memcpy(pt, &lt, sizeof(lt));
+	GetLocalTime(pt);
 }
 
 /*--------------------------------------------------
@@ -565,7 +549,7 @@ void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100)
 	y = hf / 4 - tm.tmInternalLeading / 2;
 	xcenter = wclock / 2;
 	w = 0;
-	while(*p) {
+	while(*p) {/// @fixme : draw with transparency like Windows does
 		sp = p;
 		while(*p && *p != 0x0d) p++;
 		if(*p == 0x0d) { *p = 0; p += 2; }
