@@ -1,19 +1,78 @@
 /*-------------------------------------------
-  utl.c - KAZUBON 1997-1998
+  utl.c - KAZUBON 1997-1999
 ---------------------------------------------*/
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
-#include "tclock.h"
+#include "globals.h"
+#include "utl.h"
+//#include <sys/types.h>
+#include <sys/stat.h>
 const char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
 
+BOOL bV7up=TRUE;
+BOOL b2000=TRUE;
+char g_bIniSetting = 0;
+char g_inifile[MAX_PATH];
+//================================================================================================
+//---------------------------//-----+++--> Find Out If it's Older Then Windows 2000 If it is, Die!:
+BOOL CheckSystemVersion()   //--------------------------------------------------------------+++-->
+{
+	OSVERSIONINFOEX osvi;
+	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+	if(!GetVersionEx((OSVERSIONINFO*) &osvi)) return FALSE;
+	if(osvi.dwMajorVersion >= 6) bV7up = TRUE;
+	if((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) b2000 = TRUE;
+	if(osvi.dwMajorVersion >= 5) return TRUE;
+	return FALSE;
+}
+//================================================================================================
+//--------------------------------------------------+++--> Force a ReDraw of T-Clock & the TaskBar:
+void RefreshUs(void)   //-------------------------------------------------------------------+++-->
+{
+	char classname[GEN_BUFF] = {0};
+	HWND hwndBar, hwndChild;
+	
+	hwndBar = FindWindow("Shell_TrayWnd", NULL);
+	
+	// find the clock window
+	hwndChild = GetWindow(hwndBar, GW_CHILD);
+	while(hwndChild) {
+		GetClassName(hwndChild, classname, 80);
+		if(lstrcmpi(classname, "TrayNotifyWnd") == 0) {
+			hwndChild = GetWindow(hwndChild, GW_CHILD);
+			while(hwndChild) {
+				GetClassName(hwndChild, classname, 80);
+				if(lstrcmpi(classname, "TrayClockWClass") == 0) {
+					SendMessage(hwndChild, CLOCKM_REFRESHCLOCK, 0, 0);
+					SendMessage(hwndChild, CLOCKM_REFRESHTASKBAR, 0, 0);
+					break;
+				}
+			} break;
+		}
+		hwndChild = GetWindow(hwndChild, GW_HWNDNEXT);
+	}
+}
+#ifndef S_ISDIR
+#	define S_ISDIR(mode) (mode&S_IFDIR)
+#endif // S_ISDIR
+char PathExists(const char* path){
+	struct stat st;
+	if(stat(path,&st)==-1) return 0;
+	return S_ISDIR(st.st_mode)?2:1;
+}
+/*--------------------------------------------------------
+  Retreive a file name and option from a command string
+----------------------------------------------------------*/
 void GetFileAndOption(const char* command, char* fname, char* opt)
 {
-	const char* p, *pe;	char* pd;
+	const char* p, *pe;
+	char* pd;
 	WIN32_FIND_DATA fd;
 	HANDLE hfind;
 	
 	p = command; pd = fname;
 	pe = NULL;
-	for(;;) {
+	for(; ;) {
 		if(*p == ' ' || *p == 0) {
 			*pd = 0;
 			hfind = FindFirstFile(fname, &fd);
@@ -25,7 +84,6 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 		}
 		*pd++ = *p++;
 	}
-	
 	if(pe == NULL) pe = p;
 	
 	p = command; pd = fname;
@@ -39,6 +97,9 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 	for(; *p;) *pd++ = *p++;
 	*pd = 0;
 }
+/*------------------------------------------------
+  Open a file
+--------------------------------------------------*/
 BOOL ExecFile(HWND hwnd, const char* command)
 {
 	char fname[MAX_PATH], opt[MAX_PATH];
@@ -53,7 +114,7 @@ void ToggleCalendar()
 {
 	if(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL))
 		return;
-	if(bV7up && !GetMyRegLong("Calendar","bCustom",0))
+	if(g_tos>=TOS_VISTA && !GetMyRegLong("Calendar","bCustom",0))
 		PostMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
 	else
 		ExecFile(g_hwndClock,"XPCalendar.exe");
@@ -279,13 +340,15 @@ void ForceForegroundWindow(HWND hwnd)
 {
 	DWORD fgthread=GetWindowThreadProcessId(GetForegroundWindow(),0);
 	if(fgthread && _threadid^fgthread && AttachThreadInput(_threadid,fgthread,1)){
-//		AllowSetForegroundWindow(ASFW_ANY);//does nothing... we bekome foreground, but won't receive window messages
+//		AllowSetForegroundWindow(ASFW_ANY);//does nothing... we become foreground, but won't receive window messages
 //		SetFocus(hwnd);// "
 		SetForegroundWindow(hwnd);
+		BringWindowToTop(hwnd);
 		AttachThreadInput(_threadid,fgthread,0);
 		return;
 	}
 	SetForegroundWindow(hwnd);
+	BringWindowToTop(hwnd);
 }
 //===============================================================================
 //--+++-->
@@ -293,25 +356,34 @@ int GetMyRegStr(const char* section, const char* entry, char* val, int len, cons
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
 	
-	strcpy(key, mykey);
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
 	
 	if(section && *section) {
-		strcat(key, "\\");
+		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
-		size = len;
-		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-			r=size;
-		}else{
-			if((r=(int)strlen(defval))<=len){
-				strcpy(val,defval);
+	if(g_bIniSetting) {
+		r = GetPrivateProfileString(key, entry, defval, val,
+									len, g_inifile);
+	} else {
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
+			size = len;
+			if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
+				r=size;
+				if(r) --r;
 			}else{
-				r=0;
+				if((r=(int)strlen(defval))<=len){
+					strcpy(val,defval);
+				}else{
+					r=0;
+				}
 			}
+			RegCloseKey(hkey);
 		}
-		RegCloseKey(hkey);
 	}
 	if(!r) *val='\0';
 	return r;
@@ -321,26 +393,37 @@ int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, co
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
 	
-	strcpy(key, mykey);
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
 	
 	if(section && *section) {
-		strcat(key, "\\");
+		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
-		size = len;
-		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-			r=size;
-		}else{
-			if((r=(int)strlen(defval))<=len){
-				SetMyRegStr(section, entry, defval);
-				strcpy(val,defval);
+	if(g_bIniSetting) {
+		r = GetPrivateProfileString(key, entry, defval, val,
+									len, g_inifile);
+		if(r == len)
+			SetMyRegStr(section, entry, defval);
+	} else {
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
+			size = len;
+			if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
+				r=size;
+				if(r) --r;
 			}else{
-				r=0;
+				if((r=(int)strlen(defval))<=len){
+					SetMyRegStr(section, entry, defval);
+					strcpy(val,defval);
+				}else{
+					r=0;
+				}
 			}
+			RegCloseKey(hkey);
 		}
-		RegCloseKey(hkey);
 	}
 	if(!r) *val='\0';
 	return r;
@@ -348,53 +431,63 @@ int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, co
 
 LONG GetMyRegLong(const char* section, const char* entry, LONG defval)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;
-	BOOL b = FALSE;	LONG r=0;
+	char key[80];
+	HKEY hkey;
 	
-	strcpy(key, mykey);
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
 	
 	if(section && *section) {
-		strcat(key, "\\");
+		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
-		size = 4;
-		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)&r, &size) == ERROR_SUCCESS) {
-			if(size == 4) b = TRUE;
+	if(g_bIniSetting) {
+		return GetPrivateProfileInt(key, entry, defval, g_inifile);
+	} else {
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
+			DWORD regtype,size=sizeof(LONG);
+			LONG dw=0;
+			if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
+				defval=dw;
+			RegCloseKey(hkey);
 		}
-		RegCloseKey(hkey);
 	}
-	
-	if(b == FALSE) r = defval;
-	return r;
+	return defval;
 }
 
 LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;
-	BOOL b = FALSE;	LONG r=0;
+	char key[80];
+	HKEY hkey;
 	
-	strcpy(key, mykey);
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
 	
 	if(section && *section) {
-		strcat(key, "\\");
+		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
-		size = 4;
-		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)&r, &size) == ERROR_SUCCESS) {
-			if(size == 4) b = TRUE;
+	if(g_bIniSetting) {
+		return GetPrivateProfileInt(key,entry,defval,g_inifile);
+	} else {
+		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
+			DWORD regtype,size=sizeof(LONG);
+			LONG dw=0;
+			if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
+				defval=dw;
+			}else{
+				SetMyRegLong(section,entry,defval);
+			}
+			RegCloseKey(hkey);
 		}
-		RegCloseKey(hkey);
 	}
-	
-	if(b == FALSE) {
-		r = defval;
-		SetMyRegLong(section, entry, defval);
-	}
-	return r;
+	return defval;
 }
 
 /*------------------------------------------------
@@ -440,18 +533,27 @@ BOOL SetMyRegStr(const char* section, const char* entry, const char* val)
 {
 	HKEY hkey;	char key[80];	BOOL r=FALSE;
 	
-	strcpy(key, mykey);
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
 	
 	if(section && *section) {
-		strcat(key, "\\");
+		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
-		if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)(int)strlen(val)) == ERROR_SUCCESS) {
+	if(g_bIniSetting) {
+		r = FALSE;
+		if(WritePrivateProfileString(key, entry, val, g_inifile))
 			r = TRUE;
+	} else {
+		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
+			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)(int)strlen(val)) == ERROR_SUCCESS) {
+				r = TRUE;
+			}
+			RegCloseKey(hkey);
 		}
-		RegCloseKey(hkey);
 	}
 	return r;
 }
@@ -469,22 +571,36 @@ BOOL SetRegStr(HKEY rootkey, char* section, char* entry, char* val)
 	return r;
 }// */
 
-BOOL SetMyRegLong(const char* section, const char* entry, DWORD val)
+BOOL SetMyRegLong(const char* section, const char* entry, LONG val)
 {
-	HKEY hkey;	char key[80];	BOOL r = FALSE;
+	HKEY hkey;
+	BOOL r;
+	char key[80];
 	
-	strcpy(key, mykey);
+	if(g_bIniSetting) key[0] = 0;
+	else strcpy(key, mykey);
 	
 	if(section && *section) {
-		strcat(key, "\\");
+		if(!g_bIniSetting) strcat(key, "\\");
 		strcat(key, section);
+	} else {
+		if(g_bIniSetting) strcpy(key, "Main");
 	}
 	
-	if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
-		if(RegSetValueEx(hkey, entry, 0, REG_DWORD, (CONST BYTE*)&val, 4) == ERROR_SUCCESS) {
+	if(g_bIniSetting) {
+		char s[20];
+		wsprintf(s, "%d", val);
+		r = FALSE;
+		if(WritePrivateProfileString(key, entry, s, g_inifile))
 			r = TRUE;
+	} else {
+		r = FALSE;
+		if(RegCreateKey(HKEY_CURRENT_USER, key, &hkey) == 0) {
+			if(RegSetValueEx(hkey,entry,0,REG_DWORD,(CONST BYTE*)&val,4)==ERROR_SUCCESS) {
+				r = TRUE;
+			}
+			RegCloseKey(hkey);
 		}
-		RegCloseKey(hkey);
 	}
 	return r;
 }
@@ -522,27 +638,113 @@ BOOL DelMyRegKey(const char* section)
 	return r;
 }
 
-COLORREF GetMyRegColor(const char* section, const char* entry, COLORREF defval)
+/*
+void Pause(HWND hWnd, LPCTSTR pszArgs)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;
-	BOOL b = FALSE; LONG r=0;
+	LONG lInterval = atoi(pszArgs);
+	LONG lTime = GetTickCount();
+	MSG msg;
 	
-	strcpy(key, mykey);
-	
-	if(section && *section) {
-		strcat(key, "\\");
-		strcat(key, section);
-	}
-	
-	if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey) == ERROR_SUCCESS) {
-		size = 4;
-		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)&r, &size) == ERROR_SUCCESS) {
-			if(size == 4) b = TRUE;
+	if(lInterval > 0) {
+		while((LONG)(GetTickCount() - lTime) < lInterval) {
+			if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
 		}
-		RegCloseKey(hkey);
 	}
+}// */
+/// currently unused drawing stuff
+/*
+// tile an image vertically
+void VerticalTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest,
+					 HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc,
+					 BOOL ReverseBlt, BOOL useTrans)
+{
+	int y;
 	
-	if(b == FALSE) r = defval;
-	if(r & 0x80000000) r = GetSysColor(r & 0x00ffffff);
-	return r;
+	if(ReverseBlt) {
+		for(y = cyDest - cySrc; y > yDest - cySrc; y -= cySrc) {
+			TC2DrawBlt(hdcDest,
+					   xDest,
+					   y,
+					   cxDest,
+					   cySrc,
+					   hdcSrc,
+					   xSrc,
+					   ySrc,
+					   cxSrc,
+					   cySrc,
+					   useTrans);
+		}
+	} else {
+		for(y = 0; y < cyDest; y += cySrc) {
+			TC2DrawBlt(hdcDest,
+					   xDest,
+					   yDest + y,
+					   cxDest,
+					   __min(cyDest - y, cySrc),
+					   hdcSrc,
+					   xSrc,
+					   ySrc,
+					   cxSrc,
+					   __min(cyDest - y, cySrc),
+					   useTrans);
+		}
+	}
 }
+// tile an image horizontally and vertically
+void FillTileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc, DWORD rasterOp)
+{
+	int x, y;
+	
+	for(y = 0; y < cyDest; y += cySrc) {
+		for(x = 0; x < cxDest; x += cxSrc) {
+			BitBlt(hdcDest,
+				   xDest + x,
+				   yDest + y,
+				   cxSrc,
+				   cySrc,
+				   hdcSrc,
+				   xSrc,
+				   ySrc,
+				   rasterOp);
+		}
+	}
+}
+void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcSrc,
+			 int xSrc, int ySrc, int cxSrc, int cySrc, BOOL useTrans)
+{
+	int y, x;
+	
+	for(y = yDest; y < cyDest; y = y + cySrc) {
+		for(x = xDest; x < cxDest; x = x + cxSrc) {
+			TC2DrawBlt(hdcDest, x, y, cxSrc, cySrc,
+					   hdcSrc, xSrc, ySrc, cxSrc, cySrc, useTrans);
+		}
+	}
+}// */
+BOOL IsXPStyle()
+{
+	char temp[1024];
+	
+	GetRegStr(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\ThemeManager", "ThemeActive", temp, 1024, "0");
+	if(_strnicmp(temp, "1", 1) == 0) return TRUE;
+	else return FALSE;
+}
+/*
+void Pause(HWND hWnd, LPCTSTR pszArgs)
+{
+	LONG lInterval = atoi(pszArgs);
+	LONG lTime = GetTickCount();
+	MSG msg;
+	
+	if(lInterval > 0) {
+		while((LONG)(GetTickCount() - lTime) < lInterval) {
+			if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+		}
+	}
+}// */

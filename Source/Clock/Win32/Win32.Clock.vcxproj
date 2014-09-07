@@ -184,11 +184,11 @@
     <ClCompile Include="..\soundselect.c" />
     <ClCompile Include="..\StopWatch.c" />
     <ClCompile Include="..\timer.c" />
-    <ClCompile Include="..\utl.c" />
+    <ClCompile Include="..\..\common\utl.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\common\version.h" />
-    <ClInclude Include="..\resource.h" />
+    <ClInclude Include="..\..\common\resource.h" />
     <ClInclude Include="..\tclock.h" />
   </ItemGroup>
   <ItemGroup>

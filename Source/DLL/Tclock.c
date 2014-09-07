@@ -3,6 +3,7 @@
 //--------------------------------------------------------*/
 // Modified by Stoic Joker: Tuesday, March 2 2010 - 10:42:42
 #include "tcdll.h"
+#include "../common/tcolor.h"
 
 void EndClock(void);
 void OnTimer(HWND hwnd);
@@ -20,14 +21,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 //----------------------------------------+++--> Definition of Data Segment Shared Among Processes:
 #ifndef __GNUC__
 #pragma data_seg(".MYDATA") //--------------------------------------------------------------+++-->
-HWND hwndTClockMain = NULL;
-HWND hwndClock = NULL;
-HHOOK hhook = 0;
+HWND g_hwndTClockMain = NULL;
+HWND g_hwndClock = NULL;
+HHOOK g_hhook = 0;
 #pragma data_seg()
 #else
-__attribute__((section(".MYDATA"),shared)) HWND hwndTClockMain = NULL;
-__attribute__((section(".MYDATA"),shared)) HWND hwndClock = NULL;
-__attribute__((section(".MYDATA"),shared)) HHOOK hhook = 0;
+__attribute__((section(".MYDATA"),shared)) HWND g_hwndTClockMain = NULL;
+__attribute__((section(".MYDATA"),shared)) HWND g_hwndClock = NULL;
+__attribute__((section(".MYDATA"),shared)) HHOOK g_hhook = 0;
 #endif // __GNUC__
 
 /*------------------------------------------------
@@ -105,24 +106,24 @@ void InitClock(HWND hWnd)   //--------------------------------------------------
 	osvi.dwOSVersionInfoSize=sizeof(OSVERSIONINFOEX);
 	if(GetVersionEx((OSVERSIONINFO*)&osvi) && osvi.dwMajorVersion>=6)
 		bV7up=1;
-	hwndClock = hWnd;
-	PostMessage(hwndTClockMain, WM_USER, 0, (LPARAM)hwndClock);
+	g_hwndClock = hWnd;
+	PostMessage(g_hwndTClockMain, WM_USER, 0, (LPARAM)g_hwndClock);
 	
 	ReadData(); //-+-> Get Configuration Information From Registry
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
-	oldWndProc = (WNDPROC)GetWindowLongPtr(hwndClock, GWL_WNDPROC);
-	SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)WndProc);
-	SetClassLong(hwndClock, GCL_STYLE, GetClassLong(hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
+	oldWndProc = (WNDPROC)GetWindowLongPtr(g_hwndClock, GWL_WNDPROC);
+	SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)WndProc);
+	SetClassLong(g_hwndClock, GCL_STYLE, GetClassLong(g_hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
 	
-	CreateTip(hwndClock); // Create Mouse-Over ToolTip Window & Contents
+	CreateTip(g_hwndClock); // Create Mouse-Over ToolTip Window & Contents
 	
 	DragAcceptFiles(hWnd, GetMyRegLong(NULL, "DropFiles", FALSE)); // Enable/Disable DropFiles on Clock Based on Reg Info.
 	
-	SetLayeredTaskbar(hwndClock); // Strangely Not Required for XP Themes... WTF is it For?? 2010
+	SetLayeredTaskbar(g_hwndClock); // Strangely Not Required for XP Themes... WTF is it For?? 2010
 	
-	PostMessage(GetParent(GetParent(hwndClock)), WM_SIZE, SIZE_RESTORED, 0);
-	InvalidateRect(GetParent(GetParent(hwndClock)), NULL, TRUE);
+	PostMessage(GetParent(GetParent(g_hwndClock)), WM_SIZE, SIZE_RESTORED, 0);
+	InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, TRUE);
 }
 //================================================================================================
 //-------------------------------------+++--> Delete ALL T-Clock Created (Font & BitMap) Resources:
@@ -137,18 +138,18 @@ void DeleteClockRes(void)   //--------------------------------------------------
 //----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
 void EndClock(void)   //--------------------------------------------------------------------+++-->
 {
-	DragAcceptFiles(hwndClock, FALSE);
+	DragAcceptFiles(g_hwndClock, FALSE);
 	if(g_Tip) DestroyWindow(g_Tip); g_Tip = NULL;
 	
 	DeleteClockRes();
-	EndNewAPI(hwndClock);
-	if(hwndClock && IsWindow(hwndClock)) {
-		if(g_bTimer) KillTimer(hwndClock, 1); g_bTimer = FALSE;
-		SetWindowLongPtr(hwndClock, GWL_WNDPROC, (LONG_PTR)oldWndProc);
+	EndNewAPI(g_hwndClock);
+	if(g_hwndClock && IsWindow(g_hwndClockndClock)) {
+		if(g_bTimer) KillTimer(g_hwndClock, 1); g_bTimer = FALSE;
+		SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)oldWndProc);
 		oldWndProc = NULL;
 	}
 	
-	if(IsWindow(hwndTClockMain)) PostMessage(hwndTClockMain, WM_USER+2, 0, 0);
+	if(IsWindow(g_hwndTClockMain)) PostMessage(g_hwndTClockMain, WM_USER+2, 0, 0);
 //  bClockUseTrans = FALSE;
 }
 /*------------------------------------------------
@@ -202,13 +203,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(nBlink){
 			nBlink=0; InvalidateRect(hwnd, NULL, TRUE);
 		}
-		PostMessage(hwndTClockMain, message, wParam, lParam);
+		PostMessage(g_hwndTClockMain, message, wParam, lParam);
 		return 0;
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		PostMessage(hwndTClockMain, message, wParam, lParam);
+		PostMessage(g_hwndTClockMain, message, wParam, lParam);
 		if(message == WM_RBUTTONUP) break;
 		return 0;
 	case WM_MOUSEMOVE:
@@ -227,7 +228,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(!bV7up || GetMyRegLong("Tooltip","bCustom",0)){
 			ShowTip();//show custom tooltip
 		}else{
-			PostMessage(hwndClock, WM_USER+103,1,0);//show system tooltip
+			PostMessage(g_hwndClock, WM_USER+103,1,0);//show system tooltip
 		}
 		return 0;
 	case WM_MOUSELEAVE:
@@ -235,19 +236,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			if(!bV7up || GetMyRegLong("Tooltip","bCustom",0))
 				PostMessage(g_Tip, TTM_TRACKACTIVATE , FALSE, (LPARAM)&g_TipInfo);//hide custom tooltip
 			else
-				PostMessage(hwndClock, WM_USER+103,0,0);//hide system tooltip
+				PostMessage(g_hwndClock, WM_USER+103,0,0);//hide system tooltip
 		}
 		g_TipState=0;
 		return 0;
 	case WM_CONTEXTMENU:
-		PostMessage(hwndTClockMain, message, wParam, lParam);
+		PostMessage(g_hwndTClockMain, message, wParam, lParam);
 		return 0;
 	case WM_NCHITTEST: // oldWndProc
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	case WM_MOUSEACTIVATE:
 		return MA_ACTIVATE;
 	case WM_DROPFILES:
-		PostMessage(hwndTClockMain, WM_DROPFILES, wParam, lParam);
+		PostMessage(g_hwndTClockMain, WM_DROPFILES, wParam, lParam);
 		return 0;
 	case WM_NOTIFY: {
 			UINT code=((LPNMHDR)lParam)->code;
@@ -265,14 +266,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			b = GetMyRegLong(NULL, "DropFiles", FALSE);
 			DragAcceptFiles(hwnd, b);
 			InvalidateRect(hwnd, NULL, FALSE);
-			InvalidateRect(GetParent(hwndClock), NULL, TRUE);
+			InvalidateRect(GetParent(g_hwndClock), NULL, TRUE);
 			return 0;
 		}
 	case CLOCKM_REFRESHTASKBAR: // refresh other elements than clock
 		CreateClockDC(hwnd);
-		SetLayeredTaskbar(hwndClock);
+		SetLayeredTaskbar(g_hwndClock);
 		PostMessage(GetParent(GetParent(hwnd)), WM_SIZE, SIZE_RESTORED, 0);
-		InvalidateRect(GetParent(GetParent(hwndClock)), NULL, TRUE);
+		InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, TRUE);
 		return 0;
 	case CLOCKM_BLINK: // blink the clock
 		if(wParam) { if(nBlink == 0) nBlink = 4; }
@@ -283,7 +284,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case CLOCKM_REFRESHCLEARTASKBAR: {
 			bRefreshClearTaskbar = TRUE;
-			SetLayeredTaskbar(hwndClock);
+			SetLayeredTaskbar(g_hwndClock);
 			return 0;
 		}
 	case WM_WINDOWPOSCHANGING: {
@@ -350,7 +351,7 @@ void ReadData()   //------------------------------------------------------------
 	dwInfoFormat = FindFormat(format);
 	bDispSecond = (dwInfoFormat&FORMAT_SECOND)? TRUE:FALSE;
 	nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!g_bTimer) SetTimer(hwndClock, 1, 1000, NULL);
+	if(!g_bTimer) SetTimer(g_hwndClock, 1, 1000, NULL);
 	g_bTimer = TRUE;
 	
 	bHour12 = (char)GetMyRegLong("Format", "Hour12", FALSE);
@@ -538,7 +539,7 @@ void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100)
 	
 	MakeFormat(s, pt, beat100, format);
 	
-	GetClientRect(hwndClock, &rcClock);
+	GetClientRect(g_hwndClock, &rcClock);
 	
 	wclock = rcClock.right;  hclock = rcClock.bottom;
 	
@@ -573,7 +574,7 @@ void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100)
 	w += dwidth;
 	if(w > iClockWidth) {
 		iClockWidth = w;
-		PostMessage(GetParent(GetParent(hwndClock)), WM_SIZE,
+		PostMessage(GetParent(GetParent(g_hwndClock)), WM_SIZE,
 					SIZE_RESTORED, 0);
 	}
 }

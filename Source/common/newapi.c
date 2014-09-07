@@ -2,7 +2,9 @@
   newapi.c - Kazubon 1999
   GradientFill and Layerd Window
 ---------------------------------------------*/
-#include "tcdll.h"
+#include "../common/globals.h"
+#include <Uxtheme.h>
+#include "../common/utl.h"
 
 //#define WS_EX_LAYERED 0x80000
 //#define LWA_ALPHA     2
@@ -30,7 +32,6 @@ static BOOL bInitTransparentBlt = FALSE;
 static BOOL bInitDrawThemeParentBackground = FALSE;
 
 static void RefreshRebar(HWND hwndBar);
-//static void RefreshUs(void);
 
 int nAlphaDesktop = 255;
 BOOL bClearTaskbar = FALSE;

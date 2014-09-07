@@ -5,35 +5,40 @@
 #	define XSTR(x) #x
 #	define STR(x) XSTR(x)
 /** Version **/
-	#define VER_MAJOR 2
-	#define VER_MINOR 1
-	#define VER_BUILD 0
-	#define VER_STATUS 2
-	#define VER_STATUS_S "Release Candidate"
-	#define VER_STATUS_SS "rc"
-	#define VER_STATUS_SS2 "гc"
-	#define VER_REVISION 57
-	#define VER_FULL "2.1.0 Release Candidate"
-	#define VER_SHORT "2.1rc0"
-	#define VER_SHORT2 "2.1.0"
-	#define VER_SHORT3 "2.1гc0"
-	#define VER_RC 2, 1, 0, 57
+#	define VER_MAJOR 2
+#	define VER_MINOR 2
+#	define VER_BUILD 0
+#	define VER_STATUS 1
+#	define VER_STATUS_FULL "Beta"
+#	define VER_STATUS_SHORT "b"
+#	define VER_STATUS_GREEK "β"
+#	define VER_REVISION 60
+#	define VER_FULL "2.2.0 Beta"
+#	define VER_SHORT "2.2b0"
+#	define VER_SHORT_DOTS "2.2.0"
+#	define VER_SHORT_GREEK "2.2β0"
+#	define VER_RC_REVISION 2, 2, 0, 60
+#	define VER_RC_STATUS 2, 2, 1, 0
+/** Subversion Information **/
+#	define VER_REVISION_URL "git@github.com:White-Tiger/T-Clock.git"
+#	define VER_REVISION_DATE "2014-08-28 10:43:20 +0000 (Thu, Aug 28 2014)"
 /** Date/Time **/
-	#define VER_TIMESTAMP 1403117331
-	#define VER_DATE_SEC 51
-	#define VER_DATE_MIN 48
-	#define VER_DATE_HOUR 18
-	#define VER_DATE_DAY 18
-	#define VER_DATE_MONTH 06
-	#define VER_DATE_YEAR 2014
-	#define VER_DATE_WDAY 0
-	#define VER_DATE_YDAY 169
-	#define VER_DATE_WDAY_SS "Wed"
-	#define VER_DATE_WDAY_S "Wednesday"
-	#define VER_DATE_MONTH_SS "Jun"
-	#define VER_DATE_MONTH_S "June"
-	#define VER_DATE "Wed, June 18, 2014 18:48:51 UTC"
-	#define VER_DATES "2013-05-26 18:48:51 UTC"
-	#define VER_DATE_TIME "18:48:51"
-	#define VER_DATE_DATE "2014-06-18"
+#	define VER_TIMESTAMP 1410120294
+#	define VER_TIME_SEC 54
+#	define VER_TIME_MIN 4
+#	define VER_TIME_HOUR 20
+#	define VER_TIME_DAY 7
+#	define VER_TIME_MONTH 9
+#	define VER_TIME_YEAR 2014
+#	define VER_TIME_WDAY 0
+#	define VER_TIME_YDAY 249
+#	define VER_TIME_WDAY_SHORT "Sun"
+#	define VER_TIME_WDAY_FULL "Sunday"
+#	define VER_TIME_MONTH_SHORT "Sep"
+#	define VER_TIME_MONTH_FULL "September"
+#	define VER_TIME "20:04:54"
+#	define VER_DATE "2014-09-07"
+#	define VER_DATE_LONG "Sun, Sep 07, 2014 20:04:54 UTC"
+#	define VER_DATE_SHORT "2014-09-07 20:04:54 UTC"
+#	define VER_DATE_ISO "2014-09-07T20:04:54Z"
 #endif

@@ -6,7 +6,6 @@
 // Modified by Stoic Joker: Monday, 04/12/2010 @ 7:42:04pm
 #include "tclock.h"
 #include <winsock.h>
-#include "resource.h"
 
 //===============================================================
 struct NTP_Packet { // NTP (Network Time Protocol) Request Packet
@@ -155,7 +154,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 				 st_dif.wMinute, st_dif.wSecond, st_dif.wMilliseconds);
 	}
 	GetMyRegStr("SNTP", "Sound", szWave, MAX_BUFF, "");
-	PlayFile(g_hWnd, szWave, 0);
+	PlayFile(g_hwndTClockMain, szWave, 0);
 	if(strlen(szWave)) // IF There IS a Sound File Selected
 	
 	
@@ -388,7 +387,7 @@ and add your username to "Change the system time"). I don't know of any specific
 void NetTimeConfigDialog(void)   //---------------------------------------------------------+++-->
 {
 	bGUI = TRUE;    //-----------------------------------+++--> Start in Gooy Mode.
-	DialogBox(0, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hWnd, (DLGPROC)SNTPConfigProc);
+	DialogBox(0, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, (DLGPROC)SNTPConfigProc);
 	bGUI = FALSE; //-------------------------------+++--> End of/Disable Gooy Mode.
 }
 //================================================================================================
@@ -408,12 +407,12 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	SetMyRegStr(subkey, "Sound", szSound);
 	
 	if(tchk[0].bValid) { // Synchronize System Clock With Remote Time Server
-		RegisterHotKey(g_hWnd, HOT_TSYNC, tchk[0].fsMod, tchk[0].vk);
+		RegisterHotKey(g_hwndTClockMain, HOT_TSYNC, tchk[0].fsMod, tchk[0].vk);
 	} else {						// I'm Calling This One Mouser's HotKey...
 		tchk[0].vk = 0;		   // I'm Not Explaining It You Either Already
 		tchk[0].fsMod = 0;	  // Understand Why or You're Not Going Too...
 		strcpy(tchk[0].szText, "None");
-		UnregisterHotKey(g_hWnd, HOT_TSYNC);
+		UnregisterHotKey(g_hwndTClockMain, HOT_TSYNC);
 	}
 	SetMyRegLong("HotKeys\\HK5", "bValid", tchk[0].bValid);
 	SetMyRegLong("HotKeys\\HK5", "fsMod",  tchk[0].fsMod);

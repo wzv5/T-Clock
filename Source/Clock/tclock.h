@@ -2,45 +2,18 @@
 //--+++--> tclock.h - KAZUBON  1997-1999 =========================================
 //=================== Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 //-------------------------{ Stoic Joker 2006-2010 }-------------------------+++-->
-#define _CRT_SECURE_NO_DEPRECATE 1 // SHUT-UP About the New String Functions Already!!!
-
 #pragma once
 
-#ifndef WINVER				// Allow use of features specific to Windows XP or later.
-#define WINVER 0x0501		// Change this to the appropriate value to target other versions of Windows.
-#endif
-
-#ifndef _WIN32_WINNT		// Allow use of features specific to Windows XP or later.                   
-#define _WIN32_WINNT 0x0501	// Change this to the appropriate value to target other versions of Windows.
-#endif
-
-#ifndef _WIN32_IE			// Allow use of features specific to IE 6.0 or later.
-#define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
-#endif
-
-#ifdef _WIN64
-#	define TCLOCK_SUFFIX " x64"
-#else
-#	define TCLOCK_SUFFIX ""
-#endif
-#define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - " VER_SHORT2 " build " STR(VER_REVISION)
-#define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux continues what Stoic Joker's T-Clock 2010 started and will be further improved and kept up-to-date."
-#define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
-#define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
+#include "../common/globals.h"
 
 #include <stdio.h>//sprintf
-#include <Windows.h>
 #include <Uxtheme.h>//SetWindowTheme
 #include <WindowsX.h>//Edit_SetText
 #include <ShlObj.h>//IShellDispatch4
 #include <Shlwapi.h>//PathFileExists
 #include <Psapi.h>//EmptyWorkingSet
-#include "resource.h"
-#include "../common/version.h"
-
-#ifndef GWL_WNDPROC
-#define GWL_WNDPROC GWLP_WNDPROC
-#endif
+#include "../common/newapi.h"
+#include "../common/utl.h"
 
 // replacement of standard library's functions
 //int _strnicmp(const char* d, const char* s, size_t n);
@@ -56,15 +29,6 @@
 #define IDTIMER_DEKSTOPICON			5
 #define IDTIMER_DESKTOPICONSTYLE	6
 
-
-// messages to send the clock
-#define CLOCKM_REFRESHCLOCK   (WM_USER+1)
-#define CLOCKM_REFRESHTASKBAR (WM_USER+2)
-#define CLOCKM_BLINK          (WM_USER+3)
-#define CLOCKM_COPY           (WM_USER+4)
-#define CLOCKM_REFRESHDESKTOP (WM_USER+5)
-#define CLOCKM_REFRESHCLEARTASKBAR	(WM_USER+6)
-
 // for mouse.c and pagemouse.c
 #define MOUSEFUNC_NONE			0
 #define MOUSEFUNC_TIMER			5
@@ -72,13 +36,6 @@
 #define MOUSEFUNC_SCREENSAVER	7
 #define MOUSEFUNC_SHOWCALENDER	8
 #define MOUSEFUNC_SHOWPROPERTY	9
-
-// Global Buffer Size Labels
-#define TNY_BUFF	32
-#define MIN_BUFF	64
-#define GEN_BUFF	128
-#define LRG_BUFF	256
-#define MAX_BUFF	1024
 
 // System Global HotKey Identifiers
 #define HOT_WATCH	200
@@ -93,17 +50,13 @@
 
 //--+++--> main.c - Application Global Values:
 extern char		g_mydir[];			// Path to Clock.exe
-extern HWND		g_hwndClock;		// Main Clock Window Handle
 extern HWND		g_hDlgTimer;		// Timer Dialog Window Handle
 extern HWND		g_hDlgStopWatch;	// Stopwatch Dialog Window Handle
 extern HWND		g_hDlgTimerWatch;	// Timwe Watch Dialog Window Handle
 extern HWND		g_hwndSheet;		// (TCM Property Sheet Window Handle
-extern HWND		g_hWnd;				// Main Window Anchor for HotKeys Only!
 extern HICON	g_hIconTClock, g_hIconPlay, // Frequently Used Icon Handles
 				g_hIconStop, g_hIconDel; // Frequently Used Icon Handles
 extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
-extern BOOL bV7up; //--------------+++--> OS Version is Vista/7 or Better.
-extern BOOL b2000; //--------------+++--> OS is Windows 2000.
 
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
@@ -121,10 +74,8 @@ void StopFile(void);
 void EndAlarm(void);
 void InitAlarm(void);
 void OnMCINotify(HWND hwnd);
-BOOL ExecFile(HWND hwnd, const char* command);
 void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
 BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
-void GetFileAndOption(const char* command, char* fname, char* opt);
 extern BOOL bKillPCBeep; // Declared in alarm.c
 
 // alarmday.c
@@ -161,33 +112,6 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly);
 
 // StopWatch.c
 void DialogStopWatch();
-
-// utl.c
-void ToggleCalendar();
-int atox(const char* p);
-void del_title(char* path);
-void ForceForegroundWindow(HWND hWnd);
-DWORDLONG M32x32to64(DWORD a, DWORD b);
-void parse(char* dst, const char* src, int n);
-void add_title(char* path, const char* title);
-void get_title(char* dst, const char* path);
-int ext_cmp(const char* fname, const char* ext);
-void parsechar(char* dst, const char* src, char ch, int n);
-COLORREF GetMyRegColor(const char* section, const char* entry, COLORREF defval);
-int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT uBeep);
-int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval);
-int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, const char* defval);
-int GetRegStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval);
-LONG GetRegLong(HKEY rootkey, const char* section, const char* entry, LONG defval);
-BOOL SetRegStr(HKEY rootkey, const char* section, const char* entry, const char* val);
-LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval);
-LONG GetMyRegLong(const char* section, const char* entry, LONG defval);
-BOOL SetMyRegLong(const char* section, const char* entry, DWORD val);
-BOOL SetMyRegStr(const char* section, const char* entry, const char* val);
-BOOL DelMyReg(const char* section, const char* entry);
-void str0cat(char* dst, const char* src);
-BOOL DelMyRegKey(const char* section);
-char* MyString(UINT id);
 
 // ExitWindows.c
 BOOL ShutDown(void);

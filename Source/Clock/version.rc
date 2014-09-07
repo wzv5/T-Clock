@@ -1,6 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include "resource.h"
+#include "../common/resource.h"
 #include "../common/version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -31,8 +31,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION VER_RC
- PRODUCTVERSION VER_RC
+ FILEVERSION VER_RC_REVISION
+ PRODUCTVERSION VER_RC_REVISION
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L

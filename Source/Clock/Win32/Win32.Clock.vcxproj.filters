@@ -81,12 +81,12 @@
     <ClCompile Include="..\timer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\utl.c">
+    <ClCompile Include="..\..\common\utl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\resource.h">
+    <ClInclude Include="..\..\common\resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\tclock.h">

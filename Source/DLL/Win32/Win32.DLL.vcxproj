@@ -169,13 +169,13 @@
     <ClCompile Include="..\font.c" />
     <ClCompile Include="..\format.c" />
     <ClCompile Include="..\main.c" />
-    <ClCompile Include="..\newapi.c" />
     <ClCompile Include="..\Tclock.c" />
-    <ClCompile Include="..\utl.c" />
+    <ClCompile Include="..\..\common\newapi.c" />
+    <ClCompile Include="..\..\common\utl.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\common\version.h" />
-    <ClInclude Include="..\..\Clock\resource.h" />
+    <ClInclude Include="..\..\common\resource.h" />
     <ClInclude Include="..\tcdll.h" />
   </ItemGroup>
   <ItemGroup>

@@ -181,7 +181,7 @@ void OnTimerMouse(HWND hwnd)
 		SendMessage(GetDesktopWindow(),WM_SYSCOMMAND,SC_SCREENSAVE,0);
 		break;
 	default:
-		PostMessage(g_hWnd,WM_COMMAND,func,0);
+		PostMessage(g_hwndTClockMain,WM_COMMAND,func,0);
 	}
 	g_click_button=-1;
 	g_click=0;

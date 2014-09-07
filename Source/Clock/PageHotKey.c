@@ -19,48 +19,48 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	int i;
 	
 	if(tchk[0].bValid) { // Add/Edit Active Timers
-		RegisterHotKey(g_hWnd, HOT_TIMER, tchk[0].fsMod, tchk[0].vk);
+		RegisterHotKey(g_hwndTClockMain, HOT_TIMER, tchk[0].fsMod, tchk[0].vk);
 	} else {
 		tchk[0].vk = 0;
 		tchk[0].fsMod = 0;
 		strcpy(tchk[0].szText, "None");
-		UnregisterHotKey(g_hWnd, HOT_TIMER);
+		UnregisterHotKey(g_hwndTClockMain, HOT_TIMER);
 	}
 	
 	if(tchk[1].bValid) { // Display StopWatch
-		RegisterHotKey(g_hWnd, HOT_STOPW, tchk[1].fsMod, tchk[1].vk);
+		RegisterHotKey(g_hwndTClockMain, HOT_STOPW, tchk[1].fsMod, tchk[1].vk);
 	} else {
 		tchk[1].vk = 0;
 		tchk[1].fsMod = 0;
 		strcpy(tchk[1].szText, "None");
-		UnregisterHotKey(g_hWnd, HOT_STOPW);
+		UnregisterHotKey(g_hwndTClockMain, HOT_STOPW);
 	}
 	
 	if(tchk[2].bValid) { // Display Watched (and active) Timers
-		RegisterHotKey(g_hWnd, HOT_WATCH, tchk[2].fsMod, tchk[2].vk);
+		RegisterHotKey(g_hwndTClockMain, HOT_WATCH, tchk[2].fsMod, tchk[2].vk);
 	} else {
 		tchk[2].vk = 0;
 		tchk[2].fsMod = 0;
 		strcpy(tchk[2].szText, "None");
-		UnregisterHotKey(g_hWnd, HOT_WATCH);
+		UnregisterHotKey(g_hwndTClockMain, HOT_WATCH);
 	}
 	
 	if(tchk[3].bValid) { // Display Watched (and active) Timers
-		RegisterHotKey(g_hWnd, HOT_PROPR, tchk[3].fsMod, tchk[3].vk);
+		RegisterHotKey(g_hwndTClockMain, HOT_PROPR, tchk[3].fsMod, tchk[3].vk);
 	} else {
 		tchk[3].vk = 0;
 		tchk[3].fsMod = 0;
 		strcpy(tchk[3].szText, "None");
-		UnregisterHotKey(g_hWnd, HOT_PROPR);
+		UnregisterHotKey(g_hwndTClockMain, HOT_PROPR);
 	}
 	
 	if(tchk[4].bValid) { // Display Watched (and active) Timers
-		RegisterHotKey(g_hWnd, HOT_CALEN, tchk[4].fsMod, tchk[4].vk);
+		RegisterHotKey(g_hwndTClockMain, HOT_CALEN, tchk[4].fsMod, tchk[4].vk);
 	} else {
 		tchk[4].vk = 0;
 		tchk[4].fsMod = 0;
 		strcpy(tchk[4].szText, "None");
-		UnregisterHotKey(g_hWnd, HOT_CALEN);
+		UnregisterHotKey(g_hwndTClockMain, HOT_CALEN);
 	}
 	///////////////////////////////////////////////////////////////////////////////////
 	for(i = 0; i <= 4; i++) {

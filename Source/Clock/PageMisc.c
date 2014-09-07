@@ -146,12 +146,12 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	if(!b2000) { // This Feature is Not For Windows 2000, It's Only XP and Above!
 		if((!bMonOffOnLock) &&(IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK))) {
 			SetMyRegLong("Desktop", "MonOffOnLock", TRUE);
-			RegisterSession(g_hWnd); // Sets bMonOffOnLock to TRUE.
+			RegisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to TRUE.
 		} else if((bMonOffOnLock) &&(IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK))) {
 			//RegisterSession() Already Set bMonOffOnLock So There is Nothing to do.
 		} else {
 			SetMyRegLong("Desktop", "MonOffOnLock", FALSE);
-			UnregisterSession(g_hWnd); // Sets bMonOffOnLock to FALSE.
+			UnregisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to FALSE.
 		}
 		if(bV7up) SetMyRegLong("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
 	}

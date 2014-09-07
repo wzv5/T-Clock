@@ -5,14 +5,16 @@
 #include "tclock.h" //---------------{ Stoic Joker 2006-2011 }---------------+++-->
 #include <winver.h>
 #include <wtsapi32.h>
+#include "../common/version.h"
+#include "../common/tcolor.h" // WM_DWMCOLORIZATIONCOLORCHANGED
 
 // Application Global Window Handles
-HWND	g_hwndClock;		// clock window
+HWND	g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
+HWND	g_hwndClock;		// Main Clock Window Handle
 HWND	g_hwndSheet;		// property sheet window
 HWND	g_hDlgTimer;		// Timer Dialog Handle
 HWND	g_hDlgStopWatch;	// Stopwatch Dialog Handle
 HWND	g_hDlgTimerWatch;	// Timer Watch Dialog Handle
-HWND	g_hWnd;	 // Main Window Anchor for HotKeys Only!
 
 HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 // icons to use frequently
@@ -39,25 +41,10 @@ static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;
 static int nCountFindingClock = -1;
 BOOL bMonOffOnLock = FALSE;
-BOOL bV7up = FALSE;
-BOOL b2000 = FALSE;
 
 // alarm.c
 extern BOOL bPlayingNonstop;
 
-//================================================================================================
-//---------------------------//-----+++--> Find Out If it's Older Then Windows 2000 If it is, Die!:
-BOOL CheckSystemVersion()   //--------------------------------------------------------------+++-->
-{
-	OSVERSIONINFOEX osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if(!GetVersionEx((OSVERSIONINFO*) &osvi)) return FALSE;
-	if(osvi.dwMajorVersion >= 6) bV7up = TRUE;
-	if((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) b2000 = TRUE;
-	if(osvi.dwMajorVersion >= 5) return TRUE;
-	return FALSE;
-}
 //================================================================================================
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
 void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 2000 }--------+++-->
@@ -158,7 +145,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						  0, 0, 0, 0, 0, NULL, NULL, hInstance, NULL);
 						  
 	CheckCommandLine(hwnd,lpCmdLine,0); // This Checks for First Instance Startup Options
-	g_hWnd = hwnd; // Main Window Anchor for HotKeys Only!
+	g_hwndTClockMain = hwnd; // Main Window Anchor for HotKeys Only!
 	
 	GetHotKeyInfo(hwnd);
 	
@@ -189,6 +176,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	UnregisterHotKey(hwnd, HOT_TSYNC);
 	
 	if((SessionReged) || (bMonOffOnLock)) UnregisterSession(hwnd);
+	
+	EndNewAPI(NULL);
 	
 	ExitProcess((UINT)msg.wParam);
 }
@@ -586,33 +575,6 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 	while(hwnd) {
 		InvalidateRect(hwnd, NULL, TRUE);
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
-	}
-}
-//================================================================================================
-//--------------------------------------------------+++--> Force a ReDraw of T-Clock & the TaskBar:
-void RefreshUs(void)   //-------------------------------------------------------------------+++-->
-{
-	char classname[GEN_BUFF] = {0};
-	HWND hwndBar, hwndChild;
-	
-	hwndBar = FindWindow("Shell_TrayWnd", NULL);
-	
-	// find the clock window
-	hwndChild = GetWindow(hwndBar, GW_CHILD);
-	while(hwndChild) {
-		GetClassName(hwndChild, classname, 80);
-		if(lstrcmpi(classname, "TrayNotifyWnd") == 0) {
-			hwndChild = GetWindow(hwndChild, GW_CHILD);
-			while(hwndChild) {
-				GetClassName(hwndChild, classname, 80);
-				if(lstrcmpi(classname, "TrayClockWClass") == 0) {
-					SendMessage(hwndChild, CLOCKM_REFRESHCLOCK, 0, 0);
-					SendMessage(hwndChild, CLOCKM_REFRESHTASKBAR, 0, 0);
-					break;
-				}
-			} break;
-		}
-		hwndChild = GetWindow(hwndChild, GW_HWNDNEXT);
 	}
 }
 //================================================================================================
