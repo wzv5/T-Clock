@@ -319,7 +319,7 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	// set mouse functions to combo box
 	InitMouseFuncList(hDlg); // Populate Mouse Click Action DropDown Menu
 	
-	if(!bV7up){
+	if(g_tos<TOS_VISTA){
 		EnableDlgItem(hDlg, IDCB_TOOLTIP, 0);
 		CheckDlgButton(hDlg,IDCB_TOOLTIP, 1);
 	}else{
@@ -393,7 +393,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			}
 		}
 	}
-	if(bV7up) SetMyRegLong("Tooltip","bCustom",IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
+	if(g_tos>=TOS_VISTA) SetMyRegLong("Tooltip","bCustom",IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	GetDlgItemText(hDlg, IDC_TOOLTIP,buf,256);
 	SetMyRegStr("Tooltip","Tooltip",buf);
 }

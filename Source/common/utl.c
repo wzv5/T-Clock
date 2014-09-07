@@ -6,24 +6,47 @@
 #include "utl.h"
 //#include <sys/types.h>
 #include <sys/stat.h>
+unsigned short g_tos=0;
 const char mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
 
-BOOL bV7up=TRUE;
-BOOL b2000=TRUE;
 char g_bIniSetting = 0;
 char g_inifile[MAX_PATH];
 //================================================================================================
 //---------------------------//-----+++--> Find Out If it's Older Then Windows 2000 If it is, Die!:
 BOOL CheckSystemVersion()   //--------------------------------------------------------------+++-->
 {
-	OSVERSIONINFOEX osvi;
-	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if(!GetVersionEx((OSVERSIONINFO*) &osvi)) return FALSE;
-	if(osvi.dwMajorVersion >= 6) bV7up = TRUE;
-	if((osvi.dwMajorVersion == 5) && (osvi.dwMinorVersion == 0)) b2000 = TRUE;
-	if(osvi.dwMajorVersion >= 5) return TRUE;
-	return FALSE;
+	OSVERSIONINFOEX osvi={sizeof(OSVERSIONINFOEX)};
+	if(!GetVersionEx((OSVERSIONINFO*) &osvi))
+		return FALSE;
+	switch(osvi.dwMajorVersion){
+	case 5: // 2000-Vista
+		switch(osvi.dwMajorVersion){
+		case 0:
+			g_tos=TOS_2000; break;
+		default:
+			g_tos=TOS_XP;
+		}
+		break;
+	case 6: // Vista+
+		switch(osvi.dwMajorVersion){
+		case 0:
+			g_tos=TOS_VISTA; break;
+		case 1:
+			g_tos=TOS_WIN7; break;
+		case 2:
+			g_tos=TOS_WIN8; break;
+		case 3:
+			g_tos=TOS_WIN8_1; break;
+		default:
+			g_tos=TOS_NEWER;
+		}
+		break;
+	default:
+		if(osvi.dwMajorVersion<5)
+			return FALSE;
+		g_tos=TOS_NEWER;
+	}
+	return TRUE;
 }
 //================================================================================================
 //--------------------------------------------------+++--> Force a ReDraw of T-Clock & the TaskBar:

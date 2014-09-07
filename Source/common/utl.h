@@ -3,8 +3,16 @@
 #define TCLOCK_UTL_H
 //extern char g_bIniSetting;
 //extern char g_inifile[];
-extern BOOL bV7up;
-extern BOOL b2000;
+enum{
+	TOS_2000	=0x0001,
+	TOS_XP		=0x0002,
+	TOS_VISTA	=0x0004,
+	TOS_WIN7	=0x0008,
+	TOS_WIN8	=0x0010,
+	TOS_WIN8_1	=0x0011,//requires weird manifest...
+	TOS_NEWER	=0x8000,
+};
+extern unsigned short g_tos; // holds current OS version flags
 BOOL CheckSystemVersion();
 void RefreshUs(void);
 char PathExists(const char* path);

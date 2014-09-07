@@ -327,8 +327,6 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 		EnableDlgItem(hDlg, i, !b);
 		
 	EnableDlgItem(hDlg, IDC_ZERO, !b);
-	EnableDlgItem(hDlg, IDC_LABAMSYMBOL, !b);
-	EnableDlgItem(hDlg, IDC_LABPMSYMBOL, !b);
 	
 	if(pCustomFormat && bmouse) {
 		if(b) {
@@ -431,9 +429,9 @@ void InitFormat(void)
 	CHECKS(IDC_INTERNETTIME) = GetMyRegLong("Format",
 											ENTRY(IDC_INTERNETTIME), FALSE);
 											
-	if(bV7up)
+	if(g_tos>=TOS_VISTA)
 		linebreak = TRUE;
-	else{ /// @todo : measure taskbar height to chose font size and offsets (small vs "normal" taskbar)
+	else{ /// @todo : XP: measure taskbar height to chose font size and offsets (small vs "normal" taskbar)
 		linebreak = FALSE;
 		hwnd = FindWindow("Shell_TrayWnd", NULL);
 		if(hwnd!=NULL) {
@@ -442,7 +440,7 @@ void InitFormat(void)
 		}
 	}
 	CHECKS(IDC_KAIGYO) = GetMyRegLong("Format",ENTRY(IDC_KAIGYO),linebreak);
-	CHECKS(IDC_AMPM) = GetMyRegLong("Format", ENTRY(IDC_AMPM), bV7up);
+	CHECKS(IDC_AMPM) = GetMyRegLong("Format",ENTRY(IDC_AMPM),g_tos>=TOS_VISTA);
 	
 	CreateFormat(format, checks);
 	SetMyRegStr("Format", "Format", format);

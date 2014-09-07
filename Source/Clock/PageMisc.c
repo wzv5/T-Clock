@@ -92,19 +92,23 @@ void SetMySysWeek(char* val)   //-----------------------------------------------
 //--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
-	if(bV7up && !GetMyRegLongEx("Calendar","bCustom",0)){
-		UINT iter=IDCB_SHOW_DOY;
-		for(; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
+	UINT iter;
+	if(g_tos>=TOS_VISTA && !GetMyRegLongEx("Calendar","bCustom",0)){
+		for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
 	CheckDlgButton(hDlg, IDCB_CLOSECAL,
-				   GetMyRegLongEx("Calendar", "CloseCalendar", FALSE));
+					GetMyRegLongEx("Calendar", "CloseCalendar", FALSE));
 	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS,
-				   GetMyRegLongEx("Calendar", "ShowWeekNums", FALSE));
+					GetMyRegLongEx("Calendar", "ShowWeekNums", FALSE));
 	CheckDlgButton(hDlg, IDCB_CALTOPMOST,
-				   GetMyRegLongEx("Calendar", "CalendarTopMost", FALSE));
+				GetMyRegLongEx("Calendar", "CalendarTopMost", FALSE));
 	CheckDlgButton(hDlg, IDCB_SHOW_DOY,
-				   GetMyRegLongEx("Calendar", "ShowDayOfYear", FALSE));
+					GetMyRegLongEx("Calendar", "ShowDayOfYear", FALSE));
+	CheckDlgButton(hDlg, IDCB_TRANS2KICONS,
+					GetMyRegLong("Desktop", "Transparent2kIconText", FALSE));
+	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK,
+					bMonOffOnLock);
 	CheckDlgButton(hDlg, IDCB_MULTIMON,
 					GetMyRegLong("Desktop","Multimon",1));
 	
@@ -119,14 +123,16 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	CBAddString(hDlg, IDC_FIRSTWEEK, "2");
 	CBSetCurSel(hDlg, IDC_FIRSTWEEK, GetMySysWeek());
 	
-	if(b2000) {
-		EnableDlgItem(hDlg, IDCB_MONOFF_ONLOCK, FALSE);
-		CheckDlgButton(hDlg, IDCB_TRANS2KICONS, GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE));
-	} else {
-		EnableDlgItem(hDlg, IDCB_TRANS2KICONS, FALSE);
-		CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, bMonOffOnLock);
+	if(g_tos>TOS_2000) {
+		for(iter=IDCB_TRANS2KICONS_GRP; iter<=IDCB_TRANS2KICONS; ++iter)
+			EnableDlgItem(hDlg,iter,FALSE);
+	}else{
+		for(iter=IDCB_MONOFF_ONLOCK_GRP; iter<=IDCB_MONOFF_ONLOCK; ++iter)
+			EnableDlgItem(hDlg,iter,FALSE);
 	}
-	if(!bV7up) EnableDlgItem(hDlg, IDCB_USECALENDAR, FALSE);
+	if(g_tos<TOS_VISTA){
+		EnableDlgItem(hDlg, IDCB_USECALENDAR, FALSE);
+	}
 }
 //================================================================================================
 //-------------------------//-----------------------------+++--> Save Current Settings to Registry:
@@ -147,16 +153,14 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);
 	SetMySysWeek(szWeek);
 	
-	if(!b2000) { // This Feature is Not For Windows 2000, It's Only XP and Above!
-		if((!bMonOffOnLock) &&(IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK))) {
-			SetMyRegLong("Desktop", "MonOffOnLock", TRUE);
-			RegisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to TRUE.
-		} else if((bMonOffOnLock) &&(IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK))) {
-			//RegisterSession() Already Set bMonOffOnLock So There is Nothing to do.
+	if(g_tos>TOS_2000) { // This Feature is Not For Windows 2000, It's Only XP and Above!
+		BOOL enabled=IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK);
+		if(enabled){
+			if(!bMonOffOnLock) {
+				RegisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to TRUE.
+			}
 		} else {
-			SetMyRegLong("Desktop", "MonOffOnLock", FALSE);
 			UnregisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to FALSE.
 		}
-		if(bV7up) SetMyRegLong("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
 	}
 }

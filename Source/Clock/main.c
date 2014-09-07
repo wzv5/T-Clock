@@ -149,7 +149,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	GetHotKeyInfo(hwnd);
 	
-	if(!b2000) {
+	if(g_tos>TOS_2000) {
 		bMonOffOnLock = GetMyRegLongEx("Desktop", "MonOffOnLock", FALSE);
 		if(bMonOffOnLock) {
 			RegisterSession(hwnd);
