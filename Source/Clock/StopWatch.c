@@ -94,7 +94,7 @@ void InsertLapTime(HWND hList)   //---------------------------------------------
 }
 //================================================================================================
 // --------------------------------------------------+++--> Message Processor for Stopwatch Dialog:
-BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
+INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
 	static HWND hList=NULL;
 	
@@ -183,6 +183,6 @@ BOOL CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 void DialogStopWatch()   //--------------------------------------------------------+++-->
 {
 	if(!g_hDlgStopWatch || !IsWindow(g_hDlgStopWatch))
-		g_hDlgStopWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_STOPWATCH),NULL,(DLGPROC)DlgProcStopwatch);
+		g_hDlgStopWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_STOPWATCH),NULL,DlgProcStopwatch);
 	ForceForegroundWindow(g_hDlgStopWatch);
 }

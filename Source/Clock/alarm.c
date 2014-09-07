@@ -16,17 +16,16 @@ static BOOL bTrack;
 static int nTrack;
 
 static int maxAlarm = 1;
-static PALARMSTRUCT pAS = NULL;
+static alarm_t* pAS = NULL;
 static BOOL bJihou, bJihouRepeat, bJihouBlink;
 
 typedef struct _stPCBEEP {
 	HWND hWnd;
 	char szFname[MAX_BUFF];
 	DWORD dwLoops;
-} PCBEEP, *lpPCBEEP;
+} PCBEEP;
 
 static PCBEEP pcb;
-
 BOOL bKillPCBeep = TRUE;
 
 BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops);
@@ -41,7 +40,7 @@ void InitAlarm(void)   //-------------------------------------------------------
 	if(pAS) free(pAS); pAS = NULL;
 	if(maxAlarm > 0) {
 		int i;
-		pAS = malloc(sizeof(ALARMSTRUCT) * maxAlarm);
+		pAS = malloc(sizeof(alarm_t) * maxAlarm);
 		for(i = 0; i < maxAlarm; i++) {
 			char subkey[20];
 			wsprintf(subkey, "Alarm%d", i + 1);
@@ -185,7 +184,7 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 			
 			if(iLoops > 0) { //-> IF We're Looping, Go Back to
 				fseek(file, 0, SEEK_SET); // Beginning of File
-				iLoops--;
+				--iLoops;
 			}
 			if(iLoops == 0) { // Or Die, Exit, Quit, Close, End
 				bKillPCBeep = TRUE;
@@ -202,8 +201,8 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 //--+++-->
 unsigned __stdcall PlayNoSoundProc(void* param)
 {
-	lpPCBEEP lppcb;
-	lppcb = (lpPCBEEP)param;
+	PCBEEP* lppcb;
+	lppcb = (PCBEEP*)param;
 	
 	PlayNoSound(lppcb->szFname, lppcb->dwLoops);
 	SendMessage(lppcb->hWnd, MM_WOM_DONE, 0, 0);

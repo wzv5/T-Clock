@@ -105,6 +105,9 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 				
 				++lvItem.iSubItem;
 				lvItem.pszText=(char*)"<unknown>";
+				#ifdef _DEBUG
+				{char* leak=malloc(16);wsprintf(leak,"#%i",func);lvItem.pszText=leak;}
+				#endif // _DEBUG
 				{int iter; for(iter=0; iter<g_mouseActionCount; ++iter){
 					if(func!=g_mouseAction[iter].id) continue;
 					lvItem.pszText=(char*)g_mouseAction[iter].name;
@@ -170,7 +173,7 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 }
 //================================================================================================
 //-------------------------------------------+++--> Dialog Procedure for Mouse Tab Dialog Messages:
-BOOL CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-----+++-->
+INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-----+++-->
 {
 	static HWND g_hList=NULL;
 	switch(message){

@@ -13,7 +13,7 @@ void SaveNewMenuOptions(HWND, char*, char*, char*, char*);
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)(hDlg), 0)
 //================================================================================================
 //-----------------------------------+++--> Dialog Procedure for Menu Item Details Dialog Messages:
-BOOL CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-++-->
+INT_PTR CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-++-->
 {
 	(void)lParam;
 	switch(message) {

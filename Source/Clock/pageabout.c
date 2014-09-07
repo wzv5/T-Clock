@@ -30,7 +30,7 @@ static void RemoveStartup(HWND hDlg);
 BOOL CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name);
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 /////////////////////////////////////////////////////////////////////////////////////
-BOOL CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
 	case WM_INITDIALOG:

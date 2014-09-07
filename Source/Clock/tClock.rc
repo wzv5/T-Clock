@@ -40,7 +40,7 @@ BEGIN
         MENUITEM "&Adjust date/time",               IDM_FWD_DATETIME,0,0
 //        MENUITEM "&Adjust date/time ex",               IDM_DATETIME_EX,0,0
         MENUITEM "&Customize notification icons",   IDM_FWD_CUSTOMNOTIFYICONS,0,0
-        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "",0,MFT_SEPARATOR,0
         MENUITEM "Casca&de windows",                IDM_FWD_CASCADE,0,0
         MENUITEM "Show windows stack&ed",           IDM_FWD_STACKED,0,0
         MENUITEM "Show windows s&ide by side",      IDM_FWD_SIDEBYSIDE,0,0
@@ -48,13 +48,13 @@ BEGIN
 //        MENUITEM "&Show the desktop",               IDM_FWD_SHOWDESKTOP,0,0
         MENUITEM "Minimize all windows",            IDM_FWD_MINALL,0,0
         MENUITEM "&Undo last window change",        IDM_FWD_UNDO,0,0
-        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "",0,MFT_SEPARATOR,0
         MENUITEM "&Task Manager",                   IDM_FWD_TASKMAN,0,0
-//        MENUITEM "",-1,MFT_SEPARATOR,0
+//        MENUITEM "",0,MFT_SEPARATOR,0
 //        MENUITEM "&Lock the taskbar",               IDM_FWD_LOCKTASKBAR,0,0
 //        MENUITEM "&Lock all taskbars",              IDM_FWD_LOCKALLTASKBAR,0,0
 //        MENUITEM "Taskbar P&roperties",             IDM_FWD_TASKBARPROP,0,0
-        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "",0,MFT_SEPARATOR,0
         POPUP "Sounds && Audio Options",IDC_SOUNDAUDIO,0,0
         BEGIN
             MENUITEM "Open Volume Controls",        IDM_VOLUMECONTROL,0,0
@@ -69,17 +69,17 @@ BEGIN
         BEGIN
             MENUITEM "Windows Explorer",            IDM_QUICKY_WINEXP,0,0
             MENUITEM "Command Prompt",              IDM_QUICKY_DOS,0,0
-            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "T-Clock Calendar",            IDM_SHOWCALENDER,0,0
-            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "Empty Recycle Bin",           IDM_QUICKY_EMPTYRB,0,0
         END
         POPUP "T-Clock Timers",IDC_TIMERS,0,0
         BEGIN
             MENUITEM "Add/Edit Timer",              IDM_TIMER,0,0
-            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "Stopwatch",                   IDM_STOPWATCH,0,0
-            MENUITEM "",-1,MFT_SEPARATOR,0
+            MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "Running Timers List",         IDM_TIMEWATCH,0,MFS_DISABLED
         END
         POPUP "Exit Windows",IDC_EXITWIN,0,0
@@ -88,11 +88,11 @@ BEGIN
             MENUITEM "Reboot",                      IDM_REBOOT,0,0
             MENUITEM "Shut Down",                   IDM_SHUTDOWN,0,0
         END
-        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "",0,MFT_SEPARATOR,0
         MENUITEM "T-Clock Properties",              IDM_SHOWPROP,0,0
         MENUITEM "Display Properties",              IDM_DISPLAYPROP,0,0
         MENUITEM "Refresh T-Clock",                 IDM_REFRESHTCLOCK,0,0
-        MENUITEM "",-1,MFT_SEPARATOR,0
+        MENUITEM "",0,MFT_SEPARATOR,0
         MENUITEM "Exit T-Clock",                    IDM_EXIT,0,0
         MENUITEM "",IDS_NONE,MFT_SEPARATOR,0
         MENUITEM "&Run...",                         IDM_FWD_RUNAPP,0,0

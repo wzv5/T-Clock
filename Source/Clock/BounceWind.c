@@ -12,7 +12,7 @@ static RECT rcMsg;
 static void OnOK(HWND hDlg);
 static void OnInit(HWND hDlg);
 static void BounceWindow(HWND hWndBoing);
-BOOL CALLBACK AlarmMsgProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK AlarmMsgProc(HWND, UINT, WPARAM, LPARAM);
 int iDelta, iSpeed, iPause, iShort, iSkew, iPaws, iBounce;
 static int iScreenW, iScreenH, iBallX, iBallY, iDeltaX, iDeltaY;
 void ParseSettings(char*, int*, int*, int*, int*, int*, BOOL*);
@@ -35,7 +35,7 @@ void OnMsgWindOpt(HWND hDlg)  //---------------------------------------------+++
 	GetDlgItemText(hDlg, IDC_COMBOALARM, szCaption, TNY_BUFF);
 	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage, MAX_BUFF);
 	GetDlgItemText(hDlg, IDC_JR_SETTINGS, szSettings, TNY_BUFF);
-	if(DialogBox(0, MAKEINTRESOURCE(IDD_ALARMMSG), hDlg, (DLGPROC)AlarmMsgProc) == IDOK) {
+	if(DialogBox(0, MAKEINTRESOURCE(IDD_ALARMMSG), hDlg, AlarmMsgProc) == IDOK) {
 		SetDlgItemText(hDlg, IDC_JR_SETTINGS, szSettings);
 		SetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage);
 		SendPSChanged(hDlg);
@@ -43,7 +43,7 @@ void OnMsgWindOpt(HWND hDlg)  //---------------------------------------------+++
 }
 //---------------------------------------------------------------------------+++-->
 // -------------------------------------------+++--> Alarm Message Dialog Procedure:
-BOOL CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	(void)lParam;
 	switch(message) {
@@ -94,17 +94,17 @@ void OnInit(HWND hDlg)   //--------------------------------------------------+++
 	*/
 	ParseSettings(szSettings, &iBounce, &iSkew, &iPaws, &iSpeed, &iDelta, &bRandHop);
 	
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETRANGE, 0, MAKELONG(100, 0));
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETPOS, 0, iSpeed);  // Movement Timer Rate
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETRANGE, 0, MAKELONG(42, iSkew));
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETPOS, 0, iDelta); // Pixel Distance Moved
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETRANGE32, 0,100);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETPOS32, iSpeed,0);  // Movement Timer Rate
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETRANGE32, iSkew,42);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETPOS32, 0, iDelta); // Pixel Distance Moved
 	
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETRANGE, 0, MAKELONG(6, 1));
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETPOS, 0, iSkew); //----+++--> Skew Factor
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETRANGE, 0, MAKELONG(10, 0));
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETPOS, 0, iPaws); //-+++--> Paws/Sit! Time
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETRANGE, 0, MAKELONG(10, 0));
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETPOS, 0, iBounce); //--+++--> Bounce Time
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETRANGE32, 1,6);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETPOS32, 0, iSkew); //----+++--> Skew Factor
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETRANGE32, 0,10);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETPOS32, 0, iPaws); //-+++--> Paws/Sit! Time
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETRANGE32, 0,10);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETPOS32, 0, iBounce); //--+++--> Bounce Time
 	SetDlgItemText(hDlg, IDC_JRMSG_CAPT, szCaption);
 	SetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage);
 	CheckDlgButton(hDlg, IDC_JRMSG_RAND, bRandHop);

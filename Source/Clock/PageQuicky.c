@@ -13,7 +13,7 @@ void EditQuickyMenuItem(char*, char*, char*, char*, int);
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 //================================================================================================
 //----------------------------------------+++--> Dialog Procedure for Quicky Menus Dialog Messages:
-BOOL CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
+INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
 {
 	char szText[TNY_BUFF] = {0};
 	LVCOLUMN lvCol;

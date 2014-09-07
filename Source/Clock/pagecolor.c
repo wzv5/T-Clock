@@ -33,7 +33,7 @@ static __inline void SendPSChanged(HWND hDlg){
 /*------------------------------------------------
   Dialog procedure
 --------------------------------------------------*/
-BOOL CALLBACK PageColorProc(HWND hDlg, UINT message,
+INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message,
 							WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
@@ -122,23 +122,23 @@ void OnInit(HWND hDlg)
 	hfonti = CreateFontIndirect(&logfont);
 	SendDlgItemMessage(hDlg, IDC_ITALIC, WM_SETFONT, (WPARAM)hfonti, 0);
 	
-	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETRANGE, 0, MAKELONG(200, -32));
-	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "ClockHeight", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETRANGE32, (WPARAM)-999,999);
+	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETPOS32, 0, GetMyRegLong("Clock", "ClockHeight", 0));
 	
-	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETRANGE, 0, MAKELONG(32, -32));
-	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "ClockWidth", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETRANGE32, (WPARAM)-999,999);
+	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETPOS32, 0, GetMyRegLong("Clock", "ClockWidth", 0));
 	
-	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETRANGE, 0, MAKELONG(32, -32));
-	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "LineHeight", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETRANGE32, (WPARAM)-64,64);
+	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETPOS32, 0, GetMyRegLong("Clock", "LineHeight", 0));
 	
-	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETRANGE, 0, MAKELONG(32, -32));
-	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "VertPos", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETRANGE32, (WPARAM)-200,200);
+	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETPOS32, 0, GetMyRegLong("Clock", "VertPos", 0));
 	
-	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETRANGE, 0, MAKELONG(32, -32));
-	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Clock", "HorizPos", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETRANGE32, (WPARAM)-200,200);
+	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETPOS32, 0, GetMyRegLong("Clock", "HorizPos", 0));
 	
-	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE, 0, MAKELONG(100, 0));
-	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS, 0, (int)(short)GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE32, 0,180);
+	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS32, 0, GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
 	
 	for(i=0; i<g_rotateCount; ++i)
 		CBAddString(hDlg,IDC_CLOCKROTATE,g_rotate[i]);
@@ -185,12 +185,12 @@ void OnApply(HWND hDlg)
 	
 	SetMyRegLong("Clock", "FontQuality", (DWORD)CBGetCurSel(hDlg, IDC_FONTQUAL));
 	
-	SetMyRegLong("Clock", "ClockHeight", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "ClockWidth", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINCWIDTH,  UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "LineHeight", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "VertPos", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINVPOS,    UDM_GETPOS, 0, 0));
-	SetMyRegLong("Clock", "HorizPos", (DWORD)SendDlgItemMessage(hDlg, IDC_SPINHPOS,    UDM_GETPOS, 0, 0));
-	SetMyRegLong("Taskbar","AlphaTaskbar",(DWORD)SendDlgItemMessage(hDlg, IDC_SPINALPHA,  UDM_GETPOS, 0, 0));
+	SetMyRegLong("Clock", "ClockHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINCHEIGHT,UDM_GETPOS32,0,0));
+	SetMyRegLong("Clock", "ClockWidth", (int)SendDlgItemMessage(hDlg,IDC_SPINCWIDTH,UDM_GETPOS32,0,0));
+	SetMyRegLong("Clock", "LineHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINLHEIGHT,UDM_GETPOS32,0,0));
+	SetMyRegLong("Clock", "VertPos", (int)SendDlgItemMessage(hDlg,IDC_SPINVPOS,UDM_GETPOS32,0,0));
+	SetMyRegLong("Clock", "HorizPos", (int)SendDlgItemMessage(hDlg,IDC_SPINHPOS,UDM_GETPOS32,0,0));
+	SetMyRegLong("Taskbar","AlphaTaskbar",(int)SendDlgItemMessage(hDlg,IDC_SPINALPHA,UDM_GETPOS32,0,0));
 	
 	GetDlgItemText(hDlg,IDC_CLOCKROTATE,ss,1024);
 	if(_strnicmp(ss,g_rotate[1],4)==0)			SetMyRegStr("Clock","FontRotateDirection",g_rotate[1]);

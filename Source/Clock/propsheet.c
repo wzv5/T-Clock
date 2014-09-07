@@ -10,15 +10,15 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam);
 LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 // dialog procedures of each page
-BOOL CALLBACK PageAboutProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageAlarmProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageMouseProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageColorProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageQuickyProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageFormatProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageHotKeyProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageQuickyMenuProc(HWND, UINT, WPARAM, LPARAM);
-BOOL CALLBACK PageMiscProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageAboutProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageAlarmProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageMouseProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageColorProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageQuickyProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageFormatProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageHotKeyProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageQuickyMenuProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK PageMiscProc(HWND, UINT, WPARAM, LPARAM);
 
 void SetPropSheetPos(HWND hwnd);
 
@@ -35,10 +35,10 @@ void MyPropertySheet(int page)   //---------------------------------------------
 {
 	PROPSHEETPAGE psp[PROPERTY_NUM];
 	PROPSHEETHEADER psh;  int i;
-	DLGPROC PageProc[PROPERTY_NUM] = { (DLGPROC)PageAboutProc, (DLGPROC)PageAlarmProc,
-								   (DLGPROC)PageColorProc, (DLGPROC)PageFormatProc, (DLGPROC)PageMouseProc,
-								   (DLGPROC)PageQuickyProc, (DLGPROC)PageQuickyMenuProc,
-								   (DLGPROC)PageHotKeyProc, (DLGPROC)PageMiscProc
+	DLGPROC PageProc[PROPERTY_NUM] = { PageAboutProc, PageAlarmProc,
+								   PageColorProc, PageFormatProc, PageMouseProc,
+								   PageQuickyProc, PageQuickyMenuProc,
+								   PageHotKeyProc, PageMiscProc
 								 };
 	HMODULE hInstance=GetModuleHandle(NULL); 
 	if(g_hwndSheet && IsWindow(g_hwndSheet)) { // IF Already Open...

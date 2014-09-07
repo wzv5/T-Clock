@@ -4,7 +4,7 @@
 ---------------------------------------------*/
 #include "tclock.h"
 
-BOOL CALLBACK AlarmDayProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK AlarmDayProc(HWND, UINT, WPARAM, LPARAM);
 static void OnInit(HWND hDlg);
 static void OnOK(HWND hDlg);
 static void OnEveryDay(HWND hDlg);
@@ -17,14 +17,14 @@ static int retval;
 int SetAlarmDay(HWND hDlg, int n)
 {
 	retval = n;
-	if(DialogBox(0, MAKEINTRESOURCE(IDD_ALARMDAY), hDlg, (DLGPROC)AlarmDayProc) == IDOK)
+	if(DialogBox(0, MAKEINTRESOURCE(IDD_ALARMDAY), hDlg, AlarmDayProc) == IDOK)
 		return retval;
 	return n;
 }
 //=================================================*
 // --------------------------------- Dialog Procedure
 //===================================================*
-BOOL CALLBACK AlarmDayProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK AlarmDayProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	(void)lParam;
 	switch(message) {

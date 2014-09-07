@@ -46,20 +46,20 @@ static int nTimerCount = 0;
 static PTIMERSTRUCT2 pTimersWorking = NULL; // Array of Currently Active Timers
 
 void UpdateNextCtrl(HWND, int, int, BOOL);
-BOOL CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 //=========================================================================================*
 // ------------------------------------------------------------- Open Add/Edit Timers Dialog
 //===========================================================================================*
 void DialogTimer()
 {
 	if(!g_hDlgTimer || !IsWindow(g_hDlgTimer))
-		g_hDlgTimer=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMER),NULL,(DLGPROC)DlgProcTimer);
+		g_hDlgTimer=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMER),NULL,DlgProcTimer);
 	ForceForegroundWindow(g_hDlgTimer);
 }
 //==============================================================================*
 // ---------------------------------- Dialog Procedure for Add/Edit Timers Dialog
 //================================================================================*
-BOOL CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	WORD id, code;
 	
@@ -218,10 +218,10 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		SendDlgItemMessage(hDlg, IDC_TIMERFILE, WM_SETFONT, (WPARAM)hfont, 0);
 	}
 	
-	SendDlgItemMessage(hDlg, IDC_TIMERSECSPIN, UDM_SETRANGE, 0, MAKELONG(59, 0)); // 60 Seconds Max
-	SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETRANGE, 0, MAKELONG(59, 0)); // 60 Minutes Max
-	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE, 0, MAKELONG(23, 0)); // 24 Hours Max
-	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE, 0,  MAKELONG(7, 0)); //  7 Days Max
+	SendDlgItemMessage(hDlg, IDC_TIMERSECSPIN, UDM_SETRANGE32, 0,59); // 60 Seconds Max
+	SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETRANGE32, 0,59); // 60 Minutes Max
+	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
+	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
 	
 	count = GetMyRegLong(szTimersSubKey, "NumberOfTimers", 0);
 	for(i = 0; i <= count; i++) {
@@ -253,7 +253,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	if(count > 0)
 		CBSetCurSel(hDlg, IDC_TIMERNAME, 0);
 	else
-		SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETPOS, 0, 10);
+		SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETPOS32, 0, 10);
 	OnTimerName(hDlg);
 	SendDlgItemMessage(hDlg, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
 	SendDlgItemMessage(hDlg, IDC_TIMERDEL, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconDel);
@@ -294,6 +294,7 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 		PTIMERSTRUCT pts;
 		
 		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
 		if(strcmp(pts->name, name) != 0) { //----//++--> Create Timer Named X in Registry
 			//--+++--> if it Does Not Currently Exist.
 			
@@ -785,7 +786,7 @@ void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 }
 //================================================================================================
 // -----------------------+++--> Message Processor for the Selected Running Timers Watching Dialog:
-BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
+INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
 	WORD id; HWND hList;
 	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
@@ -839,7 +840,7 @@ BOOL CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam
 void WatchTimer()   //----------------------------------------------------------------------+++-->
 {
 	if(!g_hDlgTimerWatch || !IsWindow(g_hDlgTimerWatch)) {
-		g_hDlgTimerWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMERVIEW),NULL,(DLGPROC)DlgTimerViewProc);
+		g_hDlgTimerWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMERVIEW),NULL,DlgTimerViewProc);
 	}
 	ForceForegroundWindow(g_hDlgTimerWatch);
 }

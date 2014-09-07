@@ -70,6 +70,23 @@ void SetMyDialgPos(HWND hwnd,int padding);
 BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
 
 // alarm.c
+typedef struct{
+	char name[TNY_BUFF];
+	BOOL bAlarm;
+	int hour;
+	int minute;
+	char fname[MAX_BUFF];
+	char jrMessage[MAX_BUFF];
+	char jrSettings[TNY_BUFF];
+	BOOL jrMsgUsed;
+	BOOL bHour12;
+	BOOL bChimeHr;
+	BOOL bRepeat;
+	int iTimes;
+	BOOL bBlink;
+	BOOL bPM;
+	int days;
+} alarm_t;
 void StopFile(void);
 void EndAlarm(void);
 void InitAlarm(void);
@@ -151,31 +168,10 @@ void ReleaseTheHound(HWND hWnd, BOOL);
 #define CBGetCurSel(hDlg,id) SendDlgItemMessage((hDlg),(id),CB_GETCURSEL,0,0)
 #define CBGetCount(hDlg,id) SendDlgItemMessage((hDlg),(id),CB_GETCOUNT,0,0)
 
-struct _tagAlarmStruct {
-	char name[TNY_BUFF];
-	BOOL bAlarm;
-	int hour;
-	int minute;
-	char fname[MAX_BUFF];
-	char jrMessage[MAX_BUFF];
-	char jrSettings[TNY_BUFF];
-	BOOL jrMsgUsed;
-	BOOL bHour12;
-	BOOL bChimeHr;
-	BOOL bRepeat;
-	int iTimes;
-	BOOL bBlink;
-	BOOL bPM;
-	int days;
-};
-typedef struct _tagAlarmStruct ALARMSTRUCT;
-typedef struct _tagAlarmStruct* PALARMSTRUCT;
-
 //----------------//--------------+++--> HotKey Configuration,
-struct _tagTCHOTKEY { //--+++--> Manipulation, & Storage Structure.
+typedef struct { //--+++--> Manipulation, & Storage Structure.
 	UINT vk;
 	UINT fsMod;
 	BOOL bValid;
 	char szText[TNY_BUFF];
-};
-typedef struct _tagTCHOTKEY TCHOTKEY;
+} hotkey_t;

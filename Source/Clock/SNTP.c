@@ -26,7 +26,7 @@ typedef struct { // Close Socket on Request TimeOut Structure
 	SOCKET soc;
 } KILLSOC, *LPKILLSOC;
 
-extern TCHOTKEY* tchk;
+extern hotkey_t* tchk;
 
 HWND hLogView;
 static BOOL bSaveLog;
@@ -40,7 +40,7 @@ BOOL GetSetTimePermissions(void);
 unsigned __stdcall KillSocketProc(void*);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
 extern WNDPROC OldEditClassProc; // Default Procedure for Edit Controls
-BOOL CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 //================================================================================================
 //---------------------------//----------------------------+++--> Save Request Results in SNTP.log:
@@ -387,7 +387,7 @@ and add your username to "Change the system time"). I don't know of any specific
 void NetTimeConfigDialog(void)   //---------------------------------------------------------+++-->
 {
 	bGUI = TRUE;    //-----------------------------------+++--> Start in Gooy Mode.
-	DialogBox(0, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, (DLGPROC)SNTPConfigProc);
+	DialogBox(0, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, SNTPConfigProc);
 	bGUI = FALSE; //-------------------------------+++--> End of/Disable Gooy Mode.
 }
 //================================================================================================
@@ -445,7 +445,7 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 }
 //================================================================================================
 //------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
-BOOL CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	(void)lParam;
 	switch(msg)  {
@@ -536,7 +536,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	// Load & Display the Configured Synchronization HotKey:
 //=========================//=======================================================
 
-	tchk = malloc(sizeof(TCHOTKEY));
+	tchk = malloc(sizeof(hotkey_t));
 	tchk[0].bValid = GetMyRegLongEx("HotKeys\\HK5", "bValid", 0);
 	GetMyRegStrEx("HotKeys\\HK5", "szText", tchk[0].szText, TNY_BUFF, "None");
 	tchk[0].fsMod = GetMyRegLongEx("HotKeys\\HK5", "fsMod", 0);

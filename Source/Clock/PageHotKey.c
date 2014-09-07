@@ -1,7 +1,7 @@
 // Created by Stoic Joker: Tuesday, 03/30/2010 @ 10:27:12pm
 #include "tclock.h"
 
-TCHOTKEY* tchk = NULL;
+hotkey_t* tchk = NULL;
 
 static BOOL bReset;
 static BOOL bHaveKey;
@@ -204,7 +204,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	int i;
 	
 	bFirstTime = TRUE;
-	tchk = malloc(sizeof(TCHOTKEY) * 5);
+	tchk = malloc(sizeof(hotkey_t) * 5);
 	for(i=0; i <= 4; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
 		tchk[i].bValid = GetMyRegLong(subkey, "bValid", 0);
@@ -240,7 +240,7 @@ static void OnDestroy()   //----------------------------------------------------
 }
 //================================================================================================
 //---------------------------------+++--> Dialog Precedure For Configurable HotKeys Properties Tab:
-BOOL CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
+INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
 {
 	switch(message) {
 	case WM_INITDIALOG:
@@ -343,10 +343,10 @@ BOOL CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 void GetHotKeyInfo(HWND hWnd)
 {
 	char subkey[TNY_BUFF] = {0};
-	TCHOTKEY* hk = NULL;
+	hotkey_t* hk = NULL;
 	int i;
 	
-	hk = malloc(sizeof(TCHOTKEY) * 6);
+	hk = malloc(sizeof(hotkey_t) * 6);
 	
 	for(i = 0; i <= 5; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
