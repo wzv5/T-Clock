@@ -520,7 +520,7 @@ void CheckRegistry(void)   //---------------------------------------------------
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
 	bTrans2kIcons = GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE);
 	if(!*font){ // quess it's a fresh T-Clock
-		HFONT hfont;
+		NONCLIENTMETRICS metrics={sizeof(NONCLIENTMETRICS)};
 		union{
 			unsigned short entryS;
 			char entry[3];
@@ -530,12 +530,8 @@ void CheckRegistry(void)   //---------------------------------------------------
 		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_SHOWCALENDER);
 		u.entryS='2'+('1'<<8); // middle, 1 click
 		SetMyRegLong(g_reg_mouse,u.entry,IDM_STOPWATCH);
-		hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-		if(hfont){
-			LOGFONT lf;
-			GetObject(hfont,sizeof(lf),(LPVOID)&lf);
-			SetMyRegStr("Clock","Font",lf.lfFaceName);
-		}
+		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
+		SetMyRegStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
 	}
 }
 //================================================================================================
