@@ -333,7 +333,7 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	*hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|
 							LVS_NOSORTHEADER|LVS_REPORT|LVS_SINGLESEL, 17, 117, 430, 160, hDlg, 0, 0, NULL);
 	ListView_SetExtendedListViewStyle(*hList,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
-	SetWindowTheme(*hList,L"Explorer",NULL);
+	SetXPWindowTheme(*hList,L"Explorer",NULL);
 	SetWindowLongPtr(*hList,GWLP_ID,IDC_LIST);
 	
 	lvCol.mask=LVCF_FMT|LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM;

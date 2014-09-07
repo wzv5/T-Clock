@@ -10,12 +10,8 @@
 //#define LWA_ALPHA     2
 //#define LWA_COLORKEY  1
 
-HMODULE hmodMSIMG32 = NULL;
-HMODULE hmodUSER32 = NULL;
-HMODULE hmodUxTheme = NULL;
-
-typedef BOOL (WINAPI* pGradientFill_t)(HDC,PTRIVERTEX,ULONG,PVOID,ULONG,ULONG);
-pGradientFill_t pGradientFill=NULL;
+static HMODULE hmodUSER32 = NULL;
+static HMODULE hmodUxTheme = NULL;
 
 typedef BOOL (WINAPI* pSetLayeredWindowAttributes_t)(HWND,COLORREF,BYTE,DWORD);
 pSetLayeredWindowAttributes_t pSetLayeredWindowAttributes=NULL;
@@ -25,6 +21,33 @@ pTransparentBlt_t pTransparentBlt=NULL;
 
 typedef BOOL (WINAPI* pDrawThemeParentBackground_t)(HWND hwnd, HDC hdc, RECT* prc);
 pDrawThemeParentBackground_t pDrawThemeParentBackground=NULL;
+
+/// UxTheme macros
+#define THEME_FUNC_RETRIEVE(name) \
+	p##name = (p##name##_t)GetProcAddress(hmodUxTheme, #name);\
+	if(!p##name){\
+		FreeLibrary(hmodUxTheme); hmodUxTheme = NULL;\
+		return;\
+	}
+#define THEME_FUNC_RELEASE(name) \
+	p##name = NULL
+#define THEME_FUNC_CHECK(name,ret) \
+	if(!p##name){\
+		InitDrawTheme();\
+		if(!p##name) return ret;\
+	}
+#define THEME_FUNC_CHECK_THEME(name,hwnd,ret) \
+	THEME_FUNC_CHECK(name,ret)\
+	if(!hClockTheme){\
+		hClockTheme=pOpenThemeData(hwnd,CLOCK);/*TrayClockWClass*/\
+		if(!hClockTheme) return ret;\
+	}
+#define THEME_FUNC_DEFINE(name,ret,params) \
+	typedef ret (WINAPI* p##name##_t)params;\
+	p##name##_t p##name=NULL
+/// UxTheme defines
+
+THEME_FUNC_DEFINE(SetWindowTheme,HRESULT,(HWND hwnd, LPCWSTR pszSubAppName, LPCWSTR pszSubIdList));
 
 static BOOL bInitGradientFill = FALSE;
 static BOOL bInitLayeredWindow = FALSE;
@@ -102,6 +125,7 @@ void EndNewAPI(HWND hwndClock)
 	hmodUSER32 = NULL;
 	pSetLayeredWindowAttributes = NULL;
 	
+	THEME_FUNC_RELEASE(SetWindowTheme);
 	if(hmodUxTheme != NULL) FreeLibrary(hmodUxTheme);
 	hmodUxTheme = NULL;
 	pDrawThemeParentBackground = NULL;
@@ -244,6 +268,9 @@ void InitDrawThemeParentBackground(void)
 	
 	hmodUxTheme = LoadLibrary("UxTheme.dll");
 	if(hmodUxTheme != NULL) {
+
+		THEME_FUNC_RETRIEVE(SetWindowTheme);
+
 		pDrawThemeParentBackground = (pDrawThemeParentBackground_t)GetProcAddress(hmodUxTheme, "DrawThemeParentBackground");
 		if(pDrawThemeParentBackground == NULL) {
 			FreeLibrary(hmodUxTheme); hmodUxTheme = NULL;
@@ -257,4 +284,9 @@ void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT* prc)
 	if(!pDrawThemeParentBackground) InitDrawThemeParentBackground();
 	if(!pDrawThemeParentBackground)return;
 	pDrawThemeParentBackground(hwnd, hdc, prc);
+}
+HRESULT SetXPWindowTheme(HWND hwnd, LPCWSTR pszSubAppName, LPCWSTR pszSubIdList){
+	if(!pDrawThemeParentBackground) InitDrawThemeParentBackground();
+	if(!pDrawThemeParentBackground)return;
+	return pSetWindowTheme(hwnd,pszSubAppName,pszSubIdList);
 }

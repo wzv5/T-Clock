@@ -18,7 +18,7 @@ void OnInit(HWND hDlg, HWND* hList)   //----------------------------------------
 	*hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
 						 LVS_NOSORTHEADER|LVS_SINGLESEL, 9, 55, 236, 104, hDlg, 0, 0, NULL);
 	ListView_SetExtendedListViewStyle(*hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
-	SetWindowTheme(*hList,L"Explorer",NULL);
+	SetXPWindowTheme(*hList,L"Explorer",NULL);
 	
 	lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvCol.cx = 52; // Column Width
@@ -55,7 +55,7 @@ void OnTimer(HWND hDlg)   //----------------------------------------------------
 	hrs=un.elapsed/3600000; un.elapsed%=3600000;
 	min=un.elapsed/60000; un.elapsed%=60000;
 	sec=un.elapsed/1000; un.elapsed%=1000;
-	sprintf(szElapsed,"%02dH: %02dM: %02dS: %03lums",hrs,min,sec,un.elapsed);
+	wsprintf(szElapsed,"%02dH: %02dM: %02dS: %03lums",hrs,min,sec,un.elapsed);
 	SetDlgItemText(hDlg, IDCE_SW_ELAPSED, szElapsed);
 }
 //================================================================================================
@@ -81,14 +81,14 @@ void InsertLapTime(HWND hList)   //---------------------------------------------
 	hrs=elapsed/3600000; elapsed%=3600000;
 	min=elapsed/60000; elapsed%=60000;
 	
-	sprintf(buf,"Lap %d",ListView_GetItemCount(hList)+1);
+	wsprintf(buf,"Lap %d",ListView_GetItemCount(hList)+1);
 	lvItem.mask=LVIF_TEXT;
 	lvItem.iSubItem=0;
 	lvItem.iItem=0;
 	lvItem.pszText=buf;
 	ListView_InsertItem(hList,&lvItem);
 	
-	sprintf(buf,"%02d:%02d:%02lu.%03lu",hrs,min,elapsed/1000,elapsed%1000);
+	wsprintf(buf,"%02d:%02d:%02lu.%03lu",hrs,min,elapsed/1000,elapsed%1000);
 	lvItem.iSubItem=1;
 	ListView_SetItem(hList,&lvItem);
 }

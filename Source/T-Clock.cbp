@@ -43,7 +43,6 @@
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
 					<Add library="tClock" />
-					<Add library="UxTheme" />
 					<Add directory="../Release/Win32" />
 				</Linker>
 				<ExtraCommands>
@@ -93,7 +92,6 @@
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
 					<Add library="tClock" />
-					<Add library="UxTheme" />
 					<Add directory="../Debug/Win32" />
 				</Linker>
 				<ExtraCommands>
