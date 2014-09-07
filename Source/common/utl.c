@@ -724,27 +724,3 @@ void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcS
 		}
 	}
 }// */
-BOOL IsXPStyle()
-{
-	char temp[1024];
-	
-	GetRegStr(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\ThemeManager", "ThemeActive", temp, 1024, "0");
-	if(_strnicmp(temp, "1", 1) == 0) return TRUE;
-	else return FALSE;
-}
-/*
-void Pause(HWND hWnd, LPCTSTR pszArgs)
-{
-	LONG lInterval = atoi(pszArgs);
-	LONG lTime = GetTickCount();
-	MSG msg;
-	
-	if(lInterval > 0) {
-		while((LONG)(GetTickCount() - lTime) < lInterval) {
-			if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-		}
-	}
-}// */
