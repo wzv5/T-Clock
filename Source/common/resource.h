@@ -52,7 +52,8 @@
 #define IDC_NETWORK                     202
 #define IDC_QUICKYS                     203
 #define IDC_TIMERS                      204
-#define IDC_EXITWIN                     205 /* end group */
+#define IDC_EXITWIN                     205
+#define IDC_ALARMS                      206 /* end group */
 #define IDM_VOLUMECONTROL               210
 #define IDM_AUDIOPROP                   211
 #define IDM_MAPDRIVE                    220
@@ -72,6 +73,7 @@
 #define IDM_LOGOFF                      250
 #define IDM_REBOOT                      251
 #define IDM_SHUTDOWN                    252
+#define IDM_CHIME                       260
 #define IDM_TOGGLE_DT                   280
 #define IDM_SHOWCALENDER                281
 #define IDM_SHOWPROP                    282

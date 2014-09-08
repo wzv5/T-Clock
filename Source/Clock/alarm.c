@@ -31,6 +31,74 @@ BOOL bKillPCBeep = TRUE;
 BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops);
 int PlayMCI(HWND hwnd, int nt);
 void StopWave(void);
+
+static char g_alarmkey[20]="Alarm";
+
+BOOL GetHourlyChime(){
+	return bJihou;
+}
+void SetHourlyChime(BOOL bEnabled){
+	bJihou=bEnabled;
+	SetMyRegLong("","Jihou",bJihou);
+}
+BOOL GetAlarmEnabled(int idx){
+	if(idx<0||idx>=maxAlarm)
+		return 0;
+	return pAS[idx].bAlarm;
+}
+void SetAlarmEnabled(int idx,BOOL bEnabled){
+	if(idx<0||idx>=maxAlarm)
+		return;
+	pAS[idx].bAlarm=bEnabled;
+	wsprintf(g_alarmkey+5,"%d",idx+1);
+	SetMyRegLong(g_alarmkey,"Alarm",pAS[idx].bAlarm);
+}
+void ReadAlarmFromReg(alarm_t* pAS, int num)
+{
+	wsprintf(g_alarmkey+5,"%d",num+1);
+	GetMyRegStr(g_alarmkey, "Name", pAS->name, 40, "");
+	pAS->bAlarm = GetMyRegLong(g_alarmkey, "Alarm", FALSE);
+	pAS->hour = GetMyRegLong(g_alarmkey, "Hour", 12);
+	pAS->minute = GetMyRegLong(g_alarmkey, "Minute", 0);
+	GetMyRegStr(g_alarmkey, "File", pAS->fname, MAX_BUFF, "");
+	
+	GetMyRegStr(g_alarmkey, "jrMessage", pAS->jrMessage, MAX_BUFF, "");
+	GetMyRegStr(g_alarmkey, "jrSettings", pAS->jrSettings, TNY_BUFF, "");
+	pAS->jrMsgUsed = GetMyRegLong(g_alarmkey, "jrMsgUsed", FALSE);
+	
+	pAS->bHour12 = GetMyRegLong(g_alarmkey, "Hour12", TRUE);
+	pAS->bChimeHr = GetMyRegLong(g_alarmkey, "ChimeHr", FALSE);
+	pAS->bRepeat = GetMyRegLong(g_alarmkey, "Repeat", FALSE);
+	pAS->iTimes = GetMyRegLong(g_alarmkey, "Times", 1);
+	pAS->bBlink = GetMyRegLong(g_alarmkey, "Blink", FALSE);
+	pAS->days = GetMyRegLong(g_alarmkey, "Days", 0x7f);
+	pAS->bPM = GetMyRegLong(g_alarmkey, "PM", FALSE);
+	
+	if(pAS->name[0] == 0)
+		wsprintf(pAS->name, "%02d:%02d", pAS->hour, pAS->minute);
+}
+void SaveAlarmToReg(alarm_t* pAS, int num)
+{
+	wsprintf(g_alarmkey+5,"%d",num+1);
+	SetMyRegStr(g_alarmkey, "Name", pAS->name);
+	SetMyRegLong(g_alarmkey, "Alarm", pAS->bAlarm);
+	SetMyRegLong(g_alarmkey, "Hour", pAS->hour);
+	SetMyRegLong(g_alarmkey, "Minute", pAS->minute);
+	SetMyRegStr(g_alarmkey, "File", pAS->fname);
+	
+	SetMyRegStr(g_alarmkey, "jrMessage", pAS->jrMessage);
+	SetMyRegStr(g_alarmkey, "jrSettings", pAS->jrSettings);
+	SetMyRegLong(g_alarmkey, "jrMsgUsed", pAS->jrMsgUsed);
+	
+	SetMyRegLong(g_alarmkey, "Hour12", pAS->bHour12);
+	SetMyRegLong(g_alarmkey, "ChimeHr", pAS->bChimeHr);
+	SetMyRegLong(g_alarmkey, "Repeat", pAS->bRepeat);
+	SetMyRegLong(g_alarmkey, "Times", pAS->iTimes);
+	SetMyRegLong(g_alarmkey, "Blink", pAS->bBlink);
+	SetMyRegLong(g_alarmkey, "Days", pAS->days);
+	SetMyRegLong(g_alarmkey, "PM", pAS->bPM);
+}
+
 //================================================================================================
 //-------------------------------------------------+++--> Load Configured Alarm Data From Registry:
 void InitAlarm(void)   //-------------------------------------------------------------------+++-->
@@ -41,26 +109,8 @@ void InitAlarm(void)   //-------------------------------------------------------
 	if(maxAlarm > 0) {
 		int i;
 		pAS = malloc(sizeof(alarm_t) * maxAlarm);
-		for(i = 0; i < maxAlarm; i++) {
-			char subkey[20];
-			wsprintf(subkey, "Alarm%d", i + 1);
-			GetMyRegStr(subkey, "Name", pAS[i].name, 40, "");
-			pAS[i].bAlarm = GetMyRegLong(subkey, "Alarm", FALSE);
-			pAS[i].hour = GetMyRegLong(subkey, "Hour", 12);
-			pAS[i].minute = GetMyRegLong(subkey, "Minute", 0);
-			GetMyRegStr(subkey, "File", pAS[i].fname, MAX_BUFF, "");
-			
-			GetMyRegStr(subkey, "jrMessage", pAS[i].jrMessage, MAX_BUFF, "");
-			GetMyRegStr(subkey, "jrSettings", pAS[i].jrSettings, TNY_BUFF, "3,4,3,90,42,1");
-			pAS[i].jrMsgUsed = GetMyRegLong(subkey, "jrMsgUsed", FALSE);
-			
-			pAS[i].bHour12 = GetMyRegLong(subkey, "Hour12", TRUE);
-			pAS[i].bChimeHr = GetMyRegLong(subkey, "ChimeHr", FALSE);
-			pAS[i].bRepeat = GetMyRegLong(subkey, "Repeat", FALSE);
-			pAS[i].iTimes = GetMyRegLong(subkey, "Times", 1);
-			pAS[i].bBlink = GetMyRegLong(subkey, "Blink", FALSE);
-			pAS[i].days = GetMyRegLong(subkey, "Days", 0x7f);
-			pAS[i].bPM = GetMyRegLong(subkey, "PM", FALSE);
+		for(i=0; i<maxAlarm; ++i) {
+			ReadAlarmFromReg(&pAS[i],i);
 		}
 	}
 	

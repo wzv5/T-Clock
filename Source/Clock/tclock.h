@@ -87,6 +87,12 @@ typedef struct{
 	BOOL bPM;
 	int days;
 } alarm_t;
+BOOL GetHourlyChime();
+void SetHourlyChime(BOOL bEnabled);
+BOOL GetAlarmEnabled(int idx);
+void SetAlarmEnabled(int idx,BOOL bEnabled);
+void ReadAlarmFromReg(alarm_t* pAS, int num);
+void SaveAlarmToReg(alarm_t* pAS, int num);
 void StopFile(void);
 void EndAlarm(void);
 void InitAlarm(void);

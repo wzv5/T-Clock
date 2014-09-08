@@ -8,10 +8,8 @@
 
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
-static void ReadAlarmFromReg(alarm_t pAS, int num);
-static void SaveAlarmToReg(alarm_t pAS, int num);
-static void GetAlarmFromDlg(HWND hDlg, alarm_t pAS);
-static void SetAlarmToDlg(HWND hDlg, alarm_t pAS);
+static void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS);
+static void SetAlarmToDlg(HWND hDlg, alarm_t* pAS);
 static void OnChangeAlarm(HWND hDlg);
 static void OnDropDownAlarm(HWND hDlg);
 static void OnDay(HWND hDlg);
@@ -155,7 +153,7 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 void OnInit(HWND hDlg)
 {
 	char s[1024] = "";
-	int i, count, index;
+	int i, count;
 	HFONT hfont;
 	HBITMAP hBMPJRPic;
 	
@@ -172,18 +170,15 @@ void OnInit(HWND hDlg)
 						   WM_SETFONT, (WPARAM)hfont, 0);
 	}
 	
-	index = (int)CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM));
-	CBSetItemData(hDlg, IDC_COMBOALARM, index, 0);
+	CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM)), 0);
 	
 	count = GetMyRegLong("", "AlarmNum", 0);
 	if(count < 1) count = 0;
-	for(i = 0; i < count; i++) {
-		alarm_t pAS;
-		pAS = malloc(sizeof(alarm_t));
+	for(i=0; i<count; ++i) {
+		alarm_t* pAS = malloc(sizeof(alarm_t));
 		ReadAlarmFromReg(pAS, i);
-		index = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->name);
-		CBSetItemData(hDlg, IDC_COMBOALARM, index, pAS);
-		if(i == 0)  SetAlarmToDlg(hDlg, pAS);
+		CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, pAS->name), pAS);
+		if(!i) SetAlarmToDlg(hDlg, pAS);
 	}
 	if(count > 0) {
 		CBSetCurSel(hDlg, IDC_COMBOALARM, 1);
@@ -234,7 +229,7 @@ void OnApply(HWND hDlg)
 {
 	char s[1024];
 	int i, count, n_alarm;
-	alarm_t pAS;
+	alarm_t* pAS;
 	
 	n_alarm = 0;
 	
@@ -242,7 +237,7 @@ void OnApply(HWND hDlg)
 		char name[40];
 		GetDlgItemText(hDlg, IDC_COMBOALARM, name, 40);
 		if(name[0] && IsDlgButtonChecked(hDlg, IDC_ALARM)) {
-			pAS = malloc(sizeof(ALARMSTRUCT));
+			pAS = malloc(sizeof(alarm_t));
 			if(pAS) {
 				int index;
 				GetAlarmFromDlg(hDlg, pAS);
@@ -254,15 +249,15 @@ void OnApply(HWND hDlg)
 			}
 		}
 	} else {
-		pAS = (alarm_t)CBGetItemData(hDlg, IDC_COMBOALARM, curAlarm);
+		pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, curAlarm);
 		if(pAS)
 			GetAlarmFromDlg(hDlg, pAS);
 	}
 	
 	count = (int)CBGetCount(hDlg, IDC_COMBOALARM);
 	for(i = 0; i < count; i++) {
-		alarm_t pAS;
-		pAS = (alarm_t)CBGetItemData(hDlg, IDC_COMBOALARM, i);
+		alarm_t* pAS;
+		pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, i);
 		if(pAS) {
 			SaveAlarmToReg(pAS, n_alarm);
 			n_alarm++;
@@ -290,60 +285,6 @@ void OnApply(HWND hDlg)
 				 IsDlgButtonChecked(hDlg, IDC_BLINKJIHOU));
 				 
 	InitAlarm(); // alarm.c
-}
-//================================================================================================
-//--------------------------------------------------//----+++--> Read Alarm Settings From Registry:
-void ReadAlarmFromReg(alarm_t pAS, int num)   //---------------------------------------+++-->
-{
-	char subkey[20];
-	
-	wsprintf(subkey, "Alarm%d", num + 1);
-	
-	GetMyRegStr(subkey, "Name", pAS->name, 40, "");
-	pAS->bAlarm = GetMyRegLong(subkey, "Alarm", FALSE);
-	pAS->hour = GetMyRegLong(subkey, "Hour", 12);
-	pAS->minute = GetMyRegLong(subkey, "Minute", 0);
-	GetMyRegStr(subkey, "File", pAS->fname, MAX_BUFF, "");
-	
-	GetMyRegStr(subkey, "jrMessage", pAS->jrMessage, MAX_BUFF, "");
-	GetMyRegStr(subkey, "jrSettings", pAS->jrSettings, TNY_BUFF, "");
-	pAS->jrMsgUsed = GetMyRegLong(subkey, "jrMsgUsed", FALSE);
-	
-	pAS->bHour12 = GetMyRegLong(subkey, "Hour12", TRUE);
-	pAS->bChimeHr = GetMyRegLong(subkey, "ChimeHr", FALSE);
-	pAS->bRepeat = GetMyRegLong(subkey, "Repeat", FALSE);
-	pAS->iTimes = GetMyRegLong(subkey, "Times", 1);
-	pAS->bBlink = GetMyRegLong(subkey, "Blink", FALSE);
-	pAS->days = GetMyRegLong(subkey, "Days", 0x7f);
-	pAS->bPM = GetMyRegLong(subkey, "PM", FALSE);
-	
-	if(pAS->name[0] == 0)
-		wsprintf(pAS->name, "%02d:%02d", pAS->hour, pAS->minute);
-}
-//================================================================================================
-//------------------------------------------------//--------+++--> Save Alarm Settings in Registry:
-void SaveAlarmToReg(alarm_t pAS, int num)   //-----------------------------------------+++-->
-{
-	char subkey[20];
-	
-	wsprintf(subkey, "Alarm%d", num + 1);
-	SetMyRegStr(subkey, "Name", pAS->name);
-	SetMyRegLong(subkey, "Alarm", pAS->bAlarm);
-	SetMyRegLong(subkey, "Hour", pAS->hour);
-	SetMyRegLong(subkey, "Minute", pAS->minute);
-	SetMyRegStr(subkey, "File", pAS->fname);
-	
-	SetMyRegStr(subkey, "jrMessage", pAS->jrMessage);
-	SetMyRegStr(subkey, "jrSettings", pAS->jrSettings);
-	SetMyRegLong(subkey, "jrMsgUsed", pAS->jrMsgUsed);
-	
-	SetMyRegLong(subkey, "Hour12", pAS->bHour12);
-	SetMyRegLong(subkey, "ChimeHr", pAS->bChimeHr);
-	SetMyRegLong(subkey, "Repeat", pAS->bRepeat);
-	SetMyRegLong(subkey, "Times", pAS->iTimes);
-	SetMyRegLong(subkey, "Blink", pAS->bBlink);
-	SetMyRegLong(subkey, "Days", pAS->days);
-	SetMyRegLong(subkey, "PM", pAS->bPM);
 }
 //================================================================================================
 //------------------------------------+++--> Load Current Alarm Setting From Dialog into Structure:

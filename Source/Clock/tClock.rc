@@ -74,6 +74,11 @@ BEGIN
             MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "Empty Recycle Bin",           IDM_QUICKY_EMPTYRB,0,0
         END
+        POPUP "T-Clock Alarms",IDC_ALARMS,0,0
+        BEGIN
+            MENUITEM "Hourly Chime",                IDM_CHIME,0,MFS_DISABLED
+            MENUITEM "Add/Edit Alarm",              IDM_PROP_ALARM,0,0
+        END
         POPUP "T-Clock Timers",IDC_TIMERS,0,0
         BEGIN
             MENUITEM "Add/Edit Timer",              IDM_TIMER,0,0

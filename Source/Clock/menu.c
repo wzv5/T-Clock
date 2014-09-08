@@ -3,6 +3,7 @@
 //================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
 
+void UpdateAlarmMenu(HMENU hMenu);
 void UpdateTimerMenu(HMENU hMenu);
 static char g_undo=0; // did we change windows and can undo it?
 
@@ -44,6 +45,7 @@ void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 		DeleteMenu(hPopupMenu, IDM_FWD_EXITEXPLORER, MF_BYCOMMAND);
 	}
 	/// AlarmsTimer Menu Item y/n Goes HERE!!!
+	UpdateAlarmMenu(hPopupMenu);
 	UpdateTimerMenu(hPopupMenu); // Get the List of Active Timers.
 	
 	if(g_bQMLaunch) {
@@ -222,6 +224,10 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		}
 		break;}
 		
+	case IDM_CHIME:{ /// Alarms
+		SetHourlyChime(!GetHourlyChime());
+		break;}
+		
 	case IDM_STOPWATCH: /// Timers
 		DialogStopWatch();
 		break;
@@ -241,7 +247,9 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		WatchTimer(); // Shelter All the Homeless Timers.
 		break;
 	default:
-		if(wID>=IDM_I_MENU && wID<IDM_I_MENU+1000){
+		if(wID>=IDM_I_ALARM && wID<IDM_I_ALARM+1000){
+			SetAlarmEnabled(wID-IDM_I_ALARM,!GetAlarmEnabled(wID-IDM_I_ALARM));
+		}else if(wID>=IDM_I_MENU && wID<IDM_I_MENU+1000){
 			char key[MAX_PATH];
 			int offset=9;
 			char szQM_Target[MAX_PATH];
@@ -263,6 +271,33 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		#endif // _DEBUG
 	}
 	return;
+}
+//====================================================================
+//----------+++--> Enumerate & display setup alarms incl. hourly chime:
+void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
+{
+	char buf[MAX_PATH];
+	alarm_t pAS;
+	int count,idx;
+	GetMyRegStr("","JihouFile",buf,MAX_PATH,"");
+	if(PathExists(buf)==1)
+		EnableMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_ENABLED);
+	if(GetHourlyChime()){
+		CheckMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_CHECKED);
+	}
+	count=GetMyRegLong("","AlarmNum",0);
+	if(count<1) count=0;
+	if(count){
+		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
+		for(idx=0; idx<count; ++idx) {
+			ReadAlarmFromReg(&pAS,idx);
+			wsprintf(buf,"    %s	(%i",pAS.name,idx+1);
+			InsertMenu(hMenu, IDM_PROP_ALARM, MF_BYCOMMAND|MF_STRING, IDM_I_ALARM+idx, buf);
+			if(pAS.bAlarm)
+				CheckMenuItem(hMenu,IDM_I_ALARM+idx,MF_BYCOMMAND|MF_CHECKED);
+		}
+		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
+	}
 }
 //================================================================================================
 //----------+++--> Enumerate & Display ALL Currently Active Timers on The Running Timers Menu List:
