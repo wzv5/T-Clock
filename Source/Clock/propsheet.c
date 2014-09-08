@@ -17,7 +17,6 @@ INT_PTR CALLBACK PageColorProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK PageQuickyProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK PageFormatProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK PageHotKeyProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageQuickyMenuProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK PageMiscProc(HWND, UINT, WPARAM, LPARAM);
 
 void SetPropSheetPos(HWND hwnd);
@@ -35,11 +34,12 @@ void MyPropertySheet(int page)   //---------------------------------------------
 {
 	PROPSHEETPAGE psp[PROPERTY_NUM];
 	PROPSHEETHEADER psh;  int i;
-	DLGPROC PageProc[PROPERTY_NUM] = { PageAboutProc, PageAlarmProc,
-								   PageColorProc, PageFormatProc, PageMouseProc,
-								   PageQuickyProc, PageQuickyMenuProc,
-								   PageHotKeyProc, PageMiscProc
-								 };
+	DLGPROC PageProc[PROPERTY_NUM]={
+		PageAboutProc, PageAlarmProc,
+		PageColorProc, PageFormatProc, PageMouseProc,
+		PageQuickyProc,
+		PageHotKeyProc, PageMiscProc,
+	};
 	HMODULE hInstance=GetModuleHandle(NULL); 
 	if(g_hwndSheet && IsWindow(g_hwndSheet)) { // IF Already Open...
 		ForceForegroundWindow(g_hwndSheet); // <--+++--> Stick it on Top!

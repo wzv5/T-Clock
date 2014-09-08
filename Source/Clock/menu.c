@@ -3,7 +3,6 @@
 //================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
 
-#define QM_COMMAND 3800
 void UpdateTimerMenu(HMENU hMenu);
 static char g_undo=0; // did we change windows and can undo it?
 
@@ -44,30 +43,27 @@ void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 		DeleteMenu(hPopupMenu, IDM_FWD_RUNAPP, MF_BYCOMMAND);
 		DeleteMenu(hPopupMenu, IDM_FWD_EXITEXPLORER, MF_BYCOMMAND);
 	}
-	/// Timers Menu Item y/n Goes HERE!!!
-	
+	/// AlarmsTimer Menu Item y/n Goes HERE!!!
 	UpdateTimerMenu(hPopupMenu); // Get the List of Active Timers.
 	
 	if(g_bQMLaunch) {
-		char szmItem[TNY_BUFF] = {0};
-		UINT uItemID = QM_COMMAND;
-		char s[TNY_BUFF] = {0};
-		int iMenu;
+		char key[TNY_BUFF];
+		int offset=9;
+		char name[TNY_BUFF];
+		int idx;
 		
 		MENUITEMINFO mii = { sizeof(MENUITEMINFO) };
 		mii.fMask = MIIM_STRING | MIIM_ID;
-		
-		for(iMenu = 0; iMenu <= 11; iMenu++) {
-			wsprintf(szmItem, "MenuItem-%d", iMenu);
-			
-			if(GetMyRegLong("QuickyMenu\\MenuItems", szmItem, FALSE)) {
-				wsprintf(szmItem, "MenuItem-%d-Text", iMenu);
-				GetMyRegStr("QuickyMenu\\MenuItems", szmItem, s, TNY_BUFF, "");
-				mii.dwTypeData = s;
-				mii.wID = uItemID;
+		mii.dwTypeData=name;
+		memcpy(key,"MenuItem-",offset);
+		for(idx=0; idx<12; ++idx) {
+			offset=9+wsprintf(key+9,"%i",idx);
+			if(GetMyRegLong("QuickyMenu\\MenuItems",key,0)){
+				memcpy(key+offset,"-Text",6);
+				GetMyRegStr("QuickyMenu\\MenuItems",key,name,sizeof(name),"");
+				mii.wID=IDM_I_MENU+idx;
 				InsertMenuItem(hPopupMenu, IDM_SHOWCALENDER, FALSE, &mii);
 			}
-			uItemID++;
 		}
 	}
 	
@@ -103,141 +99,101 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	switch(wID) {
 	case IDM_REFRESHTCLOCK: //-----+++--> RePaint & Size the T-Clock Display Window
 		RefreshUs();
-		return;
+		break;
 		
 	case IDM_SHOWPROP: //---------------------+++--> Show T-Clock Properties Dialog
 		MyPropertySheet(-1);
-		return;
+		break;
 	case IDM_PROP_ALARM:
 		MyPropertySheet(1);
-		return;
+		break;
 		
 	case IDM_SYNCTIME:
 		SyncTimeNow();
-		return;
+		break;
 		
 	case JRMSG_BOING:
 		ReleaseTheHound(hwnd, TRUE);
-		return;
+		break;
 		
 	case IDM_EXIT: //--------------------------------------+++--> Exit T-Clock 2010
 		PostMessage(g_hwndClock, WM_COMMAND, IDM_EXIT, 0);
-		return;
+		break;
 		
 	case IDM_SHOWCALENDER: //-------------------------------+++--> Display Calender
 		ToggleCalendar();
-		return;
+		break;
 		
 	case IDM_DISPLAYPROP: //------------------------------+++--> Display Properties
 		WinExec(("control.exe desk.cpl, display,1"),SW_SHOW);
-		return;
-//========================================================================
-#if defined _M_IX86 //-----+++--> IF Compiling This as a 32-bit Clock Use:
-#define OPEN_VOLUME "sndvol32.exe"
-
-#else //---------+++--> ELSE Assume: _M_X64 - IT's a 64-bit Clock and Use:
-#define OPEN_VOLUME "sndvol.exe"
-
-#endif
-//========================================================================
+		break;
 	case IDM_VOLUMECONTROL: //-------------------------------+++--> Volume Controls
+		#ifndef __x86_64__
+		#	define OPEN_VOLUME "SndVol32.exe"
+		#else
+		#	define OPEN_VOLUME "SndVol.exe"
+		#endif
 		WinExec((OPEN_VOLUME),SW_SHOW);
-		return;
+		break;
 		
 	case IDM_AUDIOPROP: //----------------------------------+++--> Audio Properties
 		WinExec(("control.exe mmsys.cpl"),SW_SHOW);
-		return;
+		break;
 		
 	case IDM_MAPDRIVE: //----------------------------------+++--> Map Network Drive
 		WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
-		return;
+		break;
 		
 	case IDM_DISCONNECT: //-------------------------+++--> Disconnect Network Drive
 		WNetDisconnectDialog(hwnd, RESOURCETYPE_DISK);
-		return;
+		break;
 		
 	case IDM_TOGGLE_DT: //---------------------------+++--> Show / Hide the Desktop
 		ToggleDesk();
-		return;
+		break;
 		
 	case IDM_QUICKY_WINEXP: { //-----------------//--+++--> Windows Explorer Opened
-			ShellExecute(hwnd, "open","Explorer.exe", //-> Correctly at My Computer Level
-						 "/e, ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",NULL,SW_SHOWNORMAL);
-			return;
-		}
+		ShellExecute(hwnd, "open","Explorer.exe", //-> Correctly at My Computer Level
+					 "/e, ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}",NULL,SW_SHOWNORMAL);
+		break;}
 		
 	case IDM_QUICKY_DOS: { // Command Prompt
-			char RooT[MAX_PATH];
-			GetWindowsDirectory(RooT,MAX_PATH);
-			ShellExecute(hwnd, "open","cmd.exe", "/f:on /t:0a", RooT, SW_SHOWNORMAL);
-			return;
-		}
-		
-	case QM_COMMAND:
-	case QM_COMMAND+1:
-	case QM_COMMAND+2:
-	case QM_COMMAND+3:
-	case QM_COMMAND+4:
-	case QM_COMMAND+5:
-	case QM_COMMAND+6:
-	case QM_COMMAND+7:
-	case QM_COMMAND+8:
-	case QM_COMMAND+9:
-	case QM_COMMAND+10:
-	case QM_COMMAND+11: {
-			char szQM_Temp[260]="";
-			char szQM_Target[260]="";
-			char szQM_Switch[260]="";
-			UINT uQM_cID = (wID - QM_COMMAND);
-			
-			wsprintf(szQM_Temp, "MenuItem-%d-Target", uQM_cID);
-			GetMyRegStr("QuickyMenu\\MenuItems", szQM_Temp, szQM_Target, 260, "");
-			
-			wsprintf(szQM_Temp, "MenuItem-%d-Switches", uQM_cID);
-			GetMyRegStr("QuickyMenu\\MenuItems", szQM_Temp, szQM_Switch, 260, "");
-			
-			ShellExecute(hwnd, "open", szQM_Target, szQM_Switch, NULL, SW_SHOWNORMAL);
-			return;
-		}
-		
+		char RooT[MAX_PATH];
+		GetWindowsDirectory(RooT,MAX_PATH);
+		ShellExecute(hwnd, "open","cmd.exe", "/f:on /t:0a", RooT, SW_SHOWNORMAL);
+		break;}
+	
 	case IDM_QUICKY_EMPTYRB:
 		SHEmptyRecycleBin(0, NULL, SHERB_NOCONFIRMATION);
-		return;
+		break;
 //-----------------------//--------------------------------------------+++-->
 	case IDCB_SW_START: //-> These Messages are Bounced From the Command Line
 		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_START, 0); //-+> Through Here
-		return; //-+-> Then to the StopWatch Window - IF/When it is/Gets Opened
+		break; //-+-> Then to the StopWatch Window - IF/When it is/Gets Opened
 	case IDCB_SW_STOP:
 		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_STOP, 0);
-		return;
+		break;
 	case IDCB_SW_RESET:
 		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_RESET, 0);
-		return;
+		break;
 	case IDCB_SW_LAP:
 		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_LAP, 0);
-		return; //------------------------+++--> End of Bounce Through Messages
+		break; //------------------------+++--> End of Bounce Through Messages
 //-----------//--------------------------------------------------------+++-->
 	case IDM_SHUTDOWN:
 		if(!ShutDown())
 			MessageBox(0, "Shutdown Request Failed!", "ERROR:", MB_OK|MB_ICONERROR);
-		return;
+		break;
 		
 	case IDM_REBOOT:
 		if(!ReBoot())
 			MessageBox(0, "Reboot Request Failed!", "ERROR:", MB_OK|MB_ICONERROR);
-		return;
+		break;
 		
 	case IDM_LOGOFF:
 		if(!LogOff())
 			MessageBox(0, "Logoff Request Failed!", "ERROR:", MB_OK|MB_ICONERROR);
-		return;
-		
-	case IDM_TIMER: // Timer
-		DialogTimer();
-		return;
-		
-	case IDM_STOPWATCH:
-		DialogStopWatch();
+		break;
 		
 	case IDM_FWD_CASCADE: case IDM_FWD_SIDEBYSIDE: case IDM_FWD_STACKED: case IDM_FWD_SHOWDESKTOP: case IDM_FWD_MINALL: case IDM_FWD_UNDO:
 		g_undo=(wID!=IDM_FWD_UNDO);
@@ -247,7 +203,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case IDM_FWD_TASKBARPROP: case IDM_FWD_RUNAPP: case IDM_FWD_EXITEXPLORER:{
 		HWND hwndTray = FindWindow("Shell_TrayWnd", NULL);
 		if(hwndTray) PostMessage(hwndTray, WM_COMMAND, (WPARAM)wID, 0);
-		return;}
+		break;}
 	case IDM_DATETIME_EX:{
 		int wait=40;
 		HWND hwnd1=FindWindow("Shell_TrayWnd",NULL);
@@ -264,7 +220,14 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 				}
 			}
 		}
-		return;}
+		break;}
+		
+	case IDM_STOPWATCH: /// Timers
+		DialogStopWatch();
+		break;
+	case IDM_TIMER:
+		DialogTimer();
+		break;
 	case ID_T_TIMER1:
 	case ID_T_TIMER2:
 	case ID_T_TIMER3:
@@ -276,11 +239,28 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		GetTimerInfo(szTime, wID-ID_T_TIMER1, FALSE);}
 	case IDM_TIMEWATCH:
 		WatchTimer(); // Shelter All the Homeless Timers.
-		return;
-	}
-	
-	if((IDM_STOPTIMER <= wID && wID < IDM_STOPTIMER + MAX_TIMER)) {
-		StopTimer(wID-IDM_STOPTIMER); //-+-> Stop Timer X!
+		break;
+	default:
+		if(wID>=IDM_I_MENU && wID<IDM_I_MENU+1000){
+			char key[MAX_PATH];
+			int offset=9;
+			char szQM_Target[MAX_PATH];
+			char szQM_Switch[MAX_PATH];
+			memcpy(key,"MenuItem-",offset);
+			offset+=wsprintf(key+offset,"%i",wID-IDM_I_MENU);
+			memcpy(key+offset,"-Target",8);
+			GetMyRegStr("QuickyMenu\\MenuItems",key,szQM_Target,sizeof(szQM_Target),"");
+			memcpy(key+offset,"-Switches",10);
+			GetMyRegStr("QuickyMenu\\MenuItems",key,szQM_Switch,sizeof(szQM_Switch),"");
+			ShellExecute(hwnd, "open", szQM_Target, szQM_Switch, NULL, SW_SHOWNORMAL);
+		}else if((IDM_STOPTIMER <= wID && wID < IDM_STOPTIMER + MAX_TIMER)) {
+			StopTimer(wID-IDM_STOPTIMER); //-+-> Stop Timer X!
+		}
+		#ifdef _DEBUG
+		else
+			{char buf[1024]; wsprintf(buf,"%s: unknown ID: %.5i(0x%.4x) (hwnd:%p)\n",__FUNCTION__,wID,wID,hwnd);
+			OutputDebugString(buf);}
+		#endif // _DEBUG
 	}
 	return;
 }

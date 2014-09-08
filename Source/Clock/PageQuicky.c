@@ -8,7 +8,8 @@
 void AddListBoxRows(HWND);
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
-void EditQuickyMenuItem(char*, char*, char*, char*, int);
+
+INT_PTR CALLBACK PageQuickyMenuProc(HWND, UINT, WPARAM, LPARAM); // PageQuickyMenu.c
 
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 //================================================================================================
@@ -17,84 +18,72 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 {
 	char szText[TNY_BUFF] = {0};
 	LVCOLUMN lvCol;
-	HWND hList;
 	int iCol = 0;
 	
-	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
 	switch(message) {
 		
 	case WM_INITDIALOG:
-		OnInit(hDlg);				// IF We Give IT a Window Caption ... Is IT Easier to Find??!?
-//==================================================================================
-		hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
-							 LVS_NOSORTHEADER|LVS_SINGLESEL, 17, 117, 430, 191, hDlg, 0, 0, NULL);
-		ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
-		SetXPWindowTheme(hList,L"Explorer",NULL);
+		OnInit(hDlg);
+		ListView_SetExtendedListViewStyle(GetDlgItem(hDlg,IDC_QMEN_LIST), LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+		SetXPWindowTheme(GetDlgItem(hDlg,IDC_QMEN_LIST),L"Explorer",NULL);
 		
 		lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;		 // Load the Column Headers.
-		for(iCol = IDS_LIST_TASKNUMBER; iCol <= IDS_LIST_TASKSWITCHES; iCol++) {
+		for(iCol = IDS_LIST_TASKNAME; iCol <= IDS_LIST_TASKSWITCHES; iCol++) {
 			lvCol.iSubItem = iCol;								   // From the String Table
 			lvCol.pszText = szText;							      // Into the Temporary Buffer.
-			if(iCol == IDS_LIST_TASKNUMBER) {
-				lvCol.cx = 0;			   // Set Column Width in Pixels
-				lvCol.fmt = LVCFMT_CENTER; // center-aligned column
-			} else if(iCol == IDS_LIST_TASKNAME) {
+			if(iCol == IDS_LIST_TASKNAME) {
 				lvCol.cx = 100;		  // Set Column Width in Pixels
 				lvCol.fmt = LVCFMT_LEFT; // left-aligned column
 			} else if(iCol == IDS_LIST_TASKTARGET) {
 				lvCol.cx = 220;		  // Set Column Width in Pixels
 				lvCol.fmt = LVCFMT_LEFT; // left-aligned column
 			} else if(iCol == IDS_LIST_TASKSWITCHES) {
-				lvCol.cx = 110;		  // Set Column Width in Pixels
+				lvCol.cx = 105;		  // Set Column Width in Pixels
 				lvCol.fmt = LVCFMT_LEFT; // left-aligned column
 			}
 			LoadString(0, iCol, szText, sizeof(szText));    // <-- String Loads Here.
-			ListView_InsertColumn(hList, iCol, &lvCol); // <- Now It's a Column Header
+			ListView_InsertColumn(GetDlgItem(hDlg,IDC_QMEN_LIST), iCol, &lvCol); // <- Now It's a Column Header
 		}
-		AddListBoxRows(hList);
-		ShowWindow(hList, SW_SHOW);
-//==================================================================================
+		AddListBoxRows(GetDlgItem(hDlg,IDC_QMEN_LIST));
 		return TRUE;
 		
 	case WM_COMMAND: {
-			WORD id, code;
-			id = LOWORD(wParam);
-			code = HIWORD(wParam);
-			if((IDC_QMEN_EXITWIN <= id && id <= IDC_QMEN_DISPLAY) &&
-			   ((code == BST_CHECKED) || (code == BST_UNCHECKED))) {
-				SendPSChanged(hDlg);
-			}
-			if(id == IDM_QMEM_REFRESH) {
-				AddListBoxRows(hList);
-			}
-			return TRUE;
+		WORD id, code;
+		id = LOWORD(wParam);
+		code = HIWORD(wParam);
+		if((IDC_QMEN_EXITWIN <= id && id <= IDC_QMEN_DISPLAY) &&
+		   ((code == BST_CHECKED) || (code == BST_UNCHECKED))) {
+			SendPSChanged(hDlg);
 		}
-		
+		if(id == IDM_QMEM_REFRESH) {
+			AddListBoxRows(GetDlgItem(hDlg,IDC_QMEN_LIST));
+		}
+		return TRUE;}
 	case WM_NOTIFY: {
-			if(((NMHDR*)lParam)->code == PSN_APPLY) {
-				OnApply(hDlg);
+		NMHDR* noti=(NMHDR*)lParam;
+		if(noti->code == PSN_APPLY) {
+			OnApply(hDlg);
+		}else if(noti->code == LVN_KEYDOWN) {
+			NMLVKEYDOWN* key=(NMLVKEYDOWN*)noti;
+			int item=ListView_GetNextItem(GetDlgItem(hDlg,IDC_QMEN_LIST),-1,LVNI_SELECTED);
+			int i;
+			if(key->wVKey!=VK_SPACE || item==-1)
 				return TRUE;
+			for(i=IDC_QMEN_GROUP1; i<=IDC_QMEN_LIST; ++i) {
+				ShowDlgItem(hDlg,i,0);
 			}
-//--------------------------------------------------------------------------------------------------
-			if(((LPNMHDR)lParam)->code == NM_DBLCLK) {
-				int iSel;
-				if((iSel = ListView_GetNextItem(hList, -1, LVNI_FOCUSED)) != -1) {
-					char TaskSwitches[LRG_BUFF] = {0};
-					char TaskTarget[LRG_BUFF] = {0};
-					char TaskName[TNY_BUFF] = {0};
-					char TaskNum[TNY_BUFF] = {0};
-					
-					ListView_GetItemText(hList, iSel, 0, TaskNum, TNY_BUFF);
-					ListView_GetItemText(hList, iSel, 1, TaskName, TNY_BUFF);
-					ListView_GetItemText(hList, iSel, 2, TaskTarget, LRG_BUFF);
-					ListView_GetItemText(hList, iSel, 3, TaskSwitches, LRG_BUFF);
-					EditQuickyMenuItem(TaskNum, TaskName, TaskTarget, TaskSwitches, iSel);
-				}
-//--------------------------------------------------------------------------------------------------
+			CreateDialogParam(0,MAKEINTRESOURCE(IDD_QUICKY_ADD),hDlg,PageQuickyMenuProc,item); // initializes and kills itself
+		}else if(noti->code==NM_DBLCLK) {
+			NMITEMACTIVATE* itm=(NMITEMACTIVATE*)noti;
+			int i;
+			if(itm->iItem==-1)
+				return TRUE;
+			for(i=IDC_QMEN_GROUP1; i<=IDC_QMEN_LIST; ++i) {
+				ShowDlgItem(hDlg,i,0);
 			}
-			return TRUE;
+			CreateDialogParam(0,MAKEINTRESOURCE(IDD_QUICKY_ADD),hDlg,PageQuickyMenuProc,itm->iItem); // initializes and kills itself
 		}
-		
+		return TRUE;}
 	case WM_DESTROY:
 		DestroyWindow(hDlg);
 		break;
@@ -129,66 +118,31 @@ void OnApply(HWND hDlg)   /*---------------------*/
 void AddListBoxRows(HWND hList)   //--------------------------------------------------------+++-->
 {
 	LVITEM lvItem;
-	int row;
-	
+	char key[TNY_BUFF];
+	int offset=9;
+	int idx;
 	ListView_DeleteAllItems(hList); // Clear ListView Control (Refresh Function)
 	
-	for(row=0; row <= 11; row++) {
-		char task[TNY_BUFF]= {0};
-		int col;
-		
-		wsprintf(task, "Item %d", 12-row);
+	memcpy(key,"MenuItem-",offset);
+	for(idx=12; idx--; ) {
+		char szValue[LRG_BUFF];
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iItem = 0;
+		lvItem.pszText = szValue;
 		lvItem.iSubItem = 0;
-		lvItem.pszText = task;
-		ListView_InsertItem(hList, &lvItem); // FIRST Insert A New Row
-		for(col = 1; col <= 3; col++) { //-> THEN Populate Its COLUMNS
-			char szEntry[TNY_BUFF]= {0};
-			char szValue[LRG_BUFF]= {0};
-			
-			lvItem.iSubItem = col;
-			switch(col) {
-			case 1:
-				wsprintf(szEntry, "MenuItem-%d-Text", 11-row);
-				GetMyRegStr("QuickyMenu\\MenuItems", szEntry, szValue, LRG_BUFF, "");
-				lvItem.pszText = szValue;
-				break;
-				
-			case 2:
-				wsprintf(szEntry, "MenuItem-%d-Target", 11-row);
-				GetMyRegStr("QuickyMenu\\MenuItems", szEntry, szValue, LRG_BUFF, "");
-				lvItem.pszText = szValue;
-				break;
-				
-			case 3:
-				wsprintf(szEntry, "MenuItem-%d-Switches", 11-row);
-				GetMyRegStr("QuickyMenu\\MenuItems", szEntry, szValue, LRG_BUFF, "");
-				lvItem.pszText = szValue;
-				break;
-			}
-			ListView_SetItem(hList, &lvItem);
-		}
+		offset=9+wsprintf(key+9,"%i",idx);
+		memcpy(key+offset,"-Text",6);
+		GetMyRegStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "-");
+		ListView_InsertItem(hList, &lvItem);
+		
+		lvItem.iSubItem = 1;
+		memcpy(key+offset,"-Target",8);
+		GetMyRegStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
+		ListView_SetItem(hList, &lvItem);
+		
+		lvItem.iSubItem = 2;
+		memcpy(key+offset,"-Switches",10);
+		GetMyRegStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
+		ListView_SetItem(hList, &lvItem);
 	}
-}
-//================================================================================================
-//--+++-->
-void EditQuickyMenuItem(char* TskNum, char* TskName, char* TskTarget, char* TskSwitches, int iNdx)
-{
-	HWND hNexTab;
-	int i;
-	
-	//---------------+++--> First Set "Menu Item Details" as the Active Tab, Then...
-	SendMessage(PropSheet_GetTabControl(g_hwndSheet), TCM_SETCURFOCUS, 6, 0);
-	hNexTab = PropSheet_GetCurrentPageHwnd(g_hwndSheet); // Get Handle of Active Tab
-	
-	for(i = IDC_MID_MENUTEXT; i <= IDB_LIST_BROWSE; i++) {
-		EnableDlgItem(hNexTab, i, TRUE);
-	}
-	
-	SetDlgItemInt(hNexTab,  IDC_MID_INDEX, iNdx, FALSE);
-	SetDlgItemText(hNexTab, IDC_MID_SWITCHES, TskSwitches);
-	SetDlgItemText(hNexTab, IDC_MID_TARGET, TskTarget);
-	SetDlgItemText(hNexTab, IDC_MID_MENUTEXT, TskName);
-	SetDlgItemText(hNexTab, IDC_MID_TASKNUM, TskNum);
 }

@@ -20,21 +20,20 @@
 #define IDS_XBUTTON1                    23
 #define IDS_XBUTTON2                    24
 #define IDS_NOTFOUNDCLOCK               45
-#define IDS_LIST_TASKNUMBER             75
 #define IDS_LIST_TASKNAME               76
 #define IDS_LIST_TASKTARGET             77
 #define IDS_LIST_TASKSWITCHES           78
 #define PROPERTY_BASE                   100
-#define PROPERTY_NUM                    9
+#define PROPERTY_NUM                    8
 #define IDD_PAGEABOUT                   100 /* group */
 #define IDD_PAGEALARM                   101
 #define IDD_PAGECLOCKTEXT               102
 #define IDD_PAGEFORMAT                  103
 #define IDD_PAGEMOUSE                   104
 #define IDD_PAGEQUICKY                  105
-#define IDD_PAGETARGETFILE              106
-#define IDD_PAGEHOTKEY                  107
-#define IDD_PAGEMISC                    108 /* end group */
+#define IDD_PAGEHOTKEY                  106
+#define IDD_PAGEMISC                    107 /* end group */
+#define IDD_QUICKY_ADD                  110
 #define IDD_TIMER                       120
 #define IDD_ALARMDAY                    121
 #define IDD_STOPWATCH                   124
@@ -107,23 +106,25 @@
 #define IDC_ABT_WEBuri                  605
 #define IDC_ABT_MAILuri                 606
 #define IDC_ABT_TCLOCK                  607
-#define IDC_QMEN_EXITWIN                700 /* group */
-#define IDC_QMEN_AUDIO                  701
-#define IDC_QMEN_LAUNCH                 702
-#define IDC_QMEN_NET                    703
-#define IDC_QMEN_DISPLAY                704 /* end group */
-#define IDM_QMEM_REFRESH                705
-#define IDC_MID_MENUTEXT                1004
-#define IDC_MID_TARGET                  1005
-#define IDC_MID_SWITCHES                1006
-#define IDC_MID_SAVE                    1007
-#define IDC_MID_CANCEL                  1008
-#define IDC_MID_TASKNUM                 1009
-#define IDB_MID_DELETE                  1010
-#define IDB_LIST_BROWSE                 1011
+#define IDC_QMEN_GROUP1                 700 /* group */
+#define IDC_QMEN_EXITWIN                701 /* group */
+#define IDC_QMEN_AUDIO                  702
+#define IDC_QMEN_LAUNCH                 703
+#define IDC_QMEN_NET                    704
+#define IDC_QMEN_DISPLAY                705 /* end group */
+#define IDC_QMEN_GROUP2                 706
+#define IDC_QMEN_LIST                   707 /* end group */
+#define IDM_QMEM_REFRESH                710
+#define IDC_MID_TASKNUM                 1000
+#define IDC_MID_MENUTEXT                1001
+#define IDC_MID_TARGET                  1002
+#define IDC_MID_TARGETSEL               1003
+#define IDC_MID_SWITCHES                1004
+#define IDC_MID_DELETE                  1005
+#define IDC_MID_SAVE                    1006
+#define IDC_MID_CANCEL                  1007
 #define IDC_ALPHATB                     1016
 #define IDC_SPINALPHA                   1017
-#define IDC_MID_INDEX                   1018
 #define IDCLB_SW_LAPS                   1020
 #define IDCE_SW_ELAPSED                 1021
 #define IDCB_SW_LAP                     1022
@@ -343,14 +344,16 @@
 #define IDC_CLOCKSKINFILE               3527
 #define IDC_CLOCKSKINSELECT             3528
 #define IDC_CLOCKSKINTRANS              3529
+#define IDM_I_MENU                      62000 /* first custom menu index */
+#define __IDEND__                       65535
 
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
-#define _APS_NEXT_COMMAND_VALUE         40029
-#define _APS_NEXT_CONTROL_VALUE         1080
-#define _APS_NEXT_SYMED_VALUE           106
+#define _APS_NEXT_COMMAND_VALUE         600
+#define _APS_NEXT_CONTROL_VALUE         3530
+#define _APS_NEXT_SYMED_VALUE           140
 #endif
 #endif
