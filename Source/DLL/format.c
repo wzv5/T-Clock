@@ -15,7 +15,7 @@ static char AM[11], PM[11], SDate[5], STime[5];
 static char EraStr[11];
 static int AltYear;
 
-extern char bHour12, bHourZero;
+extern char g_bHour12, g_bHourZero;
 
 //================================================================================================
 //---------------------------------//+++--> load Localized Strings for Month, Day, & AM/PM Symbols:
@@ -132,272 +132,259 @@ void SetNumFormat(char** dp, int n, int len, int slen)
 }
 //================================================================================================
 //-------------+++--> Format T-Clock's OutPut String From Current Date, Time, & System Information:
-void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //------------------+++-->
+unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   //------------------+++-->
 {
-	const char* sp, *p;
-	char* dp;
+	const char* pos;
+	char* out = buf;
 	DWORD TickCount = 0;
 	
-	sp = fmt; dp = s;
-	while(*sp) {
-		if(*sp == '\"') {
-			sp++;
-			while(*sp != '\"' && *sp) {
-				p = CharNext(sp);
-				while(sp != p) *dp++ = *sp++;
+	while(*fmt) {
+		if(*fmt == '\"') {
+			++fmt;
+			while(*fmt != '\"' && *fmt) {
+				for(pos=CharNext(fmt); fmt!=pos; )
+					*out++=*fmt++;
 			}
-			if(*sp == '\"') sp++;
-		} else if(*sp == '/') {
-			p = SDate; while(*p) *dp++ = *p++;
-			sp++;
-		} else if(*sp == ':') {
-			p = STime; while(*p) *dp++ = *p++;
-			sp++;
+			if(*fmt == '\"') ++fmt;
+		} else if(*fmt=='\\' && fmt[1]=='n') {
+			fmt+=2;
+			*out++='\n';
+		} else if(*fmt == '/') {
+			++fmt;
+			for(pos=SDate; *pos; ) *out++=*pos++;
+		} else if(*fmt == ':') {
+			++fmt;
+			for(pos=STime; *pos; ) *out++=*pos++;
+		}
+		/// for testing
+		else if(*fmt == 'S' && fmt[1] == 'S' && fmt[2] == 'S') {
+			fmt += 3;
+			SetNumFormat(&out, (int)pt->wMilliseconds, 3, 0);
 		}
 		
-		// for testing
-		else if(*sp == 'S' && *(sp + 1) == 'S' && *(sp + 2) == 'S') {
-			SetNumFormat(&dp, (int)pt->wMilliseconds, 3, 0);
-			sp += 3;
-		}
-		
-		else if(*sp == 'y' && *(sp + 1) == 'y') {
+		else if(*fmt == 'y' && fmt[1] == 'y') {
 			int len;
 			len = 2;
-			if(*(sp + 2) == 'y' && *(sp + 3) == 'y') len = 4;
+			if(*(fmt + 2) == 'y' && *(fmt + 3) == 'y') len = 4;
 			
-			SetNumFormat(&dp, (len==2)?(int)pt->wYear%100:(int)pt->wYear, len, 0);
-			sp += len;
-		} else if(*sp == 'm') {
-			if(*(sp + 1) == 'm' && *(sp + 2) == 'e') {
-				*dp++ = MonthEng[pt->wMonth-1][0];
-				*dp++ = MonthEng[pt->wMonth-1][1];
-				*dp++ = MonthEng[pt->wMonth-1][2];
-				sp += 3;
-			} else if(*(sp + 1) == 'm' && *(sp + 2) == 'm') {
-				if(*(sp + 3) == 'm') {
-					p = MonthLong;
-					while(*p) *dp++ = *p++;
-					sp += 4;
+			SetNumFormat(&out, (len==2)?(int)pt->wYear%100:(int)pt->wYear, len, 0);
+			fmt += len;
+		} else if(*fmt == 'm') {
+			if(*(fmt + 1) == 'm' && *(fmt + 2) == 'e') {
+				*out++ = MonthEng[pt->wMonth-1][0];
+				*out++ = MonthEng[pt->wMonth-1][1];
+				*out++ = MonthEng[pt->wMonth-1][2];
+				fmt += 3;
+			} else if(fmt[1] == 'm' && fmt[2] == 'm') {
+				if(*(fmt + 3) == 'm') {
+					fmt += 4;
+					for(pos=MonthLong; *pos; ) *out++=*pos++;
 				} else {
-					p = MonthShort;
-					while(*p) *dp++ = *p++;
-					sp += 3;
+					fmt += 3;
+					for(pos=MonthShort; *pos; ) *out++=*pos++;
 				}
 			} else {
-				if(*(sp + 1) == 'm') {
-					*dp++ = (char)((int)pt->wMonth / 10) + '0';
-					sp += 2;
+				if(fmt[1] == 'm') {
+					fmt += 2;
+					*out++ = (char)((int)pt->wMonth / 10) + '0';
 				} else {
+					++fmt;
 					if(pt->wMonth > 9)
-						*dp++ = (char)((int)pt->wMonth / 10) + '0';
-					sp++;
+						*out++ = (char)((int)pt->wMonth / 10) + '0';
 				}
-				*dp++ = (char)((int)pt->wMonth % 10) + '0';
+				*out++ = (char)((int)pt->wMonth % 10) + '0';
 			}
-		} else if(*sp == 'a' && *(sp + 1) == 'a' && *(sp + 2) == 'a') {
-			if(*(sp + 3) == 'a') {
-				p = DayOfWeekLong;
-				while(*p) *dp++ = *p++;
-				sp += 4;
+		} else if(*fmt == 'a' && fmt[1] == 'a' && fmt[2] == 'a') {
+			if(*(fmt + 3) == 'a') {
+				fmt += 4;
+				for(pos=DayOfWeekLong; *pos; ) *out++=*pos++;
 			} else {
-				p = DayOfWeekShort;
-				while(*p) *dp++ = *p++;
-				sp += 3;
+				fmt += 3;
+				for(pos=DayOfWeekShort; *pos; ) *out++=*pos++;
 			}
-		} else if(*sp == 'd') {
-			if(*(sp + 1) == 'd' && *(sp + 2) == 'e') {
-				p = DayOfWeekEng[pt->wDayOfWeek];
-				while(*p) *dp++ = *p++;
-				sp += 3;
-			} else if(*(sp + 1) == 'd' && *(sp + 2) == 'd') {
-				if(*(sp + 3) == 'd') {
-					p = DayOfWeekLong;
-					while(*p) *dp++ = *p++;
-					sp += 4;
+		} else if(*fmt == 'd') {
+			if(*(fmt + 1) == 'd' && *(fmt + 2) == 'e') {
+				fmt += 3;
+				for(pos=DayOfWeekEng[pt->wDayOfWeek]; *pos; ) *out++=*pos++;
+			} else if(fmt[1] == 'd' && fmt[2] == 'd') {
+				if(fmt[3] == 'd') {
+					fmt += 4;
+					for(pos=DayOfWeekLong; *pos; ) *out++=*pos++;
 				} else {
-					p = DayOfWeekShort;
-					while(*p) *dp++ = *p++;
-					sp += 3;
+					fmt += 3;
+					for(pos=DayOfWeekShort; *pos; ) *out++=*pos++;
 				}
 			} else {
-				if(*(sp + 1) == 'd') {
-					*dp++ = (char)((int)pt->wDay / 10) + '0';
-					sp += 2;
+				if(fmt[1] == 'd') {
+					fmt += 2;
+					*out++ = (char)((int)pt->wDay / 10) + '0';
 				} else {
+					++fmt;
 					if(pt->wDay > 9)
-						*dp++ = (char)((int)pt->wDay / 10) + '0';
-					sp++;
+						*out++ = (char)((int)pt->wDay / 10) + '0';
 				}
-				*dp++ = (char)((int)pt->wDay % 10) + '0';
+				*out++ = (char)((int)pt->wDay % 10) + '0';
 			}
-		} else if(*sp == 'h') {
+		} else if(*fmt == 'h') {
 			int hour;
 			hour = pt->wHour;
-			if(bHour12) {
+			if(g_bHour12) {
 				if(hour > 12) hour -= 12;
 				else if(hour == 0) hour = 12;
-				if(hour == 12 && bHourZero) hour = 0;
+				if(hour == 12 && g_bHourZero) hour = 0;
 			}
-			if(*(sp + 1) == 'h') {
-				*dp++ = (char)(hour / 10) + '0';
-				sp += 2;
+			if(fmt[1] == 'h') {
+				fmt += 2;
+				*out++ = (char)(hour / 10) + '0';
 			} else {
+				++fmt;
 				if(hour > 9) {
-					*dp++ = (char)(hour / 10) + '0';
+					*out++ = (char)(hour / 10) + '0';
 				}
-				sp++;
 			}
-			*dp++ = (char)(hour % 10) + '0';
-		} else if(*sp == 'w' && (sp[1]=='+'||sp[1]=='-')) {
-			char bAdd=*++sp=='+';
+			*out++ = (char)(hour % 10) + '0';
+		} else if(*fmt == 'w' && (fmt[1]=='+'||fmt[1]=='-')) {
+			char bAdd=*++fmt=='+';
 			int hour=0;
-			for(; *++sp<='9'&&*sp>='0'; ){
+			for(; *++fmt<='9'&&*fmt>='0'; ){
 				hour*=10;
-				hour+=*sp-'0';
+				hour+=*fmt-'0';
 			}
 			if(!bAdd) hour=-hour;
 			hour = (pt->wHour + hour)%24;
 			if(hour < 0) hour += 24;
-			if(bHour12) {
+			if(g_bHour12) {
 				if(hour > 12) hour -= 12;
 				else if(hour == 0) hour = 12;
-				if(hour == 12 && bHourZero) hour = 0;
+				if(hour == 12 && g_bHourZero) hour = 0;
 			}
-			*dp++ = (char)(hour / 10) + '0';
-			*dp++ = (char)(hour % 10) + '0';
-		} else if(*sp == 'n') {
-			if(*(sp + 1) == 'n') {
-				*dp++ = (char)((int)pt->wMinute / 10) + '0';
-				sp += 2;
+			*out++ = (char)(hour / 10) + '0';
+			*out++ = (char)(hour % 10) + '0';
+		} else if(*fmt == 'n') {
+			if(fmt[1] == 'n') {
+				fmt += 2;
+				*out++ = (char)((int)pt->wMinute / 10) + '0';
 			} else {
+				++fmt;
 				if(pt->wMinute > 9)
-					*dp++ = (char)((int)pt->wMinute / 10) + '0';
-				sp++;
+					*out++ = (char)((int)pt->wMinute / 10) + '0';
 			}
-			*dp++ = (char)((int)pt->wMinute % 10) + '0';
-		} else if(*sp == 's') {
-			if(*(sp + 1) == 's') {
-				*dp++ = (char)((int)pt->wSecond / 10) + '0';
-				sp += 2;
+			*out++ = (char)((int)pt->wMinute % 10) + '0';
+		} else if(*fmt == 's') {
+			if(fmt[1] == 's') {
+				fmt += 2;
+				*out++ = (char)((int)pt->wSecond / 10) + '0';
 			} else {
+				++fmt;
 				if(pt->wSecond > 9)
-					*dp++ = (char)((int)pt->wSecond / 10) + '0';
-				sp++;
+					*out++ = (char)((int)pt->wSecond / 10) + '0';
 			}
-			*dp++ = (char)((int)pt->wSecond % 10) + '0';
-		} else if(*sp == 't' && *(sp + 1) == 't') {
-			if(pt->wHour < 12) p = AM; else p = PM;
-			while(*p) *dp++ = *p++;
-			sp += 2;
-		} else if(*sp == 'A' && *(sp + 1) == 'M') {
-			if(*(sp + 2) == '/' &&
-			   *(sp + 3) == 'P' && *(sp + 4) == 'M') {
-				if(pt->wHour < 12) *dp++ = 'A'; //--+++--> 2010 - Noon / MidNight Decided Here!
-				else *dp++ = 'P';
-				*dp++ = 'M'; sp += 5;
-			} else if(*(sp + 2) == 'P' && *(sp + 3) == 'M') {
-				if(pt->wHour < 12) p = AM; else p = PM;
-				while(*p) *dp++ = *p++;
-				sp += 4;
-			} else *dp++ = *sp++;
-		} else if(*sp == 'a' && *(sp + 1) == 'm' && *(sp + 2) == '/' &&
-				  *(sp + 3) == 'p' && *(sp + 4) == 'm') {
-			if(pt->wHour < 12) *dp++ = 'a';
-			else *dp++ = 'p';
-			*dp++ = 'm'; sp += 5;
-		} else if(*sp == '\\' && *(sp + 1) == 'n') {
-			*dp++ = 0x0d; *dp++ = 0x0a;
-			sp += 2;
+			*out++ = (char)((int)pt->wSecond % 10) + '0';
+		} else if(*fmt == 't' && fmt[1] == 't') {
+			fmt += 2;
+			if(pt->wHour < 12) pos = AM; else pos = PM;
+			while(*pos) *out++ = *pos++;
+		} else if(*fmt == 'A' && fmt[1] == 'M') {
+			if(fmt[2] == '/' &&
+			   fmt[3] == 'P' && fmt[4] == 'M') {
+				if(pt->wHour < 12) *out++ = 'A'; //--+++--> 2010 - Noon / MidNight Decided Here!
+				else *out++ = 'P';
+				*out++ = 'M'; fmt += 5;
+			} else if(fmt[2] == 'P' && fmt[3] == 'M') {
+				fmt += 4;
+				if(pt->wHour < 12) pos = AM; else pos = PM;
+				while(*pos) *out++ = *pos++;
+			} else *out++ = *fmt++;
+		} else if(*fmt == 'a' && fmt[1] == 'm' && fmt[2] == '/' &&
+				  fmt[3] == 'p' && fmt[4] == 'm') {
+			if(pt->wHour < 12) *out++ = 'a';
+			else *out++ = 'p';
+			*out++ = 'm'; fmt += 5;
 		}
 		// internet time
-		else if(*sp == '@' && sp[1] == '@' && sp[2] == '@') {
-			*dp++ = '@';
-			*dp++ = (char)(beat100 / 10000) + '0';
-			*dp++ = (char)((beat100 % 10000) / 1000) + '0';
-			*dp++ = (char)((beat100 % 1000) / 100) + '0';
-			sp += 3;
-			if(*sp=='.' && sp[1]=='@') {
-				*dp++ = '.';
-				*dp++ = (char)((beat100 % 100) / 10) + '0';
-				sp += 2;
-				if(*sp=='@'){
-					*dp++ = (char)((beat100 % 10)) + '0';
-					++sp;
+		else if(*fmt == '@' && fmt[1] == '@' && fmt[2] == '@') {
+			fmt += 3;
+			*out++ = '@';
+			*out++ = (char)(beat100 / 10000) + '0';
+			*out++ = (char)((beat100 % 10000) / 1000) + '0';
+			*out++ = (char)((beat100 % 1000) / 100) + '0';
+			if(*fmt=='.' && fmt[1]=='@') {
+				fmt += 2;
+				*out++ = '.';
+				*out++ = (char)((beat100 % 100) / 10) + '0';
+				if(*fmt=='@'){
+					++fmt;
+					*out++ = (char)((beat100 % 10)) + '0';
 				}
 			}
 		}
 		// alternate calendar
-		else if(*sp == 'Y' && AltYear > -1) {
+		else if(*fmt == 'Y' && AltYear > -1) {
 			int n = 1;
-			while(*sp == 'Y') { n *= 10; sp++; }
+			while(*fmt == 'Y') { n *= 10; ++fmt; }
 			if(n < AltYear) {
 				n = 1; while(n < AltYear) n *= 10;
 			}
 			for(;;) {
-				*dp++ = (char)((AltYear % n) / (n/10)) + '0';
+				*out++ = (char)((AltYear % n) / (n/10)) + '0';
 				if(n == 10) break;
 				n /= 10;
 			}
-		} else if(*sp == 'g') {
-			p = EraStr;
-			while(*p && *sp == 'g') {
-				char* p2 = CharNextExA((WORD)codepage, p, 0);
-				while(p != p2) *dp++ = *p++;
-				sp++;
+		} else if(*fmt == 'g') {
+			for(pos=EraStr; *pos&&*fmt=='g'; ){
+				char* p2 = CharNextExA((WORD)codepage, pos, 0);
+				while(pos != p2) *out++ = *pos++;
+				++fmt;
 			}
-			while(*sp == 'g') sp++;
+			while(*fmt == 'g') fmt++;
 		}
 		
-		else if(*sp == 'L' && strncmp(sp, "LDATE", 5) == 0) {
-			char s[80], *p;
+		else if(*fmt == 'L' && strncmp(fmt, "LDATE", 5) == 0) {
+			char s[80];
 			GetDateFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
 						  DATE_LONGDATE, pt, NULL, s, 80);
-			p = s;
-			while(*p) *dp++ = *p++;
-			sp += 5;
+			for(pos=s; *pos; )  *out++=*pos++;
+			fmt += 5;
 		}
 		
-		else if(*sp == 'D' && strncmp(sp, "DATE", 4) == 0) {
-			char s[80], *p;
+		else if(*fmt == 'D' && strncmp(fmt, "DATE", 4) == 0) {
+			char s[80];
 			GetDateFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
 						  DATE_SHORTDATE, pt, NULL, s, 80);
-			p = s;
-			while(*p) *dp++ = *p++;
-			sp += 4;
+			for(pos=s; *pos; ) *out++=*pos++;
+			fmt += 4;
 		}
 		
-		else if(*sp == 'T' && strncmp(sp, "TIME", 4) == 0) {
-			char s[80], *p;
+		else if(*fmt == 'T' && strncmp(fmt, "TIME", 4) == 0) {
+			char s[80];
 			GetTimeFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
 						  TIME_FORCE24HOURFORMAT, pt, NULL, s, 80);
-			p = s;
-			while(*p) *dp++ = *p++;
-			sp += 4;
-		} else if(*sp == 'S') { // uptime
+			for(pos=s; *pos; )  *out++=*pos++;
+			fmt += 4;
+		} else if(*fmt == 'S') { // uptime
 			int len, slen, st;
-			sp++;
-			if(GetNumFormat(&sp, 'd', &len, &slen) == TRUE) {//days
+			fmt++;
+			if(GetNumFormat(&fmt, 'd', &len, &slen) == TRUE) {//days
 				if(!TickCount) TickCount = GetTickCount();
 				st = TickCount/86400000;
-				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 'a', &len, &slen) == TRUE) {//hours total
+				SetNumFormat(&out, st, len, slen);
+			} else if(GetNumFormat(&fmt, 'a', &len, &slen) == TRUE) {//hours total
 				if(!TickCount) TickCount = GetTickCount();
 				st = TickCount/3600000;
-				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 'h', &len, &slen) == TRUE) {//hours (max 24)
+				SetNumFormat(&out, st, len, slen);
+			} else if(GetNumFormat(&fmt, 'h', &len, &slen) == TRUE) {//hours (max 24)
 				if(!TickCount) TickCount = GetTickCount();
 				st = (TickCount/3600000)%24;
-				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 'n', &len, &slen) == TRUE) {//minutes
+				SetNumFormat(&out, st, len, slen);
+			} else if(GetNumFormat(&fmt, 'n', &len, &slen) == TRUE) {//minutes
 				if(!TickCount) TickCount = GetTickCount();
 				st = (TickCount/60000)%60;
-				SetNumFormat(&dp, st, len, slen);
-			} else if(GetNumFormat(&sp, 's', &len, &slen) == TRUE) {//seconds
+				SetNumFormat(&out, st, len, slen);
+			} else if(GetNumFormat(&fmt, 's', &len, &slen) == TRUE) {//seconds
 				if(!TickCount) TickCount = GetTickCount();
 				st = (TickCount/1000)%60;
-				SetNumFormat(&dp, st, len, slen);
-			} else if(*sp == 'T') { // ST, uptime as h:mm:ss
+				SetNumFormat(&out, st, len, slen);
+			} else if(*fmt == 'T') { // ST, uptime as h:mm:ss
 				DWORD dw;
 				int sth, stm, sts;
 				if(!TickCount) TickCount = GetTickCount();
@@ -407,33 +394,33 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 				stm = dw%60; dw /= 60;
 				sth = dw;
 				
-				SetNumFormat(&dp, sth, 1, 0);
-				*dp++ = ':';
-				SetNumFormat(&dp, stm, 2, 0);
-				*dp++ = ':';
-				SetNumFormat(&dp, sts, 2, 0);
+				SetNumFormat(&out, sth, 1, 0);
+				*out++ = ':';
+				SetNumFormat(&out, stm, 2, 0);
+				*out++ = ':';
+				SetNumFormat(&out, sts, 2, 0);
 				
-				sp++;
+				fmt++;
 			} else
-				*dp++ = 'S';
-		} else if(*sp == 'W') { //----//--+++--> 3/21/2010 is 80th day of year
+				*out++ = 'S';
+		} else if(*fmt == 'W') { //----//--+++--> 3/21/2010 is 80th day of year
 			char szWkNum[8] = {0}; //-----+++--> WEEK NUMBER CODE IS HERE!!!
 			char* Wk;
 			struct tm today;
 			time_t ltime;
 			time(&ltime);
 			localtime_s(&today, &ltime);
-			if(*(sp + 1) == 's') { // Week-Of-Year Starts Sunday
+			if(*(fmt + 1) == 's') { // Week-Of-Year Starts Sunday
 				strftime(szWkNum, 8, "%U", &today);
 				Wk = szWkNum;
-				while(*Wk) *dp++ = *Wk++;
-				sp++;
-			} else if(*(sp + 1) == 'm') { // Week-Of-Year Starts Monday
+				while(*Wk) *out++ = *Wk++;
+				fmt++;
+			} else if(*(fmt + 1) == 'm') { // Week-Of-Year Starts Monday
 				strftime(szWkNum, 8, "%W", &today);
 				Wk = szWkNum;
-				while(*Wk) *dp++ = *Wk++;
-				sp++;
-			} else if(*(sp + 1) == 'i') { // Week ISO-8601 (by henriko.se)
+				while(*Wk) *out++ = *Wk++;
+				fmt++;
+			} else if(*(fmt + 1) == 'i') { // Week ISO-8601 (by henriko.se)
 				int ISOWeek;
 				struct tm tmCurrentTime;
 				struct tm tmStartOfCurrentYear;
@@ -499,25 +486,25 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 				}
 				wsprintf(szWkNum, "%d", ISOWeek);
 				Wk = szWkNum;
-				while(*Wk) *dp++ = *Wk++;
-				sp++;
+				while(*Wk) *out++ = *Wk++;
+				fmt++;
 			}
 			// Need DOY + 6 / 7 (as float) DO NOT ROUND - Done!
-			else if(*(sp + 1) == 'w') { // SWN (Simple Week Number)
+			else if(*(fmt + 1) == 'w') { // SWN (Simple Week Number)
 				double dy; int d, s;
 				//------+++--> Stoic Joker's (Pipe Bomb Crude) Simple Week Number Calculation!
 				strftime(szWkNum, 8, "%j", &today);   // Day-Of-Year as Decimal Number (1 - 366)
 				dy = floor((atof(szWkNum) + 6) / 7); // DoY + 6 / 7 with the Fractional Part...
 				//-------------------------+++--> Truncated.
 				Wk = _fcvt(dy, 0, &d, &s); // Make it a String
-				while(*Wk) *dp++ = *Wk++; // Done!
-				sp++;
+				while(*Wk) *out++ = *Wk++; // Done!
+				fmt++;
 			}
-			sp++; // Might Not be Needed!!!
+			fmt++; // Might Not be Needed!!!
 		}
 //================================================================================================
 //======================================= JULIAN DATE Code ========================================
-		else if(*sp == 'J' && *(sp + 1) == 'D') {
+		else if(*fmt == 'J' && *(fmt + 1) == 'D') {
 			double y, M, d, h, m, s, bc, JD;
 			struct tm Julian;
 			int id, is, i=0;
@@ -548,17 +535,17 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			szJulian = _fcvt(JD, 4, &id, &is); // Make it a String
 			while(*szJulian) {
 				if(i == id) { //--//-++-> id = Decimal Point Precision/Position
-					*dp++ = '.'; // ReInsert the Decimal Point Where it Belongs.
+					*out++ = '.'; // ReInsert the Decimal Point Where it Belongs.
 				} else {
-					*dp++ = *szJulian++; //--+++--> Done!
+					*out++ = *szJulian++; //--+++--> Done!
 				}
 				i++;
 			}
-			sp +=2;
+			fmt +=2;
 		}
 //================================================================================================
 //======================================= ORDINAL DATE Code =======================================
-		else if(*sp == 'O' && *(sp + 1) == 'D') { //--------+++--> Ordinal Date UTC:
+		else if(*fmt == 'O' && *(fmt + 1) == 'D') { //--------+++--> Ordinal Date UTC:
 			char szOD[16] = {0};
 			struct tm today;
 			time_t UTC;
@@ -568,11 +555,11 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			gmtime_s(&today, &UTC);
 			strftime(szOD, 16, "%Y-%j", &today);
 			od = szOD;
-			while(*od) *dp++ = *od++;
-			sp +=2;
+			while(*od) *out++ = *od++;
+			fmt +=2;
 		}
 		//==========================================================================
-		else if(*sp == 'O' && *(sp + 1) == 'd') { //------+++--> Ordinal Date Local:
+		else if(*fmt == 'O' && *(fmt + 1) == 'd') { //------+++--> Ordinal Date Local:
 			char szOD[16] = {0};
 			struct tm today;
 			time_t ltime;
@@ -582,11 +569,11 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			localtime_s(&today, &ltime);
 			strftime(szOD, 16, "%Y-%j", &today);
 			od = szOD;
-			while(*od) *dp++ = *od++;
-			sp +=2;
+			while(*od) *out++ = *od++;
+			fmt +=2;
 		}
 		//==========================================================================
-		else if(*sp == 'D' && strncmp(sp, "DOY", 3) == 0) { //--+++--> Day-Of-Year:
+		else if(*fmt == 'D' && strncmp(fmt, "DOY", 3) == 0) { //--+++--> Day-Of-Year:
 			char szDoy[8] = {0};
 			struct tm today;
 			time_t ltime;
@@ -596,21 +583,21 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			localtime_s(&today, &ltime);
 			strftime(szDoy, 8, "%j", &today);
 			doy = szDoy;
-			while(*doy) *dp++ = *doy++;
-			sp +=3;
+			while(*doy) *out++ = *doy++;
+			fmt +=3;
 		}
 		//==========================================================================
-		else if(*sp == 'P' && strncmp(sp, "POSIX", 5) == 0) { //-> Posix/Unix Time:
+		else if(*fmt == 'P' && strncmp(fmt, "POSIX", 5) == 0) { //-> Posix/Unix Time:
 			char szPosix[16] = {0}; // This will Give the Number of Seconds That Have
 			char* posix; //--+++--> Elapsed Since the Unix Epoch: 1970-01-01 00:00:00
 			
 			wsprintf(szPosix, "%ld", time(NULL));
 			posix = szPosix;
-			while(*posix) *dp++ = *posix++;
-			sp +=5;
+			while(*posix) *out++ = *posix++;
+			fmt +=5;
 		}
 		//==========================================================================
-		else if(*sp == 'T' && strncmp(sp, "TZN", 3) == 0) { //--++-> TimeZone Name:
+		else if(*fmt == 'T' && strncmp(fmt, "TZN", 3) == 0) { //--++-> TimeZone Name:
 			char szTZName[TZNAME_MAX] = {0};
 			size_t lRet;
 			char* tzn;
@@ -624,16 +611,16 @@ void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt)   //-----
 			}
 			
 			tzn = szTZName;
-			while(*tzn) *dp++ = *tzn++;
-			sp +=3;
+			while(*tzn) *out++ = *tzn++;
+			fmt +=3;
 		}
 //=================================================================================================
 		else {
-			p = CharNext(sp);
-			while(sp != p) *dp++ = *sp++;
+			for(pos=CharNext(fmt); fmt!=pos; )  *out++=*fmt++;
 		}
 	}
-	*dp = 0;
+	*out='\0';
+	return (unsigned)(out-buf);
 }
 
 /*--------------------------------------------------

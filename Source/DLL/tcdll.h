@@ -27,7 +27,7 @@ void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink);
 
 // FORMAT.C
 void InitFormat(SYSTEMTIME* lt);
-void MakeFormat(char* s, SYSTEMTIME* pt, int beat100, const char* fmt);
+unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100);
 #define FORMAT_SECOND    0x0001
 #define FORMAT_SYSINFO   0x0002
 #define FORMAT_BEAT1     0x0004
