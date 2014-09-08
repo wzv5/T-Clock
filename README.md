@@ -14,7 +14,13 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 #### Differences to Stoic Joker's T-Clock 2010 [Build 95/98](http://www.donationcoder.com/forum/index.php?topic=21944.0)
 - [x] + ISO-8601 week number support *(Wi)*
 - [x] + original Window calendar and tooltip usable
+- [x] + support for clocks on every additional taskbar on Win8+
+- [x] + system/user dependent default colors
+- [x] + clock text angle freely adjustable
+- [x] + live update of clock text related changes *(see what happens as you change it and before you apply it)*
+- [x] + clock text always automatically centered
 - [x] + mouse button 4 and 5 supported
+- [x] * improved taskbar support such as horizontal vs vertical and size
 - [x] + calendar hides on 2nd click if opened before *(autohide must be enabled, Windows default behavior)*
 - [x] + custom calendar can now show X past months, additional improvements
 - [x] + extended right-click menu with more Windows like behavior <br>
@@ -26,7 +32,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] ! some bugfixes
 - [x] * some minor and major rewrites and changes
 - [x] ! can be compiled with MinGW/GCC *(allows more people to work on it and also fixed bugs)*
-- [ ] + automatically center clock text vertically *tbd*
+- [x] ! fixed clock text transparency issues on Vista+
 - [ ] + enhanced time format editor incl. realtime preview *tbd*
 - [ ] + ability to use different timezones on modifiers *tbd*
 - [ ] + LClock formating options such as different fonts and positions for time and date *tbd*
@@ -36,6 +42,10 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [ ] + multilingual version? *tbd*
 - [ ] + resource usage % format option (CPU,RAM maybe GPU) *tbd*
 - [ ] + improved time synchronization incl. autorun at startup (requires admin rights for "install") *tbd*
+- [ ] + mouseover customization, for example different time format, color, border or even current weather *tbd*
+- [ ] + switching clock text, eg. every 2 seconds another one *tbd*
+- [ ] + multiple clock text presets? eg. switch between them on mouse click *tbd*
+- [ ] + maybe current sun state picture as clock background (plugin) *tbd*
 
 ### Requirements
 * Windows XP+ (up to Win8.1 as of 2014)

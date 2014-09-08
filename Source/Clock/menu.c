@@ -241,6 +241,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case ID_T_TIMER5:
 	case ID_T_TIMER6:
 	case ID_T_TIMER7:
+	case ID_T_TIMER8:
 		{char szTime[GEN_BUFF];
 		GetTimerInfo(szTime, wID-ID_T_TIMER1, FALSE);}
 	case IDM_TIMEWATCH:

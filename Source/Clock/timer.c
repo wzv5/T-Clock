@@ -4,33 +4,31 @@
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 #include "tclock.h"
 
-char szTimersSubKey[] = "Timers";
+char g_szTimersSubKey[]="Timers";
 
 // Structure for Timer Setting
-typedef struct _tagTimerStruct {
-	char name[GEN_BUFF];
+typedef struct{
 	int id;
 	int second;
 	int minute;
 	int hour;
 	int day;
 	BOOL bActive;
-	char fname[MAX_BUFF];
 	BOOL bRepeat;
 	BOOL bBlink;
-} TIMERSTRUCT;
-typedef TIMERSTRUCT* PTIMERSTRUCT;
+	char fname[MAX_BUFF];
+	char name[GEN_BUFF];
+} timeropt_t;
 
 // Structure for Active Timers
-typedef struct _tagTimerStruct2 {
-	// Note: ALL Time Increment Fields Are Converted
-	char name[GEN_BUFF]; // to Seconds Before Being Set as an Active Timer
-	int id;				// Second  = 1 Second
-	BOOL bHomeless;		// Minute = 60 Seconds
-	DWORD seconds;		// Hour = 3600 Seconds
-	DWORD tickonstart;	// Day = 86400 Seconds
-} TIMERSTRUCT2;
-typedef TIMERSTRUCT2* PTIMERSTRUCT2;
+typedef struct{
+	// Note: ALL time tncrement fields are converted
+	int id;				// to Seconds before being set as an active timer
+	DWORD seconds;		// Second  = 1 Second
+	DWORD tickonstart;	// Minute = 60 Seconds
+	char name[GEN_BUFF];// Hour = 3600 Seconds
+	char bHomeless;		// Day = 86400 Seconds
+} timer_t;
 
 static void OnOK(HWND hDlg);
 static void OnDel(HWND hDlg);
@@ -43,7 +41,7 @@ static void OnTest(HWND hDlg, WORD id);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
 
 static int nTimerCount = 0;
-static PTIMERSTRUCT2 pTimersWorking = NULL; // Array of Currently Active Timers
+static timer_t* pTimersWorking = NULL; // Array of Currently Active Timers
 
 void UpdateNextCtrl(HWND, int, int, BOOL);
 INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
@@ -223,14 +221,14 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
 	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
 	
-	count = GetMyRegLong(szTimersSubKey, "NumberOfTimers", 0);
+	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
 	for(i = 0; i <= count; i++) {
 		// count is +1'ed to Make Room for the Dummy Item.
-		PTIMERSTRUCT pts;
+		timeropt_t* pts;
 		int index;
 		
-		pts = (PTIMERSTRUCT)malloc(sizeof(TIMERSTRUCT));
-		wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, i + 1);
+		pts = (timeropt_t*)malloc(sizeof(timeropt_t));
+		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
 		if(i < count) // Wait for the last (extra) Pass, and Then...
 			GetMyRegStr(subkey, "Name", pts->name, GEN_BUFF, "");
 		else //-----//----------------------+++--> Insert the Dummy!
@@ -267,8 +265,8 @@ void OnDestroy(HWND hDlg)
 	
 	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	for(i = 0; i < count; i++) {
-		PTIMERSTRUCT pts;
-		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
+		timeropt_t* pts;
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
 		free(pts);
 	}
 }
@@ -280,7 +278,7 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	char subkey[TNY_BUFF] = {0};
 	char name[GEN_BUFF] = {0};
 	char s[MAX_BUFF] = {0};
-	PTIMERSTRUCT2 temp;
+	timer_t* temp;
 	
 	GetDlgItemText(hDlg, IDC_TIMERNAME, name, GEN_BUFF);
 	
@@ -291,14 +289,12 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	count -=1; // Skip the Last One Because It's the New Timer Dummy Item
 	
 	for(i = 0; i < count; i++) {
-		PTIMERSTRUCT pts;
-		
-		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
+		timeropt_t* pts;
 		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
 		if(strcmp(pts->name, name) != 0) { //----//++--> Create Timer Named X in Registry
 			//--+++--> if it Does Not Currently Exist.
 			
-			wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, j + 1); // Timers Get renumbered
+			wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, j + 1); // Timers Get renumbered
 			// So the Timer Activated Last Becomes Timer1
 			
 			SetMyRegStr(subkey, "Name",     pts->name);		// Transfer Configuration Info
@@ -317,19 +313,18 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 			pts->bActive = TRUE; // Timer B Active (As Far as the ComboBox is Concerned Only)
 		}
 	}
-	
-	SetMyRegLong(szTimersSubKey, "NumberOfTimers", j);
+	SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", j);
 	
 	if(id < 0) {
 		id = 0;
 		for(i = 0; i < count; i++) {
-			PTIMERSTRUCT pts;
-			pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
+			timeropt_t* pts;
+			pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
 			if(pts->id >= id) id = pts->id + 1;
 		}
 	}
 	
-	wsprintf(subkey, "%s\\Timer1", szTimersSubKey);
+	wsprintf(subkey, "%s\\Timer1", g_szTimersSubKey);
 	SetMyRegStr(subkey, "Name", name);
 	SetMyRegLong(subkey, "ID", id);
 	
@@ -357,7 +352,7 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	
 	// start timer
 	temp=pTimersWorking;
-	pTimersWorking = (PTIMERSTRUCT2)malloc(sizeof(TIMERSTRUCT2)*(nTimerCount + 1));
+	pTimersWorking = (timer_t*)malloc(sizeof(timer_t)*(nTimerCount + 1));
 	for(i = 0; i < nTimerCount; i++) {
 		pTimersWorking[i] = temp[i];
 	}
@@ -386,8 +381,8 @@ void OnTimerName(HWND hDlg)   //------------------------------------------------
 	GetDlgItemText(hDlg, IDC_TIMERNAME, s, TNY_BUFF);
 	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	for(i = 0; i < count; i++) {
-		PTIMERSTRUCT pts;
-		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
+		timeropt_t* pts;
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
 		if(strcmp(s, pts->name) == 0) {
 			SetDlgItemInt(hDlg, IDC_TIMERSECOND, pts->second, FALSE);
 			SetDlgItemInt(hDlg, IDC_TIMERMINUTE, pts->minute, FALSE);
@@ -431,8 +426,8 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 	GetDlgItemText(hDlg, IDC_TIMERNAME, s, TNY_BUFF);
 	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	for(i = 0; i < count; i++) {
-		PTIMERSTRUCT pts;
-		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
+		timeropt_t* pts;
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
 		if(strcmp(s, pts->name) == 0) {
 			//--+++--> Stop Timer on KiLL: Suggested by ewemoa @ DonationCoder.com
 			for(k = 0; k < nTimerCount; ++k) {
@@ -456,13 +451,13 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 	OnTimerName(hDlg);
 	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
 	
-	wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, count);
+	wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, count);
 	DelMyRegKey(subkey);
 	
 	for(i = 0; i < count - 1; i++) {
-		PTIMERSTRUCT pts;
-		pts = (PTIMERSTRUCT)CBGetItemData(hDlg, IDC_TIMERNAME, i);
-		wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, i + 1);
+		timeropt_t* pts;
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
+		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
 		SetMyRegStr(subkey, "Name", pts->name);
 		SetMyRegLong(subkey, "ID", pts->id);
 		SetMyRegLong(subkey, "Seconds", pts->second);
@@ -474,7 +469,7 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 		SetMyRegLong(subkey, "Blink", pts->bBlink);
 		SetMyRegLong(subkey, "Active",  pts->bActive);
 	}
-	SetMyRegLong(szTimersSubKey, "NumberOfTimers", count - 1);
+	SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", count - 1);
 }
 //================================================================================================
 //---------------------------------//--------------------+++--> Test -> Play/Stop Alarm Sound File:
@@ -518,9 +513,9 @@ void Ring(HWND hwnd, int id)   //-----------------------------------------------
 	char subkey[TNY_BUFF], fname[MAX_BUFF];
 	int i, count;
 	
-	count = GetMyRegLong(szTimersSubKey, "NumberOfTimers", 0);
+	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
 	for(i = 0; i < count; i++) {
-		wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, i + 1);
+		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
 		
 		if(id == GetMyRegLong(subkey, "ID", 0)) {
 			GetMyRegStr(subkey, "File", fname, MAX_BUFF, "");
@@ -570,12 +565,12 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------
 //---------------------------------------//--------------------+++--> Free Memory to Clear a Timer:
 void StopTimer(int tostop)   //--------------------------------------------------+++-->
 {
-	PTIMERSTRUCT2 temp=pTimersWorking;
+	timer_t* temp=pTimersWorking;
 	if(tostop >= nTimerCount)
 		return;
 	if(nTimerCount > 1) {
 		int i, j;
-		pTimersWorking = (PTIMERSTRUCT2)malloc(sizeof(TIMERSTRUCT2)*(nTimerCount-1));
+		pTimersWorking = (timer_t*)malloc(sizeof(timer_t)*(nTimerCount-1));
 		
 		for(i=0,j=0; i<nTimerCount; ++i) {
 			if(tostop != i)
@@ -611,7 +606,7 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 	int i, count;
 	
 	GetDlgItemText(hWnd, IDC_TIMERNAME, s, TNY_BUFF);
-	count = GetMyRegLong(szTimersSubKey, "NumberOfTimers", 0);
+	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
 	
 	for(i = 0; i < nTimerCount; i++) {
 	
@@ -621,9 +616,9 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 			
 			for(i = 0; i < count; i++) {
 				char szName[GEN_BUFF] = {0};
-				PTIMERSTRUCT pts;
-				pts = (PTIMERSTRUCT)CBGetItemData(hWnd, IDC_TIMERNAME, i);
-				wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, i +1);
+				timeropt_t* pts;
+				pts = (timeropt_t*)CBGetItemData(hWnd, IDC_TIMERNAME, i);
+				wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i +1);
 				GetMyRegStr(subkey, "Name", szName, GEN_BUFF, "");
 				if(strcmp(s, szName) == 0) {
 					SetMyRegLong(subkey, "Active",  FALSE);
@@ -645,10 +640,10 @@ void CancelAllTimersOnStartUp()   //--------------------------------------------
 	char subkey[TNY_BUFF];
 	int i, count;
 	
-	count = GetMyRegLong(szTimersSubKey, "NumberOfTimers", 0);
+	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
 	
 	for(i = 0; i < count; i++) {
-		wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, i + 1);
+		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
 		SetMyRegLong(subkey, "Active", FALSE);
 	}
 }
@@ -664,7 +659,7 @@ void OnInitTimeView(HWND hDlg, HWND hList)   //---------------------------------
 	hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
 						 LVS_NOSORTHEADER|LVS_SINGLESEL, 0, 0, 261, 104, hDlg, 0, 0, NULL);
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
-	SetWindowTheme(hList,L"Explorer",NULL);
+	SetXPWindowTheme(hList,L"Explorer",NULL);
 	
 	lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvCol.cx = 125;		 // Column Width
@@ -752,12 +747,12 @@ void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 				int count, k;
 				
 //===========================================================================
-				count = GetMyRegLong(szTimersSubKey, "NumberOfTimers", 0);
+				count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
 				for(k = 0; k < count; k++) {
 					char szName[GEN_BUFF] = {0};
 					char subkey[TNY_BUFF] = {0};
 					
-					wsprintf(subkey, "%s\\Timer%d", szTimersSubKey, k + 1);
+					wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, k + 1);
 					GetMyRegStr(subkey, "Name", szName, GEN_BUFF, "");
 					if(strcmp(szName, szTimer) == 0) {
 						SetMyRegLong(subkey, "Active", FALSE);

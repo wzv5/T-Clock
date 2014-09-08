@@ -60,15 +60,16 @@
 #define IDM_QUICKY_WINEXP               230
 #define IDM_QUICKY_DOS                  231
 #define IDM_QUICKY_EMPTYRB              233
-#define IDM_TIMER                       240
-#define IDM_STOPWATCH                   241
+#define IDM_STOPWATCH                   240
+#define IDM_TIMER                       241
 #define ID_T_TIMER1                     242 /* group */
 #define ID_T_TIMER2                     243
 #define ID_T_TIMER3                     244
 #define ID_T_TIMER4                     245
 #define ID_T_TIMER5                     246
 #define ID_T_TIMER6                     247
-#define ID_T_TIMER7                     248 /* end group */
+#define ID_T_TIMER7                     248
+#define ID_T_TIMER8                     249 /* end group */
 #define IDM_LOGOFF                      250
 #define IDM_REBOOT                      251
 #define IDM_SHUTDOWN                    252
