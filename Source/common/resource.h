@@ -172,7 +172,10 @@
 #define IDC_SPIN_JRPAW                  1070
 #define IDC_JR_SETTINGS                 1071
 #define IDC_FONTQUAL                    1072
-#define IDCB_MONOFF_ONLOCK              1073
+#define IDCB_TRANS2KICONS_GRP           1073 /* group */
+#define IDCB_TRANS2KICONS               1074 /* end group */
+#define IDCB_MONOFF_ONLOCK_GRP          1075 /* group */
+#define IDCB_MONOFF_ONLOCK              1076 /* end group */
 #define IDCB_USECALENDAR                1080
 #define IDCB_SHOW_DOY                   1081 /* group */
 #define IDCB_SHOWWEEKNUMS               1082
@@ -188,7 +191,6 @@
 #define IDC_CALSTATIC3                  1092
 #define IDC_CALSTATIC4                  1093
 #define IDC_CALSTATIC5                  1094 /* end group */
-#define IDCB_TRANS2KICONS               1100
 #define IDC_COLFORE                     1106
 #define IDC_CHOOSECOLFORE               1107
 #define IDC_FONT                        1108
@@ -344,6 +346,8 @@
 #define IDC_CLOCKSKINFILE               3527
 #define IDC_CLOCKSKINSELECT             3528
 #define IDC_CLOCKSKINTRANS              3529
+#define IDM_I_ALARM                     60000 /* first alarm menu index */
+#define IDM_I_TIMER                     61000 /* first timer menu index */
 #define IDM_I_MENU                      62000 /* first custom menu index */
 #define __IDEND__                       65535
 
