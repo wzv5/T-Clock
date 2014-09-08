@@ -184,11 +184,17 @@
     <ClCompile Include="..\soundselect.c" />
     <ClCompile Include="..\StopWatch.c" />
     <ClCompile Include="..\timer.c" />
+    <ClCompile Include="..\..\common\newapi.c" />
     <ClCompile Include="..\..\common\utl.c" />
+    <ClCompile Include="..\..\common\tcolor.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\common\version.h" />
     <ClInclude Include="..\..\common\resource.h" />
+    <ClInclude Include="..\..\common\globals.h" />
+    <ClInclude Include="..\..\common\newapi.h" />
+    <ClInclude Include="..\..\common\utl.h" />
+    <ClInclude Include="..\..\common\tcolor.h" />
     <ClInclude Include="..\tclock.h" />
   </ItemGroup>
   <ItemGroup>

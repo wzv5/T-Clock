@@ -29,9 +29,9 @@ int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, 
 	if(strcmp((LPSTR)lParam, lpelfe->lfFaceName) == 0) return FALSE;
 	return TRUE;
 }
-//================================================================================================
-//--------------------------------------------------------------+++--> Create a Font For the Clock:
-HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic, int angle)   //--+++-->
+//====================================================================================================================
+//----------------------------------------------------------------------------------+++--> Create a Font For the Clock:
+HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic, int angle, BYTE quality)   //--+++-->
 {
 	LOGFONT lf;	POINT pt;	HDC hdc;	WORD langid;
 	char s[11];	int cp, i;	BYTE charset;
@@ -80,11 +80,11 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 	lf.lfItalic = (BYTE)italic;
 	lf.lfUnderline = 0;
 	lf.lfStrikeOut = 0;
-	if(angle >0) lf.lfEscapement = angle;
+	lf.lfEscapement=lf.lfOrientation = angle;
 	lf.lfOutPrecision = OUT_DEFAULT_PRECIS;
 	lf.lfClipPrecision = CLIP_DEFAULT_PRECIS;
 	
-	lf.lfQuality = (BYTE)GetMyRegLong("Clock", "FontQuality", CLEARTYPE_QUALITY); // This Just HAD To be Adjustable.
+	lf.lfQuality = quality;
 	
 	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
 	strcpy(lf.lfFaceName, fontname);

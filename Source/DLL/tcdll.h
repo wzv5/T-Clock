@@ -17,10 +17,13 @@
 #define TZNAME_MAX		  256//10
 
 // tclock.c
-extern char bNoClock;
-void DrawClock(HWND hwnd, HDC hdc);
+void DrawClock(HDC hdc);
 void GetDisplayTime(SYSTEMTIME* pt, int* beat100);
-void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink);
+void FillClockBG();
+void FillClockBGHover();
+
+// font.c
+HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic, int angle, BYTE guality);
 
 //#pragma once
 //extern char szTZone[]; //---+++--> TimeZone String Buffer, Also Used (as External) in Format.c

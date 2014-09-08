@@ -379,6 +379,10 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_SYSCOLORCHANGE:
 		PostMessage(hwnd, WM_USER+10, 1,0);
 		return 0;
+	case WM_DWMCOLORIZATIONCOLORCHANGED:
+		OnTColor_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
+		PostMessage(g_hwndClock, WM_DWMCOLORIZATIONCOLORCHANGED, wParam, lParam);
+		return 0;
 		
 		// context menu
 	case WM_COMMAND:

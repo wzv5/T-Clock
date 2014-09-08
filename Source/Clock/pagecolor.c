@@ -7,7 +7,7 @@
 #include "tclock.h"
 
 static void OnInit(HWND hDlg);
-static void OnApply(HWND hDlg);
+static void OnApply(HWND hDlg,BOOL preview);
 static void InitColor(HWND hDlg);
 static void InitComboFont(HWND hDlg);
 static void OnChooseColor(HWND hDlg, WORD id);
@@ -17,17 +17,17 @@ static void OnMeasureItemColorCombo(LPARAM lParam);
 static HFONT hfontb;  // for IDC_BOLD
 static HFONT hfonti;  // for IDC_ITALIC
 
-static const char* g_rotate[]={
-	"None",
-	"Left",
-	"Right",
-};
-static const int g_rotateCount=sizeof(g_rotate)/sizeof(char*);
-
+static char g_bPreviewed=-1;
 static __inline void SendPSChanged(HWND hDlg){
 	g_bApplyTaskbar = TRUE;
 	g_bApplyClock = TRUE;
 	SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)(hDlg), 0);
+	
+	if(g_bPreviewed!=-1){
+		OnApply(hDlg,1);
+		SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCKPREVIEW, 0, 0);
+		g_bPreviewed=1;
+	}
 }
 
 /*------------------------------------------------
@@ -39,6 +39,7 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message,
 	switch(message) {
 	case WM_INITDIALOG:
 		OnInit(hDlg);
+		g_bPreviewed=0;
 		return TRUE;
 	case WM_MEASUREITEM:
 		OnMeasureItemColorCombo(lParam);
@@ -47,27 +48,43 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message,
 		OnDrawItemColorCombo(lParam);
 		return TRUE;
 	case WM_COMMAND: {
-			WORD id, code;
-			id = LOWORD(wParam); code = HIWORD(wParam);
-			if((id == IDC_COLFORE || id == IDC_FONT || id == IDC_FONTQUAL ||
-				id == IDC_FONTSIZE || id == IDC_CLOCKROTATE) && code == CBN_SELCHANGE) {
-				if(id == IDC_FONT) SetComboFontSize(hDlg, FALSE);
+		WORD id=LOWORD(wParam);
+		switch(HIWORD(wParam)){
+		case CBN_SELCHANGE:
+			if(id==IDC_COLFORE || id==IDC_COLBACK || id==IDC_FONT || id==IDC_FONTQUAL || id==IDC_FONTSIZE){
+				if(id==IDC_FONT) SetComboFontSize(hDlg, FALSE);
 				SendPSChanged(hDlg);
-			} else if(id == IDC_CHOOSECOLFORE)
+			} break;
+		case EN_CHANGE:
+			if(id==IDC_CLOCKHEIGHT || id==IDC_CLOCKWIDTH || id==IDC_ALPHATB || id==IDC_VERTPOS || id==IDC_LINEHEIGHT || id==IDC_HORIZPOS || id==IDC_ANGLE){
+				SendPSChanged(hDlg);
+			} break;
+		default:
+			if(id==IDC_CHOOSECOLFORE || id==IDC_CHOOSECOLBACK){
 				OnChooseColor(hDlg, id);
-			else if(id == IDC_BOLD || id == IDC_ITALIC)
+			}else if(id==IDC_BOLD || id==IDC_ITALIC)
 				SendPSChanged(hDlg);
-			else if((id == IDC_CLOCKHEIGHT || id == IDC_CLOCKWIDTH || id == IDC_ALPHATB ||
-					 id == IDC_VERTPOS || id == IDC_LINEHEIGHT || id == IDC_HORIZPOS)
-					&& code == EN_CHANGE)
-				SendPSChanged(hDlg);
-			return TRUE;
 		}
-	case WM_NOTIFY:
-		switch(((NMHDR*)lParam)->code) {
-		case PSN_APPLY: OnApply(hDlg); break;
+		return TRUE;}
+	case WM_NOTIFY:{
+		PSHNOTIFY* notify=(PSHNOTIFY*)lParam;
+		switch(notify->hdr.code) {
+		case PSN_APPLY:
+			OnApply(hDlg,0);
+			g_bPreviewed=-1;
+			if(!notify->lParam)
+				g_bPreviewed=0;
+			break;
+		case PSN_RESET:
+			if(g_bPreviewed==1){
+				SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
+				SendMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
+				DelMyRegKey("Preview");
+			}
+			g_bPreviewed=-1;
+			break;
 		}
-		return TRUE;
+		return TRUE;}
 	case WM_DESTROY:
 		DeleteObject(hfontb);
 		DeleteObject(hfonti);
@@ -85,7 +102,6 @@ void OnInit(HWND hDlg)
 	HDC hdc;
 	LOGFONT logfont;
 	HFONT hfont;
-	char buf[1024];
 	int i;
 	
 	// setting of "background" and "text"
@@ -95,6 +111,7 @@ void OnInit(HWND hDlg)
 	hdc = CreateIC("DISPLAY", NULL, NULL, NULL);
 	if(GetDeviceCaps(hdc, BITSPIXEL) <= 8) {
 		EnableDlgItem(hDlg, IDC_CHOOSECOLFORE, FALSE);
+		EnableDlgItem(hDlg, IDC_CHOOSECOLBACK, FALSE);
 	}
 	DeleteDC(hdc);
 	
@@ -108,8 +125,8 @@ void OnInit(HWND hDlg)
 	SetComboFontSize(hDlg, TRUE);
 	
 	
-	CheckDlgButton(hDlg, IDC_BOLD, GetMyRegLong("Clock", "Bold", TRUE));
-	CheckDlgButton(hDlg, IDC_ITALIC, GetMyRegLong("Clock", "Italic", FALSE));
+	CheckDlgButton(hDlg, IDC_BOLD, GetMyRegLong("Clock", "Bold", 0));
+	CheckDlgButton(hDlg, IDC_ITALIC, GetMyRegLong("Clock", "Italic", 0));
 	
 	hfontb = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
 	GetObject(hfontb, sizeof(LOGFONT), &logfont);
@@ -137,18 +154,12 @@ void OnInit(HWND hDlg)
 	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETRANGE32, (WPARAM)-200,200);
 	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETPOS32, 0, GetMyRegLong("Clock", "HorizPos", 0));
 	
+	SendDlgItemMessage(hDlg, IDC_SPINANGLE, UDM_SETRANGE32, (WPARAM)-360,360);
+	SendDlgItemMessage(hDlg, IDC_SPINANGLE, UDM_SETPOS32, 0, GetMyRegLong("Clock", "Angle", 0));
+	
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE32, 0,180);
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS32, 0, GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
 	
-	for(i=0; i<g_rotateCount; ++i)
-		CBAddString(hDlg,IDC_CLOCKROTATE,g_rotate[i]);
-	GetMyRegStr("Clock","FontRotateDirection",buf,80,g_rotate[0]);
-	if(_strnicmp(buf,g_rotate[1],4)==0)
-		CBSetCurSel(hDlg,IDC_CLOCKROTATE,1);
-	else if(_strnicmp(buf,g_rotate[2],5)==0)
-		CBSetCurSel(hDlg,IDC_CLOCKROTATE,2);
-	else
-		CBSetCurSel(hDlg,IDC_CLOCKROTATE,0);
 	i=GetMyRegLong("Clock","FontQuality",CLEARTYPE_QUALITY);
 	CBAddString(hDlg,IDC_FONTQUAL,"Default");				// DEFAULT_QUALITY			 = 0
 	CBAddString(hDlg,IDC_FONTQUAL,"Draft");					// DRAFT_QUALITY			 = 1
@@ -163,77 +174,99 @@ void OnInit(HWND hDlg)
 /*------------------------------------------------
   Apply
 --------------------------------------------------*/
-void OnApply(HWND hDlg)
+void OnApply(HWND hDlg,BOOL preview)
 {
-	DWORD dw;
-	char s[80];
-	char ss[1024];
+	const char* section=preview?"Preview":"Clock";
+	char tmp[80];
 	
-	dw = (DWORD)CBGetItemData(hDlg, IDC_COLFORE, CBGetCurSel(hDlg, IDC_COLFORE));
-	SetMyRegLong("Clock", "ForeColor", dw);
+	SetMyRegLong(section, "ForeColor", (int)CBGetItemData(hDlg,IDC_COLFORE,CBGetCurSel(hDlg,IDC_COLFORE)));
+	SetMyRegLong(section, "BackColor", (int)CBGetItemData(hDlg,IDC_COLBACK,CBGetCurSel(hDlg,IDC_COLBACK)));
 	
-	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), s);
-	SetMyRegStr("Clock", "Font", s);
+	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), tmp);
+	SetMyRegStr(section, "Font", tmp);
 	
 	if(CBGetCount(hDlg, IDC_FONTSIZE) > 0) {
-		CBGetLBText(hDlg, IDC_FONTSIZE, CBGetCurSel(hDlg, IDC_FONTSIZE), s);
-		SetMyRegLong("Clock", "FontSize", atoi(s));
-	} else SetMyRegLong("Clock", "FontSize", 9);
+		CBGetLBText(hDlg, IDC_FONTSIZE, CBGetCurSel(hDlg, IDC_FONTSIZE), tmp);
+		SetMyRegLong(section, "FontSize", atoi(tmp));
+	} else SetMyRegLong(section, "FontSize", 9);
 	
-	SetMyRegLong("Clock", "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
-	SetMyRegLong("Clock", "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
+	SetMyRegLong(section, "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
+	SetMyRegLong(section, "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
 	
-	SetMyRegLong("Clock", "FontQuality", (DWORD)CBGetCurSel(hDlg, IDC_FONTQUAL));
+	SetMyRegLong(section, "FontQuality", (int)CBGetCurSel(hDlg, IDC_FONTQUAL));
 	
-	SetMyRegLong("Clock", "ClockHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINCHEIGHT,UDM_GETPOS32,0,0));
-	SetMyRegLong("Clock", "ClockWidth", (int)SendDlgItemMessage(hDlg,IDC_SPINCWIDTH,UDM_GETPOS32,0,0));
-	SetMyRegLong("Clock", "LineHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINLHEIGHT,UDM_GETPOS32,0,0));
-	SetMyRegLong("Clock", "VertPos", (int)SendDlgItemMessage(hDlg,IDC_SPINVPOS,UDM_GETPOS32,0,0));
-	SetMyRegLong("Clock", "HorizPos", (int)SendDlgItemMessage(hDlg,IDC_SPINHPOS,UDM_GETPOS32,0,0));
+	SetMyRegLong(section, "ClockHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINCHEIGHT,UDM_GETPOS32,0,0));
+	SetMyRegLong(section, "ClockWidth", (int)SendDlgItemMessage(hDlg,IDC_SPINCWIDTH,UDM_GETPOS32,0,0));
+	SetMyRegLong(section, "LineHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINLHEIGHT,UDM_GETPOS32,0,0));
+	SetMyRegLong(section, "VertPos", (int)SendDlgItemMessage(hDlg,IDC_SPINVPOS,UDM_GETPOS32,0,0));
+	SetMyRegLong(section, "HorizPos", (int)SendDlgItemMessage(hDlg,IDC_SPINHPOS,UDM_GETPOS32,0,0));
+	SetMyRegLong(section, "Angle", (int)SendDlgItemMessage(hDlg,IDC_SPINANGLE,UDM_GETPOS32,0,0));
 	SetMyRegLong("Taskbar","AlphaTaskbar",(int)SendDlgItemMessage(hDlg,IDC_SPINALPHA,UDM_GETPOS32,0,0));
 	
-	GetDlgItemText(hDlg,IDC_CLOCKROTATE,ss,1024);
-	if(_strnicmp(ss,g_rotate[1],4)==0)			SetMyRegStr("Clock","FontRotateDirection",g_rotate[1]);
-	else if(_strnicmp(ss,g_rotate[2],5)==0)		SetMyRegStr("Clock","FontRotateDirection",g_rotate[2]);
-	else										SetMyRegStr("Clock","FontRotateDirection",g_rotate[0]);
+	if(!preview)
+		DelMyRegKey("Preview");
 }
 
 /*------------------------------------------------
 --------------------------------------------------*/
+typedef struct {
+	COLORREF col;
+	const char* name;
+} syscolor_t;
+#include "../common/tcolor.h"
+const syscolor_t syscolor[]={
+	{TCOLOR_DEFAULT,"<default>"},
+	{TCOLOR_TRANSPARENT,"<transparent>"},
+	{TCOLOR_THEME,"<theme color>"},
+//	{TCOLOR_THEME2,"<theme color II>"},
+	
+	{COLOR_3DFACE,"3DFACE"},
+	{COLOR_3DSHADOW,"3DSHADOW"},
+	{COLOR_3DHILIGHT,"3DHILIGHT"},
+	{COLOR_BTNTEXT,"BTNTEXT"},
+	{COLOR_WINDOWTEXT,"WINDOWTEXT"},
+	{COLOR_INFOTEXT,"INFOTEXT"},
+	{COLOR_INFOBK,"INFOBK"},
+};
+const size_t syscolor_num=sizeof(syscolor)/sizeof(syscolor_t);
+const COLORREF basecolor[]={
+	0x00000080, 0x00008000, 0x00800000,
+	0x00008080, 0x00800080, 0x00808000,
+	0x000000FF, 0x0000FF00, 0x00FF0000,
+	0x0000FFFF, 0x00FF00FF, 0x00FFFF00,
+	0x00FFFFFF, 0x00C0C0C0, 0x00808080, 0x00000000,
+};
+const size_t basecolor_num=sizeof(basecolor)/sizeof(COLORREF);
+const size_t colorstotal=sizeof(syscolor)/sizeof(syscolor_t)+sizeof(basecolor)/sizeof(COLORREF);
 void InitColor(HWND hDlg)
 {
 	COLORREF col;
-	int j;
 	WORD id;
-	//Windowsデフォルト16色
-	int rgb[16][3] = {{0,0,0}, {128,0,0}, {0,128,0}, {128,128,0},
-		{0,0,128}, {128,0,128}, {0,128,128}, {192,192,192},
-		{128,128,128}, {255,0,0}, {0,255,0}, {255,255,0},
-		{0,0,255},{255,0,255}, {0,255,255}, {255,255,255}
-	};
+	unsigned icol;
 	
-	id = IDC_COLFORE;
-	
-	for(j = 0; j < 16; j++) //基本16色
-		CBAddString(hDlg, id,
-					RGB(rgb[j][0], rgb[j][1], rgb[j][2]));
-	//ボタンの...色
-	CBAddString(hDlg, id, 0x80000000|COLOR_3DFACE);
-	CBAddString(hDlg, id, 0x80000000|COLOR_3DSHADOW);
-	CBAddString(hDlg, id, 0x80000000|COLOR_3DHILIGHT);
-	CBAddString(hDlg, id, 0x80000000|COLOR_BTNTEXT);
-	
-	// New Default Font Color is White - Better Contrast for Vista & 7
-	col = GetMyRegLong("Clock", "ForeColor", 0x00ffffff); // 0x80000000 | COLOR_BTNTEXT);
-	
-	for(j = 0; j < 20; j++) {
-		if(col == (COLORREF)CBGetItemData(hDlg, id, j))
-			break;
+	for(id=IDC_COLFORE; id<=IDC_COLBACK; id+=2){
+		/// add sys colors
+		for(icol=0; icol<syscolor_num; ++icol){
+			CBAddString(hDlg, id, TCOLOR(syscolor[icol].col));
+//		for(j=0; j<31; ++j){
+//			CBAddString(hDlg, id, TCOLOR(j));
+		}
+		/// add base colors
+		for(icol=0; icol<basecolor_num; ++icol)
+			CBAddString(hDlg, id, basecolor[icol]);
+		/// select last used color
+		if(id==IDC_COLFORE)
+			col=GetMyRegLong("Clock","ForeColor",TCOLOR(TCOLOR_DEFAULT));
+		else
+			col=GetMyRegLong("Clock","BackColor",TCOLOR(TCOLOR_DEFAULT));
+		for(icol=0; icol<colorstotal; ++icol) {
+			if(col==(COLORREF)CBGetItemData(hDlg,id,icol))
+				break;
+		}
+		if(icol==colorstotal) // Add the Selected Custom Color
+			CBAddString(hDlg, id, col);
+		CBSetCurSel(hDlg, id, icol);
 	}
-	if(j == 20) // Add the Selected Custom Color
-		CBAddString(hDlg, id, col);
-		
-	CBSetCurSel(hDlg, id, j);
 }
 
 /*------------------------------------------------
@@ -257,43 +290,47 @@ void OnDrawItemColorCombo(LPARAM lParam)
 	pdis = (LPDRAWITEMSTRUCT)lParam;
 	
 	if(IsWindowEnabled(pdis->hwndItem)) {
-		col = (COLORREF)(ULONG_PTR)pdis->itemData;
-		if(col & 0x80000000) col = GetSysColor(col & 0x00ffffff);
+		col = GetTColor((COLORREF)pdis->itemData,2);
 	} else col = GetSysColor(COLOR_3DFACE);
 	
 	switch(pdis->itemAction) {
 	case ODA_DRAWENTIRE:
 	case ODA_SELECT: {
-			hbr = CreateSolidBrush(col);
-			FillRect(pdis->hDC, &pdis->rcItem, hbr);
-			DeleteObject(hbr);
-			
-			// print color names
-			if(16 <= pdis->itemID && pdis->itemID <= 19) {
-				char s[80];
-				int y;
-				strcpy(s, MyString(IDS_BTNFACE + pdis->itemID - 16));
-				SetBkMode(pdis->hDC, TRANSPARENT);
-				GetTextMetrics(pdis->hDC, &tm);
-				if(pdis->itemID == 19)
-					SetTextColor(pdis->hDC, RGB(255,255,255));
-				else
-					SetTextColor(pdis->hDC, RGB(0,0,0));
-				y = (pdis->rcItem.bottom - pdis->rcItem.top - tm.tmHeight)/2;
-				TextOut(pdis->hDC, pdis->rcItem.left + 4, pdis->rcItem.top + y,
-						s, (int)strlen(s));
-			}
-			if(!(pdis->itemState & ODS_FOCUS)) break;
+		hbr = CreateSolidBrush(col);
+		FillRect(pdis->hDC, &pdis->rcItem, hbr);
+		DeleteObject(hbr);
+		
+		// print sys color names
+		if(pdis->itemID<syscolor_num){
+			int y;
+			SetBkMode(pdis->hDC, TRANSPARENT);
+			GetTextMetrics(pdis->hDC, &tm);
+			SetTextColor(pdis->hDC, 0x00FFFFFF-(col&0x00FFFFFF));
+			if(col==0x00808080)
+				SetTextColor(pdis->hDC, 0);
+			y = (pdis->rcItem.bottom - pdis->rcItem.top - tm.tmHeight)/2;
+			TextOut(pdis->hDC, pdis->rcItem.left + 4, pdis->rcItem.top + y,
+					syscolor[pdis->itemID].name, (int)strlen(syscolor[pdis->itemID].name));
+		}
+		if(!(pdis->itemState & ODS_FOCUS)) break;
 		}
 	case ODA_FOCUS: {
-			if(pdis->itemState & ODS_FOCUS)
-				hbr = CreateSolidBrush(0);
-			else
-				hbr = CreateSolidBrush(col);
-			FrameRect(pdis->hDC, &pdis->rcItem, hbr);
-			DeleteObject(hbr);
-			break;
-		}
+		HBRUSH hbr2;
+		RECT rc;
+		rc.left=pdis->rcItem.left-1;
+		rc.top=pdis->rcItem.top-1;
+		rc.right=pdis->rcItem.right-1;
+		rc.bottom=pdis->rcItem.bottom-1;
+		if(pdis->itemState & ODS_FOCUS){
+			hbr=CreateSolidBrush(0x00000000);
+			hbr2=CreateSolidBrush(0x00FFFFFF);
+		}else
+			hbr=hbr2=CreateSolidBrush(col);
+		FrameRect(pdis->hDC, &pdis->rcItem, hbr);
+		FrameRect(pdis->hDC, &rc, hbr2);
+		if(hbr2!=hbr) DeleteObject(hbr2);
+		DeleteObject(hbr);
+		break;}
 	}
 }
 
@@ -304,14 +341,13 @@ void OnChooseColor(HWND hDlg, WORD id)
 	CHOOSECOLOR cc;
 	COLORREF col, colarray[16];
 	WORD idCombo;
-	int i;
+	unsigned icol;
 	
 	idCombo = id - 1;
 	
-	col = (COLORREF)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo));
-	if(col & 0x80000000) col = GetSysColor(col & 0x00ffffff);
+	col = GetTColor((COLORREF)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo)),2);
 	
-	for(i = 0; i < 16; i++) colarray[i] = RGB(255,255,255);
+	for(icol = 0; icol < 16; ++icol) colarray[icol] = 0x00FFFFFF;
 	
 	memset(&cc, 0, sizeof(CHOOSECOLOR));
 	cc.lStructSize = sizeof(CHOOSECOLOR);
@@ -323,18 +359,17 @@ void OnChooseColor(HWND hDlg, WORD id)
 	
 	if(!ChooseColor(&cc)) return;
 	
-	for(i = 0; i < 16; i++) {
-		if(cc.rgbResult == (COLORREF)CBGetItemData(hDlg, idCombo, i))
+	for(icol=0; icol<colorstotal; ++icol) {
+		if(cc.rgbResult==(COLORREF)CBGetItemData(hDlg,idCombo,icol))
 			break;
 	}
-	if(i == 16) { //基本16色ではないとき
-		if(CBGetCount(hDlg, idCombo) == 20)
-			CBAddString(hDlg, idCombo, cc.rgbResult);
+	if(icol==colorstotal){
+		if((unsigned)CBGetCount(hDlg,idCombo)==colorstotal)
+			CBAddString(hDlg,idCombo,cc.rgbResult);
 		else
-			CBSetItemData(hDlg, idCombo, 20, cc.rgbResult);
-		i = 20;
+			CBSetItemData(hDlg,idCombo,icol,cc.rgbResult);
 	}
-	CBSetCurSel(hDlg, idCombo, i);
+	CBSetCurSel(hDlg, idCombo, icol);
 	
 	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
 	SendPSChanged(hDlg);

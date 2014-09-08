@@ -5,18 +5,24 @@
 #include "tcdll.h"
 #include "../common/tcolor.h"
 
+#define CLOCK_BORDER_MARGIN 2
+
 void EndClock(void);
 void OnTimer(HWND hwnd);
-void ReadData();
+void ReadData(HWND hwnd, BOOL preview);
 void InitClock(HWND hwnd);
-void CreateClockDC(HWND hwnd);
+int DestroyClock();
+int UpdateClock(HWND hwnd, HFONT fnt);
+int UpdateClockSize(HWND hwnd);
 LRESULT OnCalcRect(HWND hwnd);
 void InitDaylightTimeTransition(void);
 void OnCopy(HWND hwnd, LPARAM lParam);
 BOOL CheckDaylightTimeTransition(SYSTEMTIME* lt);
 void OnTooltipNeedText(UINT code, LPARAM lParam);
-void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100);
+void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 //================================================================================================
 //----------------------------------------+++--> Definition of Data Segment Shared Among Processes:
 #ifndef __GNUC__
@@ -35,118 +41,225 @@ __attribute__((section(".MYDATA"),shared)) HHOOK g_hhook = 0;
   globals
 --------------------------------------------------*/
 HINSTANCE hInstance = 0;
-WNDPROC oldWndProc = NULL;
-HDC hdcClock = NULL;
-HBITMAP hbmpClock = NULL;
-HBITMAP hbmpClockSkin = NULL;
-HFONT hFon = NULL;
-int g_TipState=0;
-HWND g_Tip = NULL;
-TOOLINFO g_TipInfo;
-COLORREF colback, colback2, colfore;
-char format[1024];
-SYSTEMTIME LastTime;
-int beatLast = -1;
-int bDispSecond = FALSE;
-int nDispBeat = 0;
-int nBlink = 0;
-int dwidth = 0, dheight = 0, dvpos = 0, dlineheight = 0, dhpos = 0;
-int iClockWidth = -1;
-char g_bTimer=0;
-char bTimerTesting=0;
-char bHour12, bHourZero;
-char bNoClock=0;
-char bPlaying=0;
-char bV7up=0;
+WNDPROC m_oldClockProc=NULL; // original clock procedure
+WNDPROC m_oldWorkerProc=NULL; // original worker procedure used by multi clocks (Win8+)
+#define MAX_MULTIMON_CLOCKS 4
+int m_bMultimon;
+ATOM m_multiClockClass=0;
+struct {
+	HWND worker;
+	HWND clock;
+	RECT workerRECT;
+	LONG xdiff;
+	LONG ydiff;
+} m_multiClock[MAX_MULTIMON_CLOCKS];
+HDC m_multiClockDC;
+int m_multiClocks=0;
+/// draw variables
+static HDC m_hdcClock=NULL;
+static HDC m_hdcClockBG;
+static char m_bHorizontalTaskbar=1;
+static RECT m_rcClock={0};
+static RGBQUAD* m_color_start=NULL,* m_color_end;
+static RGBQUAD* m_colorBG_start=NULL,* m_colorBG_end;
+static HGDIOBJ m_oldfnt=NULL;
+static HGDIOBJ m_oldbmp=NULL,m_oldbmpB=NULL;
+/// text offsets
+static double m_radian;
+static int m_textheight,m_textwidth,m_textpadding;
+static int m_leading;
+static int m_vertfeed,m_vertpos;
+static int m_horizfeed,m_horizpos;
+/// colors
+COLORREF m_basecolorBG, m_basecolorFont;
+typedef struct tagBGRQUAD{
+	BYTE rgbRed;
+	BYTE rgbGreen;
+	BYTE rgbBlue;
+	BYTE rgbReserved;
+} BGRQUAD;
+union{
+	BGRQUAD quad;
+	COLORREF ref;
+} m_col;
+union{
+	BGRQUAD quad;
+	COLORREF ref;
+} m_colBG;
+#define g_col_update(col,m_basecolorBG) do{\
+	COLORREF oldbg;\
+	m_col.ref=GetTColor(col,0);\
+	oldbg=m_colBG.ref;\
+	m_colBG.ref=GetTColor(m_basecolorBG,1);\
+	if(m_colBG.ref!=oldbg)\
+		FillClockBG();\
+	}while(0)
+/// misc variables
+int m_TipState=0;
+HWND m_TipHwnd = NULL;
+TOOLINFO m_TipInfo;
+char m_format[256];
+SYSTEMTIME m_LastTime={0};
+int m_beatLast = -1;
+int m_bDispSecond = FALSE;
+int m_nDispBeat = 0;
+const enum{
+	BLINK_NONE=0,
+	BLINK_ON,
+	BLINK_HOUR,
+};
+int m_BlinkState = BLINK_NONE;
+int m_width=0, m_height=0, dvpos=0, dlineheight=0, dhpos=0;
+char m_bTimer=0;
+char g_bHour12, g_bHourZero;
+char m_bNoClock=0;
 
-extern HWND hwndStartMenu;
-extern int codepage;
-
-int tEdgeTop;
-int tEdgeLeft;
-int tEdgeBottom;
-int tEdgeRight;
-
-BOOL bRefreshClearTaskbar = FALSE;
 //================================================================================================
 //---------------------------------------------------------+++--> Create Mouse-Over ToolTip Window:
 void CreateTip(HWND hwnd)   //--------------------------------------------------------------+++-->
-{/// @todo : add remove function to cleanup stuff... http://msdn.microsoft.com/en-us/library/windows/desktop/bb760365%28v=vs.85%29.aspx
+{
 //	hwndTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX|TTS_BALLOON,
-	g_Tip = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
+	m_TipHwnd = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,hInstance,NULL);
-	if(!g_Tip) return;
-	memset(&g_TipInfo,0,sizeof(TOOLINFO));
-	g_TipInfo.cbSize = sizeof(TOOLINFO);
-	g_TipInfo.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_TRANSPARENT;
-	g_TipInfo.hwnd = hwnd;
-	g_TipInfo.uId = (UINT_PTR)hwnd;
-	g_TipInfo.lpszText = LPSTR_TEXTCALLBACK;
+	if(!m_TipHwnd) return;
+	memset(&m_TipInfo,0,sizeof(TOOLINFO));
+	m_TipInfo.cbSize = sizeof(TOOLINFO);
+	m_TipInfo.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_TRANSPARENT;
+	m_TipInfo.hwnd = hwnd;
+	m_TipInfo.uId = (UINT_PTR)hwnd;
+	m_TipInfo.lpszText = LPSTR_TEXTCALLBACK;
 	
-	SendMessage(g_Tip,TTM_ADDTOOL,0,(LPARAM)&g_TipInfo);
-	SendMessage(g_Tip,TTM_SETMAXTIPWIDTH,0,300);
-	SendMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));
+	SendMessage(m_TipHwnd,TTM_ADDTOOL,0,(LPARAM)&m_TipInfo);
+	SendMessage(m_TipHwnd,TTM_SETMAXTIPWIDTH,0,300);
+	SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));
 }
-void ShowTip(){
-	RECT rc; GetClientRect(hwndClock,&rc);
-	ClientToScreen(hwndClock,(LPPOINT)&rc.left);
-	if(rc.left<32){//is left
-		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0,0x7FFF));
+void DestroyTip()
+{
+	if(!m_TipHwnd) return;
+	SendMessage(m_TipHwnd,TTM_DELTOOL,0,(LPARAM)&m_TipInfo);
+	DestroyWindow(m_TipHwnd); m_TipHwnd=NULL;
+}
+/// @todo (White-Tiger#1#09/06/14): use taskbar type detection here
+void ShowTip(HWND clock){
+	RECT rc; GetClientRect(clock,&rc);
+	ClientToScreen(clock,(POINT*)&rc.left);
+	ClientToScreen(clock,(POINT*)&rc.right);
+	if(rc.left<128){//is left
+//		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0,0x7FFF));
+		PostMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.top,rc.right+3));
 	}else{
-		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));//it's some magic vodoo.. will always be over the clock and right^^
+//		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));//it's some magic vodoo.. will always be over the clock and right^^ (died in multimonitor support! :/ RIP)
+		if(rc.top<128){//is top
+			PostMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.left,rc.bottom+3));
+//		}else if(rc.top<128){//is right
+//			PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(rc.left,rc.top-3));
+		}else
+			PostMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.right,rc.top-3));
 	}
-	PostMessage(g_Tip,TTM_TRACKACTIVATE,TRUE,(LPARAM)&g_TipInfo);
+	PostMessage(m_TipHwnd,TTM_TRACKACTIVATE,TRUE,(LPARAM)&m_TipInfo);
+}
+
+void SubsDestroy(){
+	for(; m_multiClocks; ){
+		if(IsWindow(m_multiClock[--m_multiClocks].worker)){
+			SetWindowLongPtr(m_multiClock[m_multiClocks].worker,GWL_WNDPROC,(LONG_PTR)m_oldWorkerProc);
+			SendMessage(m_multiClock[m_multiClocks].clock,WM_CLOSE,0,0);
+			SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0,0,
+						m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
+						SWP_NOMOVE);
+		}
+	}
+}
+void SubsSendResize(){
+	int i;
+	for(i=0; i<m_multiClocks; ++i){
+		SetWindowPos(m_multiClock[i].worker,0,0,0,10,10,0); // set new clock size and position
+	}
+}
+void SubsCreate(){
+	char classname[GEN_BUFF];
+	HWND hwndBar;
+	HWND hwndChild;
+	int i;
+	if(m_multiClocks) return;
+	// loop all secondary taskbars
+	if(m_bMultimon){
+		hwndBar=FindWindowEx(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
+		while(hwndBar){
+			hwndChild=GetWindow(hwndBar,GW_CHILD);
+			while(hwndChild){
+				GetClassName(hwndChild,classname,sizeof(classname));
+				if(!lstrcmpi(classname,"WorkerW")){
+					if(m_multiClocks==MAX_MULTIMON_CLOCKS)
+						break;
+					for(i=0; i<m_multiClocks && hwndChild!=m_multiClock[i].worker; ++i);
+					if(i==m_multiClocks){
+						if(!m_multiClockClass){
+							WNDCLASSEX wndclass={sizeof(WNDCLASSEX),CS_CLASSDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
+							wndclass.hCursor=LoadCursor(NULL,IDC_ARROW);
+							wndclass.hInstance=hInstance;
+							m_multiClockClass=RegisterClassEx(&wndclass);
+						}
+						m_multiClock[i].clock=CreateWindowEx(0,(LPCSTR)m_multiClockClass,NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
+						if(!m_multiClock[i].clock)
+							break;
+						if(!i) m_multiClockDC=GetDC(m_multiClock[0].clock);
+						GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
+						m_multiClock[i].worker=hwndChild;
+						m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWL_WNDPROC);
+						SetWindowLongPtr(hwndChild,GWL_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
+						++m_multiClocks;
+					}
+					break;
+				}
+				hwndChild=GetWindow(hwndChild,GW_HWNDNEXT);
+			}
+			hwndBar=FindWindowEx(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
+		}
+	}
 }
 //================================================================================================
 //---------------------------------------------------------------------+++--> Initialize the Clock:
-void InitClock(HWND hWnd)   //--------------------------------------------------------------+++-->
+void InitClock(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
-	OSVERSIONINFOEX osvi;
-	memset(&osvi,0,sizeof(OSVERSIONINFOEX));
-	osvi.dwOSVersionInfoSize=sizeof(OSVERSIONINFOEX);
-	if(GetVersionEx((OSVERSIONINFO*)&osvi) && osvi.dwMajorVersion>=6)
-		bV7up=1;
-	g_hwndClock = hWnd;
+	CheckSystemVersion();
+	g_hwndClock = hwnd;
 	PostMessage(g_hwndTClockMain, WM_USER, 0, (LPARAM)g_hwndClock);
 	
-	ReadData(); //-+-> Get Configuration Information From Registry
+	ReadData(hwnd,0); //-+-> Get Configuration Information From Registry
+	SubsCreate();
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
-	oldWndProc = (WNDPROC)GetWindowLongPtr(g_hwndClock, GWL_WNDPROC);
+	m_oldClockProc = (WNDPROC)GetWindowLongPtr(g_hwndClock, GWL_WNDPROC);
 	SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)WndProc);
 	SetClassLong(g_hwndClock, GCL_STYLE, GetClassLong(g_hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
 	
 	CreateTip(g_hwndClock); // Create Mouse-Over ToolTip Window & Contents
 	
-	DragAcceptFiles(hWnd, GetMyRegLong(NULL, "DropFiles", FALSE)); // Enable/Disable DropFiles on Clock Based on Reg Info.
+	DragAcceptFiles(hwnd, GetMyRegLong(NULL, "DropFiles", FALSE)); // Enable/Disable DropFiles on Clock Based on Reg Info.
 	
-	SetLayeredTaskbar(g_hwndClock); // Strangely Not Required for XP Themes... WTF is it For?? 2010
+	SetLayeredTaskbar(g_hwndClock,0); // transparent taskbar & more?
 	
 	PostMessage(GetParent(GetParent(g_hwndClock)), WM_SIZE, SIZE_RESTORED, 0);
 	InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, TRUE);
-}
-//================================================================================================
-//-------------------------------------+++--> Delete ALL T-Clock Created (Font & BitMap) Resources:
-void DeleteClockRes(void)   //--------------------------------------------------------------+++-->
-{
-	if(hFon) DeleteObject(hFon); hFon = NULL;
-	if(hdcClock) DeleteDC(hdcClock); hdcClock = NULL;
-	if(hbmpClock) DeleteObject(hbmpClock); hbmpClock = NULL;
-	if(hbmpClockSkin) DeleteObject(hbmpClockSkin); hbmpClockSkin = NULL;
 }
 //================================================================================================
 //----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
 void EndClock(void)   //--------------------------------------------------------------------+++-->
 {
 	DragAcceptFiles(g_hwndClock, FALSE);
-	if(g_Tip) DestroyWindow(g_Tip); g_Tip = NULL;
-	
-	DeleteClockRes();
+	DestroyTip();
+	SubsDestroy();
+	if(m_multiClockClass){
+		UnregisterClass((LPCSTR)m_multiClockClass,0);
+		m_multiClockClass=0;
+	}
+	DestroyClock();
 	EndNewAPI(g_hwndClock);
-	if(g_hwndClock && IsWindow(g_hwndClockndClock)) {
-		if(g_bTimer) KillTimer(g_hwndClock, 1); g_bTimer = FALSE;
-		SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)oldWndProc);
-		oldWndProc = NULL;
+	if(g_hwndClock && IsWindow(g_hwndClock)) {
+		if(m_bTimer) KillTimer(g_hwndClock, 1); m_bTimer = FALSE;
+		SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)m_oldClockProc);
+		m_oldClockProc=m_oldWorkerProc=NULL;
 	}
 	
 	if(IsWindow(g_hwndTClockMain)) PostMessage(g_hwndTClockMain, WM_USER+2, 0, 0);
@@ -157,51 +270,85 @@ void EndClock(void)   //--------------------------------------------------------
 --------------------------------------------------*/
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	switch(message) {
+	switch(message){
 	case WM_DESTROY:
-		DeleteClockRes();
+		DestroyClock();
 		break;
-	case(WM_USER+100):
-		if(bNoClock) break;
-		return OnCalcRect(hwnd);
+	case(WM_USER+100):// send by windows to get clock size
+		if(m_bNoClock) break;
+		if(!(GetWindowLongPtr(hwnd,GWL_STYLE)&WS_VISIBLE))
+			return 0;
+		return ((LRESULT)m_rcClock.bottom << 16) | (LRESULT)m_rcClock.right;
+	case WM_WINDOWPOSCHANGING:{
+		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
+		if(m_bNoClock) break;
+		if(IsWindowVisible(hwnd)){
+			if(!(pwp->flags&SWP_NOSIZE) && !(pwp->flags&SWP_NOMOVE)){
+				if(pwp->x >= pwp->y){ // horizontal
+					pwp->cx=m_rcClock.right;
+					if(m_height){ // explorer auto-updates our height, but we use custom
+						pwp->cy=m_rcClock.bottom;
+					}
+				}else{
+					pwp->cy=m_rcClock.bottom;
+					if(m_width){ // explorer auto-updates our width, but we use custom
+						pwp->cx=m_rcClock.right;
+					}
+				}
+			}
+		}
+		return 0;}
+	case WM_WINDOWPOSCHANGED:{
+		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
+		if(m_bNoClock) break;
+		if(!(pwp->flags&SWP_NOSIZE)){
+			UpdateClockSize(hwnd);
+			pwp->cx=m_rcClock.right;
+			pwp->cy=m_rcClock.bottom;
+		}
+		return 0;}
+	case WM_DWMCOLORIZATIONCOLORCHANGED://forwarded by T-Clock itself
+		OnTColor_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
+	case WM_THEMECHANGED:
+		if(message==WM_THEMECHANGED)
+			ReloadXPClockTheme(hwnd);
 	case WM_SYSCOLORCHANGE:
-		CreateClockDC(hwnd);
+		g_col_update(m_basecolorFont,m_basecolorBG);
+		break;
 	case WM_TIMECHANGE:
 	case(WM_USER+101): {
-			HDC hdc;
-			if(bNoClock) break;
-			hdc = GetDC(hwnd);
-			DrawClock(hwnd, hdc);
-			ReleaseDC(hwnd, hdc);
-			return 0;
-		}
-	case WM_SIZE:
-		CreateClockDC(hwnd);
-		break;
+		HDC hdc;
+		if(m_bNoClock) break;
+		hdc = GetDC(hwnd);
+		DrawClock(hdc);
+		ReleaseDC(hwnd, hdc);
+		return 0;}
 	case WM_ERASEBKGND:
 		return 0;
 	case WM_PAINT: {
-			PAINTSTRUCT ps;
-			HDC hdc;
-			if(bNoClock) break;
-			hdc = BeginPaint(hwnd, &ps);
-			DrawClock(hwnd, hdc);
-			EndPaint(hwnd, &ps);
-			return 0;
-		}
+		PAINTSTRUCT ps;
+		HDC hdc;
+		if(m_bNoClock) break;
+		hdc=BeginPaint(hwnd,&ps);
+		DrawClock(hdc);
+		EndPaint(hwnd,&ps);
+//		InvalidateRect(hwnd,NULL,0); /// uncomment for debugging purpose, eg. does our drawing flicker
+		return 0;}
 	case WM_TIMER:
 		if(wParam == 1)
 			OnTimer(hwnd);
 		else {
-			if(bNoClock) break;
+			if(m_bNoClock) break;
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		if(nBlink){
-			nBlink=0; InvalidateRect(hwnd, NULL, TRUE);
+		if(m_BlinkState){
+			m_BlinkState=BLINK_NONE;
+			InvalidateRect(hwnd, NULL, 1);
+			return 0;
 		}
 		PostMessage(g_hwndTClockMain, message, wParam, lParam);
 		return 0;
@@ -213,37 +360,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(message == WM_RBUTTONUP) break;
 		return 0;
 	case WM_MOUSEMOVE:
-		if(!g_TipState){
+		if(!m_TipState){
 			TRACKMOUSEEVENT tme;
 			tme.cbSize=sizeof(TRACKMOUSEEVENT);
 			tme.dwFlags=TME_HOVER|TME_LEAVE;
 			tme.hwndTrack=hwnd;
 			tme.dwHoverTime=HOVER_DEFAULT;
-			g_TipState=1;
+			m_TipState=1;
 			TrackMouseEvent(&tme);
+			FillClockBGHover(hwnd);
+			InvalidateRect(hwnd,NULL,0);
 		}
 		return 0;
 	case WM_MOUSEHOVER:
-		g_TipState=2;
-		if(!bV7up || GetMyRegLong("Tooltip","bCustom",0)){
-			ShowTip();//show custom tooltip
+		m_TipState=2;
+		if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0)){
+			ShowTip(hwnd);//show custom tooltip
 		}else{
 			PostMessage(g_hwndClock, WM_USER+103,1,0);//show system tooltip
 		}
 		return 0;
 	case WM_MOUSELEAVE:
-		if(g_TipState==2){
-			if(!bV7up || GetMyRegLong("Tooltip","bCustom",0))
-				PostMessage(g_Tip, TTM_TRACKACTIVATE , FALSE, (LPARAM)&g_TipInfo);//hide custom tooltip
-			else
-				PostMessage(g_hwndClock, WM_USER+103,0,0);//hide system tooltip
+		if(m_TipState){
+			if(m_TipState==2){
+				if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0))
+					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
+				else
+					PostMessage(g_hwndClock, WM_USER+103,0,0);//hide system tooltip
+			}
+			FillClockBG(hwnd);
+			InvalidateRect(hwnd,NULL,0);
 		}
-		g_TipState=0;
+		m_TipState=0;
 		return 0;
 	case WM_CONTEXTMENU:
 		PostMessage(g_hwndTClockMain, message, wParam, lParam);
 		return 0;
-	case WM_NCHITTEST: // oldWndProc
+	case WM_NCHITTEST: // original clock uses this message for context menu and hover, etc. and we need our own "handler"
+//		return HTCAPTION; // xD
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	case WM_MOUSEACTIVATE:
 		return MA_ACTIVATE;
@@ -251,163 +405,260 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		PostMessage(g_hwndTClockMain, WM_DROPFILES, wParam, lParam);
 		return 0;
 	case WM_NOTIFY: {
-			UINT code=((LPNMHDR)lParam)->code;
-			if(code==TTN_NEEDTEXT || code==TTN_NEEDTEXTW)
-				OnTooltipNeedText(code,lParam);
-			return 0;
-		}
+		UINT code=((LPNMHDR)lParam)->code;
+		if(code==TTN_NEEDTEXT || code==TTN_NEEDTEXTW)
+			OnTooltipNeedText(code,lParam);
+		return 0;}
 	case WM_COMMAND:
 		if(LOWORD(wParam) == IDM_EXIT) EndClock();
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
-			BOOL b;
-			ReadData();
-			CreateClockDC(hwnd);
-			b = GetMyRegLong(NULL, "DropFiles", FALSE);
-			DragAcceptFiles(hwnd, b);
-			InvalidateRect(hwnd, NULL, FALSE);
-			InvalidateRect(GetParent(g_hwndClock), NULL, TRUE);
-			return 0;
+		BOOL b;
+		SubsDestroy();
+		ReadData(hwnd,0); // also creates/updates clock
+		b = GetMyRegLong(NULL, "DropFiles", FALSE);
+		DragAcceptFiles(hwnd, b);
+		InvalidateRect(hwnd, NULL, 0);
+		InvalidateRect(GetParent(g_hwndClock), NULL, 1);
+		SubsCreate();
+		SubsSendResize();
+		return 0;
 		}
-	case CLOCKM_REFRESHTASKBAR: // refresh other elements than clock
-		CreateClockDC(hwnd);
-		SetLayeredTaskbar(g_hwndClock);
+	case CLOCKM_REFRESHCLOCKPREVIEW: // refresh the clock
+		ReadData(hwnd,1); // also creates/updates clock
+		InvalidateRect(hwnd, NULL, 0);
+		InvalidateRect(GetParent(g_hwndClock), NULL, 1);
+	case CLOCKM_REFRESHTASKBAR: // refresh other elements than clock (somehow required to actually change the clock's size)
+		SetLayeredTaskbar(g_hwndClock,0);
 		PostMessage(GetParent(GetParent(hwnd)), WM_SIZE, SIZE_RESTORED, 0);
-		InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, TRUE);
+		InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, 1);
 		return 0;
 	case CLOCKM_BLINK: // blink the clock
-		if(wParam) { if(nBlink == 0) nBlink = 4; }
-		else nBlink = 2;
+		if(wParam)
+			m_BlinkState|=BLINK_HOUR;
+		else
+			m_BlinkState|=BLINK_ON;;
+		InvalidateRect(hwnd, NULL, 0);
 		return 0;
 	case CLOCKM_COPY: // copy format to clipboard
 		OnCopy(hwnd, lParam);
 		return 0;
 	case CLOCKM_REFRESHCLEARTASKBAR: {
-			bRefreshClearTaskbar = TRUE;
-			SetLayeredTaskbar(g_hwndClock);
+		SetLayeredTaskbar(g_hwndClock,1);
+		return 0;}
+	}
+	return CallWindowProc(m_oldClockProc, hwnd, message, wParam, lParam);
+}
+/*------------------------------------------------
+  subclass procedure of the 2nd+ taskbar clock (used to handle clicks, etc.)
+--------------------------------------------------*/
+LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch(message){
+	case WM_NCCREATE:{
+		return 1;
+	}
+	case WM_CREATE:{
+		return 0;
+	}
+	case WM_CLOSE:{
+		DestroyWindow(hwnd);
+		return 0;
+	}
+	case WM_WINDOWPOSCHANGING:{
+		return 0;}
+	case WM_WINDOWPOSCHANGED:
+		return 0;
+	case WM_ERASEBKGND:
+		return 0;
+	case WM_PAINT:{
+		PAINTSTRUCT ps;
+		BeginPaint(hwnd,&ps);
+//		BitBlt(BeginPaint(hwnd,&ps),0,0,g_rcClock.right,g_rcClock.bottom,g_hdcClock,0,0,SRCCOPY);
+		EndPaint(hwnd,&ps);
+		return 0;}
+	/// clock features
+	case WM_LBUTTONDOWN:
+	case WM_RBUTTONDOWN:
+	case WM_MBUTTONDOWN:
+	case WM_XBUTTONDOWN:
+		if(m_BlinkState){
+			m_BlinkState=BLINK_NONE;
+			InvalidateRect(g_hwndClock, NULL, 1);
 			return 0;
 		}
-	case WM_WINDOWPOSCHANGING: {
-			LPWINDOWPOS pwp;
-			if(bNoClock) break;
-			pwp = (LPWINDOWPOS)lParam;
-			if(IsWindowVisible(hwnd) && !(pwp->flags & SWP_NOSIZE)) {
-				int h;
-				h = (int)HIWORD(OnCalcRect(hwnd));
-				if(pwp->cy > h) pwp->cy = h;
-				
-			}
-			break;
+		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+		return 0;
+	case WM_LBUTTONUP:
+	case WM_RBUTTONUP:
+	case WM_MBUTTONUP:
+	case WM_XBUTTONUP:
+		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+		if(message == WM_RBUTTONUP) break;
+		return 0;
+	case WM_MOUSEMOVE:
+		if(!m_TipState){
+			TRACKMOUSEEVENT tme;
+			tme.cbSize=sizeof(TRACKMOUSEEVENT);
+			tme.dwFlags=TME_HOVER|TME_LEAVE;
+			tme.hwndTrack=hwnd;
+			tme.dwHoverTime=HOVER_DEFAULT;
+			m_TipState=1;
+			TrackMouseEvent(&tme);
+			FillClockBGHover(g_hwndClock);
+			InvalidateRect(g_hwndClock,NULL,0);
 		}
+		return 0;
+	case WM_MOUSEHOVER:
+		m_TipState=2;
+		if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0)){
+			ShowTip(hwnd);//show custom tooltip
+		}else{
+			SendMessage(g_hwndClock, WM_USER+103,1,0);//show system tooltip
+		}
+		return 0;
+	case WM_MOUSELEAVE:
+		if(m_TipState){
+			if(m_TipState==2){
+				if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0))
+					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
+				else
+					PostMessage(g_hwndClock, WM_USER+103,0,0);//hide system tooltip
+			}
+			FillClockBG(g_hwndClock);
+			InvalidateRect(g_hwndClock,NULL,0);
+		}
+		m_TipState=0;
+		return 0;
+	case WM_CONTEXTMENU:
+		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+		return 0;
+	case WM_DROPFILES:
+		PostMessage(g_hwndTClockMain, WM_DROPFILES, wParam, lParam);
+		return 0;
 	}
-	return CallWindowProc(oldWndProc, hwnd, message, wParam, lParam);
+	return DefWindowProc(hwnd,message,wParam,lParam);
+}
+/*------------------------------------------------
+  subclass procedure of the 2nd+ taskbar "worker" area (used to resize and allow own clock)
+--------------------------------------------------*/
+#define SHOW_DESKTOP_BUTTONSIZE 10
+LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	switch(message){
+	case WM_WINDOWPOSCHANGING:{
+		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
+		int i;
+		if(m_bNoClock) break;
+		for(i=0; i<m_multiClocks; ++i){
+			if(m_multiClock[i].worker==hwnd){
+//				MessageBox(0,"WM_WINDOWPOSCHANGING",__FUNCTION__,0);
+				if(!(pwp->flags&SWP_NOSIZE)){
+					if(!pwp->flags && !pwp->x && !pwp->y && pwp->cx==10 && pwp->cy==10){ // special case for us
+//						MessageBox(0,"special",__FUNCTION__,0);
+						if(!m_multiClock[i].workerRECT.left && !m_multiClock[i].workerRECT.top){
+							ClientToScreen(m_multiClock[i].worker,(POINT*)&m_multiClock[i].workerRECT);
+							ScreenToClient(GetParent(m_multiClock[i].worker),(POINT*)&m_multiClock[i].workerRECT);
+						}
+						pwp->flags=SWP_NOMOVE;
+						pwp->cx=m_multiClock[i].workerRECT.right;
+						pwp->cy=m_multiClock[i].workerRECT.bottom;
+					}
+					CallWindowProc(m_oldWorkerProc,hwnd,message,wParam,lParam); // adjusts left margin? (so changes size and pos)
+					m_multiClock[i].workerRECT.right=pwp->cx;
+					m_multiClock[i].workerRECT.bottom=pwp->cy;
+					if(pwp->cx > pwp->cy){ // horizontal
+						pwp->cx=pwp->cx-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
+					}else{
+						pwp->cy=pwp->cy-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
+					}
+				}
+				if(!(pwp->flags&SWP_NOMOVE)){
+					m_multiClock[i].workerRECT.left=pwp->x;
+					m_multiClock[i].workerRECT.top=pwp->y;
+				}
+				{int x,y,cx,cy;
+				cx=m_rcClock.right;
+				cy=m_rcClock.bottom;
+				if(m_multiClock[i].workerRECT.right > m_multiClock[i].workerRECT.bottom){ // horizontal
+					x=m_multiClock[i].workerRECT.left+m_multiClock[i].workerRECT.right-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
+					y=m_multiClock[i].workerRECT.top+CLOCK_BORDER_MARGIN;
+				}else{
+					x=m_multiClock[i].workerRECT.left+CLOCK_BORDER_MARGIN;
+					y=m_multiClock[i].workerRECT.top+m_multiClock[i].workerRECT.bottom-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
+				}
+				SetWindowPos(m_multiClock[i].clock,0,x,y,cx,cy,0);}
+				break;
+			}
+		}
+		return 0;}
+	case WM_WINDOWPOSCHANGED:{
+		break;}
+	}
+	return CallWindowProc(m_oldWorkerProc,hwnd,message,wParam,lParam);
 }
 //================================================================================================
 //---------------------------------+++--> Retreive T-Clock Configuration Information From Registry:
-void ReadData()   //---------------------------------------------------------------+++-->
+void ReadData(HWND hwnd, BOOL preview)   //---------------------------------------------------------------+++-->
 {
-	char FontRotateDirection[1024] = {0};
-	char fontname[80] = {0};
+	const char* section=preview?"Preview":"Clock";
+	char fontname[80];
 	LONG weight, italic;
-	int angle, fontsize;
+	int fontsize;
+	int angle;
+	BYTE fontquality;
 	DWORD dwInfoFormat;
 	SYSTEMTIME lt;
+	HFONT hFon;
 	
-	colfore = GetMyRegColor("Clock", "ForeColor", 0x00ffffff);//GetSysColor(COLOR_BTNTEXT));
-	// <--+++--<<<< THIS IS WHERE THE BLINK COLOR ISSUE IS/STARTS/NEEDS TO GO!!!
-	colback = GetMyRegColor("Clock", "BackColor", GetSysColor(COLOR_3DFACE));
-	if(GetMyRegLong("Clock", "UseBackColor2", TRUE))
-		colback2 = GetMyRegColor("Clock", "BackColor2", colback);
-	else colback2 = colback;
+	m_basecolorFont = GetMyRegLong(section, "ForeColor", TCOLOR(TCOLOR_DEFAULT));
+	m_basecolorBG = GetMyRegLong(section, "BackColor", TCOLOR(TCOLOR_DEFAULT));
+	g_col_update(m_basecolorFont,m_basecolorBG);
 	
-	GetMyRegStr("Clock", "Font", fontname, 80, "Arial");
+	GetMyRegStr(section, "Font", fontname, 80, "Arial");
 	
-	fontsize = GetMyRegLong("Clock", "FontSize", 10);
-	italic = GetMyRegLong("Clock", "Italic", 0);
-	weight = GetMyRegLong("Clock", "Bold", 1);
-	if(weight) weight = FW_BOLD;
-	else weight = 0;
+	fontsize = GetMyRegLong(section, "FontSize", 10);
+	italic = GetMyRegLong(section, "Italic", 0);
+	weight = GetMyRegLong(section, "Bold", 0);
+	if(weight) weight=FW_BOLD;
+	else weight=0;
+	fontquality=(BYTE)GetMyRegLong(section, "FontQuality", CLEARTYPE_QUALITY);
 	
-	GetMyRegStr("Clock", "FontRotateDirection", FontRotateDirection, 1024, "None");
-	if(_strnicmp(FontRotateDirection, "RIGHT", 5) == 0) angle = 2700;
-	else if(_strnicmp(FontRotateDirection, "LEFT", 4) == 0) angle = 900;
-	else angle = 0;
+	angle=GetMyRegLong(section,"Angle",0)%360;
+	if(angle<0) angle+=360;
 	
-	if(hFon) DeleteObject(hFon);
-	hFon = CreateMyFont(fontname, fontsize, weight, italic, angle);
+	hFon = CreateMyFont(fontname, fontsize, weight, italic, angle*10, fontquality);
+	m_radian=(double)angle*3.14159265358979323/180.;// ye π doesn't need to be that long :P
 	
-	dlineheight = (int)(short)GetMyRegLong("Clock", "LineHeight", 0);
-	dheight = (int)(short)GetMyRegLong("Clock", "ClockHeight", 0);
-	dwidth = (int)(short)GetMyRegLong("Clock", "ClockWidth", 0);
-	dhpos = (int)(short)GetMyRegLong("Clock", "HorizPos", 0);
-	dvpos = (int)(short)GetMyRegLong("Clock", "VertPos", 0);
+	dlineheight = GetMyRegLong(section, "LineHeight", 0);
+	m_height = GetMyRegLong(section, "ClockHeight", 0);
+	m_width = GetMyRegLong(section, "ClockWidth", 0);
+	dhpos = GetMyRegLong(section, "HorizPos", 0);
+	dvpos = GetMyRegLong(section, "VertPos", 0);
 	
-	bNoClock = (char)GetMyRegLong("Clock", "NoClockCustomize", FALSE);
+	m_bNoClock = (char)GetMyRegLong(section, "NoClockCustomize", FALSE);
 	
-	if(!GetMyRegStr("Format", "Format", format, 1024, "") || !format[0]) {
-		bNoClock = TRUE;
+	if(!GetMyRegStr("Format", "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
+		m_bNoClock = TRUE;
 	}
 	
-	dwInfoFormat = FindFormat(format);
-	bDispSecond = (dwInfoFormat&FORMAT_SECOND)? TRUE:FALSE;
-	nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!g_bTimer) SetTimer(g_hwndClock, 1, 1000, NULL);
-	g_bTimer = TRUE;
+	dwInfoFormat = FindFormat(m_format);
+	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? TRUE:FALSE;
+	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
+	if(!m_bTimer) SetTimer(g_hwndClock, 1, 1000, NULL);
+	m_bTimer = TRUE;
 	
-	bHour12 = (char)GetMyRegLong("Format", "Hour12", FALSE);
-	bHourZero = (char)GetMyRegLong("Format", "HourZero", 0);
+	g_bHour12 = (char)GetMyRegLong("Format", "Hour12", FALSE);
+	g_bHourZero = (char)GetMyRegLong("Format", "HourZero", 0);
 	
 	GetLocalTime(&lt);
-	LastTime.wDay = lt.wDay;
+	m_LastTime.wDay = lt.wDay;
 	
 	InitFormat(&lt);      // format.c
 	
-	iClockWidth = -1;
-	
-//  bClockUseTrans = GetMyRegLong("Clock", "ClockUseTrans", FALSE);
-}
-//=========================================================
-void CreateClockDC(HWND hwnd)
-{
-	COLORREF col;
-	RECT rc;
-	HDC hdc;
-	
-	if(hdcClock) DeleteDC(hdcClock); hdcClock = NULL;
-	if(hbmpClock) DeleteObject(hbmpClock); hbmpClock = NULL;
-	if(hbmpClockSkin) DeleteObject(hbmpClockSkin); hbmpClockSkin = NULL;
-	
-	if(bNoClock) return;
-	
-	GetClientRect(hwnd, &rc);
-	
-	hdc = GetDC(NULL);
-	hdcClock = CreateCompatibleDC(hdc);
-	if(!hdcClock) {
-		ReleaseDC(NULL, hdc);
-		return;
-	}
-	
-	hbmpClock = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
-	
-	if(!hbmpClock) {
-		DeleteDC(hdcClock); hdcClock = NULL;
-		ReleaseDC(NULL, hdc);
-		return;
-	}
-	
-	SelectObject(hdcClock, hbmpClock);
-	SelectObject(hdcClock, hFon);
-	
-	SetBkMode(hdcClock, TRANSPARENT);
-	SetTextAlign(hdcClock, TA_CENTER|TA_TOP);
-	col = colfore;
-	
-	if(col & 0x80000000) col = GetSysColor(col & 0x00ffffff);
-	SetTextColor(hdcClock, col);
-	
-	FillClock(hwnd, hdcClock, &rc, 0);
-	ReleaseDC(NULL, hdc);
+	m_bMultimon = GetMyRegLong("Desktop", "Multimon", 1);
+
+	UpdateClock(hwnd,hFon);
 }
 
 /*------------------------------------------------
@@ -432,28 +683,30 @@ void OnTimer(HWND hwnd)
 {
 	SYSTEMTIME t;
 	int beat100=0;
-	HDC hdc;
 	BOOL bRedraw;
+	static char bCalibration=0;
 	
-	GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
+	GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
 	
 	if(t.wMilliseconds > 200) {
 		KillTimer(hwnd, 1);
-		bTimerTesting = TRUE;
+		bCalibration = 1;
 		SetTimer(hwnd, 1, 1001 - t.wMilliseconds, NULL);
-	} else if(bTimerTesting) {
+	} else if(bCalibration) {
 		KillTimer(hwnd, 1);
-		bTimerTesting = FALSE;
+		bCalibration = 0;
 		SetTimer(hwnd, 1, 1000, NULL);
 	}
 	
 	if(CheckDaylightTimeTransition(&t)) {
-		CallWindowProc(oldWndProc, hwnd, WM_TIMER, 0, 0);
-		GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
+		CallWindowProc(m_oldClockProc, hwnd, WM_TIMER, 0, 0);
+		GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
 	}
 	
 	bRedraw = FALSE;
-	if(nBlink > 0) {
+	if(m_BlinkState){
+		if(m_LastTime.wMinute && m_BlinkState&BLINK_HOUR)
+			m_BlinkState^=BLINK_HOUR; // disable hourly blink
 //			APPBARDATA abd;
 		bRedraw = TRUE;
 		/* --+++--> This Will Disable the AutoHide...
@@ -464,191 +717,258 @@ void OnTimer(HWND hwnd)
 		
 	}
 	
-	else if(bDispSecond) bRedraw = TRUE;
-	else if(nDispBeat == 1 && beatLast != (beat100/100)) bRedraw = TRUE;
-	else if(nDispBeat == 2 && beatLast != beat100) bRedraw = TRUE;
+	else if(m_bDispSecond) bRedraw = TRUE;
+	else if(m_nDispBeat == 1 && m_beatLast != (beat100/100)) bRedraw = TRUE;
+	else if(m_nDispBeat == 2 && m_beatLast != beat100) bRedraw = TRUE;
 //	else if(bDispSysInfo) bRedraw = TRUE;
-	else if(LastTime.wHour != (int)t.wHour
-			|| LastTime.wMinute != (int)t.wMinute) bRedraw = TRUE;
-			
-	if(bNoClock) bRedraw = FALSE;
+	else if(m_LastTime.wHour != (int)t.wHour
+			|| m_LastTime.wMinute != (int)t.wMinute) bRedraw = TRUE;
 	
-	if((LastTime.wHour != (int)t.wHour) && (bRedraw)) RefreshUs();
-	
-	if(LastTime.wDay != t.wDay || LastTime.wMonth != t.wMonth ||
-	   LastTime.wYear != t.wYear) {
+	if(m_LastTime.wDay != t.wDay || m_LastTime.wMonth != t.wMonth ||
+	   m_LastTime.wYear != t.wYear) {
 		InitFormat(&t); // format.c
 		InitDaylightTimeTransition();
 	}
 	
-	hdc = NULL;
-	if(bRedraw) hdc = GetDC(hwnd);
+	memcpy(&m_LastTime, &t, sizeof(t));
 	
-	memcpy(&LastTime, &t, sizeof(t));
+	if(m_nDispBeat == 1) m_beatLast = beat100/100;
+	else if(m_nDispBeat > 1) m_beatLast = beat100;
 	
-	if(nDispBeat == 1) beatLast = beat100/100;
-	else if(nDispBeat > 1) beatLast = beat100;
-	
-	if(nBlink >= 3 && t.wMinute == 1) nBlink = 0;
-	
-	if(hdc) {
-		DrawClockSub(hwnd, hdc, &t, beat100); //•`‰æ
-		ReleaseDC(hwnd, hdc);
-	}
-	
-	if(nBlink) {
-		if(nBlink % 2) nBlink++;
-		else nBlink--;
-	}
+	if(bRedraw)
+		InvalidateRect(hwnd,NULL,0);
 }
 
-/*------------------------------------------------
---------------------------------------------------*/
-void DrawClock(HWND hwnd, HDC hdc)
+void FillClockBG()
 {
-	SYSTEMTIME t;
-	int beat100=0;
-	
-	GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
-	DrawClockSub(hwnd, hdc, &t, beat100);
+	RGBQUAD* color;
+	BYTE alpha;
+	union{
+		BGRQUAD quad;
+		COLORREF ref;
+	} col;
+	if(!m_colorBG_end) return;
+	if(m_colBG.ref==TCOLOR(TCOLOR_DEFAULT)){
+		if(IsXPThemeActive()){
+			DrawXPClockBackground(g_hwndClock,m_hdcClockBG,&m_rcClock);
+			return;
+		}
+		col.ref=GetSysColor(COLOR_3DFACE);
+	}else
+		col.ref=m_colBG.ref;
+	// fill with color (Win8 uses ~0x37 alpha)
+//	col.ref=0x37000000;//Win8 like
+	alpha=255-col.quad.rgbReserved;
+	col.ref=alpha<<24|(col.quad.rgbBlue*alpha/255)|(col.quad.rgbGreen*alpha/255)<<8|(col.quad.rgbRed*alpha/255)<<16;
+	for(color=m_colorBG_start; color<m_colorBG_end; ++color)
+		*(unsigned*)color=col.ref;
 }
+void FillClockBGHover()
+{
+	if(!m_colorBG_end) return;
+	if(IsXPThemeActive()) {
+		DrawXPClockHover(g_hwndClock,m_hdcClockBG,&m_rcClock);
+	}
+}
+void CalculateClockTextPosition(){
+	double cos_=cos(m_radian);
+	double sin_=sin(m_radian);
+	int hleading=(int)(sin_*m_leading);
+	int leading=(int)(cos_*m_leading);
+	int textwidth=(int)(sin_*m_textheight);
+	int textheight=(int)(cos_*m_textheight);
+	/// use width / height based on angle.
+	GetClientRect(GetParent(GetParent(g_hwndClock)),&m_rcClock);
+	m_bHorizontalTaskbar=m_rcClock.right>m_rcClock.bottom;
+	if(m_bHorizontalTaskbar){
+		m_rcClock.bottom-=CLOCK_BORDER_MARGIN;//2px top
+		if(m_height){//user-defined height
+			m_rcClock.bottom=m_textheight;
+		}else
+			textheight+=CLOCK_BORDER_MARGIN; // ignore top margin on center calculation
+		m_rcClock.right=abs((int)(cos_*m_textwidth))+abs((int)(sin_*m_textheight)) + m_textpadding;
+	}else{
+		m_rcClock.right-=CLOCK_BORDER_MARGIN;//2px top
+		if(m_width){//user-defined height
+			m_rcClock.right=m_textwidth;
+		}else
+			textwidth+=CLOCK_BORDER_MARGIN; // ignore left margin on center calculation
+		m_rcClock.bottom=abs((int)(cos_*m_textheight))+abs((int)(sin_*m_textwidth)) + m_textpadding;
+	}
+	m_rcClock.right+=m_width;
+	m_rcClock.bottom+=m_height;
+	if(m_rcClock.right<5) m_rcClock.right=5;
+	if(m_rcClock.bottom<5) m_rcClock.bottom=5;
+	/// position
+	m_vertpos=(m_rcClock.bottom-textheight-leading+(int)(cos_*dlineheight))/2 + dvpos;
+	m_horizpos=(m_rcClock.right-textwidth-hleading+(int)(sin_*dlineheight))/2 + dhpos;
+}
+void CalculateClockTextSize(){
+	SYSTEMTIME time;
+	int beat100=0;
+	char buf[1024], *pos, *str;
+	unsigned len;
+	SIZE sz;
+	TEXTMETRIC tm;
+	GetDisplayTime(&time, m_nDispBeat ? &beat100 : NULL);
+	len=MakeFormat(buf, m_format, &time, beat100);
+	GetTextMetrics(m_hdcClock,&tm);
+	m_textpadding=tm.tmAveCharWidth*2;
+	m_textheight=m_textwidth=0;
+	m_leading=tm.tmInternalLeading;
+	m_vertfeed=tm.tmHeight-m_leading+dlineheight;
+	for(pos=buf; *pos; ){
+		for(str=pos; *pos&&*pos!='\n'; ++pos);
+		len=(unsigned)(pos-str);
+		if(*pos=='\n') {*pos++='\0';}
+		/// width
+		if(GetTextExtentPoint32(m_hdcClock,str,len,&sz)==0)
+			sz.cx=len*tm.tmAveCharWidth;
+		if(m_textwidth<sz.cx)
+			m_textwidth=sz.cx;
+		///height
+		m_textheight+=m_vertfeed;
+	}
+	m_horizfeed=(int)(sin(m_radian)*m_vertfeed);
+	m_vertfeed=(int)(cos(m_radian)*m_vertfeed);
+	CalculateClockTextPosition();
+}
+int DestroyClock()
+{
+	if(m_oldfnt){
+		DeleteObject(SelectObject(m_hdcClock,m_oldfnt));
+		m_oldfnt=NULL;
+	}
+	if(m_oldbmpB){
+		DeleteObject(SelectObject(m_hdcClockBG,m_oldbmpB));
+		m_oldbmpB=NULL;
+		m_colorBG_start=NULL;
+	}
+	if(m_oldbmp){
+		DeleteObject(SelectObject(m_hdcClock,m_oldbmp));
+		m_oldbmp=NULL;
+		m_color_start=NULL;
+	}
+	if(m_hdcClock){
+		DeleteDC(m_hdcClockBG);
+		DeleteDC(m_hdcClock);
+		m_hdcClock=NULL;
+	}
+	memset(&m_rcClock,0,sizeof(m_rcClock));
+	return 0;
+}
+int UpdateClock(HWND hwnd, HFONT fnt)
+{
+	if(m_bNoClock)
+		return 0;
+	if(!m_hdcClock){
+		HDC hdc=GetDC(NULL);
+		m_hdcClock=CreateCompatibleDC(hdc);
+		m_hdcClockBG=CreateCompatibleDC(hdc);
+		ReleaseDC(NULL,hdc);
+		SetBkMode(m_hdcClock,TRANSPARENT);
+		SetTextAlign(m_hdcClock,TA_CENTER|TA_TOP);
+		SetTextColor(m_hdcClock,0x00000000);
+	}
+	if(!m_oldfnt)
+		m_oldfnt=SelectObject(m_hdcClock,fnt);
+	else
+		DeleteObject(SelectObject(m_hdcClock,fnt));
+	CalculateClockTextSize(); // height change only, bugs...
+	SetWindowPos(hwnd,HWND_TOP,0,0,m_rcClock.right+1,m_rcClock.bottom,SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOMOVE|SWP_NOCOPYBITS); // without doing this...
+	return 1;
+}
+int UpdateClockSize(HWND hwnd)
+{
+	static BITMAPINFO bmi={sizeof(BITMAPINFO),0,0,1,32,BI_RGB};
+	HBITMAP hbm;
+	if(!m_hdcClock)
+		return 0;
+	bmi.bmiHeader.biWidth=m_rcClock.right;
+	bmi.bmiHeader.biHeight=m_rcClock.bottom;
+	/// create/select text bitmap
+	hbm=CreateDIBSection(m_hdcClock,&bmi,DIB_RGB_COLORS,&m_color_start,NULL,0);
+	if(!hbm) return DestroyClock();
+	m_color_end=m_color_start+(m_rcClock.right*m_rcClock.bottom);
+	if(!m_oldbmp) m_oldbmp=SelectObject(m_hdcClock,hbm);
+	else DeleteObject(SelectObject(m_hdcClock,hbm));
+	/// create/select background bitmap
+	hbm=CreateDIBSection(m_hdcClockBG,&bmi,DIB_RGB_COLORS,&m_colorBG_start,NULL,0);
+	if(!hbm) return DestroyClock();
+	m_colorBG_end=m_colorBG_start+(m_rcClock.right*m_rcClock.bottom);
+	if(!m_oldbmpB) m_oldbmpB=SelectObject(m_hdcClockBG,hbm);
+	else DeleteObject(SelectObject(m_hdcClockBG,hbm));
+	FillClockBG(hwnd);
+	CalculateClockTextPosition();
+	SubsSendResize();
+	return 1;
+}
+
 
 /*------------------------------------------------
   draw the clock
 --------------------------------------------------*/
-void DrawClockSub(HWND hwnd, HDC hdc, SYSTEMTIME* pt, int beat100)
-{
-	BITMAP bmp;
-	RECT rcFill,  rcClock;
-	TEXTMETRIC tm;
-	int hf, y, w;
-	char s[1024], *p, *sp;
-	SIZE sz;
-	int wclock, hclock, xsrc, ysrc, wsrc, hsrc;
-	int xcenter;
-	
-	if(!hdcClock) CreateClockDC(hwnd);
-	
-	if(!hdcClock || !hbmpClock) return;
-	
-	GetObject(hbmpClock, sizeof(BITMAP), (LPVOID)&bmp);
-	rcFill.left = rcFill.top = 0;
-	rcFill.right = bmp.bmWidth; rcFill.bottom = bmp.bmHeight;
-	
-	FillClock(hwnd, hdcClock, &rcFill, nBlink);
-	
-	MakeFormat(s, pt, beat100, format);
-	
-	GetClientRect(g_hwndClock, &rcClock);
-	
-	wclock = rcClock.right;  hclock = rcClock.bottom;
-	
-	GetTextMetrics(hdcClock, &tm);
-	
-	hf = tm.tmHeight - tm.tmInternalLeading;
-	p = s;
-	y = hf / 4 - tm.tmInternalLeading / 2;
-	xcenter = wclock / 2;
-	w = 0;
-	while(*p) {/// @fixme : draw with transparency like Windows does
-		sp = p;
-		while(*p && *p != 0x0d) p++;
-		if(*p == 0x0d) { *p = 0; p += 2; }
-		if(*p == 0 && sp == s) {
-			y = (hclock - tm.tmHeight) / 2  - tm.tmInternalLeading / 4;
-		}
-		TextOut(hdcClock, xcenter + dhpos, y + dvpos, sp, (int)strlen(sp));
-		
-		if(GetTextExtentPoint32(hdcClock, sp, (int)strlen(sp), &sz) == 0)
-			sz.cx = (LONG)(int)strlen(sp) * tm.tmAveCharWidth;
-		if(w < sz.cx) w = sz.cx;
-		
-		y += hf; if(*p) y += 2 + dlineheight;
-	}
-	
-	xsrc = 0; ysrc = 0; wsrc = rcFill.right; hsrc = rcFill.bottom;
-	
-	BitBlt(hdc, 0, 0, wsrc, hsrc, hdcClock, xsrc, ysrc, SRCCOPY);
-	
-	w += tm.tmAveCharWidth * 2;
-	w += dwidth;
-	if(w > iClockWidth) {
-		iClockWidth = w;
-		PostMessage(GetParent(GetParent(g_hwndClock)), WM_SIZE,
-					SIZE_RESTORED, 0);
-	}
-}
-
-/*--------------------------------------------------
--------------------------- paint background of clock
---------------------------------------------------*/
-void FillClock(HWND hwnd, HDC hdc, RECT* prc, int nblink)
-{
-	COLORREF col;
-	
-	if(nblink == 0 || (nblink % 2)) col = colfore;
-	else col = colback; // <--+++--<<<< THIS IS WHERE THE BLINK COLOR ISSUE IS/STARTS/NEEDS TO GO!!!
-	SetTextColor(hdc, col);
-	
-	if(IsXPStyle()) {
-		DrawXPClockBackground(hwnd, hdc, 0);
-	} else { // -------------- fill the clock/tray with simple colors
-		if(nblink || colback == colback2) { // - only a single color
-			HBRUSH hbr;
-			if(nblink == 0 || (nblink % 2)) col = colback;
-			else col = colfore;
-			hbr = CreateSolidBrush(col);
-			FillRect(hdc, prc, hbr);
-			DeleteObject(hbr);
-		}
-	}
-}
-
-/*------------------------------------------------
---------------------------------------------------*/
-LRESULT OnCalcRect(HWND hwnd)
+void DrawClock(HDC hdc)
 {
 	SYSTEMTIME t;
 	int beat100=0;
-	LRESULT width, height;
-	HDC hdc;
-	TEXTMETRIC tm;
-	char s[1024], *p, *sp;
-	SIZE sz;
-	int hf;
+	if(!m_color_start)
+		return;
+	GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
+	DrawClockSub(hdc, &t, beat100);
+}
+void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100)
+{
+	RGBQUAD* color,* back;
+	char buf[1024],* pos,* str;
+	unsigned len;
+	int vpos,hpos;
+	const unsigned opacity=255-m_col.quad.rgbReserved;
+	for(color=m_color_start; color<m_color_end; ++color)
+		*(unsigned*)color=0xFFFFFFFF;
+	len=MakeFormat(buf, m_format, pt, beat100);
 	
-	if(!(GetWindowLongPtr(hwnd, GWL_STYLE)&WS_VISIBLE)) return 0;
-	
-	hdc = GetDC(hwnd);
-	
-	if(hFon) SelectObject(hdc, hFon);
-	GetTextMetrics(hdc, &tm);
-	
-	GetDisplayTime(&t, nDispBeat ? &beat100 : NULL);
-	MakeFormat(s, &t, beat100, format);
-	
-	p = s; width = 0; height = 0;
-	hf = tm.tmHeight - tm.tmInternalLeading;
-	while(*p) {
-		sp = p;
-		while(*p && *p != 0x0d) p++;
-		if(*p == 0x0d) { *p = 0; p += 2; }
-		if(GetTextExtentPoint32(hdc, sp, (int)strlen(sp), &sz) == 0)
-			sz.cx = (LONG)strlen(sp) * tm.tmAveCharWidth;
-		if(width < sz.cx) width = sz.cx;
-		height += hf; if(*p) height += 2 + dlineheight;
+	vpos=m_vertpos;
+	hpos=m_horizpos;
+	for(pos=buf; *pos; ){
+		for(str=pos; *pos&&*pos!='\n'; ++pos);
+		len=(unsigned)(pos-str);
+		if(*pos=='\n') {*pos++='\0';}
+		ExtTextOut(m_hdcClock, hpos, vpos, 0, NULL, str, len, NULL);
+		vpos+=m_vertfeed;
+		hpos+=m_horizfeed;
 	}
-	width += tm.tmAveCharWidth * 2;
-	if(iClockWidth < 0) iClockWidth = (int)width;
-	else width = iClockWidth;
-	width += dwidth;
-	
-	height += hf / 2 + dheight;
-	if(height < 4) height = 4;
-	
-	ReleaseDC(hwnd, hdc);
-	
-	return (height << 16) + width;
+	GdiFlush();//flush before bit manipulation
+	for(color=m_color_start,back=m_colorBG_start; color<m_color_end; ++color,++back){
+		if(!color->rgbReserved){
+			unsigned channel;
+			unsigned trans=(255-(color->rgbGreen+color->rgbBlue+color->rgbRed)/3)*opacity/255;
+			unsigned bgtrans=255-trans;
+			channel=m_col.quad.rgbBlue*trans/0xE7 + back->rgbBlue*bgtrans/255;
+			color->rgbBlue=(channel>255?255:(BYTE)channel);
+			channel=m_col.quad.rgbGreen*trans/0xE7 + back->rgbGreen*bgtrans/255;
+			color->rgbGreen=(channel>255?255:(BYTE)channel);
+			channel=m_col.quad.rgbRed*trans/0xE7 + back->rgbRed*bgtrans/255;
+			color->rgbRed=(channel>255?255:(BYTE)channel);
+			
+			channel=back->rgbReserved+trans;
+			color->rgbReserved=(channel>255?255:(BYTE)channel);
+		}else{
+			*(unsigned*)color=*(unsigned*)back;
+		}
+	}
+	if(!m_BlinkState || pt->wSecond%2){
+//		BLENDFUNCTION fnc={AC_SRC_OVER,0,255,AC_SRC_ALPHA};
+//		GdiAlphaBlend(hdc,0,0,g_rcClock.right,g_rcClock.bottom,g_hdcClock,0,0,g_rcClock.right,g_rcClock.bottom,fnc);
+//		BitBlt(hdc,0,0,g_rcClock.right,g_rcClock.bottom,g_hdcClock,0,0,SRCPAINT);
+		BitBlt(hdc,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,SRCCOPY);
+		if(m_multiClocks)
+			BitBlt(m_multiClockDC,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,SRCCOPY);
+	}else{
+		BitBlt(hdc,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,NOTSRCCOPY);
+		if(m_multiClocks)
+			BitBlt(m_multiClockDC,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,NOTSRCCOPY);
+	}
 }
 
 void OnTooltipNeedText(UINT code, LPARAM lParam)
@@ -658,10 +978,10 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 	char fmt[1024], s[1024];
 	
 	GetMyRegStr("Tooltip", "Tooltip", fmt, 1024, "");
-	if(fmt[0] == 0) strcpy(fmt, "\"TClock\" LDATE");
+	if(!*fmt) strcpy(fmt, "\"TClock\" LDATE");
 	
 	GetDisplayTime(&t, &beat100);
-	MakeFormat(s, &t, beat100, fmt);
+	MakeFormat(s, fmt, &t, beat100);
 	
 	if(code == TTN_NEEDTEXT) strcpy(((LPTOOLTIPTEXT)lParam)->szText, s);
 	else {
@@ -683,9 +1003,9 @@ void OnCopy(HWND hwnd, LPARAM lParam)
 	entry[1]='0'+(char)HIWORD(lParam);
 	memcpy(entry+2,"Clip",5);
 	GetMyRegStr("Mouse",entry,fmt,256,"");
-	if(!*fmt) strcpy(fmt,format);
+	if(!*fmt) strcpy(fmt,m_format);
 	
-	MakeFormat(s, &t, beat100, fmt);
+	MakeFormat(s, fmt, &t, beat100);
 	
 	if(!OpenClipboard(hwnd)) return;
 	EmptyClipboard();

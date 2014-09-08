@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by tClock.rc
 //
-#define IDS_BTNFACE                     4
 #define IDS_ADDALARM                    8
 #define IDS_MMFILE                      10
 #define IDS_ALLFILE                     11
@@ -178,6 +177,8 @@
 #define IDCB_TRANS2KICONS               1074 /* end group */
 #define IDCB_MONOFF_ONLOCK_GRP          1075 /* group */
 #define IDCB_MONOFF_ONLOCK              1076 /* end group */
+#define IDCB_MULTIMON_GRP               1077 /* group */
+#define IDCB_MULTIMON                   1078 /* end group */
 #define IDCB_USECALENDAR                1080
 #define IDCB_SHOW_DOY                   1081 /* group */
 #define IDCB_SHOWWEEKNUMS               1082
@@ -193,8 +194,10 @@
 #define IDC_CALSTATIC3                  1092
 #define IDC_CALSTATIC4                  1093
 #define IDC_CALSTATIC5                  1094 /* end group */
-#define IDC_COLFORE                     1106
-#define IDC_CHOOSECOLFORE               1107
+#define IDC_COLFORE                     1100 /* group */
+#define IDC_CHOOSECOLFORE               1101
+#define IDC_COLBACK                     1102
+#define IDC_CHOOSECOLBACK               1103 /* end group */
 #define IDC_FONT                        1108
 #define IDC_FONTSIZE                    1109
 #define IDC_BOLD                        1110
@@ -211,8 +214,8 @@
 #define IDC_HPOS                        1121
 #define IDC_HORIZPOS                    1122
 #define IDC_SPINHPOS                    1123
-#define IDC_LABCLOCKROTATE              1124
-#define IDC_CLOCKROTATE                 1125
+#define IDC_ANGLE                       1124
+#define IDC_SPINANGLE                   1125
 #define IDC_LOCALE                      1200
 #define IDC_YEAR4                       1201 /* group */
 #define IDC_YEAR                        1202
@@ -338,12 +341,6 @@
 #define IDC_CLOCKSKINEDGEBOTTOM         3517
 #define IDC_SPINSKINEDGEBOTTOM          3518
 #define ICD_FRAMECOLOR                  3519
-#define IDC_LABCOLBACK                  3520
-#define IDC_COLBACK                     3521
-#define IDC_CHOOSECOLBACK               3522
-#define IDC_CHKCOLOR2                   3523
-#define IDC_COLBACK2                    3524
-#define IDC_CHOOSECOLBACK2              3525
 #define IDC_LABCLOCKSKIN                3526
 #define IDC_CLOCKSKINFILE               3527
 #define IDC_CLOCKSKINSELECT             3528

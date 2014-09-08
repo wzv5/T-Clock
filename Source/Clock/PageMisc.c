@@ -42,6 +42,7 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				(id==IDCB_SHOW_DOY) ||
 				(id==IDCB_TRANS2KICONS) ||
 				(id==IDCB_MONOFF_ONLOCK) ||
+				(id==IDCB_MULTIMON) ||
 				(id==IDCB_CALTOPMOST)) && (code==BST_CHECKED||code==BST_UNCHECKED)) {
 				SendPSChanged(hDlg);
 			}
@@ -130,8 +131,12 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 		for(iter=IDCB_MONOFF_ONLOCK_GRP; iter<=IDCB_MONOFF_ONLOCK; ++iter)
 			EnableDlgItem(hDlg,iter,FALSE);
 	}
-	if(g_tos<TOS_VISTA){
-		EnableDlgItem(hDlg, IDCB_USECALENDAR, FALSE);
+	if(g_tos<TOS_WIN8){
+		for(iter=IDCB_MULTIMON_GRP; iter<=IDCB_MULTIMON; ++iter)
+			EnableDlgItem(hDlg,iter,FALSE);
+		if(g_tos<TOS_VISTA){
+			EnableDlgItem(hDlg, IDCB_USECALENDAR, FALSE);
+		}
 	}
 }
 //================================================================================================
@@ -139,6 +144,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
 	char szWeek[8];
+	char bRefresh=GetMyRegLong("Desktop","Multimon",1) != (LONG)IsDlgButtonChecked(hDlg,IDCB_MULTIMON);
 	
 	SetMyRegLong("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
 	SetMyRegLong("Calendar","CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));
@@ -149,6 +155,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	SetMyRegLong("Calendar","ViewMonthsPast", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS32,0,0));
 	SetMyRegLong("Desktop","Transparent2kIconText", IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS));
 	SetMyRegLong("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
+	SetMyRegLong("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
 	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);
 	SetMySysWeek(szWeek);
@@ -162,5 +169,8 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 		} else {
 			UnregisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to FALSE.
 		}
+	}
+	if(bRefresh){
+		SendMessage(g_hwndClock,CLOCKM_REFRESHCLOCK,0,0);
 	}
 }

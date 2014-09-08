@@ -320,6 +320,19 @@
 			<Option target="app debug" />
 			<Option target="dll debug" />
 		</Unit>
+		<Unit filename="common/tcolor.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/tcolor.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
