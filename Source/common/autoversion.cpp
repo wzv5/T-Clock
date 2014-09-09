@@ -1,4 +1,4 @@
-//Based on autorevision.cpp by Code::Blocks released as GPL (should be enough modification to vanish GPL, MUHAHAHAHAW)
+//Based on autorevision.cpp by Code::Blocks released as GPLv3 (should be enough modification to vanish GPL, MUHAHAHAHAW)
 //	Rev: 7109 @ 2011-04-15T11:53:16.901970Z
 //Now released as WTFPL
 #include <stdio.h>
@@ -44,14 +44,14 @@
 #endif
 using namespace std;
 bool g_verbose=false;
-bool g_do_autoinc=true;
 bool g_do_postbuild=true;
 enum{
-	REPO_NONE	=0x00,
-	REPO_GIT	=0x01,
-	REPO_SVN	=0x02,
+	REPO_NONE		=0x00,
+	REPO_AUTOINC	=0x01, // fake repo, simple autoincrement
+	REPO_GIT		=0x02,
+	REPO_SVN		=0x04,
 };
-char g_repo=REPO_NONE;
+unsigned char g_repo=REPO_AUTOINC;
 bool g_only_postbuild=false;
 
 //major.minor[.build[.revision]]
@@ -81,9 +81,9 @@ struct Version{
 	unsigned int revision;
 };
 bool ReadHeader(const char* filepath,Version &ver);
-bool QueryGit(const char* path,Version &ver,string &url,string &date);
-bool QuerySVN(const char* path,Version &ver,string &url,string &date);
-bool WriteHeader(const char* filepath,Version &ver,string &url,string &date);
+bool QueryGit(const char* path,Version* ver,string* url,string* date,string* revhash);
+bool QuerySVN(const char* path,Version* ver,string* url,string* date);
+bool WriteHeader(const char* filepath,const Version &ver,const string &url,const string &date,const string &revhash);
 int main(int argc, char** argv)
 {
 //	+svn +noincrement +noinc --minor=99
@@ -112,7 +112,7 @@ int main(int argc, char** argv)
 		} else if(!strcmp("--post-build",argv[i]) || !strcmp("--post",argv[i])) {
 			g_only_postbuild=true;
 		} else if(!strcmp("+noincrement",argv[i]) || !strcmp("+noinc",argv[i])) {
-			g_do_autoinc=false;
+			g_repo&=~REPO_AUTOINC;
 		} else if(!strcmp("+nopost-build",argv[i]) || !strcmp("+nopost",argv[i])) {
 			g_do_postbuild=false;
 		} else if((argv[i][0]!='-'||argv[i][0]!='+') && !headerPath) {
@@ -121,7 +121,7 @@ int main(int argc, char** argv)
 			printf("Unknown Option: %s\n\n",argv[i]);
 		}
 	}
-	if(g_repo && (!Gitpath&&!SVNpath)) {
+	if(g_repo&(REPO_GIT|REPO_SVN) && (!Gitpath&&!SVNpath)) {
 		puts("Usage: autoversion [options] [autoversion.h]\n"
 			"Options:\n"
 			"   --git <path>             use Git for 'revision', also add Git date & URL\n"
@@ -152,7 +152,7 @@ int main(int argc, char** argv)
 		//if(flock)
 		//	fclose(flock);
 		return 0;
-	} else if(g_do_postbuild && g_repo==REPO_NONE) {
+	} else if(g_do_postbuild && g_repo<=REPO_AUTOINC) {
 		FILE* flock = fopen(lockPath,"rb");
 		if(flock){
 			fclose(flock);
@@ -171,33 +171,40 @@ int main(int argc, char** argv)
 	Version ver={0};
 	string url="";
 	string date="unknown date";
+	string revhash="";
 
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	ReadHeader(headerPath,ver);
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	unsigned int rev=ver.revision;
-	if(g_do_autoinc) ++ver.revision;
 	if(g_repo&REPO_GIT){
-		if(QueryGit(Gitpath,ver,url,date))
+		if(QueryGit(Gitpath,&ver,&url,&date,&revhash))
 			g_repo=REPO_GIT;
 		else
 			g_repo&=~REPO_GIT;
 	}
 	if(g_repo&REPO_SVN){
-		if(QuerySVN(SVNpath,ver,url,date))
+		if(QuerySVN(SVNpath,&ver,&url,&date))
 			g_repo=REPO_SVN;
 		else
 			g_repo&=~REPO_SVN;
 	}
+	if(g_repo&REPO_AUTOINC){
+		g_repo=REPO_NONE;
+		++ver.revision;
+	}
+//	if(g_repo){ // increase revision because on commit the revision increases :P
+//		++ver.revision; // So we should use the "comming" revision and not the previous (grml... date and time is wrong though :/ )
+//	}
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	if(rev!=ver.revision){
-		WriteHeader(headerPath,ver,url,date);
+		WriteHeader(headerPath,ver,url,date,revhash);
 		puts("	- increased revision");
 	}
 
 	return 0;
 }
-bool QueryGit(const char* path,Version &ver,string &url,string &date)
+bool QueryGit(const char* path,Version* ver,string* url,string* date,string* revhash)
 {
 	bool found=false;
 #	ifdef _WIN32
@@ -208,29 +215,34 @@ bool QueryGit(const char* path,Version &ver,string &url,string &date)
 		return false;
 	char buf[4097],* pos,* data;
 	size_t read;
+	int error;
 	FILE* git;
 	git=popen("git rev-list HEAD --count","r");
 	if(git){ /// revision count
-		read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; pclose(git);
-		if(*buf>='0' && *buf<='9'){ // simple error check on command failure
-			ver.revision=atoi(buf);
+		read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+		if(!error && *buf>='0' && *buf<='9'){ // simple error check on command failure
+			ver->revision=atoi(buf);
 			git=popen("git remote -v","r");
 			if(git){ /// url
-				read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; pclose(git);
+				read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
 				for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'&&*pos!=' '&&*pos!='\t'); ++pos);
 				for(data=pos; *data=='\r'||*data=='\n'||*data==' '||*data=='\t'; ++data);
 				for(pos=data; *pos && (*pos!='\r'&&*pos!='\n'&&*pos!=' '&&*pos!='\t'); ++pos);
-				if(*data && pos>data){
-					url.append(data,pos-data);
-//					git=popen("git log -1 --pretty=%h%n%an%n%at","r"); // short hash,author,timestamp
-					git=popen("git log -1 --pretty=%at","r"); // timestamp
+				if(!error && *data && pos>data){
+					url->append(data,pos-data);
+//					git=popen("git log -1 --pretty=%h%n%an%n%at","r"); // short hash, author, timestamp
+					git=popen("git log -1 --pretty=%h%n%at","r"); // short hash, timestamp
 					if(git){ /// shorthash,author,timestamp		SVN date example: 2014-07-01 21:31:24 +0200 (Tue, 01 Jul 2014)
-						read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; pclose(git);
-						time_t tt=atoi(buf);
-						tm* ttm=gmtime(&tt);
-						strftime(buf,64,"%Y-%m-%d %H:%M:%S +0000 (%a, %b %d %Y)",ttm);
-						date=buf;
-						found=true;
+						read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+						for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'); ++pos);
+						if(!error && *pos){
+							revhash->assign(buf,pos-buf); ++pos;
+							time_t tt=atoi(pos);
+							tm* ttm=gmtime(&tt);
+							strftime(buf,64,"%Y-%m-%d %H:%M:%S +0000 (%a, %b %d %Y)",ttm);
+							date->assign(buf);
+							found=true;
+						}
 					}
 				}
 			}
@@ -239,7 +251,7 @@ bool QueryGit(const char* path,Version &ver,string &url,string &date)
 	chdir(cwd);
 	return found;
 }
-bool QuerySVN(const char* path,Version &ver,string &url,string &date)
+bool QuerySVN(const char* path,Version* ver,string* url,string* date)
 {
 	bool found=false;
 	string svncmd("svn info --non-interactive ");
@@ -250,48 +262,50 @@ bool QuerySVN(const char* path,Version &ver,string &url,string &date)
 		size_t value_len=0; char value[128]={};
 		char buf[4097];
 		size_t read;
-		read=fread(buf,sizeof(char),4096,svn); buf[read]='\0'; pclose(svn);
-		for(char* c=buf; *c; ++c) {
-			nextloop:
-			if(attrib_len>=31) goto nextline;
-			switch(*c) {
-			case ':':
-				attrib[attrib_len]='\0';
-				for(++c; *c==' ' || *c=='\t'; ++c);
-				for(; *c && *c!='\n'; ++c) {
-					if(value_len>=127) {
-						value_len=0; *value='\0';
-						break;
+		read=fread(buf,sizeof(char),4096,svn); buf[read]='\0';
+		if(pclose(svn)==0){
+			for(char* c=buf; *c; ++c) {
+				nextloop:
+				if(attrib_len>=31) goto nextline;
+				switch(*c) {
+				case ':':
+					attrib[attrib_len]='\0';
+					for(++c; *c==' ' || *c=='\t'; ++c);
+					for(; *c && *c!='\n'; ++c) {
+						if(value_len>=127) {
+							value_len=0; *value='\0';
+							break;
+						}
+						value[value_len++]=*c;
 					}
-					value[value_len++]=*c;
-				}
-				if(*c=='\n') {
-					value[value_len]='\0';
-					if(!strcmp(attrib,"Revision")) {
-//						printf("Found: %s %s\n",attrib,value);
-						ver.revision=atoi(value);
-						found=true;
-					} else if(!strcmp(attrib,"Last Changed Date")) {
-//						printf("Found: %s @ %s\n",attrib,value);
-						date=value;
-					} else if(!strcmp(attrib,"URL")) {
-//						printf("Found: %s @ %s\n",attrib,value);
-						url=value;
+					if(*c=='\n') {
+						value[value_len]='\0';
+						if(!strcmp(attrib,"Revision")) {
+//							printf("Found: %s %s\n",attrib,value);
+							ver->revision=atoi(value);
+							found=true;
+						} else if(!strcmp(attrib,"Last Changed Date")) {
+//							printf("Found: %s @ %s\n",attrib,value);
+							date->assign(value);
+						} else if(!strcmp(attrib,"URL")) {
+//							printf("Found: %s @ %s\n",attrib,value);
+							url->assign(value);
+						}
 					}
+					value_len=0; *value='\0';
+				case '\n':
+					goto nextline;
+				default:
+					attrib[attrib_len++]=*c;
 				}
-				value_len=0; *value='\0';
-			case '\n':
-				goto nextline;
-			default:
-				attrib[attrib_len++]=*c;
+				continue;
+				nextline:
+				for(; *c && *c!='\n'; ++c);
+				for(; *c=='\r'||*c=='\n'||*c==' '||*c=='\t'; ++c);
+				attrib_len=0; *attrib='\0';
+				if(!*c) break;
+				goto nextloop;
 			}
-			continue;
-			nextline:
-			for(; *c && *c!='\n'; ++c);
-			for(; *c=='\r'||*c=='\n'||*c==' '||*c=='\t'; ++c);
-			attrib_len=0; *attrib='\0';
-			if(!*c) break;
-			goto nextloop;
 		}
 	}
 	return found;
@@ -366,7 +380,7 @@ bool ReadHeader(const char* filepath,Version &ver)
 	}
 	return true;
 }
-bool WriteHeader(const char* filepath,Version &ver,string &url,string &date)
+bool WriteHeader(const char* filepath,const Version &ver,const string &url,const string &date,const string &revhash)
 {
 	FILE* fheader = fopen(filepath,"wb");
 	if(!fheader) {
@@ -402,6 +416,7 @@ bool WriteHeader(const char* filepath,Version &ver,string &url,string &date)
 		fputs("/** Subversion Information **/\n",fheader);
 		fprintf(fheader, "#	define VER_REVISION_URL \"%s\"\n",url.c_str());
 		fprintf(fheader, "#	define VER_REVISION_DATE \"%s\"\n",date.c_str());
+		fprintf(fheader, "#	define VER_REVISION_HASH \"%s\"\n",revhash.c_str());
 	}
 	fputs("/** Date/Time **/\n",fheader);
 	fprintf(fheader,"#	define VER_TIMESTAMP %lu\n",tt);
