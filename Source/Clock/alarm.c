@@ -56,7 +56,7 @@ void SetAlarmEnabled(int idx,BOOL bEnabled){
 void ReadAlarmFromReg(alarm_t* pAS, int num)
 {
 	wsprintf(g_alarmkey+5,"%d",num+1);
-	GetMyRegStr(g_alarmkey, "Name", pAS->name, 40, "");
+	GetMyRegStr(g_alarmkey, "Name", pAS->name, sizeof(pAS->name), "");
 	pAS->bAlarm = GetMyRegLong(g_alarmkey, "Alarm", FALSE);
 	pAS->hour = GetMyRegLong(g_alarmkey, "Hour", 12);
 	pAS->minute = GetMyRegLong(g_alarmkey, "Minute", 0);
@@ -74,7 +74,7 @@ void ReadAlarmFromReg(alarm_t* pAS, int num)
 	pAS->days = GetMyRegLong(g_alarmkey, "Days", 0x7f);
 	pAS->bPM = GetMyRegLong(g_alarmkey, "PM", FALSE);
 	
-	if(pAS->name[0] == 0)
+	if(!*pAS->name)
 		wsprintf(pAS->name, "%02d:%02d", pAS->hour, pAS->minute);
 }
 void SaveAlarmToReg(alarm_t* pAS, int num)

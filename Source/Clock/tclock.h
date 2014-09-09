@@ -102,7 +102,8 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
 extern BOOL bKillPCBeep; // Declared in alarm.c
 
 // alarmday.c
-int SetAlarmDay(HWND hDlg, int n);
+#define ALARMDAY_OKFLAG 0x80000000
+int ChooseAlarmDay(HWND hDlg, unsigned days);
 
 // soundselect.c
 BOOL IsMMFile(const char* fname);

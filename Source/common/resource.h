@@ -240,7 +240,7 @@
 #define IDC_LABAMSYMBOL                 1254
 #define IDC_LABPMSYMBOL                 1255
 #define IDC_ALARM                       1300
-#define IDC_LABTIMEALARM                1301
+#define IDC_LABTIMEALARM                1301 /* group */
 #define IDC_LABTIMEALARM_X              1302
 #define IDC_HOURALARM                   1303
 #define IDC_SPINHOUR                    1304
@@ -257,18 +257,17 @@
 #define IDC_REPEATALARM                 1315
 #define IDC_AMPM_DISPLAY                1316
 #define IDC_AMPM_CHECK                  1317
-#define IDC_BLINKALARM                  1318
+#define IDC_BLINKALARM                  1318 /* end group */
 #define IDC_COMBOALARM                  1319
 #define IDC_DELALARM                    1320
-#define IDC_HIDDENALARMDAY              1321
 #define IDC_JIHOU                       1322
-#define IDC_LABSOUNDJIHOU               1323
+#define IDC_LABSOUNDJIHOU               1323 /* group */
 #define IDC_FILEJIHOU                   1324
 #define IDC_SANSHOJIHOU                 1325
 #define IDC_LABTESTJIHOU                1326
 #define IDC_TESTJIHOU                   1327
 #define IDC_REPEATJIHOU                 1328
-#define IDC_BLINKJIHOU                  1329
+#define IDC_BLINKJIHOU                  1329 /* end group */
 #define IDC_ALARMDAY0                   1350
 #define IDC_ALARMDAY1                   1351
 #define IDC_ALARMDAY2                   1352
