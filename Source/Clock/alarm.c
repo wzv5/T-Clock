@@ -3,21 +3,22 @@
 //--+++--> Sound a wave, a media file, or open a file =============================
 //================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
+static char g_alarmkey[20]="Alarm";
 
-static WAVEHDR wh;
-static HPSTR pData = NULL;
-static HWAVEOUT hWaveOut = NULL;
-static WAVEFORMATEX* pFormat = NULL;
+static WAVEHDR m_wh;
+static HPSTR m_pData = NULL;
+static HWAVEOUT m_hWaveOut = NULL;
+static WAVEFORMATEX* m_pFormat = NULL;
 
-static int countPlay = 0, countPlayNum = 0;
-static BOOL bMCIPlaying = FALSE;
-BOOL bPlayingNonstop = FALSE;
-static BOOL bTrack;
-static int nTrack;
+static int m_countPlay = 0, m_countPlayNum = 0;
+static BOOL m_bMCIPlaying = FALSE;
+char g_bPlayingNonstop = 0;
+static BOOL m_bTrack;
+static int m_nTrack;
 
-static int maxAlarm = 1;
-static alarm_t* pAS = NULL;
-static BOOL bJihou, bJihouRepeat, bJihouBlink;
+static int m_maxAlarm = 1;
+static alarm_t* m_pAS = NULL;
+static BOOL m_bJihou, m_bJihouRepeat, m_bJihouBlink;
 
 typedef struct _stPCBEEP {
 	HWND hWnd;
@@ -25,33 +26,31 @@ typedef struct _stPCBEEP {
 	DWORD dwLoops;
 } PCBEEP;
 
-static PCBEEP pcb;
-BOOL bKillPCBeep = TRUE;
+static PCBEEP m_pcb;
+static volatile char m_bKillPCBeep;
 
 BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops);
 int PlayMCI(HWND hwnd, int nt);
 void StopWave(void);
 
-static char g_alarmkey[20]="Alarm";
-
 BOOL GetHourlyChime(){
-	return bJihou;
+	return m_bJihou;
 }
 void SetHourlyChime(BOOL bEnabled){
-	bJihou=bEnabled;
-	SetMyRegLong("","Jihou",bJihou);
+	m_bJihou=bEnabled;
+	SetMyRegLong("","Jihou",m_bJihou);
 }
 BOOL GetAlarmEnabled(int idx){
-	if(idx<0||idx>=maxAlarm)
+	if(idx<0||idx>=m_maxAlarm)
 		return 0;
-	return pAS[idx].bAlarm;
+	return m_pAS[idx].bAlarm;
 }
 void SetAlarmEnabled(int idx,BOOL bEnabled){
-	if(idx<0||idx>=maxAlarm)
+	if(idx<0||idx>=m_maxAlarm)
 		return;
-	pAS[idx].bAlarm=bEnabled;
+	m_pAS[idx].bAlarm=bEnabled;
 	wsprintf(g_alarmkey+5,"%d",idx+1);
-	SetMyRegLong(g_alarmkey,"Alarm",pAS[idx].bAlarm);
+	SetMyRegLong(g_alarmkey,"Alarm",m_pAS[idx].bAlarm);
 }
 void ReadAlarmFromReg(alarm_t* pAS, int num)
 {
@@ -103,29 +102,29 @@ void SaveAlarmToReg(alarm_t* pAS, int num)
 //-------------------------------------------------+++--> Load Configured Alarm Data From Registry:
 void InitAlarm(void)   //-------------------------------------------------------------------+++-->
 {
-	maxAlarm = GetMyRegLong("", "AlarmNum", 0);
-	if(maxAlarm < 1) maxAlarm = 0;
-	if(pAS) free(pAS); pAS = NULL;
-	if(maxAlarm > 0) {
+	m_maxAlarm = GetMyRegLong("", "AlarmNum", 0);
+	if(m_maxAlarm < 1) m_maxAlarm = 0;
+	if(m_pAS) free(m_pAS); m_pAS = NULL;
+	if(m_maxAlarm > 0) {
 		int i;
-		pAS = malloc(sizeof(alarm_t) * maxAlarm);
-		for(i=0; i<maxAlarm; ++i) {
-			ReadAlarmFromReg(&pAS[i],i);
+		m_pAS = malloc(sizeof(alarm_t) * m_maxAlarm);
+		for(i=0; i<m_maxAlarm; ++i) {
+			ReadAlarmFromReg(&m_pAS[i],i);
 		}
 	}
 	
-	bJihou = GetMyRegLong("", "Jihou", FALSE);
-	if(bJihou) {
-		bJihouRepeat = GetMyRegLong("", "JihouRepeat", FALSE);
-		bJihouBlink = GetMyRegLong("", "JihouBlink", FALSE);
+	m_bJihou = GetMyRegLong("", "Jihou", FALSE);
+	if(m_bJihou) {
+		m_bJihouRepeat = GetMyRegLong("", "JihouRepeat", FALSE);
+		m_bJihouBlink = GetMyRegLong("", "JihouBlink", FALSE);
 	}
 }
 //================================================================================================
 //---------------------//--------------------------------------+++--> Shut Off the God Damn Siren!:
 void EndAlarm(void)   //--------------------------------------------------------------------+++-->
 {
-	if(pAS) free(pAS); pAS = NULL;
 	StopFile();
+	if(m_pAS) free(m_pAS); m_pAS = NULL;
 }
 //============================================== This Code Assumes...	===========================
 //-----------------------------------------+++--> 12pm = Noon <--> However (See Below for Details):
@@ -136,34 +135,34 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 	if(st->wDayOfWeek > 0) fday = 1 << (st->wDayOfWeek - 1);
 	else fday = 1 << 6;
 	
-	for(i = 0; i < maxAlarm; i++) {
-		if(!pAS[i].bAlarm) continue;
+	for(i = 0; i < m_maxAlarm; i++) {
+		if(!m_pAS[i].bAlarm) continue;
 		h = st->wHour;
 		
-		if(pAS[i].bHour12 && pAS[i].bPM) {
+		if(m_pAS[i].bHour12 && m_pAS[i].bPM) {
 			if(h != 12) h -= 12;
 		}
 		
-		if(pAS[i].hour == h && pAS[i].minute == st->wMinute && (pAS[i].days & fday)) {
-			if(pAS[i].bBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, FALSE, 0);
-			if(pAS[i].jrMsgUsed) { // From BounceWindow.c
+		if(m_pAS[i].hour == h && m_pAS[i].minute == st->wMinute && (m_pAS[i].days & fday)) {
+			if(m_pAS[i].bBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, FALSE, 0);
+			if(m_pAS[i].jrMsgUsed) { // From BounceWindow.c
 				extern char szCaption[TNY_BUFF];  // Alarm Name
 				extern char szMessage[MAX_BUFF];  // Window Text
 				extern char szSettings[TNY_BUFF]; // Hop Settings
 				
-				strcpy(szCaption, pAS[i].name);
-				strcpy(szMessage, pAS[i].jrMessage);
-				strcpy(szSettings, pAS[i].jrSettings);
+				strcpy(szCaption, m_pAS[i].name);
+				strcpy(szMessage, m_pAS[i].jrMessage);
+				strcpy(szSettings, m_pAS[i].jrSettings);
 				PostMessage(hwnd, WM_COMMAND, JRMSG_BOING, 0);
 			}
-			if(pAS[i].fname[0]) {
-				if(pAS[i].bRepeat && pAS[i].iTimes > 1) rep = pAS[i].iTimes; //-+> Ring X Times
-				else if(pAS[i].bRepeat) rep = -1; //-+> Ring To Infinity > ∞ < Or Until Stopped
-				else if(pAS[i].bChimeHr) rep = h; //-+> Ring the Hour
+			if(m_pAS[i].fname[0]) {
+				if(m_pAS[i].bRepeat && m_pAS[i].iTimes > 1) rep = m_pAS[i].iTimes; //-+> Ring X Times
+				else if(m_pAS[i].bRepeat) rep = -1; //-+> Ring To Infinity > ∞ < Or Until Stopped
+				else if(m_pAS[i].bChimeHr) rep = h; //-+> Ring the Hour
 				else rep = 0;
 				
-				bKillPCBeep = FALSE;
-				if(PlayFile(hwnd, pAS[i].fname, rep)) {
+				m_bKillPCBeep = 0;
+				if(PlayFile(hwnd, m_pAS[i].fname, rep)) {
 					EmptyWorkingSet(GetCurrentProcess());
 					return; // ^^Return^^ Memory Used by File Play.
 				}
@@ -171,15 +170,15 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 		}
 	}
 	
-	if(bJihou && st->wMinute == 0) {
+	if(m_bJihou && st->wMinute == 0) {
 		char fname[MAX_BUFF];
 		h = st->wHour;
-		if(bJihouBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, TRUE, 0);
+		if(m_bJihouBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, TRUE, 0);
 		if(h == 0) h = 12;
 		else if(h >= 13) h -= 12;
 		GetMyRegStr("", "JihouFile", fname, GEN_BUFF, "");
 		if(fname[0]) {
-			if(bJihouRepeat) {
+			if(m_bJihouRepeat) {
 				rep = h; // Chime the Hour as Requested (If Requested)
 			} else {
 				rep = 0; // Ring Once & Go Away!
@@ -198,11 +197,11 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 	FILE* file;
 	
 	if(fopen_s(&file, fname, "r") > 0) {
-		bKillPCBeep = TRUE;
+		m_bKillPCBeep = 1;
 		return FALSE;
 	} else {
 		char* szToken,*nxToken;
-		while(!bKillPCBeep) {
+		while(!m_bKillPCBeep) {
 			// If We Have a Line, Play Its Beep!
 			char szTmp[TNY_BUFF];
 			while(fgets(szTmp, TNY_BUFF, file)) {
@@ -222,7 +221,7 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 					i++;
 				} // Get Next Beep Line.
 				
-				if(bKillPCBeep) {  // Just in case It's a Long File...
+				if(m_bKillPCBeep) {  // Just in case It's a Long File...
 					fclose(file); // Check for Kill Code between Beeps.
 					return TRUE;
 				} else if(iFeq == -1) {
@@ -237,7 +236,7 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 				--iLoops;
 			}
 			if(iLoops == 0) { // Or Die, Exit, Quit, Close, End
-				bKillPCBeep = TRUE;
+				m_bKillPCBeep = 1;
 				fclose(file);
 				return TRUE;
 			}
@@ -264,12 +263,12 @@ unsigned __stdcall PlayNoSoundProc(void* param)
 //--+++-->
 void PlayNoSoundThread(HWND hWnd, char* fname, DWORD dwLoops)
 {
-	strcpy_s(pcb.szFname, MAX_BUFF, fname);
-	pcb.dwLoops = dwLoops;
-	pcb.hWnd = hWnd;
+	strcpy_s(m_pcb.szFname, MAX_BUFF, fname);
+	m_pcb.dwLoops = dwLoops;
+	m_pcb.hWnd = hWnd;
 	
-	_beginthreadex(NULL, 0, PlayNoSoundProc, (void*)&pcb, 0, 0);
-	
+	m_bKillPCBeep = 0;
+	_beginthreadex(NULL, 0, PlayNoSoundProc, (void*)&m_pcb, 0, 0);
 }
 //=================================================*
 // ------------------------ Play Selected Alarm File
@@ -280,47 +279,46 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 	if(*fname == 0) return FALSE;
 	
 	if(ext_cmp(fname, "wav") == 0) {
-		if(bMCIPlaying) return FALSE;
+		if(m_bMCIPlaying) return FALSE;
 		return PlayWave(hwnd, fname, dwLoops);
 	}
 	
 	if(ext_cmp(fname, "pcb") == 0) {
-		if(bMCIPlaying) return FALSE;
-		bKillPCBeep = FALSE;
+		if(m_bMCIPlaying) return FALSE;
 		PlayNoSoundThread(hwnd, fname, dwLoops);
 		return TRUE;
 	}
 	
 	else if(IsMMFile(fname)) {
 		char command[GEN_BUFF];
-		if(bMCIPlaying) return FALSE;
+		if(m_bMCIPlaying) return FALSE;
 		strcpy(command, "open \"");
 		strcat(command, fname);
 		strcat(command, "\" alias myfile");
 		if(mciSendString(command, NULL, 0, NULL) == 0) {
 			strcpy(command, "set myfile time format ");
 			if(_stricmp(fname, "cdaudio") == 0 || ext_cmp(fname, "cda") == 0) {
-				strcat(command, "tmsf"); bTrack = TRUE;
+				strcat(command, "tmsf"); m_bTrack = TRUE;
 			} else {
-				strcat(command, "milliseconds"); bTrack = FALSE;
+				strcat(command, "milliseconds"); m_bTrack = FALSE;
 			}
 			mciSendString(command, NULL, 0, NULL);
 			
-			nTrack = -1;
+			m_nTrack = -1;
 			if(ext_cmp(fname, "cda") == 0) {
 				char* p;
-				p = fname; nTrack = 0;
+				p = fname; m_nTrack = 0;
 				while(*p) {
-					if('0' <= *p && *p <= '9') nTrack = nTrack * 10 + *p - '0';
+					if('0' <= *p && *p <= '9') m_nTrack = m_nTrack * 10 + *p - '0';
 					p++;
 				}
 			}
 			
-			if(PlayMCI(hwnd, nTrack) == 0) {
-				bMCIPlaying = TRUE;
-				countPlay = 1; countPlayNum = dwLoops;
+			if(PlayMCI(hwnd, m_nTrack) == 0) {
+				m_bMCIPlaying = TRUE;
+				m_countPlay = 1; m_countPlayNum = dwLoops;
 			} else mciSendString("close myfile", NULL, 0, NULL);
-		} return bMCIPlaying;
+		} return m_bMCIPlaying;
 	} else ExecFile(hwnd, fname);
 	return FALSE;
 }
@@ -353,26 +351,26 @@ int PlayMCI(HWND hwnd, int nt)
 //===================================================*
 void StopFile(void)
 {
-	bKillPCBeep = TRUE;
+	m_bKillPCBeep = 1;
 	StopWave();
-	if(bMCIPlaying) {
+	if(m_bMCIPlaying) {
 		mciSendString("stop myfile", NULL, 0, NULL);
 		mciSendString("close myfile", NULL, 0, NULL);
-		bMCIPlaying = FALSE;
-		countPlay = 0; countPlayNum = 0;
+		m_bMCIPlaying = FALSE;
+		m_countPlay = 0; m_countPlayNum = 0;
 	}
-	bPlayingNonstop = FALSE;
+	g_bPlayingNonstop = 0;
 }
 //=================================================*
 // ----------------------------- Loop Play as Needed
 //===================================================*
 void OnMCINotify(HWND hwnd)
 {
-	if(bMCIPlaying) {
-		if(countPlay < countPlayNum || countPlayNum < 0) {
+	if(m_bMCIPlaying) {
+		if(m_countPlay < m_countPlayNum || m_countPlayNum < 0) {
 			mciSendString("seek myfile to start wait", NULL, 0, NULL);
-			if(PlayMCI(hwnd, nTrack) == 0) {
-				countPlay++;
+			if(PlayMCI(hwnd, m_nTrack) == 0) {
+				m_countPlay++;
 			} else StopFile();
 		} else StopFile();
 	}
@@ -387,7 +385,7 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 	LONG lFmtSize;
 	HMMIO hmmio;
 	
-	if(hWaveOut != NULL) return FALSE;
+	if(m_hWaveOut != NULL) return FALSE;
 	
 	if((hmmio=mmioOpen(fname, NULL, MMIO_READ|MMIO_ALLOCBUF))==0)
 		return FALSE;
@@ -406,21 +404,21 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 	}
 	
 	lFmtSize = mmckinfoSubchunk.cksize;
-	pFormat = (WAVEFORMATEX*)malloc(lFmtSize);
-	if(pFormat == NULL) {
+	m_pFormat = (WAVEFORMATEX*)malloc(lFmtSize);
+	if(m_pFormat == NULL) {
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
 	
-	if(mmioRead(hmmio, (HPSTR)pFormat, lFmtSize) != lFmtSize) {
-		free(pFormat); pFormat = NULL;
+	if(mmioRead(hmmio, (HPSTR)m_pFormat, lFmtSize) != lFmtSize) {
+		free(m_pFormat); m_pFormat = NULL;
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
 	
-	if(waveOutOpen(&hWaveOut, (UINT)WAVE_MAPPER, (LPWAVEFORMATEX)pFormat,
+	if(waveOutOpen(&m_hWaveOut, (UINT)WAVE_MAPPER, (LPWAVEFORMATEX)m_pFormat,
 				   0, 0, (DWORD)WAVE_FORMAT_QUERY)) {
-		free(pFormat); pFormat = NULL;
+		free(m_pFormat); m_pFormat = NULL;
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
@@ -430,60 +428,60 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 	mmckinfoSubchunk.ckid = mmioFOURCC('d', 'a', 't', 'a');
 	if(mmioDescend(hmmio, &mmckinfoSubchunk, &mmckinfoParent,
 				   MMIO_FINDCHUNK)) {
-		free(pFormat); pFormat = NULL;
+		free(m_pFormat); m_pFormat = NULL;
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
 	
 	lDataSize = mmckinfoSubchunk.cksize;
 	if(lDataSize == 0) {
-		free(pFormat); pFormat = NULL;
+		free(m_pFormat); m_pFormat = NULL;
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
 	
-	pData = (HPSTR)malloc(lDataSize);
-	if(pData == NULL) {
-		free(pFormat); pFormat = NULL;
+	m_pData = (HPSTR)malloc(lDataSize);
+	if(m_pData == NULL) {
+		free(m_pFormat); m_pFormat = NULL;
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
 	
-	if(mmioRead(hmmio, pData, lDataSize) != lDataSize) {
-		free(pFormat); pFormat = NULL;
-		free(pData); pData = NULL;
+	if(mmioRead(hmmio, m_pData, lDataSize) != lDataSize) {
+		free(m_pFormat); m_pFormat = NULL;
+		free(m_pData); m_pData = NULL;
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
 	mmioClose(hmmio, 0);
 	
-	if(waveOutOpen((LPHWAVEOUT)&hWaveOut, (UINT)WAVE_MAPPER,
-				   (LPWAVEFORMATEX)pFormat, (DWORD_PTR)(HWND)hwnd, 0,
+	if(waveOutOpen((LPHWAVEOUT)&m_hWaveOut, (UINT)WAVE_MAPPER,
+				   (LPWAVEFORMATEX)m_pFormat, (DWORD_PTR)(HWND)hwnd, 0,
 				   (DWORD)CALLBACK_WINDOW)) {
-		free(pFormat); pFormat = NULL;
-		free(pData); pData = NULL;
+		free(m_pFormat); m_pFormat = NULL;
+		free(m_pData); m_pData = NULL;
 		return FALSE;
 	}
 	
-	memset(&wh, 0, sizeof(WAVEHDR));
-	wh.dwBufferLength = lDataSize;
-	wh.lpData = pData;
+	memset(&m_wh, 0, sizeof(WAVEHDR));
+	m_wh.dwBufferLength = lDataSize;
+	m_wh.lpData = m_pData;
 	if(dwLoops != 0) {
-		wh.dwFlags = WHDR_BEGINLOOP|WHDR_ENDLOOP;
-		wh.dwLoops = dwLoops;
+		m_wh.dwFlags = WHDR_BEGINLOOP|WHDR_ENDLOOP;
+		m_wh.dwLoops = dwLoops;
 	}
-	if(waveOutPrepareHeader(hWaveOut, &wh, sizeof(WAVEHDR))) {
-		waveOutClose(hWaveOut); hWaveOut = NULL;
-		free(pFormat); pFormat = NULL;
-		free(pData); pData = NULL;
+	if(waveOutPrepareHeader(m_hWaveOut, &m_wh, sizeof(WAVEHDR))) {
+		waveOutClose(m_hWaveOut); m_hWaveOut = NULL;
+		free(m_pFormat); m_pFormat = NULL;
+		free(m_pData); m_pData = NULL;
 		return FALSE;
 	}
 	
-	if(waveOutWrite(hWaveOut, &wh, sizeof(WAVEHDR)) != 0) {
-		waveOutUnprepareHeader(hWaveOut, &wh, sizeof(WAVEHDR));
-		waveOutClose(hWaveOut);	hWaveOut = NULL;
-		free(pFormat); pFormat = NULL;
-		free(pData); pData = NULL;
+	if(waveOutWrite(m_hWaveOut, &m_wh, sizeof(WAVEHDR)) != 0) {
+		waveOutUnprepareHeader(m_hWaveOut, &m_wh, sizeof(WAVEHDR));
+		waveOutClose(m_hWaveOut);	m_hWaveOut = NULL;
+		free(m_pFormat); m_pFormat = NULL;
+		free(m_pData); m_pData = NULL;
 		return FALSE;
 	}
 	
@@ -493,13 +491,13 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 //---------------------//---------------------------------------+++--> End Play of Wave Audio File:
 void StopWave(void)   //--------------------------------------------------------------------+++-->
 {
-	if(hWaveOut == NULL) return;
-	waveOutReset(hWaveOut);
-	waveOutUnprepareHeader(hWaveOut, &wh, sizeof(WAVEHDR));
-	waveOutClose(hWaveOut);
-	hWaveOut = NULL;
-	free(pFormat); pFormat = NULL;
-	free(pData); pData = NULL;
+	if(m_hWaveOut == NULL) return;
+	waveOutReset(m_hWaveOut);
+	waveOutUnprepareHeader(m_hWaveOut, &m_wh, sizeof(WAVEHDR));
+	waveOutClose(m_hWaveOut);
+	m_hWaveOut = NULL;
+	free(m_pFormat); m_pFormat = NULL;
+	free(m_pData); m_pData = NULL;
 }
 //===============================================================================*
 // -------------------------------------------------------------- The NIST Says...
