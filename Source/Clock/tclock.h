@@ -123,13 +123,17 @@ void OnDropFiles(HWND hwnd, HDROP hdrop);
 void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 // timer.c
-#define MAX_TIMER  7
-void WatchTimer(void);
-void CancelAllTimersOnStartUp(void);
+void UpdateTimerMenu(HMENU hMenu);
 
-void EndTimer(void);
+void StopTimer(int id);
+void StartTimer(int id);
+void ToggleTimer(int id);
+
+void WatchTimer(int reset);
+void CancelAllTimersOnStartUp();
+
+void EndAllTimers();
 void DialogTimer();
-void StopTimer(int n);
 void OnTimerTimer(HWND hwnd);
 int GetTimerInfo(char* dst, int num, BOOL bNameOnly);
 

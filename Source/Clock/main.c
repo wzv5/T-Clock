@@ -261,7 +261,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		
 	case WM_DESTROY:
 		EndAlarm();
-		EndTimer();
+		EndAllTimers();
 		KillTimer(hwnd, IDTIMER_MAIN);
 		if(bStartTimer) {
 			KillTimer(hwnd, IDTIMER_START);
@@ -275,7 +275,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_ENDSESSION:
 		if(wParam) {
 			EndAlarm();
-			EndTimer();
+			EndAllTimers();
 			if(bStartTimer) {
 				KillTimer(hwnd, IDTIMER_START);
 				bStartTimer = FALSE;

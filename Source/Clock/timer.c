@@ -3,32 +3,153 @@
 ---------------------------------------------*/
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 #include "tclock.h"
+/// @todo (White-Tiger#1#09/04/14): clean up registry (remove ID from timers) ...
 
 char g_szTimersSubKey[]="Timers";
+//==================================================================
+//----------+++--> enumerate & display all times to our context menu:
+void UpdateTimerMenu(HMENU hMenu)   //------------------------+++-->
+{
+	unsigned count=GetMyRegLong(g_szTimersSubKey,"NumberOfTimers",0);
+	if(count){
+		unsigned idx;
+		char buf[GEN_BUFF+16];
+		char subkey[TNY_BUFF];
+		size_t offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
+		memset(buf,' ',4);
+		EnableMenuItem(hMenu,IDM_TIMEWATCH,MF_BYCOMMAND|MF_ENABLED);
+		EnableMenuItem(hMenu,IDM_TIMEWATCHRESET,MF_BYCOMMAND|MF_ENABLED);
+		InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
+		for(idx=0; idx<count; ++idx){
+			size_t len;
+			wsprintf(subkey+offset, "%d", idx+1);
+			len=GetMyRegStr(subkey,"Name",buf+4,GEN_BUFF,"");
+			wsprintf(buf+4+len,"	(%i",idx+1);
+			InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_STRING,IDM_I_TIMER+idx,buf);
+			if(GetMyRegLong(subkey,"Active",0))
+				CheckMenuItem(hMenu,IDM_I_TIMER+idx,MF_BYCOMMAND|MF_CHECKED);
+		}
+		InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
+	}
+}
 
 // Structure for Timer Setting
 typedef struct{
-	int id;
 	int second;
 	int minute;
 	int hour;
 	int day;
-	BOOL bActive;
-	BOOL bRepeat;
-	BOOL bBlink;
-	char fname[MAX_BUFF];
 	char name[GEN_BUFF];
+	char fname[MAX_BUFF];
+	char bActive;
+	char bRepeat;
+	char bBlink;
 } timeropt_t;
 
 // Structure for Active Timers
 typedef struct{
-	// Note: ALL time tncrement fields are converted
-	int id;				// to Seconds before being set as an active timer
+	int id;
 	DWORD seconds;		// Second  = 1 Second
 	DWORD tickonstart;	// Minute = 60 Seconds
 	char name[GEN_BUFF];// Hour = 3600 Seconds
 	char bHomeless;		// Day = 86400 Seconds
 } timer_t;
+
+static int m_timers = 0;
+static timer_t* m_timer = NULL; // Array of Currently Active Timers
+
+//========================================================================
+//---------------------//---------------------------+++--> Clear All Timer:
+void EndAllTimers()   //--------------------------------------------+++-->
+{
+	m_timers=0;
+	free(m_timer),m_timer=NULL;
+}
+//=================================================================================
+//----------------------------------------------+++--> Free Memory to Clear a Timer:
+void StopTimer(int id)   //--------------------------------------------------+++-->
+{
+	char subkey[TNY_BUFF];
+	size_t offset;
+	int idx;
+	
+	for(idx=0; idx<m_timers; ++idx) {
+		if(id==m_timer[idx].id){
+			timer_t* told=m_timer;
+			offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
+			wsprintf(subkey+offset, "%d", m_timer[idx].id+1);
+			SetMyRegLong(subkey, "Active", 0);
+			if(--m_timers){
+				int i;
+				timer_t* tnew=(timer_t*)malloc(sizeof(timer_t)*m_timers);
+				if(!tnew){
+					++m_timers; return;
+				}
+				for(i=0; i<idx; ++i){
+					tnew[i]=told[i];
+				}
+				for(i=idx; i<m_timers; ++i){
+					tnew[i]=told[i+1];
+				}
+				m_timer=tnew;
+			}else
+				m_timer=NULL;
+			Sleep(0);
+			free(told);
+			return;
+		}
+	}
+}
+//=================================================================================
+//----------------------------------------------+++--> Free Memory to Clear a Timer:
+void StartTimer(int id)   //-------------------------------------------------+++-->
+{
+	char subkey[TNY_BUFF];
+	size_t offset;
+	int idx;
+	timer_t* told=m_timer;
+	timer_t* tnew;
+	for(idx=0; idx<m_timers; ++idx) {
+		if(id==m_timer[idx].id) return;
+	}
+	tnew=(timer_t*)malloc(sizeof(timer_t)*(m_timers+1));
+	if(!tnew) return;
+	for(idx=0; idx<m_timers; ++idx){
+		tnew[idx]=told[idx];
+	}
+	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
+	wsprintf(subkey+offset, "%d", id+1);
+	GetMyRegStr(subkey,"Name",tnew[m_timers].name,sizeof(tnew[m_timers].name),"");
+	if(!*tnew[m_timers].name){
+		free(tnew);
+		return;
+	}
+	tnew[m_timers].id=id;
+	tnew[m_timers].seconds =GetMyRegLong(subkey,"Seconds",0);
+	tnew[m_timers].seconds+=GetMyRegLong(subkey,"Minutes",0)*60;
+	tnew[m_timers].seconds+=GetMyRegLong(subkey,"Hours",0)*3600;
+	tnew[m_timers].seconds+=GetMyRegLong(subkey,"Days",0)*86400;
+	tnew[m_timers].bHomeless=1;
+	tnew[m_timers].tickonstart=GetTickCount()/1000;
+	m_timer=tnew;
+	++m_timers;
+	free(told);
+	SetMyRegLong(subkey, "Active", 1);
+}
+//=================================================================
+//----------------------------------------------+++--> Toggle timer:
+void ToggleTimer(int id)   //--------------------------------+++-->
+{
+	char subkey[TNY_BUFF];
+	size_t offset;
+	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
+	wsprintf(subkey+offset, "%d", id+1);
+	if(GetMyRegLong(subkey,"Active",0)){
+		StopTimer(id);
+	}else{
+		StartTimer(id);
+	}
+}
 
 static void OnOK(HWND hDlg);
 static void OnDel(HWND hDlg);
@@ -39,9 +160,6 @@ static void OnTimerName(HWND hDlg);
 static void Ring(HWND hwnd, int id);
 static void OnTest(HWND hDlg, WORD id);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
-
-static int nTimerCount = 0;
-static timer_t* pTimersWorking = NULL; // Array of Currently Active Timers
 
 void UpdateNextCtrl(HWND, int, int, BOOL);
 INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
@@ -59,28 +177,31 @@ void DialogTimer()
 //================================================================================*
 INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	WORD id, code;
-	
-	id = LOWORD(wParam);
-	code = HIWORD(wParam);
-	
 	switch(message) {
 	case WM_INITDIALOG:
-		SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
-		SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 		OnInit(hDlg);
-		SetMyDialgPos(hDlg,21);
 		return TRUE;
 		
+	case WM_DESTROY:
+		OnDestroy(hDlg);
+		break;
+		
 	case WM_COMMAND: {
+			WORD id = LOWORD(wParam);
+			WORD code = HIWORD(wParam);
 			switch(id) {
-			case IDC_TIMERNAME:
-				if(code == CBN_EDITCHANGE) OnTimerName(hDlg);
-				else if(code == CBN_SELCHANGE) PostMessage(hDlg, WM_COMMAND, MAKELONG(id, CBN_EDITCHANGE), 0);
-				break;
-				
 			case IDC_TIMERDEL:
 				OnDel(hDlg);
+				break;
+				
+			case IDOK:
+				OnOK(hDlg);
+			case IDCANCEL:
+				DestroyWindow(hDlg);
+				
+			case IDC_TIMERNAME:
+				if(code==CBN_EDITCHANGE) OnTimerName(hDlg);
+				else if(code==CBN_SELCHANGE) PostMessage(hDlg, WM_COMMAND, MAKELONG(id, CBN_EDITCHANGE), 0);
 				break;
 				
 			case IDCB_STOPTIMER:
@@ -94,16 +215,9 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 			case IDC_TIMERTEST:
 				OnTest(hDlg, id);
 				break;
-				
-			case IDOK:
-				OnOK(hDlg);
-				
-			case IDCANCEL:
-				DestroyWindow(hDlg);
 			}
 			return TRUE;
 		}
-		
 		//--------------------------------------------------------------------------+++-->
 	case WM_NOTIFY: { //========================================== BEGIN WM_NOTIFY:
 //----------------------------------------------------------------------------+++-->
@@ -113,7 +227,7 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				
 				lpnmud = (LPNMUPDOWN)lParam;
 				if(lpnmud->iDelta > 0) { // User Selected the Up Arrow
-					switch(id) { //--+++--> on One of the Timer Controls.
+					switch(LOWORD(wParam)) { //--+++--> on One of the Timer Controls.
 					case IDC_TIMERSECSPIN:
 						i = GetDlgItemInt(hDlg, IDC_TIMERSECOND, NULL, TRUE);
 						if(i == 59)
@@ -148,7 +262,7 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 						} break;
 					}
 				} else { //--+++--> User Selected the Down Arrow
-					switch(id) { // on One of the Timer Controls.
+					switch(LOWORD(wParam)) { // on One of the Timer Controls.
 					case IDC_TIMERSECSPIN:
 						if(lpnmud->iDelta == -4) {
 							i = GetDlgItemInt(hDlg, IDC_TIMERSECOND, NULL, TRUE);
@@ -188,12 +302,6 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 			return TRUE; //=============================================== END WM_NOTIFY:
 		} //----------------------------------------------------------------------+++-->
 		
-	case WM_DESTROY:
-		StopFile();
-		OnDestroy(hDlg);
-		g_hDlgTimer = NULL;
-		break;
-		
 	case MM_MCINOTIFY:
 	case MM_WOM_DONE:
 		StopFile();
@@ -203,12 +311,29 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 	return FALSE;
 }
 //================================================================================================
+//------------------------//------------------------+++--> free memories associated with combo box:
+void OnDestroy(HWND hDlg)   //--------------------------------------------------------------+++-->
+{
+	int idx;
+	int count=(int)CBGetCount(hDlg, IDC_TIMERNAME);
+	StopFile();
+	for(idx=0; idx<count; ++idx) {
+		free((void*)CBGetItemData(hDlg,IDC_TIMERNAME,idx));
+	}
+	g_hDlgTimer = NULL;
+}
+//================================================================================================
 //------------------------//----------------------------------+++--> Initialize the "Timer" Dialog:
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
 	HFONT hfont;
 	char subkey[TNY_BUFF];
-	int i, count;
+	size_t offset;
+	int idx, count;
+	timeropt_t* pts;
+	
+	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
+	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	
 	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 	if(hfont) {
@@ -221,186 +346,121 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
 	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
 	
-	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
-	for(i = 0; i <= count; i++) {
-		// count is +1'ed to Make Room for the Dummy Item.
-		timeropt_t* pts;
-		int index;
-		
+	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
+	count=GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
+	for(idx=0; idx<count; ++idx) {
 		pts = (timeropt_t*)malloc(sizeof(timeropt_t));
-		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
-		if(i < count) // Wait for the last (extra) Pass, and Then...
-			GetMyRegStr(subkey, "Name", pts->name, GEN_BUFF, "");
-		else //-----//----------------------+++--> Insert the Dummy!
-			strcpy(pts->name, "New Timer");
-		pts->id = GetMyRegLong(subkey, "ID", 0);
+		wsprintf(subkey+offset,"%d",idx+1);
 		pts->second = GetMyRegLong(subkey, "Seconds",  0);
 		pts->minute = GetMyRegLong(subkey, "Minutes", 10);
 		pts->hour   = GetMyRegLong(subkey, "Hours",    0);
 		pts->day    = GetMyRegLong(subkey, "Days",     0);
-		GetMyRegStr(subkey, "File", pts->fname, MAX_BUFF, "");
-		pts->bBlink = GetMyRegLong(subkey, "Blink", FALSE);
-		pts->bRepeat = GetMyRegLong(subkey, "Repeat", FALSE);
-		if(i < count) // Waiting for the (Dummy) Last One...
-			pts->bActive = GetMyRegLong(subkey, "Active", FALSE);
-		else // The New Timer Dummy Menu Item MUST Always Remain FALSE!
-			pts->bActive = FALSE;
-		index = (int)CBAddString(hDlg, IDC_TIMERNAME, pts->name);
-		CBSetItemData(hDlg, IDC_TIMERNAME, index, pts);
+		GetMyRegStr(subkey, "Name", pts->name, sizeof(pts->name), "");
+		GetMyRegStr(subkey, "File", pts->fname, sizeof(pts->fname), "");
+		pts->bBlink = (char)GetMyRegLong(subkey, "Blink", FALSE);
+		pts->bRepeat = (char)GetMyRegLong(subkey, "Repeat", FALSE);
+		pts->bActive = (char)GetMyRegLong(subkey, "Active", FALSE);
+		CBAddString(hDlg, IDC_TIMERNAME, pts->name);
+		CBSetItemData(hDlg, IDC_TIMERNAME, idx, pts);
 	}
-	if(count > 0)
-		CBSetCurSel(hDlg, IDC_TIMERNAME, 0);
-	else
-		SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETPOS32, 0, 10);
+	// add "new timer" item
+	pts = (timeropt_t*)calloc(1,sizeof(timeropt_t));
+	memcpy(pts->name,"   <new timer>",15);
+	CBAddString(hDlg, IDC_TIMERNAME, pts->name);
+	CBSetItemData(hDlg, IDC_TIMERNAME, count, pts);
+	CBSetCurSel(hDlg, IDC_TIMERNAME, 0);
 	OnTimerName(hDlg);
 	SendDlgItemMessage(hDlg, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
 	SendDlgItemMessage(hDlg, IDC_TIMERDEL, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconDel);
-}
-/*------------------------------------------------
-  free memories associated with combo box.
---------------------------------------------------*/
-void OnDestroy(HWND hDlg)
-{
-	int i, count;
 	
-	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
-	for(i = 0; i < count; i++) {
-		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
-		free(pts);
-	}
+	SetMyDialgPos(hDlg,21);
 }
 //================================================================================================
 //--{ START TIMER }-----//-----------------+++--> Called When "OK" Button is Clicked (Start Timer):
 void OnOK(HWND hDlg)   //-------------------------------------------------------------------+++-->
 {
-	int i, j, id, count, seconds, minutes, hours, days, iTimer;
-	char subkey[TNY_BUFF] = {0};
-	char name[GEN_BUFF] = {0};
-	char s[MAX_BUFF] = {0};
-	timer_t* temp;
+	int idx, count, seconds, minutes, hours, days;
+	char subkey[TNY_BUFF];
+	size_t offset;
+	char name[GEN_BUFF];
+	char fname[MAX_PATH];
 	
-	GetDlgItemText(hDlg, IDC_TIMERNAME, name, GEN_BUFF);
-	
-	// Save Settings as Needed - IF Needed.
-	j = 1; id = -1;
+	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
+	GetDlgItemText(hDlg, IDC_TIMERNAME, name, sizeof(name));
 	
 	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
 	count -=1; // Skip the Last One Because It's the New Timer Dummy Item
 	
-	for(i = 0; i < count; i++) {
+	for(idx=0; idx<count; ++idx) {
 		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
-		if(strcmp(pts->name, name) != 0) { //----//++--> Create Timer Named X in Registry
-			//--+++--> if it Does Not Currently Exist.
-			
-			wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, j + 1); // Timers Get renumbered
-			// So the Timer Activated Last Becomes Timer1
-			
-			SetMyRegStr(subkey, "Name",     pts->name);		// Transfer Configuration Info
-			SetMyRegStr(subkey, "File",     pts->fname);		// From Timer X to Timer Y, so
-			SetMyRegLong(subkey, "ID",      pts->id);			// The Timer we Just Activated
-			SetMyRegLong(subkey, "Seconds", pts->second);		// Can "Bubble", to the top of
-			SetMyRegLong(subkey, "Minutes", pts->minute);		// the ComboBox's Timers List.
-			SetMyRegLong(subkey, "Hours",   pts->hour);
-			SetMyRegLong(subkey, "Days",    pts->day);
-			SetMyRegLong(subkey, "Repeat",  pts->bRepeat);
-			SetMyRegLong(subkey, "Blink",   pts->bBlink);
-			SetMyRegLong(subkey, "Active",  pts->bActive);
-			j++;
-		} else {
-			id = pts->id; //--++--// ID of the Timer we are Activating
-			pts->bActive = TRUE; // Timer B Active (As Far as the ComboBox is Concerned Only)
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx);
+		if(!strcmp(pts->name, name)) {
+			pts->bActive = TRUE;
+			break;
 		}
 	}
-	SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", j);
-	
-	if(id < 0) {
-		id = 0;
-		for(i = 0; i < count; i++) {
-			timeropt_t* pts;
-			pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
-			if(pts->id >= id) id = pts->id + 1;
-		}
-	}
-	
-	wsprintf(subkey, "%s\\Timer1", g_szTimersSubKey);
+	wsprintf(subkey+offset,"%d",idx+1);
 	SetMyRegStr(subkey, "Name", name);
-	SetMyRegLong(subkey, "ID", id);
-	
-	seconds = GetDlgItemInt(hDlg, IDC_TIMERSECOND, 0, FALSE);
-	minutes = GetDlgItemInt(hDlg, IDC_TIMERMINUTE, 0, FALSE);
-	hours   = GetDlgItemInt(hDlg, IDC_TIMERHOUR,   0, FALSE);
-	days    = GetDlgItemInt(hDlg, IDC_TIMERDAYS,   0, FALSE);
-	
+	seconds = GetDlgItemInt(hDlg, IDC_TIMERSECOND, 0, 0);
+	minutes = GetDlgItemInt(hDlg, IDC_TIMERMINUTE, 0, 0);
+	hours   = GetDlgItemInt(hDlg, IDC_TIMERHOUR,   0, 0);
+	days    = GetDlgItemInt(hDlg, IDC_TIMERDAYS,   0, 0);
 	if(seconds>59) for(; seconds>59; seconds-=60,++minutes);
 	if(minutes>59) for(; minutes>59; minutes-=60,++hours);
 	if(hours>23) for(; hours>23; hours-=24,++days);
 	if(days>42) days=7;
-	
 	SetMyRegLong(subkey, "Seconds", seconds);
 	SetMyRegLong(subkey, "Minutes", minutes);
 	SetMyRegLong(subkey, "Hours",   hours);
 	SetMyRegLong(subkey, "Days",    days);
 	
-	GetDlgItemText(hDlg, IDC_TIMERFILE, s, MAX_PATH);
-	SetMyRegStr(subkey, "File", s);
+	GetDlgItemText(hDlg, IDC_TIMERFILE, fname, sizeof(fname));
+	SetMyRegStr(subkey, "File", fname);
 	
 	SetMyRegLong(subkey, "Repeat", IsDlgButtonChecked(hDlg, IDC_TIMERREPEAT));
 	SetMyRegLong(subkey, "Blink",  IsDlgButtonChecked(hDlg, IDC_TIMERBLINK));
 	SetMyRegLong(subkey, "Active",  TRUE);
+	if(idx==count)
+		SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", idx+1);
 	
-	// start timer
-	temp=pTimersWorking;
-	pTimersWorking = (timer_t*)malloc(sizeof(timer_t)*(nTimerCount + 1));
-	for(i = 0; i < nTimerCount; i++) {
-		pTimersWorking[i] = temp[i];
-	}
-	free(temp);
-	
-	iTimer = seconds;
-	iTimer += minutes * 60;
-	iTimer += hours * 3600;
-	iTimer += days * 86400;
-	
-	strcpy(pTimersWorking[i].name, name);
-	pTimersWorking[i].id = id;
-	pTimersWorking[i].seconds = iTimer;
-	pTimersWorking[i].bHomeless = FALSE;
-	pTimersWorking[i].tickonstart = GetTickCount();
-	
-	nTimerCount++;
+	StartTimer(idx);
 }
 //================================================================================================
 //-----------------------------//-----+++--> Load the Data Set For Timer X When Its Name is Called:
 void OnTimerName(HWND hDlg)   //------------------------------------------------------------+++-->
 {
-	char s[TNY_BUFF];
-	int i, count;
+	char name[TNY_BUFF];
+	int idx, count;
 	
-	GetDlgItemText(hDlg, IDC_TIMERNAME, s, TNY_BUFF);
-	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
-	for(i = 0; i < count; i++) {
+	GetDlgItemText(hDlg, IDC_TIMERNAME, name, sizeof(name));
+	count=(int)CBGetCount(hDlg,IDC_TIMERNAME);
+	for(idx=0; idx<count; ++idx){
 		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
-		if(strcmp(s, pts->name) == 0) {
-			SetDlgItemInt(hDlg, IDC_TIMERSECOND, pts->second, FALSE);
-			SetDlgItemInt(hDlg, IDC_TIMERMINUTE, pts->minute, FALSE);
-			SetDlgItemInt(hDlg, IDC_TIMERHOUR,   pts->hour,   FALSE);
-			SetDlgItemInt(hDlg, IDC_TIMERDAYS,   pts->day,    FALSE);
-			SetDlgItemText(hDlg, IDC_TIMERFILE, pts->fname);
-			CheckDlgButton(hDlg, IDC_TIMERREPEAT, pts->bRepeat);
-			CheckDlgButton(hDlg, IDC_TIMERBLINK, pts->bBlink);
-			if(pts->bActive) {
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx);
+		if(!strcmp(name, pts->name)){
+			SetDlgItemInt(hDlg, IDC_TIMERSECOND,	pts->second, 0);
+			SetDlgItemInt(hDlg, IDC_TIMERMINUTE,	pts->minute, 0);
+			SetDlgItemInt(hDlg, IDC_TIMERHOUR,		pts->hour,   0);
+			SetDlgItemInt(hDlg, IDC_TIMERDAYS,		pts->day,    0);
+			SetDlgItemText(hDlg, IDC_TIMERFILE,		pts->fname);
+			CheckDlgButton(hDlg, IDC_TIMERREPEAT,	pts->bRepeat);
+			CheckDlgButton(hDlg, IDC_TIMERBLINK,	pts->bBlink);
+			if(pts->bActive){
 				EnableWindow(GetDlgItem(hDlg, IDCB_STOPTIMER), TRUE);
 				EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
-			} else {
+			}else{
 				EnableWindow(GetDlgItem(hDlg, IDCB_STOPTIMER), FALSE);
 				EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
-			} break;
+			}
+			break;
 		}
 	}
-	EnableDlgItem(hDlg, IDC_TIMERDEL, i < count);
+	if(idx<count-1){
+		SetDlgItemText(hDlg,IDOK,"Start");
+	}else{
+		SetDlgItemText(hDlg,IDOK,"Create");
+	}
+	EnableDlgItem(hDlg, IDC_TIMERDEL, idx<count-1);
 }
 /*------------------------------------------------
   browse sound file
@@ -420,56 +480,46 @@ void OnSanshoAlarm(HWND hDlg, WORD id)
 //-----------------------//-----------------------------+++--> Delete One of the Configured Timers:
 void OnDel(HWND hDlg)   //------------------------------------------------------------------+++-->
 {
-	char s[TNY_BUFF], subkey[TNY_BUFF];
-	int i, k, count;
+	char name[TNY_BUFF];
+	char subkey[TNY_BUFF];
+	size_t offset;
+	int idx, idx2, count;
 	
-	GetDlgItemText(hDlg, IDC_TIMERNAME, s, TNY_BUFF);
-	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
-	for(i = 0; i < count; i++) {
-		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
-		if(strcmp(s, pts->name) == 0) {
-			//--+++--> Stop Timer on KiLL: Suggested by ewemoa @ DonationCoder.com
-			for(k = 0; k < nTimerCount; ++k) {
-				if(strcmp(s, pTimersWorking[k].name) == 0) {
-					StopTimer(k);
-					MessageBox(hDlg, s, "Timer Stopped!", MB_OK|MB_ICONINFORMATION);
-				}
-			}
-			//--+++--> End of Stop Timer on KiLL: Simple Really - Shoulda Been There Already
-			free(pts);
+	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
+	GetDlgItemText(hDlg, IDC_TIMERNAME, name, sizeof(name));
+	count = (int)CBGetCount(hDlg, IDC_TIMERNAME) -1;
+	for(idx=0; idx<count; ++idx) {
+		timeropt_t* pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx);
+		if(!strcmp(name,pts->name)){
 			break;
 		}
 	}
-	if(i >= count) return;
+	if(idx==count) return;
+	StopTimer(idx);
 	
-	CBDeleteString(hDlg, IDC_TIMERNAME, i);
-	if(count > 1)
-		CBSetCurSel(hDlg, IDC_TIMERNAME, (i>0)?(i-1):i);
-	else
-		SetDlgItemText(hDlg, IDC_TIMERNAME, "");
+	for(idx2=idx+1; idx2<count; ++idx2) {
+		timeropt_t* pts;
+		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx2);
+		wsprintf(subkey+offset, "%d", idx2); // we're 1 behind, as needed
+		SetMyRegStr(subkey, "Name",		pts->name);
+		SetMyRegLong(subkey, "Seconds",	pts->second);
+		SetMyRegLong(subkey, "Minutes",	pts->minute);
+		SetMyRegLong(subkey, "Hours",	pts->hour);
+		SetMyRegLong(subkey, "Days",	pts->day);
+		SetMyRegStr(subkey, "File",		pts->fname);
+		SetMyRegLong(subkey, "Repeat",	pts->bRepeat);
+		SetMyRegLong(subkey, "Blink",	pts->bBlink);
+		SetMyRegLong(subkey, "Active",	pts->bActive);
+	}
+	wsprintf(subkey+offset, "%d", count);
+	DelMyRegKey(subkey);
+	SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", --count);
+	free((void*)CBGetItemData(hDlg,IDC_TIMERNAME,idx));
+	CBDeleteString(hDlg,IDC_TIMERNAME,idx);
+	
+	CBSetCurSel(hDlg, IDC_TIMERNAME, (idx>0)?(idx-1):idx);
 	OnTimerName(hDlg);
 	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
-	
-	wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, count);
-	DelMyRegKey(subkey);
-	
-	for(i = 0; i < count - 1; i++) {
-		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, i);
-		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
-		SetMyRegStr(subkey, "Name", pts->name);
-		SetMyRegLong(subkey, "ID", pts->id);
-		SetMyRegLong(subkey, "Seconds", pts->second);
-		SetMyRegLong(subkey, "Minutes", pts->minute);
-		SetMyRegLong(subkey, "Hours",   pts->hour);
-		SetMyRegLong(subkey, "Days",    pts->day);
-		SetMyRegStr(subkey, "File", pts->fname);
-		SetMyRegLong(subkey, "Repeat", pts->bRepeat);
-		SetMyRegLong(subkey, "Blink", pts->bBlink);
-		SetMyRegLong(subkey, "Active",  pts->bActive);
-	}
-	SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", count - 1);
 }
 //================================================================================================
 //---------------------------------//--------------------+++--> Test -> Play/Stop Alarm Sound File:
@@ -492,60 +542,47 @@ void OnTest(HWND hDlg, WORD id)   //--------------------------------------------
 void OnTimerTimer(HWND hwnd)   //-------------------------------------------+++-->
 {
 	DWORD tick;
-	int i;
+	int idx;
+	if(!m_timers) return;
 	
-	if(nTimerCount == 0) return;
-	
-	tick = GetTickCount();
-	for(i = 0; i < nTimerCount; ++i) {
-		DWORD seconds = (tick - pTimersWorking[i].tickonstart) / 1000;
-		if(seconds >= pTimersWorking[i].seconds) {
-			Ring(hwnd, pTimersWorking[i].id);
-			StopTimer(i);
-			--i;
-		}
+	tick=GetTickCount()/1000;
+	for(idx=0; idx<m_timers; ) {
+		DWORD elapsed = tick-m_timer[idx].tickonstart;
+		if(elapsed >= m_timer[idx].seconds){
+			int id=m_timer[idx].id;
+			StopTimer(id);
+			Ring(hwnd,id);
+		}else
+			++idx;
 	}
 }
 //================================================================================================
 //------------------------------//---------------------------+++--> Sound Alarm or Open Timer File:
 void Ring(HWND hwnd, int id)   //-----------------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF], fname[MAX_BUFF];
-	int i, count;
-	
-	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
-	for(i = 0; i < count; i++) {
-		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
-		
-		if(id == GetMyRegLong(subkey, "ID", 0)) {
-			GetMyRegStr(subkey, "File", fname, MAX_BUFF, "");
-			SetMyRegLong(subkey, "Active",  FALSE);
-			PlayFile(hwnd, fname, GetMyRegLong(subkey, "Repeat", FALSE)?(-1):0);
-			if(GetMyRegLong(subkey, "Blink", FALSE)) PostMessage(g_hwndClock, CLOCKM_BLINK, FALSE, 0);
-			break;
-		}
-	}
-}
-//================================================================================================
-//---------------------//---------------------------------------------------+++--> Clear All Timer:
-void EndTimer(void)   //--------------------------------------------------------------------+++-->
-{
-	free(pTimersWorking),pTimersWorking=NULL;
-	nTimerCount = 0;
+	char subkey[TNY_BUFF];
+	size_t offset;
+	char fname[MAX_BUFF];
+	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
+	wsprintf(subkey+offset, "%d", id+1);
+	GetMyRegStr(subkey, "File", fname, sizeof(fname), "");
+	PlayFile(hwnd, fname, GetMyRegLong(subkey, "Repeat", 0)?-1:0);
+	if(GetMyRegLong(subkey, "Blink", 0))
+		PostMessage(g_hwndClock, CLOCKM_BLINK, 0, 0);
 }
 //================================================================================================
 //---------+++--> Get Active Timer Name(s) to Populate Menu -or- Mark Selected Timer as "Homeless":
 int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------------------+++-->
 {
-	if(num < nTimerCount) {
+	if(num < m_timers) {
 		if(bNameOnly) {
-			wsprintf(dst, " %s", pTimersWorking[num].name);
+			wsprintf(dst, "    %s	(%i", m_timer[num].name,num+1);
 		} else {
-			DWORD tick = GetTickCount();
-			int iTCount = (tick - pTimersWorking[num].tickonstart) / 1000;
+			DWORD tick = GetTickCount()/1000;
+			int iTCount = tick - m_timer[num].tickonstart;
 			int days,hours,minutes,seconds;
-			iTCount = pTimersWorking[num].seconds - iTCount;
-			pTimersWorking[num].bHomeless = TRUE; // Homeless Timers Are Automatically Picked-Up
+			iTCount = m_timer[num].seconds - iTCount;
+			m_timer[num].bHomeless = 1; // Homeless Timers Are Automatically Picked-Up
 			if(iTCount <= 0) {					  //-++--> By the Timer Watch Window for Display.
 				wsprintf(dst, " <- Time Expired!");
 				return -1;
@@ -562,27 +599,6 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------
 	return 0;
 }
 //================================================================================================
-//---------------------------------------//--------------------+++--> Free Memory to Clear a Timer:
-void StopTimer(int tostop)   //--------------------------------------------------+++-->
-{
-	timer_t* temp=pTimersWorking;
-	if(tostop >= nTimerCount)
-		return;
-	if(nTimerCount > 1) {
-		int i, j;
-		pTimersWorking = (timer_t*)malloc(sizeof(timer_t)*(nTimerCount-1));
-		
-		for(i=0,j=0; i<nTimerCount; ++i) {
-			if(tostop != i)
-				pTimersWorking[j++] = temp[i];
-		}
-	}else{
-		pTimersWorking=NULL;
-	}
-	free(temp);
-	--nTimerCount;
-}
-//================================================================================================
 //-------------------------------------+++--> Spoof Control Message to Force Update of Nexe Window:
 void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, BOOL bGoUp)   //-----------------------+++-->
 {
@@ -593,7 +609,7 @@ void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, BOOL bGoUp)   //-----------
 	nmud.hdr.code = UDN_DELTAPOS;
 	if(bGoUp)nmud.iDelta = 4; // Fake Message Forces Update of Next Control!
 	else nmud.iDelta = -4;   // Fake Message Forces Update of Next Control!
-	nmud.iPos = GetDlgItemInt(hWnd, iEdit, NULL, TRUE);
+	nmud.iPos = GetDlgItemInt(hWnd, iEdit, NULL, 1);
 	
 	SendMessage(hWnd, WM_NOTIFY, iSpin, (LPARAM)&nmud);
 }
@@ -601,35 +617,22 @@ void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, BOOL bGoUp)   //-----------
 //-----------------------------//-------------------+++--> Stop & Cancel a Currently Running Timer:
 void OnStopTimer(HWND hWnd)   //------------------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF];
-	char s[GEN_BUFF];
-	int i, count;
+	char name[GEN_BUFF];
+	int idx;
 	
-	GetDlgItemText(hWnd, IDC_TIMERNAME, s, TNY_BUFF);
-	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
+	GetDlgItemText(hWnd, IDC_TIMERNAME, name, sizeof(name));
 	
-	for(i = 0; i < nTimerCount; i++) {
-	
-		if(strcmp(s, pTimersWorking[i].name) == 0) {
-			StopTimer(i);
-			MessageBox(hWnd, s, "Timer Stopped!", MB_OK|MB_ICONINFORMATION);
+	for(idx=0; idx<m_timers; ++idx) {
+		if(!strcmp(name, m_timer[idx].name)) {
+			int id=m_timer[idx].id;
+			timeropt_t* pts=(timeropt_t*)CBGetItemData(hWnd, IDC_TIMERNAME, id);;
 			
-			for(i = 0; i < count; i++) {
-				char szName[GEN_BUFF] = {0};
-				timeropt_t* pts;
-				pts = (timeropt_t*)CBGetItemData(hWnd, IDC_TIMERNAME, i);
-				wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i +1);
-				GetMyRegStr(subkey, "Name", szName, GEN_BUFF, "");
-				if(strcmp(s, szName) == 0) {
-					SetMyRegLong(subkey, "Active",  FALSE);
-					pts->bActive = FALSE;
-					break;
-				}
-			}
+			StopTimer(id);
+			pts->bActive = 0;
 			
-			EnableWindow(GetDlgItem(hWnd, IDOK), TRUE);
-			EnableWindow(GetDlgItem(hWnd, IDCB_STOPTIMER), FALSE);
-			return;
+			EnableWindow(GetDlgItem(hWnd, IDOK), 1);
+			EnableWindow(GetDlgItem(hWnd, IDCB_STOPTIMER), 0);
+			break;
 		}
 	}
 }
@@ -638,12 +641,13 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 void CancelAllTimersOnStartUp()   //--------------------------------------------------------+++-->
 {
 	char subkey[TNY_BUFF];
-	int i, count;
+	size_t offset;
+	int idx, count;
 	
+	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
 	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
-	
-	for(i = 0; i < count; i++) {
-		wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, i + 1);
+	for(idx=0; idx<count; ) {
+		wsprintf(subkey+offset, "%d", ++idx);
 		SetMyRegLong(subkey, "Active", FALSE);
 	}
 }
@@ -687,15 +691,15 @@ BOOL OnWatchTimer(HWND hList)   //----------------------------------------------
 	int iTc;
 	LVITEM lvItem;
 	
-	iTc = nTimerCount;
+	iTc = m_timers;
 	for(; iTc > 0; --iTc) {
 		int iTn = (iTc - 1);
-		if(pTimersWorking[iTn].bHomeless) {
+		if(m_timer[iTn].bHomeless) {
 			int iF;
 			GetTimerInfo(szStatus, iTn, FALSE);
 			
 			lvFind.flags = LVFI_STRING;
-			lvFind.psz = pTimersWorking[iTn].name;
+			lvFind.psz = m_timer[iTn].name;
 			if((iF = ListView_FindItem(hList, -1, &lvFind)) != -1) {
 				ListView_SetItemText(hList, iF, 1, szStatus); // IF Timer Pre-Exists,
 				bNeeded = TRUE; //------------+++--> Update the Existing Timer Entry.
@@ -705,7 +709,7 @@ BOOL OnWatchTimer(HWND hList)   //----------------------------------------------
 				lvItem.iSubItem = 0;
 				lvItem.iItem = 0;
 				
-				lvItem.pszText = pTimersWorking[iTn].name;
+				lvItem.pszText = m_timer[iTn].name;
 				ListView_InsertItem(hList, &lvItem);
 				
 				lvItem.iSubItem = 1;
@@ -721,20 +725,22 @@ BOOL OnWatchTimer(HWND hList)   //----------------------------------------------
 //-----------------------------+++--> Remove Timer X From Timer Watch List (Set Homeless to FALSE):
 void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 {
-	char szCaption[GEN_BUFF] = {0}; int i; BOOL bExpired = TRUE;
-	char szMessage[] = TEXT("Yes will Cancel the Timer & Remove it from the Watch List.\r\n"
-							"No will Remove Timer from Watch List Only (Timer continues).\r\n"
-							"Cancel will Assume you hit Delete Accidentally (and do nothing).");
+	const char szMessage[] = TEXT("Yes will cancel the timer & remove it from the Watch List\n"
+							"No will remove timer from Watch List only (timer continues)\n"
+							"Cancel will assume you hit delete accidentally (and do nothing)");
+	char szCaption[GEN_BUFF];
+	int idx;
+	int id=-1;
 							
-	for(i = 0; i < nTimerCount; i++) {
-		if(strcmp(szTimer, pTimersWorking[i].name) == 0) {
-			bExpired = FALSE; // Timer is/Was Still Running
-			break; //--------//---+++--> at Time of Request.
+	for(idx=0; idx<m_timers; ++idx) {
+		if(!strcmp(szTimer, m_timer[idx].name)) {
+			id=m_timer[idx].id;
+			break;
 		}
 	}
 	
-	if(bExpired) { //----+++--> IF the Timer Has Expired...
-		ListView_DeleteItem(hList, iLx); // Just Delete it.
+	if(id==-1) { //----+++--> IF the Timer Has Expired...
+		ListView_DeleteItem(hList,iLx); // Just Delete it.
 		return;
 	}
 	
@@ -742,41 +748,18 @@ void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 	
 	switch(MessageBox(hWnd, szMessage, szCaption, MB_YESNOCANCEL|MB_ICONQUESTION)) {
 	case IDYES:
-		for(i = 0; i < nTimerCount; i++) {
-			if(strcmp(szTimer, pTimersWorking[i].name) == 0) {
-				int count, k;
-				
-//===========================================================================
-				count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
-				for(k = 0; k < count; k++) {
-					char szName[GEN_BUFF] = {0};
-					char subkey[TNY_BUFF] = {0};
-					
-					wsprintf(subkey, "%s\\Timer%d", g_szTimersSubKey, k + 1);
-					GetMyRegStr(subkey, "Name", szName, GEN_BUFF, "");
-					if(strcmp(szName, szTimer) == 0) {
-						SetMyRegLong(subkey, "Active", FALSE);
-						pTimersWorking[i].bHomeless = FALSE;
-						ListView_DeleteItem(hList, iLx);
-						StopTimer(i); // Does Not Reset Active Flag!
-						return; // The End...
-					}
-				}
-//===========================================================================
-				break;
-			}
-		} break;
-		
+		ListView_DeleteItem(hList, iLx);
+		StopTimer(id); // Does Not Reset Active Flag!
+		break;
 	case IDNO:
-		for(i = 0; i < nTimerCount; i++) {
-			if(strcmp(szTimer, pTimersWorking[i].name) == 0) {
-				pTimersWorking[i].bHomeless = FALSE;
-				ListView_DeleteItem(hList, iLx);
+		for(idx=0; idx<m_timers; ++idx) {
+			if(!strcmp(szTimer, m_timer[idx].name)) {
+				m_timer[idx].bHomeless = 0;
+				ListView_DeleteItem(hList,iLx);
 				break;
 			}
-		}  break;
-		
-	default: return;
+		}
+		break;
 	}
 }
 //================================================================================================
@@ -832,8 +815,13 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 }
 //================================================================================================
 // ------------------//---------------------------------------------+++--> Open Timer Watch Dialog:
-void WatchTimer()   //----------------------------------------------------------------------+++-->
+void WatchTimer(int reset)   //----------------------------------------------------------------------+++-->
 {
+	if(reset){
+		int idx; for(idx=0; idx<m_timers; ++idx) {
+			m_timer[idx].bHomeless=1;
+		}
+	}
 	if(!g_hDlgTimerWatch || !IsWindow(g_hDlgTimerWatch)) {
 		g_hDlgTimerWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMERVIEW),NULL,DlgTimerViewProc);
 	}

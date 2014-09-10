@@ -82,8 +82,8 @@
 #define IDM_REFRESHTCLOCK               285
 #define IDM_SYNCTIME                    286
 #define IDM_TIMEWATCH                   287
-#define IDM_EXIT                        288
-#define IDM_STOPTIMER                   290
+#define IDM_TIMEWATCHRESET              288
+#define IDM_EXIT                        289
 #define IDM_FWD_RUNAPP                  401 /* group (forward commands, keep ids) */
 #define IDM_FWD_CASCADE                 403
 #define IDM_FWD_SIDEBYSIDE              404

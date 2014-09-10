@@ -81,11 +81,10 @@ BEGIN
         END
         POPUP "T-Clock Timers",IDC_TIMERS,0,0
         BEGIN
-            MENUITEM "Add/Edit Timer",              IDM_TIMER,0,0
-            MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "Stopwatch",                   IDM_STOPWATCH,0,0
-            MENUITEM "",0,MFT_SEPARATOR,0
-            MENUITEM "Running Timers List",         IDM_TIMEWATCH,0,MFS_DISABLED
+            MENUITEM "Watch List\t(running timers)", IDM_TIMEWATCH,0,MFS_DISABLED
+            MENUITEM "Reset Watch List",            IDM_TIMEWATCHRESET,0,MFS_DISABLED
+            MENUITEM "Add/Edit Timer",              IDM_TIMER,0,0
         END
         POPUP "Exit Windows",IDC_EXITWIN,0,0
         BEGIN

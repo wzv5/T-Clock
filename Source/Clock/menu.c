@@ -4,7 +4,6 @@
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
 
 void UpdateAlarmMenu(HMENU hMenu);
-void UpdateTimerMenu(HMENU hMenu);
 static char g_undo=0; // did we change windows and can undo it?
 
 /*-----------------------------------------------------------------
@@ -245,10 +244,15 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		{char szTime[GEN_BUFF];
 		GetTimerInfo(szTime, wID-ID_T_TIMER1, FALSE);}
 	case IDM_TIMEWATCH:
-		WatchTimer(); // Shelter All the Homeless Timers.
+		WatchTimer(0); // Shelter All the Homeless Timers.
+		break;
+	case IDM_TIMEWATCHRESET:
+		WatchTimer(1); // Shelter All the Homeless Timers.
 		break;
 	default:
-		if(wID>=IDM_I_ALARM && wID<IDM_I_ALARM+1000){
+		if(wID>=IDM_I_TIMER && wID<IDM_I_TIMER+1000){
+			ToggleTimer(wID-IDM_I_TIMER);
+		}else if(wID>=IDM_I_ALARM && wID<IDM_I_ALARM+1000){
 			SetAlarmEnabled(wID-IDM_I_ALARM,!GetAlarmEnabled(wID-IDM_I_ALARM));
 		}else if(wID>=IDM_I_MENU && wID<IDM_I_MENU+1000){
 			char key[MAX_PATH];
@@ -262,8 +266,6 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 			memcpy(key+offset,"-Switches",10);
 			GetMyRegStr("QuickyMenu\\MenuItems",key,szQM_Switch,sizeof(szQM_Switch),"");
 			ShellExecute(hwnd, "open", szQM_Target, szQM_Switch, NULL, SW_SHOWNORMAL);
-		}else if((IDM_STOPTIMER <= wID && wID < IDM_STOPTIMER + MAX_TIMER)) {
-			StopTimer(wID-IDM_STOPTIMER); //-+-> Stop Timer X!
 		}
 		#ifdef _DEBUG
 		else
@@ -298,16 +300,5 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 				CheckMenuItem(hMenu,IDM_I_ALARM+idx,MF_BYCOMMAND|MF_CHECKED);
 		}
 		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
-	}
-}
-//================================================================================================
-//----------+++--> Enumerate & Display ALL Currently Active Timers on The Running Timers Menu List:
-void UpdateTimerMenu(HMENU hMenu)   //------------------------------------------------------+++-->
-{
-	int tid; char buf[GEN_BUFF];
-	for(tid=0; tid<7; ++tid) { //---------+++--> the Running Timers List Menu Item.
-		if(!GetTimerInfo(buf,tid,TRUE)) break; // Get the Timer's Name Only
-		InsertMenu(hMenu, IDM_TIMEWATCH, MF_BYCOMMAND|MF_STRING, ID_T_TIMER1+tid, buf);
-		EnableMenuItem(hMenu,IDM_TIMEWATCH,MF_BYCOMMAND|MF_ENABLED);
 	}
 }
