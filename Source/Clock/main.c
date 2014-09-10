@@ -43,7 +43,7 @@ static int nCountFindingClock = -1;
 BOOL bMonOffOnLock = FALSE;
 
 // alarm.c
-extern BOOL bPlayingNonstop;
+extern char g_bPlayingNonstop;
 
 //================================================================================================
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
@@ -319,18 +319,18 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		} return 0;
 		
 		//==================================================
-	case WM_USER: // Messages sent/posted from TCDLL.dll
+	case MAINM_CLOCKINIT: // Messages sent/posted from TCDLL.dll
 		nCountFindingClock = -1;
 		g_hwndClock = (HWND)lParam;
 		return 0;
 		
-	case(WM_USER+1):    // error
+	case MAINM_ERROR:    // error
 		nCountFindingClock = -1;
 		InitError((int)lParam);
 		PostMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
 		
-	case(WM_USER+2):    // exit
+	case MAINM_EXIT:    // exit
 		if(g_hwndSheet && IsWindow(g_hwndSheet))
 			PostMessage(g_hwndSheet, WM_CLOSE, 0, 0);
 		if(g_hDlgTimer && IsWindow(g_hDlgTimer))
@@ -341,12 +341,16 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		PostMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
 		
+	case MAINM_BLINKOFF:    // clock no longer blinks
+		if(!g_bPlayingNonstop) StopFile();
+		return 0;
+		
 	case MM_MCINOTIFY:
 		OnMCINotify(hwnd);
 		return 0;
 		
 	case MM_WOM_DONE: // stop playing wave
-	case(WM_USER+3):
+	case MAINM_STOPSOUND:
 		StopFile();
 		return 0;
 		
@@ -376,9 +380,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			}
 			return 0;
 		}
-	case WM_SYSCOLORCHANGE:
-		PostMessage(hwnd, WM_USER+10, 1,0);
-		return 0;
+		// inform clock about DWM color change
 	case WM_DWMCOLORIZATIONCOLORCHANGED:
 		OnTColor_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
 		PostMessage(g_hwndClock, WM_DWMCOLORIZATIONCOLORCHANGED, wParam, lParam);
@@ -402,7 +404,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		if(!bPlayingNonstop) PostMessage(hwnd, WM_USER+3, 0, 0);
+		if(!g_bPlayingNonstop) PostMessage(hwnd, MAINM_STOPSOUND, 0, 0);
 	case WM_LBUTTONUP: // <^ Code is Designed to "Fall Through" Here.
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:

@@ -224,7 +224,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 {
 	CheckSystemVersion();
 	g_hwndClock = hwnd;
-	PostMessage(g_hwndTClockMain, WM_USER, 0, (LPARAM)g_hwndClock);
+	PostMessage(g_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)g_hwndClock);
 	
 	ReadData(hwnd,0); //-+-> Get Configuration Information From Registry
 	SubsCreate();
@@ -262,7 +262,7 @@ void EndClock(void)   //--------------------------------------------------------
 		m_oldClockProc=m_oldWorkerProc=NULL;
 	}
 	
-	if(IsWindow(g_hwndTClockMain)) PostMessage(g_hwndTClockMain, WM_USER+2, 0, 0);
+	if(IsWindow(g_hwndTClockMain)) PostMessage(g_hwndTClockMain, MAINM_EXIT, 0, 0);
 //  bClockUseTrans = FALSE;
 }
 /*------------------------------------------------
@@ -348,6 +348,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;
 			InvalidateRect(hwnd, NULL, 1);
+			PostMessage(g_hwndTClockMain,MAINM_BLINKOFF,0,0);
 			return 0;
 		}
 		PostMessage(g_hwndTClockMain, message, wParam, lParam);
@@ -707,7 +708,6 @@ void OnTimer(HWND hwnd)
 	if(m_BlinkState){
 		if(m_LastTime.wMinute && m_BlinkState&BLINK_HOUR)
 			m_BlinkState^=BLINK_HOUR; // disable hourly blink
-//			APPBARDATA abd;
 		bRedraw = TRUE;
 		/* --+++--> This Will Disable the AutoHide...
 				abd.cbSize = sizeof(APPBARDATA);

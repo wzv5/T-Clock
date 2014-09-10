@@ -40,7 +40,7 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 	// find the taskbar
 	hwndBar = FindWindow("Shell_TrayWnd", NULL);
 	if(!hwndBar) {
-		SendMessage(hwnd, WM_USER+1, 0, 1);
+		SendMessage(hwnd, MAINM_ERROR, 0, 1);
 		return;
 	}
 	
@@ -48,14 +48,14 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 	dwThreadId = GetWindowThreadProcessId(hwndBar, NULL);
 	
 	if(!dwThreadId) {
-		SendMessage(hwnd, WM_USER+1, 0, 2);
+		SendMessage(hwnd, MAINM_ERROR, 0, 2);
 		return;
 	}
 	
 	// install an hook to thread of taskbar
 	g_hhook = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CallWndProc, hInstance, dwThreadId);
 	if(!g_hhook) {
-		SendMessage(hwnd, WM_USER+1, 0, 3);
+		SendMessage(hwnd, MAINM_ERROR, 0, 3);
 		return;
 	}
 	

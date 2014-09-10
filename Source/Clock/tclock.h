@@ -60,7 +60,7 @@ extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
 
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
-void RefreshUs(void);
+void RefreshUs();
 
 // propsheet.c
 extern BOOL g_bApplyClock;
@@ -93,13 +93,12 @@ BOOL GetAlarmEnabled(int idx);
 void SetAlarmEnabled(int idx,BOOL bEnabled);
 void ReadAlarmFromReg(alarm_t* pAS, int num);
 void SaveAlarmToReg(alarm_t* pAS, int num);
-void StopFile(void);
-void EndAlarm(void);
-void InitAlarm(void);
+void StopFile();
+void EndAlarm();
+void InitAlarm();
 void OnMCINotify(HWND hwnd);
 void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
 BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
-extern BOOL bKillPCBeep; // Declared in alarm.c
 
 // alarmday.c
 #define ALARMDAY_OKFLAG 0x80000000
@@ -110,7 +109,7 @@ BOOL IsMMFile(const char* fname);
 BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname);
 
 // pageformat.c
-void InitFormat(void);
+void InitFormat();
 void CreateFormat(char* s, int* checks);
 
 // menu.c
@@ -138,20 +137,20 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly);
 void DialogStopWatch();
 
 // ExitWindows.c
-BOOL ShutDown(void);
-BOOL ReBoot(void);
-BOOL LogOff(void);
+BOOL ShutDown();
+BOOL ReBoot();
+BOOL LogOff();
 
 // TCDLL.DLL‚ÌAPI
 void WINAPI HookStart(HWND hwnd);
-void WINAPI HookEnd(void);
+void WINAPI HookEnd();
 
 // PageHotKey.c
 void GetHotKeyInfo(HWND hWnd);
 
 // SNTP.c
-void SyncTimeNow(void);
-void NetTimeConfigDialog(void);
+void SyncTimeNow();
+void NetTimeConfigDialog();
 
 // BounceWind.c
 void OnMsgWindOpt(HWND hDlg);

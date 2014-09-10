@@ -35,6 +35,12 @@ extern HHOOK	g_hhook;
 #	define GWL_WNDPROC GWLP_WNDPROC
 #endif
 
+// messages to send the main/helper app
+#define MAINM_CLOCKINIT				(WM_USER)
+#define MAINM_ERROR					(WM_USER+1)
+#define MAINM_EXIT					(WM_USER+2)
+#define MAINM_STOPSOUND				(WM_USER+3)
+#define MAINM_BLINKOFF				(WM_USER+4)
 // messages to send the clock
 #define CLOCKM_REFRESHCLOCK			(WM_USER+1)
 #define CLOCKM_REFRESHTASKBAR		(WM_USER+2)
