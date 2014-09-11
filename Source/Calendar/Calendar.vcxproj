@@ -162,7 +162,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Clock\utl.c" />
+    <ClCompile Include="..\common\utl.c" />
     <ClCompile Include="DeskCalendar.c" />
   </ItemGroup>
   <ItemGroup>

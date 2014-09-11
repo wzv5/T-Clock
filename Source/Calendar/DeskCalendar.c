@@ -8,12 +8,8 @@
 #include "resource.h"
 //#include <WinUser.h>
 #include <time.h>
+#include "../common/utl.h"
 HWND g_hwndClock=0; // required in utl.c
-//utl.c
-void ForceForegroundWindow(HWND hwnd);
-LONG GetMyRegLongEx(char* section, char* entry, LONG defval);
-LONG GetMyRegLong(char* section, char* entry, LONG defval);
-BOOL SetMyRegLong(char* subkey, char* entry, DWORD val);
 //void ForceForegroundWindow(HWND hwnd);
 //other
 BOOL bAutoClose;
