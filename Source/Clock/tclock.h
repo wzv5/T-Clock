@@ -62,6 +62,9 @@ void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
 void RefreshUs();
 
+// settings.c
+int CheckSettings();
+
 // propsheet.c
 extern BOOL g_bApplyClock;
 void MyPropertySheet(int page);

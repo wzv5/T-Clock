@@ -81,6 +81,9 @@
     <ClCompile Include="..\timer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\settings.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\common\newapi.c">
       <Filter>Source Files</Filter>
     </ClCompile>

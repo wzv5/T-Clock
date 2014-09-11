@@ -53,7 +53,7 @@
 #define IDC_TIMERS                      204
 #define IDC_EXITWIN                     205
 #define IDC_ALARMS                      206 /* end group */
-#define IDM_VOLUMECONTROL               210
+#define IDM_VOLUMECONTROL               210 /* never change IDM numbers as they are used by mouse click settings, etc. */
 #define IDM_AUDIOPROP                   211
 #define IDM_MAPDRIVE                    220
 #define IDM_DISCONNECT                  221
@@ -62,14 +62,6 @@
 #define IDM_QUICKY_EMPTYRB              233
 #define IDM_STOPWATCH                   240
 #define IDM_TIMER                       241
-#define ID_T_TIMER1                     242 /* group */
-#define ID_T_TIMER2                     243
-#define ID_T_TIMER3                     244
-#define ID_T_TIMER4                     245
-#define ID_T_TIMER5                     246
-#define ID_T_TIMER6                     247
-#define ID_T_TIMER7                     248
-#define ID_T_TIMER8                     249 /* end group */
 #define IDM_LOGOFF                      250
 #define IDM_REBOOT                      251
 #define IDM_SHUTDOWN                    252
@@ -98,7 +90,7 @@
 #define IDM_FWD_CUSTOMNOTIFYICONS       421
 #define IDM_FWD_LOCKTASKBAR             424
 #define IDM_FWD_LOCKALLTASKBAR          425
-#define IDM_FWD_EXITEXPLORER            518 /* end group (forward commands) */
+#define IDM_FWD_EXITEXPLORER            518 /* end group (forward commands), end never change */
 /// misc
 #define IDC_ABT_TITLE                   600 /* group */
 #define IDC_ABT_StoicJoker              601

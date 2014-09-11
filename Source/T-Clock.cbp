@@ -12,8 +12,11 @@
 				<Option object_output=".objs/autoversion" />
 				<Option type="1" />
 				<Option compiler="msvc10" />
+				<Option parameters="--git . _testver.h" />
+				<Option projectCompilerOptionsRelation="1" />
+				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
-					<Add option="/ML" />
+					<Add option="/MT" />
 					<Add option="/EHc" />
 					<Add option="/EHs" />
 					<Add option="/O1" />
@@ -81,7 +84,7 @@
 					<Add option="/D_DEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="/DEBUG" />
+					<Add option="/debug" />
 					<Add library="Psapi" />
 					<Add library="ole32" />
 					<Add library="Comdlg32" />
@@ -111,7 +114,7 @@
 					<Add option="/D_DEBUG" />
 				</Compiler>
 				<Linker>
-					<Add option="/DEBUG" />
+					<Add option="/debug" />
 					<Add option="/def:DLL\DLL.def" />
 				</Linker>
 				<ExtraCommands>
@@ -235,6 +238,11 @@
 			<Option target="app debug" />
 		</Unit>
 		<Unit filename="Clock/propsheet.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="app debug" />
+		</Unit>
+		<Unit filename="Clock/settings.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />

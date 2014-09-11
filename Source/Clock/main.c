@@ -16,12 +16,12 @@ HWND	g_hDlgTimer;		// Timer Dialog Handle
 HWND	g_hDlgStopWatch;	// Stopwatch Dialog Handle
 HWND	g_hDlgTimerWatch;	// Timer Watch Dialog Handle
 
-HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 // icons to use frequently
+HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 char	g_mydir[MAX_PATH]; // path to tclock.exe
 
 // Make Background of Desktop Icon Text Labels Transparent:
-BOOL bTrans2kIcons; //-------+++--> (For Windows 2000 Only)
+BOOL m_bTrans2kIcons; //-------+++--> (For Windows 2000 Only)
 //-----------------//+++--> UnAvertized EasterEgg Function:
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
@@ -114,7 +114,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	GetModuleFileName(hInstance, g_mydir, MAX_PATH);
 	del_title(g_mydir);
 	
-	CheckRegistry();
+	// Update settings if required and setup defaults
+	if(CheckSettings()){
+		ExitProcess(1);
+	}
+	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
+	m_bTrans2kIcons = GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE);
 	CancelAllTimersOnStartUp();
 	if(!CheckTCDLL()) { ExitProcess(2);}
 	
@@ -517,37 +522,13 @@ BOOL CheckDLL(char* fname)   //-------------------------------------------------
 	return br;
 }
 //================================================================================================
-//------------+++--> Initialize With (or set default) Clock.exe Path & Chosen Font Registy Entries:
-void CheckRegistry(void)   //---------------------------------------------------------------+++-->
-{
-	char font[80];
-//	SetMyRegStr(NULL,"ExePath",g_mydir);
-	GetMyRegStr("Clock","Font",font,80,"");
-	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
-	bTrans2kIcons = GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE);
-	if(!*font){ // quess it's a fresh T-Clock
-		NONCLIENTMETRICS metrics={sizeof(NONCLIENTMETRICS)};
-		union{
-			unsigned short entryS;
-			char entry[3];
-		} u;
-		u.entry[2]='\0';
-		u.entryS='0'+('1'<<8); // left, 1 click
-		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_SHOWCALENDER);
-		u.entryS='2'+('1'<<8); // middle, 1 click
-		SetMyRegLong(g_reg_mouse,u.entry,IDM_STOPWATCH);
-		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
-		SetMyRegStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
-	}
-}
-//================================================================================================
 //----------+++--> Make Background of Desktop Icon Text Labels Transparent (For Windows 2000 Only):
 void SetDesktopIconTextBk(void)   //--------------------------------------------------------+++-->
 {
 	COLORREF col;
 	HWND hwnd;
 	
-	if(bTrans2kIcons) {
+	if(m_bTrans2kIcons) {
 		hwnd = FindWindow("Progman", "Program Manager");
 		if(!hwnd) return;
 		hwnd = GetWindow(hwnd, GW_CHILD);
@@ -561,7 +542,7 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 		if(!hwnd) return;
 	} else return;
 	
-	if(bTrans2kIcons) {
+	if(m_bTrans2kIcons) {
 		if(ListView_GetTextBkColor(hwnd) == CLR_NONE) return;
 		col = CLR_NONE;
 	} else {

@@ -233,16 +233,6 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case IDM_TIMER:
 		DialogTimer();
 		break;
-	case ID_T_TIMER1:
-	case ID_T_TIMER2:
-	case ID_T_TIMER3:
-	case ID_T_TIMER4:
-	case ID_T_TIMER5:
-	case ID_T_TIMER6:
-	case ID_T_TIMER7:
-	case ID_T_TIMER8:
-		{char szTime[GEN_BUFF];
-		GetTimerInfo(szTime, wID-ID_T_TIMER1, FALSE);}
 	case IDM_TIMEWATCH:
 		WatchTimer(0); // Shelter All the Homeless Timers.
 		break;

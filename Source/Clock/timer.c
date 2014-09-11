@@ -3,7 +3,6 @@
 ---------------------------------------------*/
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 #include "tclock.h"
-/// @todo (White-Tiger#1#09/04/14): clean up registry (remove ID from timers) ...
 
 char g_szTimersSubKey[]="Timers";
 //==================================================================

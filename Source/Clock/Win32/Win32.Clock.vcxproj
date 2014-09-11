@@ -184,6 +184,7 @@
     <ClCompile Include="..\soundselect.c" />
     <ClCompile Include="..\StopWatch.c" />
     <ClCompile Include="..\timer.c" />
+    <ClCompile Include="..\settings.c" />
     <ClCompile Include="..\..\common\newapi.c" />
     <ClCompile Include="..\..\common\utl.c" />
     <ClCompile Include="..\..\common\tcolor.c" />
