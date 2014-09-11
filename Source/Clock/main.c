@@ -35,7 +35,6 @@ void FindTrayServer();
 static void InitError(int n);
 static BOOL CheckTCDLL(void);
 static BOOL CheckDLL(char* fname);
-static void CheckRegistry(void);
 void SetDesktopIconTextBk(void);
 static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;

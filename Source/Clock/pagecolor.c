@@ -425,11 +425,11 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	
 	//以前のsizeを保存
 	if(bInit) { // WM_INITDIALOGのとき
-		size = GetMyRegLong("Clock", "FontSize", 10);
-		if(size<=0) size = 10;
+		size = GetMyRegLong("Clock", "FontSize", 9);
+		if(!size || size>100) size = 9;
 	} else { // IDC_FONTが変更されたとき
 		CBGetLBText(hDlg, IDC_FONTSIZE,
-					CBGetCurSel(hDlg, IDC_FONTSIZE), str);
+					CBGetCurSel(hDlg, IDC_FONTSIZE), &str);
 		size = atoi(str);
 	}
 	

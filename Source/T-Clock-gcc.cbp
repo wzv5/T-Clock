@@ -7,6 +7,18 @@
 		<Option default_target="app" />
 		<Option compiler="gcc" />
 		<Build>
+			<Target title="AutoVersion">
+				<Option output="common/AutoVersion" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".objs/autoversion" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option parameters="--git . _testver.h" />
+				<Option projectCompilerOptionsRelation="1" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="-Os" />
+				</Compiler>
+			</Target>
 			<Target title="app">
 				<Option output="../Release/Win32/Clock" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/" />
@@ -31,6 +43,9 @@
 					<Add library="tClock" />
 					<Add directory="../Release/Win32" />
 				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
 			</Target>
 			<Target title="dll">
 				<Option output="../Release/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
@@ -46,6 +61,9 @@
 				<Linker>
 					<Add option="-s" />
 				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
 			</Target>
 			<Target title="app debug">
 				<Option output="../Debug/Win32/Clock" prefix_auto="1" extension_auto="1" />
@@ -69,6 +87,9 @@
 					<Add library="tClock" />
 					<Add directory="../Debug/Win32" />
 				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
 			</Target>
 			<Target title="dll debug">
 				<Option output="../Debug/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
@@ -80,6 +101,9 @@
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
 			</Target>
 		</Build>
 		<VirtualTargets>
@@ -97,7 +121,6 @@
 			<Add library="User32" />
 			<Add library="gdi32" />
 			<Add library="msvcr100" />
-			<Add library="UxTheme" />
 		</Linker>
 		<Unit filename="Clock/BounceWind.c">
 			<Option compilerVar="CC" />
@@ -203,7 +226,8 @@
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
-		<Unit filename="Clock/resource.h">
+		<Unit filename="Clock/settings.c">
+			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
@@ -222,11 +246,6 @@
 			<Option target="app debug" />
 		</Unit>
 		<Unit filename="Clock/timer.c">
-			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="app debug" />
-		</Unit>
-		<Unit filename="Clock/utl.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
@@ -258,27 +277,73 @@
 			<Option target="dll debug" />
 			<Option target="dll" />
 		</Unit>
-		<Unit filename="DLL/newapi.c">
-			<Option compilerVar="CC" />
-			<Option target="dll" />
-			<Option target="dll debug" />
-		</Unit>
-		<Unit filename="DLL/resource.h">
-			<Option target="dll" />
-			<Option target="dll debug" />
-		</Unit>
 		<Unit filename="DLL/tcdll.h">
-			<Option target="dll" />
-			<Option target="dll debug" />
-		</Unit>
-		<Unit filename="DLL/utl.c">
-			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
 		</Unit>
 		<Unit filename="DLL/version.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="dll" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/autoversion.cpp">
+			<Option target="AutoVersion" />
+		</Unit>
+		<Unit filename="common/globals.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/newapi.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/newapi.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/resource.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/tcolor.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/tcolor.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/utl.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/utl.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="common/version.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
 			<Option target="dll debug" />
 		</Unit>
 		<Extensions>

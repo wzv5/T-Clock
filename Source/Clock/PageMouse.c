@@ -132,7 +132,6 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 //----------------------------------------------+++--> Update UI controls: combo boxes and radiobutton:
 static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int type)   //-------+++-->
 {
-	int iter;
 	int func;
 	if(button==-1){
 		button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
@@ -153,6 +152,7 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 		func=(int)CBGetItemData(hDlg,IDC_MOUSEFUNC,CBGetCurSel(hDlg,IDC_MOUSEFUNC));
 		pData[button].func[click]=func;
 	}else{
+		int iter;
 		func=pData[button].func[click];
 		for(iter=0; iter<g_mouseActionCount+1; ++iter) {
 			if(func==CBGetItemData(hDlg,IDC_MOUSEFUNC,iter)) {

@@ -409,7 +409,6 @@ void InitFormat(void)
 	char format[LRG_BUFF];
 	int iter, checks[15];
 	RECT rc;
-	HWND hwnd;
 	BOOL linebreak;
 	
 	if(GetMyRegLong("Format", ENTRY(IDC_CUSTOM), FALSE))
@@ -432,6 +431,7 @@ void InitFormat(void)
 	if(g_tos>=TOS_VISTA)
 		linebreak = TRUE;
 	else{ /// @todo : XP: measure taskbar height to chose font size and offsets (small vs "normal" taskbar)
+		HWND hwnd;
 		linebreak = FALSE;
 		hwnd = FindWindow("Shell_TrayWnd", NULL);
 		if(hwnd!=NULL) {

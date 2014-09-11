@@ -214,12 +214,11 @@ bool QueryGit(const char* path,Version* ver,string* url,string* date,string* rev
 	if(chdir(path))
 		return false;
 	char buf[4097],* pos,* data;
-	size_t read;
-	int error;
 	FILE* git;
 	git=popen("git rev-list HEAD --count","r");
 	if(git){ /// revision count
-		read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+		int error;
+		size_t read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
 		if(!error && *buf>='0' && *buf<='9'){ // simple error check on command failure
 			ver->revision=atoi(buf);
 			git=popen("git remote -v","r");

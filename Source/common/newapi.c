@@ -50,13 +50,11 @@ THEME_FUNC_DEFINE(GetThemeColor,HRESULT,(HTHEME hTheme, int iPartId, int iStateI
 THEME_FUNC_DEFINE(DrawThemeBackground,HRESULT,(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect));
 THEME_FUNC_DEFINE(DrawThemeParentBackground,HRESULT,(HWND hwnd, HDC hdc, RECT* prc));
 
-static BOOL bInitGradientFill = FALSE;
 static BOOL bInitLayeredWindow = FALSE;
 static BOOL bInitDrawTheme = FALSE;
 
 static void RefreshRebar(HWND hwndBar);
 
-static int nAlphaDesktop = 255;
 static BOOL bClearTaskbar = FALSE;
 
 void InitLayeredWindow(void)

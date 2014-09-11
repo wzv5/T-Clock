@@ -103,7 +103,7 @@ SYSTEMTIME m_LastTime={0};
 int m_beatLast = -1;
 int m_bDispSecond = FALSE;
 int m_nDispBeat = 0;
-const enum{
+enum{
 	BLINK_NONE=0,
 	BLINK_ON,
 	BLINK_HOUR,
@@ -618,7 +618,8 @@ void ReadData(HWND hwnd, BOOL preview)   //-------------------------------------
 	
 	GetMyRegStr(section, "Font", fontname, 80, "Arial");
 	
-	fontsize = GetMyRegLong(section, "FontSize", 10);
+	fontsize = GetMyRegLong(section, "FontSize", 9);
+	if(fontsize>100 || fontsize<=0) fontsize=9;
 	italic = GetMyRegLong(section, "Italic", 0);
 	weight = GetMyRegLong(section, "Bold", 0);
 	if(weight) weight=FW_BOLD;
@@ -880,7 +881,7 @@ int UpdateClock(HWND hwnd, HFONT fnt)
 }
 int UpdateClockSize(HWND hwnd)
 {
-	static BITMAPINFO bmi={sizeof(BITMAPINFO),0,0,1,32,BI_RGB};
+	static BITMAPINFO bmi={{sizeof(BITMAPINFO),0,0,1,32,BI_RGB},};
 	HBITMAP hbm;
 	if(!m_hdcClock)
 		return 0;
