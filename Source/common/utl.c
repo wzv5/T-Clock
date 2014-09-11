@@ -377,7 +377,8 @@ void ForceForegroundWindow(HWND hwnd)
 //--+++-->
 int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
+	HKEY hkey;	char key[80];	DWORD regtype, size;
+	int ret=-1;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -390,31 +391,31 @@ int GetMyRegStr(const char* section, const char* entry, char* val, int len, cons
 	}
 	
 	if(g_bIniSetting) {
-		r = GetPrivateProfileString(key, entry, defval, val,
+		ret = GetPrivateProfileString(key, entry, defval, val,
 									len, g_inifile);
 	} else {
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
 			size = len;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-				r=size;
-				if(r) --r;
-			}else{
-				if((r=(int)strlen(defval))<=len){
-					strcpy(val,defval);
-				}else{
-					r=0;
-				}
+				ret=size;
+				if(ret) --ret;
 			}
 			RegCloseKey(hkey);
 		}
 	}
-	if(!r) *val='\0';
-	return r;
+	if(ret==-1){
+		if((ret=(int)strlen(defval))<=len){
+			strcpy(val,defval);
+		}else ret=0;
+	}
+	if(!ret) *val='\0';
+	return ret;
 }
 
 int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, const char* defval)
 {
-	HKEY hkey;	char key[80];	DWORD regtype, size;	int r=0;
+	HKEY hkey;	char key[80];	DWORD regtype, size;
+	int ret=-1;
 	
 	if(g_bIniSetting) key[0] = 0;
 	else strcpy(key, mykey);
@@ -427,29 +428,28 @@ int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, co
 	}
 	
 	if(g_bIniSetting) {
-		r = GetPrivateProfileString(key, entry, defval, val,
+		ret = GetPrivateProfileString(key, entry, defval, val,
 									len, g_inifile);
-		if(r == len)
+		if(ret == len)
 			SetMyRegStr(section, entry, defval);
 	} else {
 		if(RegOpenKey(HKEY_CURRENT_USER, key, &hkey)==ERROR_SUCCESS) {
 			size = len;
 			if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-				r=size;
-				if(r) --r;
-			}else{
-				if((r=(int)strlen(defval))<=len){
-					SetMyRegStr(section, entry, defval);
-					strcpy(val,defval);
-				}else{
-					r=0;
-				}
+				ret=size;
+				if(ret) --ret;
 			}
 			RegCloseKey(hkey);
 		}
 	}
-	if(!r) *val='\0';
-	return r;
+	if(ret==-1){
+		if((ret=(int)strlen(defval))<=len){
+			SetMyRegStr(section, entry, defval);
+			strcpy(val,defval);
+		}else ret=0;
+	}
+	if(!ret) *val='\0';
+	return ret;
 }
 
 LONG GetMyRegLong(const char* section, const char* entry, LONG defval)
