@@ -8,7 +8,7 @@ rem set xmsbuild=msbuild /p:Configuration="Release" /p:Platform="x64"
 echo __________________________________________
 echo %%xmsbuild%% /t:Clean "T-Clock 2010.sln"
 echo.
-echo %%xmsbuild%% "T-Clock 2010.sln"
+echo %%xmsbuild%% /m "T-Clock 2010.sln"
 echo.
 echo __________________________________________
 cmd /K
