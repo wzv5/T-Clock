@@ -104,18 +104,32 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		
 		MonthCal_GetMinReqRect(hCal,&rc);//size for a single month
 		if(ivMonths>1){
-			rc.right*=ivMonths; // wrong size for multi calendar...
-			if(ivMonths>5){//multi row
-				rc.right/=3;
-				if(ivMonths==6 || ivMonths==9){//6 or 9
-					rc.bottom*=3;
-				}else{//8 or 12
-					rc.bottom*=4;
-				}
+			switch(ivMonths){
+			case 1: case 2: case 3:
+			case 4: case 5:
+				rc.right*=ivMonths;
+				break;
+			case 6:
+				rc.bottom*=3;
+			case 7: case 8:
+				rc.right*=2;
+				if(ivMonths!=6) rc.bottom*=4;
+				break;
+			case 9:
+				rc.bottom*=4;
+			case 11: case 12:
+				rc.right*=3;
+				if(ivMonths!=9) rc.bottom*=4;
+				break;
+			case 10:
+				rc.right*=5;
+				rc.bottom*=2;
+				break;
 			}
 			if(bV7up)
 				MonthCal_SizeRectToMin(hCal,&rc);//removes some empty space.. (eg at 4 months)
 			else{ // brute force correct size
+				//rc.right+=6*ivMonths;
 				SetWindowPos(hCal,HWND_TOP,0,0,rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
 				while(MonthCal_GetCalendarCount(hCal)>=(DWORD)ivMonths) SetWindowPos(hCal,HWND_TOP,0,0,--rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
 				SetWindowPos(hCal,HWND_TOP,0,0,++rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
@@ -142,24 +156,23 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if(!bAutoClose && !GetMyRegLong("Calendar","CalendarTopMost",FALSE))
 			SetWindowPos(hwnd,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 		SetMyDialgPos(hwnd);
-		return 0;}
+//		ForceForegroundWindow(hwnd);
+//		if(bAutoClose && GetForegroundWindow()!=hwnd)
+//			PostMessage(hwnd,WM_CLOSE,0,0);
+		return 0;
+		break;}
 	case WM_ACTIVATE:
 		if(!bAutoClose) break;
 		if(LOWORD(wParam)!=WA_ACTIVE && LOWORD(wParam)!=WA_CLICKACTIVE){
 			PostMessage(hwnd,WM_CLOSE,0,0);//adds a little more delay which is good
 		}
 		break;
-	case WM_CLOSE:
-		DestroyWindow(hwnd);
-		return 1;
 	case WM_DESTROY:
 		Sleep(50);//we needed more delay... 50ms looks good (to allow T-Clock's FindWindow to work) 100ms is slower then Vista's native calendar
 		PostQuitMessage(0);
-		return 0;
-	default:
-		return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		break;
 	}
-	return 0;
+	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 //==========================================================================
 //---------------------------------------------------+++--> Open "Calendar":
@@ -189,8 +202,6 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	calclass=RegisterClassEx(&wcx);
 	hwnd=CreateWindowEx(0,(LPCSTR)MAKELPARAM(calclass,0),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,hInstance,NULL);
 	ForceForegroundWindow(hwnd);
-	if(bAutoClose && GetForegroundWindow()!=hwnd)
-		PostMessage(hwnd,WM_CLOSE,0,0);
 	return hwnd;
 }
 
