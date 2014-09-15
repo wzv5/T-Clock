@@ -175,21 +175,10 @@ void OnInit(HWND hDlg)
 {
 	char s[1024] = "";
 	int i, count;
-	HFONT hfont;
 	HBITMAP hBMPJRPic;
 	
 	hBMPJRPic = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BITMAP1), IMAGE_BITMAP, 64, 80, LR_DEFAULTCOLOR);
 	SendDlgItemMessage(hDlg, IDC_BMPJACK, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBMPJRPic);
-	
-	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-	if(hfont) {
-		SendDlgItemMessage(hDlg, IDC_COMBOALARM,
-						   WM_SETFONT, (WPARAM)hfont, 0);
-		SendDlgItemMessage(hDlg, IDC_FILEALARM,
-						   WM_SETFONT, (WPARAM)hfont, 0);
-		SendDlgItemMessage(hDlg, IDC_FILEJIHOU,
-						   WM_SETFONT, (WPARAM)hfont, 0);
-	}
 	
 	CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM)), 0);
 	

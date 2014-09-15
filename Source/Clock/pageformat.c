@@ -156,12 +156,6 @@ void OnInit(HWND hDlg)
 	
 	hwndPage = hDlg;
 	
-	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-	if(hfont) {
-		SendDlgItemMessage(hDlg, IDC_LOCALE, WM_SETFONT, (WPARAM)hfont, 0);
-		SendDlgItemMessage(hDlg, IDC_AMSYMBOL, WM_SETFONT, (WPARAM)hfont, 0);
-		SendDlgItemMessage(hDlg, IDC_PMSYMBOL, WM_SETFONT, (WPARAM)hfont, 0);
-	}
 	hfont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
 	if(hfont)
 		SendDlgItemMessage(hDlg, IDC_FORMAT, WM_SETFONT, (WPARAM)hfont, 0);

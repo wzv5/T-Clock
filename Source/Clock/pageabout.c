@@ -11,7 +11,7 @@
 #	define TCLOCK_SUFFIX ""
 #endif
 #define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - " VER_SHORT_DOTS " build " STR(VER_REVISION)
-#define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux continues what Stoic Joker's T-Clock 2010 started and will be further improved and kept up-to-date."
+#define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux tries to continue Stoic Joker's efforts."
 #define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
 #define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
 

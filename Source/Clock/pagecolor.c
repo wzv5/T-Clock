@@ -115,11 +115,6 @@ void OnInit(HWND hDlg)
 	}
 	DeleteDC(hdc);
 	
-	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-	if(hfont)
-		SendDlgItemMessage(hDlg, IDC_FONT, WM_SETFONT, (WPARAM)hfont, 0);
-		
-		
 	InitComboFont(hDlg);
 	
 	SetComboFontSize(hDlg, TRUE);

@@ -51,15 +51,8 @@ void OnInit(HWND hDlg, unsigned days)
 {
 	int i, f;
 	char s[80];
-	HFONT hfont;
-	
-	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
 	f = 1;
 	for(i = 0; i < 7; i++) {
-		if(hfont)
-			SendDlgItemMessage(hDlg, IDC_ALARMDAY1 + i,
-							   WM_SETFONT, (WPARAM)hfont, 0);
-							   
 		GetLocaleInfo(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					  LOCALE_SDAYNAME1+i, s, 80);
 		SetDlgItemText(hDlg, IDC_ALARMDAY1 + i, s);

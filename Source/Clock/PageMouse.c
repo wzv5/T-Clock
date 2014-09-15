@@ -282,12 +282,6 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	char buf[LRG_BUFF];
 	int button, click;
 	LVCOLUMN lvCol;
-	HFONT hfont=(HFONT)GetStockObject(DEFAULT_GUI_FONT);
-	if(hfont){
-		SendDlgItemMessage(hDlg,IDC_DROPFILESAPP,WM_SETFONT,(WPARAM)hfont,0);
-		SendDlgItemMessage(hDlg,IDC_MOUSEFILE,WM_SETFONT,(WPARAM)hfont,0);
-		SendDlgItemMessage(hDlg,IDC_TOOLTIP,WM_SETFONT,(WPARAM)hfont,0);
-	}
 	/// setup basic controls
 	for(click=IDS_NONE; click<=IDS_MOVETO; ++click)
 		CBAddString(hDlg,IDC_DROPFILES,MyString(click));

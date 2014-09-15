@@ -13,7 +13,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 
 #### Differences to Stoic Joker's T-Clock 2010 [Build 95/98](http://www.donationcoder.com/forum/index.php?topic=21944.0)
 - [x] + ISO-8601 week number support *(Wi)*
-- [x] + original Window calendar and tooltip usable
+- [x] + original Windows calendar and tooltip usable
 - [x] + support for clocks on every additional taskbar on Win8+
 - [x] + system/user dependent default colors
 - [x] + clock text angle freely adjustable

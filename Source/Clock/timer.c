@@ -325,7 +325,6 @@ void OnDestroy(HWND hDlg)   //--------------------------------------------------
 //------------------------//----------------------------------+++--> Initialize the "Timer" Dialog:
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
-	HFONT hfont;
 	char subkey[TNY_BUFF];
 	size_t offset;
 	int idx, count;
@@ -333,12 +332,6 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
 	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
-	
-	hfont = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
-	if(hfont) {
-		SendDlgItemMessage(hDlg, IDC_TIMERNAME, WM_SETFONT, (WPARAM)hfont, 0);
-		SendDlgItemMessage(hDlg, IDC_TIMERFILE, WM_SETFONT, (WPARAM)hfont, 0);
-	}
 	
 	SendDlgItemMessage(hDlg, IDC_TIMERSECSPIN, UDM_SETRANGE32, 0,59); // 60 Seconds Max
 	SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETRANGE32, 0,59); // 60 Minutes Max
