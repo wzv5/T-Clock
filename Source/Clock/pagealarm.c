@@ -29,7 +29,7 @@ static char m_bTransition=0;
 static int m_curAlarm;
 static unsigned m_days;
 
-void SendPSChanged(HWND hDlg){
+static void SendPSChanged(HWND hDlg){
 	if(!m_bTransition)
 		SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0);
 }

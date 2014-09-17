@@ -654,7 +654,7 @@ void OnInitTimeView(HWND hDlg, HWND hList)   //---------------------------------
 	
 	hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
 						 LVS_NOSORTHEADER|LVS_SINGLESEL, 0, 0, 261, 104, hDlg, 0, 0, NULL);
-	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
 	SetXPWindowTheme(hList,L"Explorer",NULL);
 	
 	lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;

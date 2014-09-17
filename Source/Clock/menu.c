@@ -214,7 +214,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 			while((hwnd2=FindWindow(MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
 			if(hwnd2){
 				SetActiveWindow(hwnd2);
-				hwnd1=FindWindowEx(hwnd2,NULL,MAKEINTATOM(32770),"Date and Time");
+				wait=10; while((hwnd1=FindWindowEx(hwnd2,NULL,MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
 				if(hwnd1){
 					hwnd2=GetDlgItem(hwnd1,116);
 					if(hwnd2) PostMessage(hwnd2,BM_CLICK,0,0);

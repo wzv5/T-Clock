@@ -24,7 +24,7 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		
 	case WM_INITDIALOG:
 		OnInit(hDlg);
-		ListView_SetExtendedListViewStyle(GetDlgItem(hDlg,IDC_QMEN_LIST), LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+		ListView_SetExtendedListViewStyle(GetDlgItem(hDlg,IDC_QMEN_LIST), LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
 		SetXPWindowTheme(GetDlgItem(hDlg,IDC_QMEN_LIST),L"Explorer",NULL);
 		
 		lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;		 // Load the Column Headers.

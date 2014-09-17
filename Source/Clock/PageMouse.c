@@ -10,26 +10,25 @@ static void OnDestroy();
 static void OnSansho(HWND hDlg, WORD id);
 static void InitMouseFuncList(HWND hDlg);
 
-static const char* g_mouseButton[]={
+static const char* m_mouseButton[]={
 	"Left",
 	"Right",
 	"Middle",
 	"Button 4",
 	"Button 5",
 };
-static const int g_mouseButtonCount=sizeof(g_mouseButton)/sizeof(char*);
-//#define g_mouseButtonCount (sizeof(g_mouseButton)/sizeof(char*))
-static const char* g_mouseClick[]={
+static const int m_mouseButtonCount=sizeof(m_mouseButton)/sizeof(char*);
+static const char* m_mouseClick[]={
 	"Single",
 	"Double",
 };
-//static const int g_mouseClickCount=sizeof(g_mouseClick)/sizeof(char*);
-#define g_mouseClickCount (sizeof(g_mouseClick)/sizeof(char*))
+//static const int m_mouseClickCount=sizeof(m_mouseClick)/sizeof(char*);
+#define m_mouseClickCount (sizeof(m_mouseClick)/sizeof(char*))
 typedef struct{
 	const int id;
 	const char* name;
 } action_t;
-static const action_t g_mouseAction[]={
+static const action_t m_mouseAction[]={
 //	{MOUSEFUNC_NONE,"<unknown>"},
 	{MOUSEFUNC_TIMER,"Timer"},
 	{IDM_TIMEWATCH,"Timer watch"},
@@ -45,18 +44,21 @@ static const action_t g_mouseAction[]={
 	{IDM_FWD_SIDEBYSIDE,"Show windows side by side"},
 	{IDM_FWD_UNDO,"Undo last window change"},
 };
-static const int g_mouseActionCount=sizeof(g_mouseAction)/sizeof(action_t);
-//#define g_mouseActionCount (sizeof(g_mouseAction)/sizeof(action_t))
+static const int m_mouseActionCount=sizeof(m_mouseAction)/sizeof(action_t);
 
 //----------------------+++--> Mouse Click Date Configuration,
 typedef struct { //--+++--> Manipulation, & Storage Structure.
-	int func[g_mouseClickCount];
-	char format[g_mouseClickCount][256];
-	char fname[g_mouseClickCount][256];
+	int func[m_mouseClickCount];
+	char format[m_mouseClickCount][256];
+	char fname[m_mouseClickCount][256];
 } CLICKDATA;
 static CLICKDATA* pData=NULL;
 
-#define SendPSChanged(hDlg) SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)(hDlg), 0)
+static char m_bTransition=0;
+static void SendPSChanged(HWND hDlg){
+	if(!m_bTransition)
+		SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)(hDlg), 0);
+}
 
 //========================================================================================
 //------------------------------------------------------+++--> Update UI, listview control:
@@ -90,17 +92,17 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 		ListView_SetItem(hList,&lvItem);
 		++lvItem.iItem;
 	}// */
-	for(button=0; button<g_mouseButtonCount; ++button){
+	for(button=0; button<m_mouseButtonCount; ++button){
 		if(button==1) continue; // We're Skipping the Right Mouse Button
-		for(click=0; click<g_mouseClickCount; ++click){
+		for(click=0; click<m_mouseClickCount; ++click){
 			int func=pData[button].func[click];
 			if(func){
 				lvItem.iSubItem=0;
-				lvItem.pszText=(char*)g_mouseButton[button];// we set it, so it's "const"
+				lvItem.pszText=(char*)m_mouseButton[button];// we set it, so it's "const"
 				ListView_InsertItem(hList,&lvItem);
 				
 				++lvItem.iSubItem;
-				lvItem.pszText=(char*)g_mouseClick[click];
+				lvItem.pszText=(char*)m_mouseClick[click];
 				ListView_SetItem(hList,&lvItem);
 				
 				++lvItem.iSubItem;
@@ -108,9 +110,9 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 				#ifdef _DEBUG
 				{char* leak=malloc(16);wsprintf(leak,"#%i",func);lvItem.pszText=leak;}
 				#endif // _DEBUG
-				{int iter; for(iter=0; iter<g_mouseActionCount; ++iter){
-					if(func!=g_mouseAction[iter].id) continue;
-					lvItem.pszText=(char*)g_mouseAction[iter].name;
+				{int iter; for(iter=0; iter<m_mouseActionCount; ++iter){
+					if(func!=m_mouseAction[iter].id) continue;
+					lvItem.pszText=(char*)m_mouseAction[iter].name;
 					break;
 				}}
 				ListView_SetItem(hList,&lvItem);
@@ -133,28 +135,30 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int type)   //-------+++-->
 {
 	int func;
+	if(m_bTransition) return;
+	m_bTransition=1; // start transition
 	if(button==-1){
 		button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
 		if(button>0) ++button; // skip right mouse (relative)
 	}else{
 		CBSetCurSel(hDlg,IDC_MOUSEBUTTON,(button>1?button-1:button));
 		if(click==-1){
-			for(click=0; click<g_mouseClickCount && !pData[button].func[click]; ++click);
+			for(click=0; click<m_mouseClickCount && !pData[button].func[click]; ++click);
 		}
 	}
 	if(click==-1){
-		for(click=0; click<g_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
-	}else
-		CheckRadioButton(hDlg,IDC_RADSINGLE,IDC_RADDOUBLE,IDC_RADSINGLE+click);
-	if(click==g_mouseClickCount)
+		for(click=0; click<m_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
+	}
+	if(click==m_mouseClickCount)
 		click=0;
+	CheckRadioButton(hDlg,IDC_RADSINGLE,IDC_RADDOUBLE,IDC_RADSINGLE+click);
 	if(type==1){
 		func=(int)CBGetItemData(hDlg,IDC_MOUSEFUNC,CBGetCurSel(hDlg,IDC_MOUSEFUNC));
 		pData[button].func[click]=func;
 	}else{
 		int iter;
 		func=pData[button].func[click];
-		for(iter=0; iter<g_mouseActionCount+1; ++iter) {
+		for(iter=0; iter<m_mouseActionCount+1; ++iter) {
 			if(func==CBGetItemData(hDlg,IDC_MOUSEFUNC,iter)) {
 				CBSetCurSel(hDlg,IDC_MOUSEFUNC,iter);
 				break;
@@ -170,6 +174,7 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 			GetMyRegStr("Format","Format",pData[button].format[click],LRG_BUFF,"");
 		SetDlgItemText(hDlg,IDC_MOUSEFILE,pData[button].format[click]);
 	}
+	m_bTransition=0; // end transition
 }
 //================================================================================================
 //-------------------------------------------+++--> Dialog Procedure for Mouse Tab Dialog Messages:
@@ -190,43 +195,43 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			SetDlgItemText(hDlg, IDC_LABDROPFILESAPP, MyString(sel>=3?IDS_LABFOLDER:IDS_LABPROGRAM));
 			for(iter=IDC_LABDROPFILESAPP; iter<=IDC_DROPFILESAPPSANSHO; ++iter)
 				EnableWindow(GetDlgItem(hDlg,iter),(sel>=2 && sel<=4));
-			UpdateUIControls(hDlg,g_hList,-1,-1,0);
-			g_bApplyClock=TRUE; SendPSChanged(hDlg);
-		}else if(id==IDC_DROPFILESAPP && code==EN_CHANGE)
+			if(!m_bTransition){
+				UpdateUIControls(hDlg,g_hList,-1,-1,0);
+				g_bApplyClock=TRUE;
+				SendPSChanged(hDlg);
+			}
+		}else if(id==IDC_DROPFILESAPP && code==EN_CHANGE){
 			SendPSChanged(hDlg);
 		/// non-functioning drag&drop handler (at least on Win8)
-		else if(id == IDC_DROPFILESAPPSANSHO)
+		}else if(id == IDC_DROPFILESAPPSANSHO){
 			OnSansho(hDlg, id);
 		///  button
-		else if(id == IDC_MOUSEBUTTON && code == CBN_SELCHANGE){
+		}else if(id == IDC_MOUSEBUTTON && code == CBN_SELCHANGE){
 			int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
 			if(button>0) ++button; // skip right mouse (relative)
 			UpdateUIControls(hDlg,g_hList,button,-1,0);
-		}
 		/// clicks
-		else if(id >= IDC_RADSINGLE && id <= IDC_RADDOUBLE){
+		}else if(id >= IDC_RADSINGLE && id <= IDC_RADDOUBLE){
 			UpdateUIControls(hDlg,g_hList,-1,id-IDC_RADSINGLE,0);
-		}
 		///  Mouse Function
-		else if(id == IDC_MOUSEFUNC && code == CBN_SELCHANGE){
+		}else if(id == IDC_MOUSEFUNC && code == CBN_SELCHANGE){
 			UpdateUIControls(hDlg,g_hList,-1,-1,1);
 			SendPSChanged(hDlg);
-		}
 		/// Mouse Function - File
-		else if(id == IDC_MOUSEFILE && code==EN_CHANGE){
+		}else if(id == IDC_MOUSEFILE && code==EN_CHANGE){
 			int click;
 			int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
 			if(button>0) ++button; // skip right mouse (relative)
-			for(click=0; click<g_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
-			if(click<g_mouseClickCount){
+			for(click=0; click<m_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
+			if(click<m_mouseClickCount){
 				if(CBGetItemData(hDlg,IDC_MOUSEFUNC,CBGetCurSel(hDlg,IDC_MOUSEFUNC)==MOUSEFUNC_CLIPBOARD))
 					GetDlgItemText(hDlg,IDC_MOUSEFILE,pData[button].format[click],256);
-//				UpdateUIControls(hDlg,g_hList,-1,-1,0); // recursion since it updates selection which in place updates list editbox
 				SendPSChanged(hDlg);
 			}
 		}else if((id==IDC_TOOLTIP && code==EN_CHANGE) || id==IDCB_TOOLTIP){
 			if(id==IDCB_TOOLTIP) EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
-			g_bApplyClock=TRUE; SendPSChanged(hDlg);
+			g_bApplyClock=TRUE;
+			SendPSChanged(hDlg);
 		}
 		return TRUE;}
 	case WM_NOTIFY:{
@@ -253,13 +258,13 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				lvItem.iSubItem=1;
 				lvItem.pszText=szClickBuf;
 				ListView_GetItem(g_hList,&lvItem);
-				for(button=0; button<g_mouseButtonCount; ++button){
+				for(button=0; button<m_mouseButtonCount; ++button){
 					if(button==1) continue; // We're Skipping the Right Mouse Button
-					if(strcmp(g_mouseButton[button],szButton)) continue;
-					for(click=0; click<g_mouseClickCount; ++click){
-						if(strcmp(g_mouseClick[click],lvItem.pszText)) continue;
+					if(strcmp(m_mouseButton[button],szButton)) continue;
+					for(click=0; click<m_mouseClickCount; ++click){
+						if(strcmp(m_mouseClick[click],lvItem.pszText)) continue;
 						UpdateUIControls(hDlg,g_hList,button,click,2);
-						button=g_mouseButtonCount;
+						button=m_mouseButtonCount;
 						break;
 					}
 				}
@@ -282,19 +287,20 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	char buf[LRG_BUFF];
 	int button, click;
 	LVCOLUMN lvCol;
+	m_bTransition=1; // start transition
 	/// setup basic controls
 	for(click=IDS_NONE; click<=IDS_MOVETO; ++click)
 		CBAddString(hDlg,IDC_DROPFILES,MyString(click));
 	CBSetCurSel(hDlg,IDC_DROPFILES,GetMyRegLong(g_reg_mouse,"DropFiles",0));
-	PostMessage(hDlg,WM_COMMAND,MAKEWPARAM(IDC_DROPFILES,CBN_SELCHANGE),0); // update IDC_DROPFILES related
+	SendMessage(hDlg,WM_COMMAND,MAKEWPARAM(IDC_DROPFILES,CBN_SELCHANGE),0); // update IDC_DROPFILES related
 	GetMyRegStr(g_reg_mouse,"DropFilesApp",buf,256,"");
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP,buf);
 	/// read mouse click settings
 	entry[2]='\0';
-	pData=malloc(sizeof(CLICKDATA)*g_mouseButtonCount);
-	for(button=0; button<g_mouseButtonCount; ++button) {
+	pData=malloc(sizeof(CLICKDATA)*m_mouseButtonCount);
+	for(button=0; button<m_mouseButtonCount; ++button) {
 		if(button==1) continue; // skip right mouse
-		for(click=0; click<g_mouseClickCount; ++click) {
+		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
 			pData[button].func[click]=GetMyRegLong(g_reg_mouse, entry, MOUSEFUNC_NONE);
@@ -326,7 +332,7 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	/// setup list view
 	*hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|
 							LVS_NOSORTHEADER|LVS_REPORT|LVS_SINGLESEL, 17, 117, 430, 160, hDlg, 0, 0, NULL);
-	ListView_SetExtendedListViewStyle(*hList,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+	ListView_SetExtendedListViewStyle(*hList,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
 	SetXPWindowTheme(*hList,L"Explorer",NULL);
 	SetWindowLongPtr(*hList,GWLP_ID,IDC_LIST);
 	
@@ -355,6 +361,7 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	lvCol.cx=140;
 	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
 	ShowWindow(*hList,SW_SHOW);
+	m_bTransition=0; // end transition
 	/// select first mouse setup and UpdateMouseClickList
 	UpdateUIControls(hDlg,*hList,0,-1,0); // pre-select first mouse button
 }
@@ -371,9 +378,9 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	SetMyRegStr(g_reg_mouse,"DropFilesApp",buf);
 	
 	entry[2]='\0';
-	for(button=0; button<g_mouseButtonCount; ++button) {
+	for(button=0; button<m_mouseButtonCount; ++button) {
 		if(button==1) continue; // skip right mouse
-		for(click=0; click<g_mouseClickCount; ++click) {
+		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
 			if(pData[button].func[click])
@@ -446,8 +453,8 @@ void InitMouseFuncList(HWND hDlg)   //------------------------------------------
 	CBSetDroppedWidth(hDlg,IDC_MOUSEFUNC,180);
 	CBAddString(hDlg,IDC_MOUSEFUNC,MyString(IDS_NONE));
 	CBSetItemData(hDlg,IDC_MOUSEFUNC,0,0);
-	for(iter=0; iter<g_mouseActionCount; ++iter){
-		CBAddString(hDlg,IDC_MOUSEFUNC,g_mouseAction[iter].name);
-		CBSetItemData(hDlg,IDC_MOUSEFUNC,iter+1,g_mouseAction[iter].id);
+	for(iter=0; iter<m_mouseActionCount; ++iter){
+		CBAddString(hDlg,IDC_MOUSEFUNC,m_mouseAction[iter].name);
+		CBSetItemData(hDlg,IDC_MOUSEFUNC,iter+1,m_mouseAction[iter].id);
 	}
 }

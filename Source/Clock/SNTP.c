@@ -551,7 +551,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 //===============================//=================================================
 	hLogView = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
 							LVS_NOSORTHEADER|LVS_SINGLESEL, 19, 188, 428, 89, hDlg, 0, 0, NULL);
-	ListView_SetExtendedListViewStyle(hLogView, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
+	ListView_SetExtendedListViewStyle(hLogView, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
 	SetXPWindowTheme(hLogView,L"Explorer",NULL);
 	
 	ShowWindow(hLogView, SW_SHOW);							 // Populate Its Column:
