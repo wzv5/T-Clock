@@ -147,6 +147,7 @@
 #define IDC_CHIMEALARM                  1046
 #define IDC_REPEATIMES                  1047
 #define IDC_SPINTIMES                   1048
+#define IDC_TOPMOST                     1053
 #define IDC_MSG_ALARM                   1054
 #define IDCB_MSG_ALARM                  1055
 #define IDC_BMPJACK                     1056

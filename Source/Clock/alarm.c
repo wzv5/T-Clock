@@ -40,12 +40,12 @@ void SetHourlyChime(BOOL bEnabled){
 	m_bJihou=bEnabled;
 	SetMyRegLong("","Jihou",m_bJihou);
 }
-BOOL GetAlarmEnabled(int idx){
+char GetAlarmEnabled(int idx){
 	if(idx<0||idx>=m_maxAlarm)
 		return 0;
 	return m_pAS[idx].bAlarm;
 }
-void SetAlarmEnabled(int idx,BOOL bEnabled){
+void SetAlarmEnabled(int idx,char bEnabled){
 	if(idx<0||idx>=m_maxAlarm)
 		return;
 	m_pAS[idx].bAlarm=bEnabled;
@@ -55,39 +55,40 @@ void SetAlarmEnabled(int idx,BOOL bEnabled){
 void ReadAlarmFromReg(alarm_t* pAS, int num)
 {
 	wsprintf(g_alarmkey+5,"%d",num+1);
-	GetMyRegStr(g_alarmkey, "Name", pAS->name, sizeof(pAS->name), "");
-	pAS->bAlarm = GetMyRegLong(g_alarmkey, "Alarm", FALSE);
+	GetMyRegStr(g_alarmkey, "Name", pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name), "");
 	pAS->hour = GetMyRegLong(g_alarmkey, "Hour", 12);
 	pAS->minute = GetMyRegLong(g_alarmkey, "Minute", 0);
-	GetMyRegStr(g_alarmkey, "File", pAS->fname, MAX_BUFF, "");
-	
-	GetMyRegStr(g_alarmkey, "jrMessage", pAS->jrMessage, MAX_BUFF, "");
-	GetMyRegStr(g_alarmkey, "jrSettings", pAS->jrSettings, TNY_BUFF, "");
-	pAS->jrMsgUsed = GetMyRegLong(g_alarmkey, "jrMsgUsed", FALSE);
-	
-	pAS->bHour12 = GetMyRegLong(g_alarmkey, "Hour12", TRUE);
-	pAS->bChimeHr = GetMyRegLong(g_alarmkey, "ChimeHr", FALSE);
-	pAS->bRepeat = GetMyRegLong(g_alarmkey, "Repeat", FALSE);
-	pAS->iTimes = GetMyRegLong(g_alarmkey, "Times", 1);
-	pAS->bBlink = GetMyRegLong(g_alarmkey, "Blink", FALSE);
 	pAS->days = GetMyRegLong(g_alarmkey, "Days", 0x7f);
-	pAS->bPM = GetMyRegLong(g_alarmkey, "PM", FALSE);
+	pAS->iTimes = GetMyRegLong(g_alarmkey, "Times", 1);
 	
-	if(!*pAS->name)
-		wsprintf(pAS->name, "%02d:%02d", pAS->hour, pAS->minute);
+	pAS->bAlarm = (char)GetMyRegLong(g_alarmkey, "Alarm", 0);
+	pAS->bHour12 = (char)GetMyRegLong(g_alarmkey, "Hour12", 1);
+	pAS->bChimeHr = (char)GetMyRegLong(g_alarmkey, "ChimeHr", 0);
+	pAS->bRepeat = (char)GetMyRegLong(g_alarmkey, "Repeat", 0);
+	pAS->bBlink = (char)GetMyRegLong(g_alarmkey, "Blink", 0);
+	pAS->bPM = (char)GetMyRegLong(g_alarmkey, "PM", 0);
+	
+	GetMyRegStr(g_alarmkey, "File", pAS->fname, sizeof(pAS->fname), "");
+	
+	pAS->bDlg = (char)GetMyRegLong(g_alarmkey, "jrMsgUsed", 0);
+	GetMyRegStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message), "");
+	GetMyRegStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings), "");
+	
+	if(!*pAS->dlgmsg.name)
+		wsprintf(pAS->dlgmsg.name, "%02d:%02d", pAS->hour, pAS->minute);
 }
 void SaveAlarmToReg(alarm_t* pAS, int num)
 {
 	wsprintf(g_alarmkey+5,"%d",num+1);
-	SetMyRegStr(g_alarmkey, "Name", pAS->name);
+	SetMyRegStr(g_alarmkey, "Name", pAS->dlgmsg.name);
 	SetMyRegLong(g_alarmkey, "Alarm", pAS->bAlarm);
 	SetMyRegLong(g_alarmkey, "Hour", pAS->hour);
 	SetMyRegLong(g_alarmkey, "Minute", pAS->minute);
 	SetMyRegStr(g_alarmkey, "File", pAS->fname);
 	
-	SetMyRegStr(g_alarmkey, "jrMessage", pAS->jrMessage);
-	SetMyRegStr(g_alarmkey, "jrSettings", pAS->jrSettings);
-	SetMyRegLong(g_alarmkey, "jrMsgUsed", pAS->jrMsgUsed);
+	SetMyRegLong(g_alarmkey, "jrMsgUsed", pAS->bDlg);
+	SetMyRegStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message);
+	SetMyRegStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings);
 	
 	SetMyRegLong(g_alarmkey, "Hour12", pAS->bHour12);
 	SetMyRegLong(g_alarmkey, "ChimeHr", pAS->bChimeHr);
@@ -145,15 +146,8 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 		
 		if(m_pAS[i].hour == h && m_pAS[i].minute == st->wMinute && (m_pAS[i].days & fday)) {
 			if(m_pAS[i].bBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, FALSE, 0);
-			if(m_pAS[i].jrMsgUsed) { // From BounceWindow.c
-				extern char szCaption[TNY_BUFF];  // Alarm Name
-				extern char szMessage[MAX_BUFF];  // Window Text
-				extern char szSettings[TNY_BUFF]; // Hop Settings
-				
-				strcpy(szCaption, m_pAS[i].name);
-				strcpy(szMessage, m_pAS[i].jrMessage);
-				strcpy(szSettings, m_pAS[i].jrSettings);
-				PostMessage(hwnd, WM_COMMAND, JRMSG_BOING, 0);
+			if(m_pAS[i].bDlg) { // From BounceWindow.c
+				ReleaseTheHound(hwnd,m_pAS[i].dlgmsg.name,m_pAS[i].dlgmsg.message,m_pAS[i].dlgmsg.settings);
 			}
 			if(m_pAS[i].fname[0]) {
 				if(m_pAS[i].bRepeat && m_pAS[i].iTimes > 1) rep = m_pAS[i].iTimes; //-+> Ring X Times

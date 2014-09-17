@@ -45,9 +45,6 @@
 #define HOT_CALEN	240
 #define HOT_TSYNC	250
 
-// Jack Russel Message Windo Goes Boing!
-#define JRMSG_BOING 15000
-
 //--+++--> main.c - Application Global Values:
 extern char		g_mydir[];			// Path to Clock.exe
 extern HWND		g_hDlgTimer;		// Timer Dialog Window Handle
@@ -72,28 +69,31 @@ extern BOOL g_bApplyTaskbar;
 void SetMyDialgPos(HWND hwnd,int padding);
 BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
 
-// alarm.c
 typedef struct{
 	char name[TNY_BUFF];
-	BOOL bAlarm;
+	char message[MAX_BUFF];
+	char settings[TNY_BUFF];
+} dlgmsg_t;
+// alarm.c
+typedef struct{
+	int days;
 	int hour;
 	int minute;
-	char fname[MAX_BUFF];
-	char jrMessage[MAX_BUFF];
-	char jrSettings[TNY_BUFF];
-	BOOL jrMsgUsed;
-	BOOL bHour12;
-	BOOL bChimeHr;
-	BOOL bRepeat;
 	int iTimes;
-	BOOL bBlink;
-	BOOL bPM;
-	int days;
+	char bAlarm;
+	char bHour12;
+	char bChimeHr;
+	char bRepeat;
+	char bBlink;
+	char bPM;
+	char fname[MAX_BUFF];
+	char bDlg;
+	dlgmsg_t dlgmsg;
 } alarm_t;
 BOOL GetHourlyChime();
 void SetHourlyChime(BOOL bEnabled);
-BOOL GetAlarmEnabled(int idx);
-void SetAlarmEnabled(int idx,BOOL bEnabled);
+char GetAlarmEnabled(int idx);
+void SetAlarmEnabled(int idx,char bEnabled);
 void ReadAlarmFromReg(alarm_t* pAS, int num);
 void SaveAlarmToReg(alarm_t* pAS, int num);
 void StopFile();
@@ -160,8 +160,8 @@ void SyncTimeNow();
 void NetTimeConfigDialog();
 
 // BounceWind.c
-void OnMsgWindOpt(HWND hDlg);
-void ReleaseTheHound(HWND hWnd, BOOL);
+int BounceWindOptions(HWND hDlg, dlgmsg_t* dlg);
+void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* settings);
 
 // Macros
 #define EnableDlgItem(hDlg,id,b) EnableWindow(GetDlgItem((hDlg),(id)),(b))

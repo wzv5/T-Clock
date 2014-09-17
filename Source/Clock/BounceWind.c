@@ -4,42 +4,35 @@
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
 //-----------------//-------------------------------------------------------+++-->
 #include <time.h> // Required for Randomizing the Bounce Height -----------+++-->
-char szCaption[TNY_BUFF];  // Alarm Name
-char szMessage[MAX_BUFF]; // Window Text
-char szSettings[TNY_BUFF]; // Hop Settings
 
-static RECT rcMsg;
+static RECT m_rcMsg;
+static int m_iDelta, m_iSpeed, m_iPause, m_iShort, m_iSkew, m_iPaws, m_iBounce;
+static int m_iScreenW, m_iScreenH, m_iBallX, m_iBallY, m_iDeltaX, m_iDeltaY;
+
+enum{
+	BFLAG_NONE		=0x00,
+	BFLAG_RAND		=0x01,
+	BFLAG_TOPMOST	=0x02,
+};
+static unsigned char m_flags;
+
 static void OnOK(HWND hDlg);
-static void OnInit(HWND hDlg);
+static void OnInit(HWND hDlg, dlgmsg_t* dlg);
 static void BounceWindow(HWND hWndBoing);
-INT_PTR CALLBACK AlarmMsgProc(HWND, UINT, WPARAM, LPARAM);
-int iDelta, iSpeed, iPause, iShort, iSkew, iPaws, iBounce;
-static int iScreenW, iScreenH, iBallX, iBallY, iDeltaX, iDeltaY;
-void ParseSettings(char*, int*, int*, int*, int*, int*, BOOL*);
+static INT_PTR CALLBACK AlarmMsgProc(HWND, UINT, WPARAM, LPARAM);
+static void ParseSettings(char* data);
 static void CenterDoggie(HWND hWnd);
-BOOL bRandHop;
 
-#define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 #define ID_DOGGIE 2419
 
-//----------------------------------------------------------------//---------+++-->
-//---------------+++--> This is the Window That Will Bounce Wildly About the Screen:
-void JackRusselWindow(HWND hJRWnd, char* szCapt, char* szText)   //----------+++-->
-{
-	MessageBox(hJRWnd, szText, szCapt, MB_OK);
-}
 //-----------------------------//--------------------------------------------+++-->
 //-----------------------------//----+++--> Open Window Bounce Control Options Here:
-void OnMsgWindOpt(HWND hDlg)  //---------------------------------------------+++-->
+int BounceWindOptions(HWND hDlg, dlgmsg_t* dlg)  //--------------------------+++-->
 {
-	GetDlgItemText(hDlg, IDC_COMBOALARM, szCaption, TNY_BUFF);
-	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage, MAX_BUFF);
-	GetDlgItemText(hDlg, IDC_JR_SETTINGS, szSettings, TNY_BUFF);
-	if(DialogBox(0, MAKEINTRESOURCE(IDD_ALARMMSG), hDlg, AlarmMsgProc) == IDOK) {
-		SetDlgItemText(hDlg, IDC_JR_SETTINGS, szSettings);
-		SetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage);
-		SendPSChanged(hDlg);
+	if(DialogBoxParam(0,MAKEINTRESOURCE(IDD_ALARMMSG),hDlg,AlarmMsgProc,(LPARAM)dlg) == IDOK) {
+		return 1;
 	}
+	return 0;
 }
 //---------------------------------------------------------------------------+++-->
 // -------------------------------------------+++--> Alarm Message Dialog Procedure:
@@ -48,26 +41,27 @@ INT_PTR CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 	(void)lParam;
 	switch(message) {
 	case WM_INITDIALOG:
-		OnInit(hDlg);
+		OnInit(hDlg,(dlgmsg_t*)lParam);
 		return TRUE;
 		
 	case WM_COMMAND: {
 			WORD id = LOWORD(wParam);
 			switch(id) {
-			case IDC_JRMSG_TEST:
-				iBounce = GetDlgItemInt(hDlg, IDC_JRMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
-				iSkew = GetDlgItemInt(hDlg, IDC_JRMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
-				iPaws = GetDlgItemInt(hDlg, IDC_JRMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
+			case IDC_JRMSG_TEST:{
+				dlgmsg_t* dlg=(dlgmsg_t*)GetWindowLongPtr(hDlg,DWLP_USER);
+				m_iBounce = GetDlgItemInt(hDlg, IDC_JRMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
+				m_iSkew = GetDlgItemInt(hDlg, IDC_JRMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
+				m_iPaws = GetDlgItemInt(hDlg, IDC_JRMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
 				
-				iSpeed = GetDlgItemInt(hDlg, IDC_JRMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
-				iDelta = GetDlgItemInt(hDlg, IDC_JRMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
-				GetDlgItemText(hDlg, IDC_JRMSG_CAPT, szCaption, TNY_BUFF);
-				GetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage, MAX_BUFF);
-				bRandHop = IsDlgButtonChecked(hDlg, IDC_JRMSG_RAND);
-				ReleaseTheHound(hDlg, FALSE);
-				break;
-				
-				
+				m_iSpeed = GetDlgItemInt(hDlg, IDC_JRMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
+				m_iDelta = GetDlgItemInt(hDlg, IDC_JRMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
+				GetDlgItemText(hDlg, IDC_JRMSG_CAPT, dlg->name, sizeof(dlg->name));
+				GetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg->message, sizeof(dlg->message));
+				m_flags=0;
+				if(IsDlgButtonChecked(hDlg,IDC_JRMSG_RAND)) m_flags|=BFLAG_RAND;
+				if(IsDlgButtonChecked(hDlg,IDC_TOPMOST)) m_flags|=BFLAG_TOPMOST;
+				ReleaseTheHound(hDlg,dlg->name,dlg->message,NULL);
+				break;}
 				
 			case IDOK: // Fall Through IS Intentional.
 				OnOK(hDlg);
@@ -83,7 +77,7 @@ INT_PTR CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 }
 //------------------------//-------------------------------------------------+++-->
 // -----------------------//----------------------------+++--> Initialize Dialoggie:
-void OnInit(HWND hDlg)   //--------------------------------------------------+++-->
+void OnInit(HWND hDlg, dlgmsg_t* dlg)   //--------------------------------------------------+++-->
 {
 	/*	bRandHop = TRUE; // Enable Randomized Hop Height
 		iBounce = 3;   // Get Users Attention!!!
@@ -92,26 +86,28 @@ void OnInit(HWND hDlg)   //--------------------------------------------------+++
 		iSkew = 4; // Hop vs. Ricochet deviation
 		iPaws = 3; // Sit! & Wait for User Input
 	*/
-	ParseSettings(szSettings, &iBounce, &iSkew, &iPaws, &iSpeed, &iDelta, &bRandHop);
+	SetWindowLongPtr(hDlg,DWLP_USER,(LONG_PTR)dlg);
+	ParseSettings(dlg->settings);
 	
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETRANGE32, 0,100);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETPOS32, iSpeed,0);  // Movement Timer Rate
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETRANGE32, iSkew,42);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETPOS32, 0, iDelta); // Pixel Distance Moved
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETRANGE32, 0,200);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETPOS32, 0, m_iSpeed);  // Movement Timer Rate
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETRANGE32, m_iSkew,42);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETPOS32, 0, m_iDelta); // Pixel Distance Moved
 	
 	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETRANGE32, 1,6);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETPOS32, 0, iSkew); //----+++--> Skew Factor
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETPOS32, 0, m_iSkew); //----+++--> Skew Factor
 	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETRANGE32, 0,10);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETPOS32, 0, iPaws); //-+++--> Paws/Sit! Time
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETPOS32, 0, m_iPaws); //-+++--> Paws/Sit! Time
 	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETRANGE32, 0,10);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETPOS32, 0, iBounce); //--+++--> Bounce Time
-	SetDlgItemText(hDlg, IDC_JRMSG_CAPT, szCaption);
-	SetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage);
-	CheckDlgButton(hDlg, IDC_JRMSG_RAND, bRandHop);
-	iScreenW = GetSystemMetrics(SM_CXSCREEN);
-	iScreenH = GetSystemMetrics(SM_CYSCREEN);
+	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETPOS32, 0, m_iBounce); //--+++--> Bounce Time
+	SetDlgItemText(hDlg, IDC_JRMSG_CAPT, dlg->name);
+	SetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg->message);
+	CheckDlgButton(hDlg, IDC_JRMSG_RAND,	m_flags&BFLAG_RAND);
+	CheckDlgButton(hDlg, IDC_TOPMOST,		m_flags&BFLAG_TOPMOST);
+	m_iScreenW = GetSystemMetrics(SM_CXSCREEN);
+	m_iScreenH = GetSystemMetrics(SM_CYSCREEN);
 	
-	iShort = 100;
+	m_iShort = 100;
 }
 //-----------------------------//--------------------------------------------+++-->
 //------------------+++--> ...And Here be the Part What Goes Boing, Boing, Boing!!!:
@@ -119,36 +115,36 @@ void BounceWindow(HWND hWnd)  //---------------------------------------------+++
 {
 	int iSizeW, iSizeH;
 	
-	iBallX += (iDeltaX / iSkew);
-	iBallY += iDeltaY;
-	iSizeW = rcMsg.right - rcMsg.left;
-	iSizeH = rcMsg.bottom - rcMsg.top;
+	m_iBallX += (m_iDeltaX / m_iSkew);
+	m_iBallY += m_iDeltaY;
+	iSizeW = m_rcMsg.right - m_rcMsg.left;
+	iSizeH = m_rcMsg.bottom - m_rcMsg.top;
 	
-	if(iBallX < 0) {
-		iBallX = 0;
-		iDeltaX = iDelta;
-	} else if((iBallX + iSizeW) > iScreenW) {
-		iBallX = iScreenW - iSizeW;
-		iDeltaX = -iDelta;
+	if(m_iBallX < 0) {
+		m_iBallX = 0;
+		m_iDeltaX = m_iDelta;
+	} else if((m_iBallX + iSizeW) > m_iScreenW) {
+		m_iBallX = m_iScreenW - iSizeW;
+		m_iDeltaX = -m_iDelta;
 	}
 	
-	if(iBallY < iShort) {
-		iBallY = iShort;
-		iDeltaY = iDelta;
-	} else if((iBallY + iSizeH) > iScreenH) {
-		if(bRandHop) {
+	if(m_iBallY < m_iShort) {
+		m_iBallY = m_iShort;
+		m_iDeltaY = m_iDelta;
+	} else if((m_iBallY + iSizeH) > m_iScreenH) {
+		if(m_flags&BFLAG_RAND) {
 			double dTmp;
 			srand((UINT)time(0));
 			dTmp = rand() % 42 + 0;
 			dTmp *= .01;
-			iShort = (int)(iScreenH * dTmp); // Make Shorter Random Height Hops
+			m_iShort = (int)(m_iScreenH * dTmp); // Make Shorter Random Height Hops
 		} else {
-			iShort = 0;
+			m_iShort = 0;
 		}
-		iBallY = iScreenH - iSizeH;
-		iDeltaY = -iDelta;
+		m_iBallY = m_iScreenH - iSizeH;
+		m_iDeltaY = -m_iDelta;
 	}
-	SetWindowPos(hWnd, HWND_TOP, iBallX, iBallY, 0, 0, SWP_NOSIZE);
+	SetWindowPos(hWnd, HWND_TOP, m_iBallX, m_iBallY, 0, 0, SWP_NOSIZE);
 }
 //------------------------------//-------------------------------------------+++-->
 //------------+++--> Snap Dialoggie Window to Center Screen and Wait for User Input:
@@ -157,113 +153,123 @@ void CenterDoggie(HWND hWnd)   //--------------------------------------------+++
 	int iSizeW, iSizeH;
 	int x, y;
 	
-	iSizeW = rcMsg.right - rcMsg.left;
-	iSizeH = rcMsg.bottom - rcMsg.top;
-	x = (iScreenW / 2) - (iSizeW / 2);
-	y = (iScreenH / 2) - (iSizeH / 2);
+	iSizeW = m_rcMsg.right - m_rcMsg.left;
+	iSizeH = m_rcMsg.bottom - m_rcMsg.top;
+	x = (m_iScreenW / 2) - (iSizeW / 2);
+	y = (m_iScreenH / 2) - (iSizeH / 2);
 	SetWindowPos(hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
 }
 //----------------------//---------------------------------------------------+++-->
 // ---------------------//------------------------------+++--> Initialize Dialoggie:
 void OnOK(HWND hDlg)   //----------------------------------------------------+++-->
 {
-	iBounce = GetDlgItemInt(hDlg, IDC_JRMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
-	iSkew = GetDlgItemInt(hDlg, IDC_JRMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
-	iPaws = GetDlgItemInt(hDlg, IDC_JRMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
+	dlgmsg_t* dlg=(dlgmsg_t*)GetWindowLongPtr(hDlg,DWLP_USER);
+	m_iBounce = GetDlgItemInt(hDlg, IDC_JRMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
+	m_iSkew = GetDlgItemInt(hDlg, IDC_JRMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
+	m_iPaws = GetDlgItemInt(hDlg, IDC_JRMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
 	
-	iSpeed = GetDlgItemInt(hDlg, IDC_JRMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
-	iDelta = GetDlgItemInt(hDlg, IDC_JRMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
-//  GetDlgItemText(hDlg, IDC_JRMSG_CAPT, szCaption, TNY_BUFF);
-	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, szMessage, MAX_BUFF);
-	bRandHop = IsDlgButtonChecked(hDlg, IDC_JRMSG_RAND);
-	if(iSkew < 1) iSkew = 1; // Divide by Zero = Bad...
+	m_iSpeed = GetDlgItemInt(hDlg, IDC_JRMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
+	m_iDelta = GetDlgItemInt(hDlg, IDC_JRMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
+//	GetDlgItemText(hDlg, IDC_JRMSG_CAPT, dlg->name, sizeof(dlg->name));
+	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg->message, sizeof(dlg->message));
 	
-	wsprintf(szSettings, "%i,%i,%i,%i,%i,%i", iBounce, iSkew, iPaws, iSpeed, iDelta, bRandHop);
+	m_flags=0;
+	if(IsDlgButtonChecked(hDlg,IDC_JRMSG_RAND)) m_flags|=BFLAG_RAND;
+	if(IsDlgButtonChecked(hDlg,IDC_TOPMOST)) m_flags|=BFLAG_TOPMOST;
+	
+	if(m_iSkew < 1) m_iSkew = 1; // Divide by Zero = Bad...
+	
+	wsprintf(dlg->settings, "%i,%i,%i,%i,%i,%hu", m_iBounce, m_iSkew, m_iPaws, m_iSpeed, m_iDelta, m_flags);
 }
 //--------------------------------------------------------//--------//-------+++-->
 //----------------------------+++--> Parse the Dialoggie Settings Out of the String:
-void ParseSettings(char* szString, int* iBnc, int* iSkw, //--------//--------+++-->
-				   /*****************/int* iPws, int* iSpd, int* iDlt, BOOL* bRHp)   //--------+++-->
+void ParseSettings(char* data)   //------------------------------------------+++-->
 {
+	const char seps[] = ",";
 	char* szToken, *nxToken;
-	char seps[] = ",";
 	int i=0;
 	
-	if(!strlen(szString)) // Enforce the Defaults if String is Empty
-		strcpy(szString, "3,4,3,90,42,1");
-		
-	szToken = strtok_s(szString, seps, &nxToken);
+	if(!*data)
+		strcpy(data,"3,4,3,90,42,3"); // last one is "flags" BFLAG_RAND|BFLAG_TOPMOST = 3
+		//			 0,1,2, 3, 4,5
+	
+	szToken = strtok_s(data, seps, &nxToken);
 	while(szToken != NULL) {
-		switch(i) {
+		switch(i++) {
 		case 0:
-			*iBnc = atoi(szToken);
+			m_iBounce = atoi(szToken);
 			break;
 		case 1:
-			*iSkw = atoi(szToken);
+			m_iSkew = atoi(szToken);
 			break;
 		case 2:
-			*iPws = atoi(szToken);
+			m_iPaws = atoi(szToken);
 			break;
 		case 3:
-			*iSpd = atoi(szToken);
+			m_iSpeed = atoi(szToken);
 			break;
 		case 4:
-			*iDlt = atoi(szToken);
+			m_iDelta = atoi(szToken);
 			break;
-		case 5:
-			*bRHp = atoi(szToken);
+		case 5: // flags
+			m_flags = (unsigned char)atoi(szToken);
 			break;
 		}
 		szToken = strtok_s(NULL, seps, &nxToken);
-		i++;
 	}
 }
+
+static char* m_caption=NULL;
 //---------------------------------------------------------------------------+++-->
 //------------------------------------------+++--> Ricochet Doggie Window Procedure:
 VOID CALLBACK DoggieProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)   //
 {
 	static HWND hWndBoing=0;
 	(void)hWnd; (void)uMsg; (void)idEvent; (void)dwTime;
-	iPause += iSpeed;
+	m_iPause += m_iSpeed;
 	
-	if(iPause >= (iBounce * 1000)) { // Check for Sit! Command.
-		if(iPause < ((iBounce * 1000) + 101)) CenterDoggie(hWndBoing);
-		iPause += iSpeed;
-		if(iPause >= ((iBounce * 1000)+(iPaws * 1000))) { // Give User X Seconds to Read
-			iPause = 0; //---------------------------+++--> and Respond to Alarm Message.
+	if(m_iPause >= (m_iBounce * 1000)) { // Check for Sit! Command.
+		if(m_iPause < ((m_iBounce * 1000) + 101)) CenterDoggie(hWndBoing);
+		m_iPause += m_iSpeed;
+		if(m_iPause >= ((m_iBounce * 1000)+(m_iPaws * 1000))) { // Give User X Seconds to Read
+			m_iPause = 0; //---------------------------+++--> and Respond to Alarm Message.
 		}
-	} else { // Bounce Wildly for X Seconds!
-		hWndBoing = FindWindow(NULL, szCaption);
-		GetWindowRect(hWndBoing, &rcMsg);
+	} else if(m_caption) { // Bounce Wildly for X Seconds!
+		hWndBoing = FindWindow(NULL, m_caption);
+		GetWindowRect(hWndBoing, &m_rcMsg);
 		BounceWindow(hWndBoing);
 	}
 }
 //---------------------------------------------------------------------------+++-->
 //-------------------------------------------+++--> The Alarm Just Let the Dogz Out:
-void ReleaseTheHound(HWND hWnd, BOOL bLive)
+void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* settings)
 {
-
-	iScreenW = GetSystemMetrics(SM_CXSCREEN);
-	iScreenH = GetSystemMetrics(SM_CYSCREEN);
-	iShort = 100;
+	char* caption=strdup(title);
+	m_iScreenW = GetSystemMetrics(SM_CXSCREEN);
+	m_iScreenH = GetSystemMetrics(SM_CYSCREEN);
+	m_iShort = 100;
 	
-	if(bLive) // If This is a Live Alarm & Not a Test, Parse the Settings Input String.
-		ParseSettings(szSettings, &iBounce, &iSkew, &iPaws, &iSpeed, &iDelta, &bRandHop);
+	if(settings) // If This is a Live Alarm & Not a Test, Parse the Settings Input String.
+		ParseSettings(settings);
 		
-	iDeltaX = iDeltaY = iDelta;
-	iBallX = iBallY = 0;
-	iPause = 0; // Hang Time Between Rompings...
+	m_iDeltaX = m_iDeltaY = m_iDelta;
+	m_iBallX = m_iBallY = 0;
+	m_iPause = 0; // Hang Time Between Rompings...
 	
-	if(iSkew < 1) iSkew = 1; // Divide by Zero = Bad...
+	if(m_iSkew < 1) m_iSkew = 1; // Divide by Zero = Bad...
 	
-	if(iSpeed > 100) { // Timer Cannot be Set
-		iSpeed = 0;  // Any Faster Than Zero!
+	if(m_iSpeed > 100) { // Timer Cannot be Set
+		m_iSpeed = 0;  // Any Faster Than Zero!
 	} else { // Convert High Number Into Short Time Slice.
-		iSpeed = 100 - iSpeed;
+		m_iSpeed = 100 - m_iSpeed;
 	} //-//-++-> Now Set the Converted Short Time Slice.
 	
-	SetTimer(hWnd, ID_DOGGIE, iSpeed, (TIMERPROC)DoggieProc);
-	if(iSpeed < 10) iSpeed = 10; // Required to Ensure Paws.
-	JackRusselWindow(hWnd, szCaption, szMessage);
-	KillTimer(hWnd, ID_DOGGIE);
+	SetTimer(hwnd, ID_DOGGIE, m_iSpeed, (TIMERPROC)DoggieProc);
+	if(m_iSpeed < 10) m_iSpeed = 10; // Required to Ensure Paws.
+	// our notify
+	m_caption=caption;
+	MessageBox(NULL, text, caption, MB_OK|(m_flags&BFLAG_TOPMOST?MB_SYSTEMMODAL:0));
+	KillTimer(hwnd, ID_DOGGIE);
+	m_caption=NULL;
+	free(caption); // we use a copy since it's possible to have more then one dialog... (ugly but somewhat works)
 }

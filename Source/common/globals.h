@@ -20,6 +20,8 @@
 #ifdef __GNUC__
 #	define localtime_s _localtime64_s
 #	define gmtime_s _gmtime64_s
+#else
+#	define strdup _strdup
 #endif // __GNUC__
 
 #include "resource.h"

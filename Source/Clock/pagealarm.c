@@ -108,9 +108,17 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			OnDay(hDlg);
 			break;
 		// Message Window Options
-		case IDCB_MSG_ALARM:
-			OnMsgWindOpt(hDlg);
-			break;
+		case IDCB_MSG_ALARM:{
+			dlgmsg_t dlg;
+			GetDlgItemText(hDlg, IDC_COMBOALARM, dlg.name, sizeof(dlg.name));
+			GetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg.message, sizeof(dlg.message));
+			GetDlgItemText(hDlg, IDC_JR_SETTINGS, dlg.settings, sizeof(dlg.settings));
+			if(BounceWindOptions(hDlg,&dlg)){
+				SetDlgItemText(hDlg, IDC_JR_SETTINGS, dlg.settings);
+				SetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg.message);
+				SendPSChanged(hDlg);
+			}
+			break;}
 		// checked "12 hour"
 		case IDC_12HOURALARM:
 			On12Hour(hDlg);
@@ -187,7 +195,7 @@ void OnInit(HWND hDlg)
 	for(i=0; i<count; ++i) {
 		alarm_t* pAS = malloc(sizeof(alarm_t));
 		ReadAlarmFromReg(pAS, i);
-		CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, pAS->name), pAS);
+		CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name), pAS);
 		if(!i) SetAlarmToDlg(hDlg, pAS);
 	}
 	if(count > 0) {
@@ -257,13 +265,13 @@ void OnApply(HWND hDlg)
 	n_alarm = 0;
 	
 	if(m_curAlarm < 0) {
-		char name[sizeof(pAS->name)];
-		GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->name));
+		char name[sizeof(pAS->dlgmsg.name)];
+		GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->dlgmsg.name));
 		if(name[0] && IsDlgButtonChecked(hDlg, IDC_ALARM)) {
 			pAS = malloc(sizeof(alarm_t));
 			if(pAS) {
 				GetAlarmFromDlg(hDlg, pAS);
-				i = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->name);
+				i = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
 				CBSetItemData(hDlg, IDC_COMBOALARM, i, pAS);
 				m_curAlarm = i;
 				CBSetCurSel(hDlg, IDC_COMBOALARM, i);
@@ -311,42 +319,43 @@ void OnApply(HWND hDlg)
 void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------------+++-->
 {
 	if(m_curAlarm!=-1){ // update alarm name in combobox
-		size_t oldlen=strlen(pAS->name), newlen;
-		char name[sizeof(pAS->name)];
+		size_t oldlen=strlen(pAS->dlgmsg.name), newlen;
+		char name[sizeof(pAS->dlgmsg.name)];
 		newlen=GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(name));
-		if(newlen!=oldlen || memcmp(name,pAS->name,newlen)){
+		if(newlen!=oldlen || memcmp(name,pAS->dlgmsg.name,newlen)){
 			HWND combo=GetDlgItem(hDlg,IDC_COMBOALARM);
 			OutputDebugString("GetAlarmFromDlg new name");
 			ComboBox_DeleteString(combo,m_curAlarm);
 			ComboBox_InsertString(combo,m_curAlarm,name);
 			ComboBox_SetItemData(combo,m_curAlarm,pAS);
-			memcpy(pAS->name,name,sizeof(pAS->name));
+			memcpy(pAS->dlgmsg.name,name,sizeof(pAS->dlgmsg.name));
 		}
 	}else
-		GetDlgItemText(hDlg, IDC_COMBOALARM, pAS->name, sizeof(pAS->name));
-	pAS->bAlarm = IsDlgButtonChecked(hDlg, IDC_ALARM);
+		GetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name));
+	pAS->bAlarm = (char)IsDlgButtonChecked(hDlg, IDC_ALARM);
 	
 	pAS->hour = (int)SendDlgItemMessage(hDlg,IDC_SPINHOUR,UDM_GETPOS32,0,0);
 	pAS->minute = (int)SendDlgItemMessage(hDlg,IDC_SPINMINUTE,UDM_GETPOS32,0,0);
+	pAS->days = m_days;
+	
+	pAS->iTimes = GetDlgItemInt(hDlg, IDC_REPEATIMES, NULL, FALSE);
+	pAS->bHour12 = (char)IsDlgButtonChecked(hDlg, IDC_12HOURALARM);
+	pAS->bChimeHr = (char)IsDlgButtonChecked(hDlg, IDC_CHIMEALARM);
+	pAS->bRepeat = (char)IsDlgButtonChecked(hDlg, IDC_REPEATALARM);
+	pAS->bBlink = (char)IsDlgButtonChecked(hDlg, IDC_BLINKALARM);
+	pAS->bPM = (char)IsDlgButtonChecked(hDlg, IDC_AMPM_CHECK);
+	
 	GetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname, MAX_PATH);
 	
-	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, pAS->jrMessage, MAX_BUFF);
-	GetDlgItemText(hDlg, IDC_JR_SETTINGS, pAS->jrSettings, TNY_BUFF);
-	pAS->jrMsgUsed = IsDlgButtonChecked(hDlg, IDC_MSG_ALARM);
-	
-	pAS->bHour12 = IsDlgButtonChecked(hDlg, IDC_12HOURALARM);
-	pAS->bChimeHr = IsDlgButtonChecked(hDlg, IDC_CHIMEALARM);
-	pAS->bRepeat = IsDlgButtonChecked(hDlg, IDC_REPEATALARM);
-	pAS->iTimes = GetDlgItemInt(hDlg, IDC_REPEATIMES, NULL, FALSE);
-	pAS->bBlink = IsDlgButtonChecked(hDlg, IDC_BLINKALARM);
-	pAS->days = m_days;
-	pAS->bPM = IsDlgButtonChecked(hDlg, IDC_AMPM_CHECK);
+	pAS->bDlg = (char)IsDlgButtonChecked(hDlg, IDC_MSG_ALARM);
+	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message));
+	GetDlgItemText(hDlg, IDC_JR_SETTINGS, pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings));
 }
 //================================================================================================
 //-------------------------------------------------+++--> Load Dialog With Settings for This Alarm:
 void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------------------+++-->
 {
-	SetDlgItemText(hDlg, IDC_COMBOALARM, pAS->name);
+	SetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
 	CheckDlgButton(hDlg, IDC_ALARM, pAS->bAlarm);
 	
 	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETRANGE32, 0,23);
@@ -357,9 +366,9 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETPOS32, 0, pAS->iTimes);
 	SetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname);
 	
-	SetDlgItemText(hDlg, IDC_JRMSG_TEXT, pAS->jrMessage);
-	SetDlgItemText(hDlg, IDC_JR_SETTINGS, pAS->jrSettings);
-	CheckDlgButton(hDlg, IDC_MSG_ALARM, pAS->jrMsgUsed);
+	CheckDlgButton(hDlg, IDC_MSG_ALARM, pAS->bDlg);
+	SetDlgItemText(hDlg, IDC_JRMSG_TEXT, pAS->dlgmsg.message);
+	SetDlgItemText(hDlg, IDC_JR_SETTINGS, pAS->dlgmsg.settings);
 	
 	CheckDlgButton(hDlg, IDC_12HOURALARM, pAS->bHour12);
 	CheckDlgButton(hDlg, IDC_AMPM_CHECK, pAS->bPM);
@@ -390,14 +399,14 @@ void OnChangeAlarm(HWND hDlg)
 	m_bTransition=1; // start transition
 	
 	if(m_curAlarm < 0) {
-		char name[sizeof(pAS->name)];
-		GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->name));
+		char name[sizeof(pAS->dlgmsg.name)];
+		GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->dlgmsg.name));
 		if(name[0] && IsDlgButtonChecked(hDlg, IDC_ALARM)) {
 			pAS = malloc(sizeof(alarm_t));
 			if(pAS) {
 				int index;
 				GetAlarmFromDlg(hDlg, pAS);
-				index = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->name);
+				index = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
 				CBSetItemData(hDlg, IDC_COMBOALARM, index, pAS);
 				m_curAlarm = index;
 			}
@@ -430,14 +439,14 @@ void OnChangeAlarm(HWND hDlg)
 void OnDropDownAlarm(HWND hDlg)
 {
 	alarm_t* pAS;
-	char name[sizeof(pAS->name)];
+	char name[sizeof(pAS->dlgmsg.name)];
 	
 	if(m_curAlarm < 0) return;
 	pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
 	if(!pAS) return;
-	GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->name));
-	if(strcmp(name, pAS->name)) {
-		strcpy(pAS->name, name);
+	GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->dlgmsg.name));
+	if(strcmp(name, pAS->dlgmsg.name)) {
+		strcpy(pAS->dlgmsg.name, name);
 		CBDeleteString(hDlg, IDC_COMBOALARM, m_curAlarm);
 		(int)CBInsertString(hDlg, IDC_COMBOALARM, m_curAlarm, name);
 		CBSetItemData(hDlg, IDC_COMBOALARM, m_curAlarm, pAS);

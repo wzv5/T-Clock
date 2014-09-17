@@ -113,10 +113,6 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		SyncTimeNow();
 		break;
 		
-	case JRMSG_BOING:
-		ReleaseTheHound(hwnd, TRUE);
-		break;
-		
 	case IDM_EXIT: //--------------------------------------+++--> Exit T-Clock 2010
 		PostMessage(g_hwndClock, WM_COMMAND, IDM_EXIT, 0);
 		break;
@@ -284,7 +280,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
 		for(idx=0; idx<count; ++idx) {
 			ReadAlarmFromReg(&pAS,idx);
-			wsprintf(buf,"    %s	(%i",pAS.name,idx+1);
+			wsprintf(buf,"    %s	(%i",pAS.dlgmsg.name,idx+1);
 			InsertMenu(hMenu, IDM_PROP_ALARM, MF_BYCOMMAND|MF_STRING, IDM_I_ALARM+idx, buf);
 			if(pAS.bAlarm)
 				CheckMenuItem(hMenu,IDM_I_ALARM+idx,MF_BYCOMMAND|MF_CHECKED);
