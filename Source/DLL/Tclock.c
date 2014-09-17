@@ -622,8 +622,12 @@ void ReadData(HWND hwnd, BOOL preview)   //-------------------------------------
 	if(fontsize>100 || fontsize<=0) fontsize=9;
 	italic = GetMyRegLong(section, "Italic", 0);
 	weight = GetMyRegLong(section, "Bold", 0);
-	if(weight) weight=FW_BOLD;
-	else weight=0;
+	switch(weight){
+	case 0: break;
+	case 1: weight=FW_BOLD; break;
+	default:
+		weight=FW_SEMIBOLD;
+	}
 	fontquality=(BYTE)GetMyRegLong(section, "FontQuality", CLEARTYPE_QUALITY);
 	
 	angle=GetMyRegLong(section,"Angle",0)%360;

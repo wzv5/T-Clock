@@ -101,8 +101,6 @@ void OnInit(HWND hDlg)
 {
 	HDC hdc;
 	LOGFONT logfont;
-	HFONT hfont;
-	int i;
 	
 	// setting of "background" and "text"
 	InitColor(hDlg);
@@ -155,7 +153,6 @@ void OnInit(HWND hDlg)
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE32, 0,180);
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS32, 0, GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
 	
-	i=GetMyRegLong("Clock","FontQuality",CLEARTYPE_QUALITY);
 	CBAddString(hDlg,IDC_FONTQUAL,"Default");				// DEFAULT_QUALITY			 = 0
 	CBAddString(hDlg,IDC_FONTQUAL,"Draft");					// DRAFT_QUALITY			 = 1
 	CBAddString(hDlg,IDC_FONTQUAL,"Proof");					// PROOF_QUALITY			 = 2
@@ -163,7 +160,7 @@ void OnInit(HWND hDlg)
 	CBAddString(hDlg,IDC_FONTQUAL,"AntiAliased (Win7)");	// ANTIALIASED_QUALITY		 = 4
 	CBAddString(hDlg,IDC_FONTQUAL,"ClearType (WinXP+)");	// CLEARTYPE_QUALITY		 = 5
 	CBAddString(hDlg,IDC_FONTQUAL,"ClearType Natural");		// CLEARTYPE_NATURAL_QUALITY = 6
-	CBSetCurSel(hDlg,IDC_FONTQUAL,i);
+	CBSetCurSel(hDlg,IDC_FONTQUAL,GetMyRegLong("Clock","FontQuality",CLEARTYPE_QUALITY));
 }
 
 /*------------------------------------------------
