@@ -227,7 +227,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	PostMessage(g_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)g_hwndClock);
 	
 	ReadData(hwnd,0); //-+-> Get Configuration Information From Registry
-	SubsCreate();
+//	SubsCreate();
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
 	m_oldClockProc = (WNDPROC)GetWindowLongPtr(g_hwndClock, GWL_WNDPROC);
@@ -238,10 +238,14 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	
 	DragAcceptFiles(hwnd, GetMyRegLong(NULL, "DropFiles", FALSE)); // Enable/Disable DropFiles on Clock Based on Reg Info.
 	
-	SetLayeredTaskbar(g_hwndClock,0); // transparent taskbar & more?
+//	SetLayeredTaskbar(g_hwndClock,0); // transparent taskbar & more?
+//	PostMessage(GetParent(GetParent(g_hwndClock)), WM_SIZE, SIZE_RESTORED, 0);
+//	InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, TRUE);
 	
-	PostMessage(GetParent(GetParent(g_hwndClock)), WM_SIZE, SIZE_RESTORED, 0);
-	InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, TRUE);
+	// somehow required... first size is smaller... taskbar refresh is also required to update clock position
+	// delaying the call to ReadData here or adding a second later doesn't seem to help...
+	PostMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
+	PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
 }
 //================================================================================================
 //----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
@@ -633,7 +637,6 @@ void ReadData(HWND hwnd, BOOL preview)   //-------------------------------------
 	angle=GetMyRegLong(section,"Angle",0)%360;
 	if(angle<0) angle+=360;
 	
-	hFon = CreateMyFont(fontname, fontsize, weight, italic, angle*10, fontquality);
 	m_radian=(double)angle*3.14159265358979323/180.;// ye π doesn't need to be that long :P
 	
 	dlineheight = GetMyRegLong(section, "LineHeight", 0);
@@ -664,6 +667,7 @@ void ReadData(HWND hwnd, BOOL preview)   //-------------------------------------
 	
 	m_bMultimon = GetMyRegLong("Desktop", "Multimon", 1);
 
+	hFon = CreateMyFont(fontname, fontsize, weight, italic, angle*10, fontquality);
 	UpdateClock(hwnd,hFon);
 }
 

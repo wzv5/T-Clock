@@ -383,7 +383,7 @@ void OnFormatCheck(HWND hDlg, WORD id)
 /*------------------------------------------------
   Initialize a format string. Called from main.c
 --------------------------------------------------*/
-void InitFormat(void)
+void InitFormat()
 {
 	char format[LRG_BUFF];
 	int iter, checks[15];
