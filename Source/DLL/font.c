@@ -33,20 +33,14 @@ int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, 
 //----------------------------------------------------------------------------------+++--> Create a Font For the Clock:
 HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic, int angle, BYTE quality)   //--+++-->
 {
-	LOGFONT lf;	POINT pt;	HDC hdc;	WORD langid;
-	char s[11];	int cp, i;	BYTE charset;
+	LOGFONT lf;	POINT pt;	HDC hdc;	int langid;
+	int cp, i;	BYTE charset;
 	
 	memset(&lf, 0, sizeof(LOGFONT));
-	langid = (WORD)GetMyRegLong("Format", "Locale", (int)GetUserDefaultLangID());
-	cp = CP_ACP;
+	langid = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
 	
-	if(GetLocaleInfo(langid, LOCALE_IDEFAULTANSICODEPAGE, s, 10) > 0) {
-		char* p;
-		p = s;
-		cp = 0;
-		while('0' <= *p && *p <= '9') cp = cp * 10 + *p++ - '0';
-		if(!IsValidCodePage(cp)) cp = CP_ACP;
-	}
+	GetLocaleInfo(langid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&cp, sizeof(cp));
+	if(!IsValidCodePage(cp)) cp = CP_ACP;
 	
 	charset = 0;
 	for(i = 0; codepage_charset[i].cp; i++) {

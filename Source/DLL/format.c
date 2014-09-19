@@ -6,14 +6,14 @@
 // Last Modified by Stoic Joker: Friday, 12/16/2011 @ 3:36:00pm
 #include "tcdll.h"
 
-int codepage = CP_ACP;
-static char MonthShort[11], MonthLong[31];
-static char DayOfWeekShort[11], DayOfWeekLong[31];
-static char* DayOfWeekEng[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-static char* MonthEng[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-static char AM[11], PM[11], SDate[5], STime[5];
-static char EraStr[11];
-static int AltYear;
+static WORD m_codepage = CP_ACP;
+static char m_MonthShort[11], m_MonthLong[31];
+static char m_DayOfWeekShort[11], m_DayOfWeekLong[31];
+static char* m_DayOfWeekEng[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+static char* m_MonthEng[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+static char m_AM[10], m_PM[10];
+static char m_EraStr[11];
+static int m_AltYear;
 
 extern char g_bHour12, g_bHourZero;
 
@@ -21,62 +21,47 @@ extern char g_bHour12, g_bHourZero;
 //---------------------------------//+++--> load Localized Strings for Month, Day, & AM/PM Symbols:
 void InitFormat(SYSTEMTIME* lt)   //--------------------------------------------------------+++-->
 {
-	char s[80], *p;
+	char str[80];
 	int i, ilang, ioptcal;
 	
-	ilang = GetMyRegLong(NULL, "Locale", (int)GetUserDefaultLangID());
-	codepage = CP_ACP;
+	ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
 	
-	if(GetLocaleInfo((WORD)ilang, LOCALE_IDEFAULTANSICODEPAGE, s, 10) > 0) {
-		p = s; codepage = 0;
-		while('0' <= *p && *p <= '9') codepage = codepage * 10 + *p++ - '0';
-		if(!IsValidCodePage(codepage)) codepage = CP_ACP;
-	}
+	GetLocaleInfo(ilang, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&m_codepage, sizeof(m_codepage));
+	if(!IsValidCodePage(m_codepage)) m_codepage=CP_ACP;
 	
 	i = lt->wDayOfWeek; i--; if(i < 0) i = 6;
 	
-	GetLocaleInfo((WORD)ilang, LOCALE_SABBREVDAYNAME1 + i, DayOfWeekShort, 10);
-	GetLocaleInfo((WORD)ilang, LOCALE_SDAYNAME1 + i, DayOfWeekLong, 30);
+	GetLocaleInfo(ilang, LOCALE_SABBREVDAYNAME1 + i, m_DayOfWeekShort, sizeof(m_DayOfWeekShort));
+//	GetLocaleInfo(ilang, LOCALE_SSHORTESTDAYNAME1 + i, DayOfWeekShort, sizeof(DayOfWeekShort)); // Vista+
+	GetLocaleInfo(ilang, LOCALE_SDAYNAME1 + i, m_DayOfWeekLong, sizeof(m_DayOfWeekLong));
 	
 	i = lt->wMonth; i--;
-	GetLocaleInfo((WORD)ilang, LOCALE_SABBREVMONTHNAME1 + i, MonthShort, 10);
-	GetLocaleInfo((WORD)ilang, LOCALE_SMONTHNAME1 + i, MonthLong, 30);
+	GetLocaleInfo(ilang, LOCALE_SABBREVMONTHNAME1 + i, m_MonthShort, sizeof(m_MonthShort));
+	GetLocaleInfo(ilang, LOCALE_SMONTHNAME1 + i, m_MonthLong, sizeof(m_MonthLong));
 	
-	GetLocaleInfo((WORD)ilang, LOCALE_S1159, AM, 10);
-	GetMyRegStr("Format", "AMsymbol", s, 80, AM);
-	if(s[0] == 0) strcpy(s, "AM");
-	strcpy(AM, s);
-	
-	GetLocaleInfo((WORD)ilang, LOCALE_S2359, PM, 10);
-	GetMyRegStr("Format", "PMsymbol", s, 80, PM);
-	if(s[0] == 0) strcpy(s, "PM");
-	strcpy(PM, s);
-	
-	GetLocaleInfo((WORD)ilang, LOCALE_SDATE, SDate, 4);
-	GetLocaleInfo((WORD)ilang, LOCALE_STIME, STime, 4);
-	
-	EraStr[0] = 0;
-	AltYear = -1;
-	
-	ioptcal = 0;
-	if(GetLocaleInfo((WORD)ilang, LOCALE_IOPTIONALCALENDAR, s, 10)) {
-		ioptcal = 0;
-		p = s;
-		
-		while('0' <= *p && *p <= '9') ioptcal = ioptcal * 10 + *p++ - '0';
+	GetMyRegStr("Format", "AMsymbol", m_AM, sizeof(m_AM), "");
+	if(!*m_AM){
+		if(!GetLocaleInfo(ilang, LOCALE_S1159, m_AM, sizeof(m_AM)))
+			strcpy(m_AM, "AM");
 	}
+	GetMyRegStr("Format", "PMsymbol", m_PM, sizeof(m_PM), "");
+	if(!*m_PM){
+		if(!GetLocaleInfo(ilang, LOCALE_S2359, m_PM, sizeof(m_PM)))
+			strcpy(m_PM, "PM");
+	}
+	
+	m_AltYear = -1;
+	
+	if(!GetLocaleInfo(ilang, LOCALE_IOPTIONALCALENDAR|LOCALE_RETURN_NUMBER, (LPSTR)&ioptcal, sizeof(ioptcal)))
+		ioptcal = 0;
 	
 	if(ioptcal < 3) ilang = LANG_USER_DEFAULT;
 	
-	if(GetDateFormat((WORD)ilang, DATE_USE_ALT_CALENDAR, lt, "gg", s, 12) != 0) strcpy(EraStr, s);
+	if(!GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, "gg", m_EraStr, sizeof(m_EraStr)))
+		*m_EraStr='\0';
 	
-	if(GetDateFormat((WORD)ilang, DATE_USE_ALT_CALENDAR, lt, "yyyy", s, 6) != 0) {
-		if(s[0]) {
-			p = s;
-			AltYear = 0;
-			while('0' <= *p && *p <= '9') AltYear = AltYear * 10 + *p++ - '0';
-		}
-	}
+	if(GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, "yyyy", str, 6))
+		m_AltYear=atoi(str);
 }
 //================================================================================================
 //--+++-->
@@ -149,12 +134,6 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 		} else if(*fmt=='\\' && fmt[1]=='n') {
 			fmt+=2;
 			*out++='\n';
-		} else if(*fmt == '/') {
-			++fmt;
-			for(pos=SDate; *pos; ) *out++=*pos++;
-		} else if(*fmt == ':') {
-			++fmt;
-			for(pos=STime; *pos; ) *out++=*pos++;
 		}
 		/// for testing
 		else if(*fmt == 'S' && fmt[1] == 'S' && fmt[2] == 'S') {
@@ -171,17 +150,17 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 			fmt += len;
 		} else if(*fmt == 'm') {
 			if(*(fmt + 1) == 'm' && *(fmt + 2) == 'e') {
-				*out++ = MonthEng[pt->wMonth-1][0];
-				*out++ = MonthEng[pt->wMonth-1][1];
-				*out++ = MonthEng[pt->wMonth-1][2];
+				*out++ = m_MonthEng[pt->wMonth-1][0];
+				*out++ = m_MonthEng[pt->wMonth-1][1];
+				*out++ = m_MonthEng[pt->wMonth-1][2];
 				fmt += 3;
 			} else if(fmt[1] == 'm' && fmt[2] == 'm') {
 				if(*(fmt + 3) == 'm') {
 					fmt += 4;
-					for(pos=MonthLong; *pos; ) *out++=*pos++;
+					for(pos=m_MonthLong; *pos; ) *out++=*pos++;
 				} else {
 					fmt += 3;
-					for(pos=MonthShort; *pos; ) *out++=*pos++;
+					for(pos=m_MonthShort; *pos; ) *out++=*pos++;
 				}
 			} else {
 				if(fmt[1] == 'm') {
@@ -197,35 +176,36 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 		} else if(*fmt == 'a' && fmt[1] == 'a' && fmt[2] == 'a') {
 			if(*(fmt + 3) == 'a') {
 				fmt += 4;
-				for(pos=DayOfWeekLong; *pos; ) *out++=*pos++;
+				for(pos=m_DayOfWeekLong; *pos; ) *out++=*pos++;
 			} else {
 				fmt += 3;
-				for(pos=DayOfWeekShort; *pos; ) *out++=*pos++;
+				for(pos=m_DayOfWeekShort; *pos; ) *out++=*pos++;
 			}
-		} else if(*fmt == 'd') {
-			if(*(fmt + 1) == 'd' && *(fmt + 2) == 'e') {
-				fmt += 3;
-				for(pos=DayOfWeekEng[pt->wDayOfWeek]; *pos; ) *out++=*pos++;
-			} else if(fmt[1] == 'd' && fmt[2] == 'd') {
-				if(fmt[3] == 'd') {
-					fmt += 4;
-					for(pos=DayOfWeekLong; *pos; ) *out++=*pos++;
-				} else {
-					fmt += 3;
-					for(pos=DayOfWeekShort; *pos; ) *out++=*pos++;
+		} else if(*fmt=='d') {
+			if(fmt[1]=='d' && fmt[2]=='e'){
+				fmt+=3;
+				for(pos=m_DayOfWeekEng[pt->wDayOfWeek]; *pos; ) *out++=*pos++;
+			}else if(fmt[1]=='d' && fmt[2]=='d') {
+				fmt+=3;
+				if(*fmt=='d'){
+					++fmt;
+					pos=m_DayOfWeekLong;
+				}else{
+					pos=m_DayOfWeekShort;
 				}
-			} else {
-				if(fmt[1] == 'd') {
-					fmt += 2;
+				for(; *pos; ) *out++=*pos++;
+			}else{
+				if(fmt[1]=='d') {
+					fmt+=2;
 					*out++ = (char)((int)pt->wDay / 10) + '0';
-				} else {
+				}else{
 					++fmt;
 					if(pt->wDay > 9)
 						*out++ = (char)((int)pt->wDay / 10) + '0';
 				}
 				*out++ = (char)((int)pt->wDay % 10) + '0';
 			}
-		} else if(*fmt == 'h') {
+		} else if(*fmt=='h') {
 			int hour;
 			hour = pt->wHour;
 			if(g_bHour12) {
@@ -282,7 +262,7 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 			*out++ = (char)((int)pt->wSecond % 10) + '0';
 		} else if(*fmt == 't' && fmt[1] == 't') {
 			fmt += 2;
-			if(pt->wHour < 12) pos = AM; else pos = PM;
+			if(pt->wHour < 12) pos = m_AM; else pos = m_PM;
 			while(*pos) *out++ = *pos++;
 		} else if(*fmt == 'A' && fmt[1] == 'M') {
 			if(fmt[2] == '/' &&
@@ -292,7 +272,7 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 				*out++ = 'M'; fmt += 5;
 			} else if(fmt[2] == 'P' && fmt[3] == 'M') {
 				fmt += 4;
-				if(pt->wHour < 12) pos = AM; else pos = PM;
+				if(pt->wHour < 12) pos = m_AM; else pos = m_PM;
 				while(*pos) *out++ = *pos++;
 			} else *out++ = *fmt++;
 		} else if(*fmt == 'a' && fmt[1] == 'm' && fmt[2] == '/' &&
@@ -319,20 +299,20 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 			}
 		}
 		// alternate calendar
-		else if(*fmt == 'Y' && AltYear > -1) {
+		else if(*fmt == 'Y' && m_AltYear > -1) {
 			int n = 1;
 			while(*fmt == 'Y') { n *= 10; ++fmt; }
-			if(n < AltYear) {
-				n = 1; while(n < AltYear) n *= 10;
+			if(n < m_AltYear) {
+				n = 1; while(n < m_AltYear) n *= 10;
 			}
 			for(;;) {
-				*out++ = (char)((AltYear % n) / (n/10)) + '0';
+				*out++ = (char)((m_AltYear % n) / (n/10)) + '0';
 				if(n == 10) break;
 				n /= 10;
 			}
 		} else if(*fmt == 'g') {
-			for(pos=EraStr; *pos&&*fmt=='g'; ){
-				char* p2 = CharNextExA((WORD)codepage, pos, 0);
+			for(pos=m_EraStr; *pos&&*fmt=='g'; ){
+				char* p2 = CharNextExA(m_codepage, pos, 0);
 				while(pos != p2) *out++ = *pos++;
 				++fmt;
 			}

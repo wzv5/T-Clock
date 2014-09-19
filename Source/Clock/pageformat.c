@@ -13,13 +13,16 @@ static void On12Hour(HWND hDlg);
 static void OnCustom(HWND hDlg, BOOL bmouse);
 static void OnFormatCheck(HWND hDlg, WORD id);
 
-static HWND hwndPage;
-static int ilang;  // language code. ex) 0x411 - Japanese
-static int idate;  // 0: mm/dd/yy 1: dd/mm/yy 2: yy/mm/dd
-static BOOL bDayOfWeekIsLast;   // yy/mm/dd ddd
-static BOOL bTimeMarkerIsFirst; // AM/PM hh:nn:ss
-static char* pCustomFormat = NULL;
-static char sMon[11];  //
+static int m_ilang;  // language code. ex) 0x411 - Japanese
+static int m_idate;  // 0: mm/dd/yy 1: dd/mm/yy 2: yy/mm/dd
+static char* m_pCustomFormat = NULL;
+static char m_sMon[10];  //
+
+static char m_bDayOfWeekIsLast;   // yy/mm/dd ddd
+static char m_bTimeMarkerIsFirst; // AM/PM hh:nn:ss
+
+static char m_sep_date[4]; // date seperator such as / .
+static char m_sep_time[4]; // time seperator such as : .
 
 
 static __inline void SendPSChanged(HWND hDlg)
@@ -70,9 +73,9 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		} return TRUE;
 		
 	case WM_DESTROY:
-		if(pCustomFormat) {
-			free(pCustomFormat);
-			pCustomFormat = NULL;
+		if(m_pCustomFormat) {
+			free(m_pCustomFormat);
+			m_pCustomFormat = NULL;
 		}
 		DestroyWindow(hDlg);
 		break;
@@ -91,51 +94,45 @@ char* entrydate[] = { "Year4", "Year", "Month", "MonthS", "Day", "Weekday",
 --------------------------------------------------*/
 void InitLocale(HWND hwnd)
 {
-	char s[21];
 	int i;
-	int aLangDayOfWeekIsLast[] =
-	{ LANG_JAPANESE, LANG_KOREAN, 0 };
-	int aTimeMarkerIsFirst[] =
-	{ LANG_CHINESE, LANG_JAPANESE, LANG_KOREAN, 0 };
+	const int aLangDayOfWeekIsLast[]={LANG_JAPANESE,LANG_KOREAN,0};
 	
 	if(hwnd) {
 		int sel = (int)CBGetCurSel(hwnd, IDC_LOCALE);
-		ilang = (int)CBGetItemData(hwnd, IDC_LOCALE, sel);
+		m_ilang = (int)CBGetItemData(hwnd, IDC_LOCALE, sel);
 	} else {
-		ilang = GetMyRegLong("Format", "Locale", (int)GetUserDefaultLangID());
+		m_ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID())&0x00ff;
 	}
-	GetLocaleInfo(ilang, LOCALE_IDATE, s, 20);
-	idate = atoi(s);
-	GetLocaleInfo(ilang, LOCALE_SABBREVDAYNAME1, sMon, 10);
+	GetLocaleInfo(m_ilang,LOCALE_SDATE,m_sep_date,sizeof(m_sep_date));
+	GetLocaleInfo(m_ilang,LOCALE_STIME,m_sep_time,sizeof(m_sep_time));
+	GetLocaleInfo(m_ilang, LOCALE_ITIMEMARKPOSN|LOCALE_RETURN_NUMBER, (LPSTR)&i, sizeof(i));
+	m_bTimeMarkerIsFirst=(char)i;
+	GetLocaleInfo(m_ilang, LOCALE_IDATE|LOCALE_RETURN_NUMBER, (LPSTR)&m_idate, sizeof(m_idate));
+	GetLocaleInfo(m_ilang, LOCALE_SABBREVDAYNAME1, m_sMon, sizeof(m_sMon));
 	
-	bDayOfWeekIsLast = FALSE;
-	for(i = 0; aLangDayOfWeekIsLast[i]; i++) {
-		if((ilang & 0x00ff) == aLangDayOfWeekIsLast[i]) {
-			bDayOfWeekIsLast = TRUE; break;
-		}
-	}
-	bTimeMarkerIsFirst = FALSE;
-	for(i = 0; aTimeMarkerIsFirst[i]; i++) {
-		if((ilang & 0x00ff) == aTimeMarkerIsFirst[i]) {
-			bTimeMarkerIsFirst = TRUE; break;
+	m_bDayOfWeekIsLast = 0;
+	for(i=0; aLangDayOfWeekIsLast[i]; ++i) {
+		if((m_ilang&0x00ff) == aLangDayOfWeekIsLast[i]) {
+			m_bDayOfWeekIsLast = 1; break;
 		}
 	}
 }
 
+static HWND m_hwndPage;
 /*------------------------------------------------
   for EnumSystemLocales function
 --------------------------------------------------*/
 BOOL CALLBACK EnumLocalesProc(LPTSTR lpLocaleString)
 {
-	char s[81];
+	char str[80];
 	int x, index;
 	
 	x = atox(lpLocaleString);
-	if(GetLocaleInfo(x, LOCALE_SLANGUAGE, s, 80) > 0)
-		index = (int)CBAddString(hwndPage, IDC_LOCALE, s);
+	if(GetLocaleInfo(x, LOCALE_SLANGUAGE, str, sizeof(str)) > 0)
+		index = (int)CBAddString(m_hwndPage, IDC_LOCALE, str);
 	else
-		index = (int)CBAddString(hwndPage, IDC_LOCALE, lpLocaleString);
-	CBSetItemData(hwndPage, IDC_LOCALE, index, x);
+		index = (int)CBAddString(m_hwndPage, IDC_LOCALE, lpLocaleString);
+	CBSetItemData(m_hwndPage, IDC_LOCALE, index, x);
 	return TRUE;
 }
 
@@ -144,17 +141,20 @@ BOOL CALLBACK EnumLocalesProc(LPTSTR lpLocaleString)
 --------------------------------------------------*/
 void OnInit(HWND hDlg)
 {
+	const char* AM[]={"AM","am","A","a"," ",};
+	const char* PM[]={"PM","pm","P","p"," ",};
+	const size_t AMPMs=sizeof(AM)/sizeof(AM[0]);
 	HFONT hfont;
-	char s[MAX_BUFF];
+	char fmt[MAX_BUFF];
 	int i, count, nKaigyo;
 	
-	char s3[TNY_BUFF] = {0};
-	char s2[TNY_BUFF] = {0};
+	char ampm_user[TNY_BUFF];
+	char ampm_locale[TNY_BUFF];
 	int ilang;
 	
 	//ilang = (int)lParam;
 	
-	hwndPage = hDlg;
+	m_hwndPage = hDlg;
 	
 	hfont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
 	if(hfont)
@@ -163,7 +163,7 @@ void OnInit(HWND hDlg)
 	// Fill and select the "Locale" combobox
 	EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);
 	CBSetCurSel(hDlg, IDC_LOCALE, 0);
-	ilang = GetMyRegLong("Format", "Locale", (int)GetUserDefaultLangID());
+	ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
 	count = (int)CBGetCount(hDlg, IDC_LOCALE);
 	for(i = 0; i < count; i++) {
 		int x;
@@ -211,55 +211,40 @@ void OnInit(HWND hDlg)
 					   GetMyRegLong("Format", ENTRY(i), FALSE));
 	}
 	
-	GetMyRegStr("Format", "Format", s, 1024, "");
-	SetDlgItemText(hDlg, IDC_FORMAT, s);
+	GetMyRegStr("Format", "Format", fmt, 1024, "");
+	SetDlgItemText(hDlg, IDC_FORMAT, fmt);
 	
-	pCustomFormat = malloc(MAX_BUFF);
-	if(pCustomFormat)
-		GetMyRegStr("Format", "CustomFormat", pCustomFormat, MAX_BUFF, "");
-		
+	m_pCustomFormat = malloc(MAX_BUFF);
+	if(m_pCustomFormat)
+		GetMyRegStr("Format", "CustomFormat", m_pCustomFormat, MAX_BUFF, "");
+	
 	// "AM Symbol" and "PM Symbol"
 	CBResetContent(hDlg, IDC_AMSYMBOL);
-	GetMyRegStr("Format", "AMsymbol", s3, TNY_BUFF, "");
-	if(s3[0]) CBAddString(hDlg, IDC_AMSYMBOL, s3);
-	GetLocaleInfo(ilang, LOCALE_S1159, s2, 10);
-	if(s2[0] && strcmp(s, s2) != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, s2);
-	if(strcmp(s, "AM") != 0 && strcmp(s2, "AM") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, "AM");
-		
-	if(strcmp(s, "am") != 0 && strcmp(s2, "am") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, "am");
-		
-	if(strcmp(s, "A") != 0 && strcmp(s2, "A") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, "A");
-		
-	if(strcmp(s, "a") != 0 && strcmp(s2, "a") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, "a");
-		
-	if(strcmp(s, " ") != 0 && strcmp(s2, " ") != 0)
-		CBAddString(hDlg, IDC_AMSYMBOL, " ");
-		
+	GetMyRegStr("Format", "AMsymbol", ampm_user, sizeof(ampm_user), "");
+	if(*ampm_user)
+		CBAddString(hDlg, IDC_AMSYMBOL, ampm_user);
+	if(GetLocaleInfo(ilang, LOCALE_S1159, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
+		CBAddString(hDlg,IDC_AMSYMBOL,ampm_locale);
+	else
+		*ampm_locale='\0';
+	for(i=0; i<AMPMs; ++i){
+		if(strcmp(ampm_locale,AM[i]) && strcmp(ampm_user,AM[i]))
+			CBAddString(hDlg,IDC_AMSYMBOL,AM[i]);
+	}
 	CBSetCurSel(hDlg, IDC_AMSYMBOL, 0);
 	
 	CBResetContent(hDlg, IDC_PMSYMBOL);
-	GetMyRegStr("Format", "PMsymbol", s3, 80, "");
-	if(s3[0]) CBAddString(hDlg, IDC_PMSYMBOL, s3);
-	GetLocaleInfo(ilang, LOCALE_S2359, s2, 10);
-	if(s2[0] && strcmp(s, s2) != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, s2);
-	if(strcmp(s, "PM") != 0 && strcmp(s2, "PM") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, "PM");
-		
-	if(strcmp(s, "pm") != 0 && strcmp(s2, "pm") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, "pm");
-		
-	if(strcmp(s, "P") != 0 && strcmp(s2, "P") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, "P");
-		
-	if(strcmp(s, "p") != 0 && strcmp(s2, "p") != 0)
-		CBAddString(hDlg, IDC_PMSYMBOL, "p");
-		
+	GetMyRegStr("Format", "PMsymbol", ampm_user, sizeof(ampm_user), "");
+	if(*ampm_user)
+		CBAddString(hDlg, IDC_PMSYMBOL, ampm_user);
+	if(GetLocaleInfo(ilang, LOCALE_S2359, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
+		CBAddString(hDlg,IDC_PMSYMBOL,ampm_locale);
+	else
+		*ampm_locale='\0';
+	for(i=0; i<AMPMs; ++i){
+		if(strcmp(ampm_locale,PM[i]) && strcmp(ampm_user,PM[i]))
+			CBAddString(hDlg,IDC_PMSYMBOL,PM[i]);
+	}
 	CBSetCurSel(hDlg, IDC_PMSYMBOL, 0);
 	
 	CheckDlgButton(hDlg, IDC_ZERO,
@@ -293,10 +278,10 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	GetDlgItemText(hDlg, IDC_FORMAT, s, 1024);
 	SetMyRegStr("Format", "Format", s);
 	
-	if(pCustomFormat) {
+	if(m_pCustomFormat) {
 		if(IsDlgButtonChecked(hDlg, IDC_CUSTOM)) {
-			strcpy(pCustomFormat, s);
-			SetMyRegStr("Format", "CustomFormat", pCustomFormat);
+			strcpy(m_pCustomFormat, s);
+			SetMyRegStr("Format", "CustomFormat", m_pCustomFormat);
 		}
 	}
 }
@@ -322,12 +307,12 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 		
 	EnableDlgItem(hDlg, IDC_ZERO, !b);
 	
-	if(pCustomFormat && bmouse) {
+	if(m_pCustomFormat && bmouse) {
 		if(b) {
-			if(pCustomFormat[0])
-				SetDlgItemText(hDlg, IDC_FORMAT, pCustomFormat);
+			if(m_pCustomFormat[0])
+				SetDlgItemText(hDlg, IDC_FORMAT, m_pCustomFormat);
 		} else {
-			GetDlgItemText(hDlg, IDC_FORMAT, pCustomFormat, 1024);
+			GetDlgItemText(hDlg, IDC_FORMAT, m_pCustomFormat, 1024);
 		}
 	}
 	
@@ -464,12 +449,12 @@ void CreateFormat(char* dst, int* checks)
 	
 	dst[0] = 0;
 	
-	if(!bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
+	if(!m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
 		strcat(dst, "ddd");
 		for(i = IDC_YEAR4; i <= IDC_DAY; i++) {
 			if(CHECKS(i)) {
-				if((ilang & 0x00ff) == LANG_CHINESE) strcat(dst, " ");
-				else if(sMon[0] && sMon[ strlen(sMon) - 1 ] == '.')
+				if((m_ilang & 0x00ff) == LANG_CHINESE) strcat(dst, " ");
+				else if(m_sMon[0] && m_sMon[ strlen(m_sMon) - 1 ] == '.')
 					strcat(dst, " ");
 				else strcat(dst, ", ");
 				break;
@@ -477,50 +462,53 @@ void CreateFormat(char* dst, int* checks)
 		}
 	}
 	
-	if(idate == 0) {
+	switch(m_idate){
+	case 0: // m/d/y
 		if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
 			if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
 			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
 			if(CHECKS(IDC_DAY) || CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, "/");
+				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
 				else strcat(dst, " ");
 			}
 		}
 		if(CHECKS(IDC_DAY)) {
 			strcat(dst, "dd");
 			if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, "/");
+				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
 				else strcat(dst, ", ");
 			}
 		}
 		if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
 		if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
-	} else if(idate == 1) {
+		break;
+	case 1: // d/m/y
 		if(CHECKS(IDC_DAY)) {
 			strcat(dst, "dd");
 			if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, "/");
+				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
 				else strcat(dst, " ");
-			} else if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) strcat(dst, "/");
+			} else if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) strcat(dst, m_sep_date);
 		}
 		if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
 			if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
 			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
 			if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, "/");
+				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
 				else strcat(dst, " ");
 			}
 		}
 		if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
 		if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
-	} else {
+		break;
+	default:  // y/m/d
 		if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
 			if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
 			if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
 			if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)
 			   || CHECKS(IDC_DAY)) {
 				if(CHECKS(IDC_MONTHS)) strcat(dst, " ");
-				else strcat(dst, "/");
+				else strcat(dst, m_sep_date);
 			}
 		}
 		if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
@@ -528,13 +516,13 @@ void CreateFormat(char* dst, int* checks)
 			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
 			if(CHECKS(IDC_DAY)) {
 				if(CHECKS(IDC_MONTHS)) strcat(dst, " ");
-				else strcat(dst, "/");
+				else strcat(dst, m_sep_date);
 			}
 		}
 		if(CHECKS(IDC_DAY)) strcat(dst, "dd");
 	}
 	
-	if(bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
+	if(m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
 		for(i = IDC_YEAR4; i <= IDC_DAY; i++) {
 			if(CHECKS(i)) { strcat(dst, " "); break; }
 		}
@@ -544,14 +532,14 @@ void CreateFormat(char* dst, int* checks)
 	if(bdate && btime) {
 		if(CHECKS(IDC_KAIGYO)) strcat(dst, "\\n");
 		else {
-			if(idate < 2 && CHECKS(IDC_MONTHS) &&
+			if(m_idate < 2 && CHECKS(IDC_MONTHS) &&
 			   (CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)))
 				strcat(dst, " ");
 			strcat(dst, " ");
 		}
 	}
 	
-	if(bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
+	if(m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
 		strcat(dst, "tt");
 		if(CHECKS(IDC_HOUR) || CHECKS(IDC_MINUTE) ||
 		   CHECKS(IDC_SECOND) || CHECKS(IDC_INTERNETTIME))
@@ -560,23 +548,23 @@ void CreateFormat(char* dst, int* checks)
 	
 	if(CHECKS(IDC_HOUR)) {
 		strcat(dst, "hh");
-		if(CHECKS(IDC_MINUTE) || CHECKS(IDC_SECOND)) strcat(dst, ":");
+		if(CHECKS(IDC_MINUTE) || CHECKS(IDC_SECOND)) strcat(dst, m_sep_time);
 		else if(CHECKS(IDC_INTERNETTIME) ||
-				(!bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
+				(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
 	}
 	if(CHECKS(IDC_MINUTE)) {
 		strcat(dst, "nn");
-		if(CHECKS(IDC_SECOND)) strcat(dst, ":");
+		if(CHECKS(IDC_SECOND)) strcat(dst, m_sep_time);
 		else if(CHECKS(IDC_INTERNETTIME) ||
-				(!bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
+				(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
 	}
 	if(CHECKS(IDC_SECOND)) {
 		strcat(dst, "ss");
 		if(CHECKS(IDC_INTERNETTIME) ||
-		   (!bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
+		   (!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
 	}
 	
-	if(!bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
+	if(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
 		strcat(dst, "tt");
 		if(CHECKS(IDC_INTERNETTIME)) strcat(dst, " ");
 	}
