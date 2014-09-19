@@ -1,12 +1,12 @@
 // Written by Stoic Joker: Tuesday, 03/16/2010 @ 10:18:59pm
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "tclock.h"
-
-LARGE_INTEGER g_frequency={{0}};
-LARGE_INTEGER g_start;// start time
-LARGE_INTEGER g_lap={{0}};// latest lap time
-LARGE_INTEGER g_stop;// latest lap time
-BOOL g_paused; // Global Pause/Resume Displayed Counter.
+#define DEFAULT_TIMETEXT "00 h 00 m 00 s 000 ms"
+static LARGE_INTEGER m_frequency={{0}};
+static LARGE_INTEGER m_start;// start time
+static LARGE_INTEGER m_lap={{0}};// latest lap time
+static LARGE_INTEGER m_stop;// latest lap time
+static char m_paused; // Global Pause/Resume Displayed Counter.
 //================================================================================================
 // ----------------------------------------------------+++--> Initialize Stopwatch Dialog Controls:
 void OnInit(HWND hDlg, HWND* hList)   //-----------------------------------------------------+++-->
@@ -35,7 +35,17 @@ void OnInit(HWND hDlg, HWND* hList)   //----------------------------------------
 	
 	ShowWindow(*hList, SW_SHOW);
 	
-	SetDlgItemText(hDlg, IDCE_SW_ELAPSED, "00H: 00M: 00S: 000ms");
+	{
+		LOGFONT logfont;
+		HFONT hfont;
+		hfont=(HFONT)SendMessage(hDlg,WM_GETFONT,0,0);
+		GetObject(hfont,sizeof(LOGFONT),&logfont);
+		logfont.lfHeight=logfont.lfHeight*120/100;
+		logfont.lfWeight=FW_BOLD;
+		hfont=CreateFontIndirect(&logfont);
+		SendDlgItemMessage(hDlg,IDCE_SW_ELAPSED,WM_SETFONT,(WPARAM)hfont,0);
+	}
+	SetDlgItemText(hDlg, IDCE_SW_ELAPSED, DEFAULT_TIMETEXT);
 }
 //================================================================================================
 //-------------------------//------------------+++--> Updates the Stopwatch's Elapsed Time Display:
@@ -49,13 +59,13 @@ void OnTimer(HWND hDlg)   //----------------------------------------------------
 	} un;
 	
 	QueryPerformanceCounter(&un.end);
-	un.end.QuadPart-=g_start.QuadPart;
-	un.elapsed=(unsigned long)(un.end.QuadPart*1000/g_frequency.QuadPart);
+	un.end.QuadPart-=m_start.QuadPart;
+	un.elapsed=(unsigned long)(un.end.QuadPart*1000/m_frequency.QuadPart);
 	
 	hrs=un.elapsed/3600000; un.elapsed%=3600000;
 	min=un.elapsed/60000; un.elapsed%=60000;
 	sec=un.elapsed/1000; un.elapsed%=1000;
-	wsprintf(szElapsed,"%02dH: %02dM: %02dS: %03lums",hrs,min,sec,un.elapsed);
+	wsprintf(szElapsed,"%02d h %02d m %02d s %03lu ms",hrs,min,sec,un.elapsed);
 	SetDlgItemText(hDlg, IDCE_SW_ELAPSED, szElapsed);
 }
 //================================================================================================
@@ -68,15 +78,16 @@ void InsertLapTime(HWND hList)   //---------------------------------------------
 	LARGE_INTEGER end;
 	unsigned long elapsed;
 	
-	if(!g_lap.QuadPart)
+	if(!m_lap.QuadPart)
 		return;
 	QueryPerformanceCounter(&end);
-	if(g_paused)
-		end=g_stop;
-	elapsed=(unsigned long)((end.QuadPart-g_lap.QuadPart)*1000/g_frequency.QuadPart);
-	g_lap=end;
-	if(g_paused)
-		g_lap.QuadPart=0;
+	if(m_paused)
+		end=m_stop;
+	elapsed=(unsigned long)((end.QuadPart-m_lap.QuadPart)*1000/m_frequency.QuadPart);
+	if(m_paused)
+		m_lap.QuadPart=0;
+	else
+		m_lap=end;
 	
 	hrs=elapsed/3600000; elapsed%=3600000;
 	min=elapsed/60000; elapsed%=60000;
@@ -105,6 +116,11 @@ INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 		OnInit(hDlg,&hList);
 		SetMyDialgPos(hDlg,21);
 		return TRUE;
+	case WM_DESTROY:{
+		HFONT hfont=(HFONT)SendDlgItemMessage(hDlg,IDCE_SW_ELAPSED,WM_GETFONT,0,0);
+		SendDlgItemMessage(hDlg,IDCE_SW_ELAPSED,WM_SETFONT,SendMessage(hDlg,WM_GETFONT,0,0),0);
+		DeleteObject(hfont);
+		return 0;}
 	case WM_ACTIVATE:
 		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
 			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
@@ -114,32 +130,32 @@ INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 		}
 		break;
 	case WM_TIMER:
-		if(!g_paused)
+		if(!m_paused)
 			OnTimer(hDlg);
 		return TRUE;
 	case WM_COMMAND: {
 			WORD id = LOWORD(wParam);
 			switch(id) {
 			case IDCB_SW_START: // Start
-				if(!g_paused) {
+				if(!m_paused) {
 					ListView_DeleteAllItems(hList);
-					if(!g_frequency.QuadPart)
-						QueryPerformanceFrequency(&g_frequency);
-					QueryPerformanceCounter(&g_start);
-					g_lap=g_start;
+					if(!m_frequency.QuadPart)
+						QueryPerformanceFrequency(&m_frequency);
+					QueryPerformanceCounter(&m_start);
+					m_lap=m_start;
 				}else{
 					LARGE_INTEGER end;
 					QueryPerformanceCounter(&end);
-					end.QuadPart-=g_stop.QuadPart;
-					if(g_start.QuadPart)
-						g_start.QuadPart+=end.QuadPart;
+					end.QuadPart-=m_stop.QuadPart;
+					if(m_start.QuadPart)
+						m_start.QuadPart+=end.QuadPart;
 					else
-						QueryPerformanceCounter(&g_start);
-					if(g_lap.QuadPart)
-						g_lap.QuadPart+=end.QuadPart;
+						QueryPerformanceCounter(&m_start);
+					if(m_lap.QuadPart)
+						m_lap.QuadPart+=end.QuadPart;
 					else
-						QueryPerformanceCounter(&g_lap);
-					g_paused = FALSE;
+						QueryPerformanceCounter(&m_lap);
+					m_paused = 0;
 				}
 				SetTimer(hDlg,1,7,NULL);
 				ShowWindow(GetDlgItem(hDlg,IDCB_SW_STOP),1);
@@ -148,20 +164,21 @@ INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 				break;
 			case IDCB_SW_STOP:{
 				KillTimer(hDlg,1);
+				m_paused = 1;
+				QueryPerformanceCounter(&m_stop);
+				OnTimer(hDlg); // update time text
 				ShowWindow(GetDlgItem(hDlg,IDCB_SW_START),1);
 				ShowWindow(GetDlgItem(hDlg,IDCB_SW_STOP),0);
-				g_paused = TRUE;
-				QueryPerformanceCounter(&g_stop);
 				break;}
 			case IDCB_SW_RESET:
-				SetDlgItemText(hDlg,IDCE_SW_ELAPSED,"00H: 00M: 00S: 000ms");
+				SetDlgItemText(hDlg,IDCE_SW_ELAPSED,DEFAULT_TIMETEXT);
 				ListView_DeleteAllItems(hList);
-				if(g_paused){
-					g_start.QuadPart=g_lap.QuadPart=0;
+				if(m_paused){
+					m_start.QuadPart=m_lap.QuadPart=0;
 					EnableWindow(GetDlgItem(hDlg,IDCB_SW_RESET),0);
 				}else{
-					QueryPerformanceCounter(&g_start);
-					g_lap=g_start;
+					QueryPerformanceCounter(&m_start);
+					m_lap=m_start;
 				}
 				break;
 			case IDCB_SW_LAP:
