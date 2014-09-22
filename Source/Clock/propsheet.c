@@ -5,9 +5,14 @@
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "tclock.h"
 
-void SetMyDialgPos(HWND hwnd,int padding);
-int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam);
-LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+#define IDC_TAB					0x3020
+#define ID_APPLY_NOW			0x3021
+#define ID_WIZBACK				0x3023
+#define ID_WIZNEXT				0x3024
+#define ID_WIZFINISH			0x3025
+
+static int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam);
+static LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 // dialog procedures of each page
 INT_PTR CALLBACK PageAboutProc(HWND, UINT, WPARAM, LPARAM);
@@ -19,59 +24,50 @@ INT_PTR CALLBACK PageFormatProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK PageHotKeyProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK PageMiscProc(HWND, UINT, WPARAM, LPARAM);
 
-void SetPropSheetPos(HWND hwnd);
+static WNDPROC m_oldWndProc; // to save default window procedure
+static int m_startpage = 0; // page to open first
 
-static WNDPROC oldWndProc; // to save default window procedure
-static int startpage = 0; // page to open first
-
-BOOL g_bApplyTaskbar = FALSE;
-BOOL g_bApplyClock = FALSE;
-BOOL g_bApplyClear = FALSE;
+char g_bApplyTaskbar = 0;
+char g_bApplyClock = 0;
+//char g_bApplyClear = 0;
 
 //================================================================================================
 //----------------------------//-----------------------+++--> Show the (Tab Dialog) Property Sheet:
 void MyPropertySheet(int page)   //---------------------------------------------------------+++-->
 {
-	PROPSHEETPAGE psp[PROPERTY_NUM];
-	PROPSHEETHEADER psh;  int i;
-	DLGPROC PageProc[PROPERTY_NUM]={
+	const DLGPROC PageProc[]={
 		PageAboutProc, PageAlarmProc,
 		PageColorProc, PageFormatProc, PageMouseProc,
 		PageQuickyProc,
 		PageHotKeyProc, PageMiscProc,
 	};
-	HMODULE hInstance=GetModuleHandle(NULL); 
-	if(g_hwndSheet && IsWindow(g_hwndSheet)) { // IF Already Open...
-		ForceForegroundWindow(g_hwndSheet); // <--+++--> Stick it on Top!
-		return;
+	if(!g_hwndSheet || !IsWindow(g_hwndSheet)) {
+		#define PROPERTY_NUM sizeof(PageProc)/sizeof(DLGPROC)
+		PROPSHEETPAGE psp[PROPERTY_NUM];
+		PROPSHEETHEADER psh={sizeof(PROPSHEETHEADER)};
+		HMODULE hInstance=GetModuleHandle(NULL);
+		int i;
+		// Allocate Clean Memory for Each Page
+		for(i=0; i<PROPERTY_NUM; ++i) {
+			memset(&psp[i], 0, sizeof(PROPSHEETPAGE));
+			psp[i].dwSize = sizeof(PROPSHEETPAGE);
+			psp[i].hInstance = hInstance;
+			psp[i].pfnDlgProc = PageProc[i];
+			psp[i].pszTemplate = MAKEINTRESOURCE(PROPERTY_BASE+i);
+		}
+		
+		// set data of property sheet
+		psh.dwFlags = PSH_USEICONID | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
+		psh.hInstance = hInstance;
+		psh.pszIcon = MAKEINTRESOURCE(IDI_MAIN);
+		psh.pszCaption = "T-Clock Redux";
+		psh.nPages = PROPERTY_NUM;
+		psh.nStartPage = (page==-1?m_startpage:page);
+		psh.ppsp = psp;
+		psh.pfnCallback = PropSheetProc;
+		// show it !
+		g_hwndSheet = (HWND)PropertySheet(&psh);
 	}
-	
-	// Allocate Clean Memory for Each Page
-	for(i=0; i<PROPERTY_NUM; ++i) {
-		memset(&psp[i], 0, sizeof(PROPSHEETPAGE));
-		psp[i].dwSize = sizeof(PROPSHEETPAGE);
-		psp[i].hInstance = hInstance;
-		psp[i].pfnDlgProc = PageProc[i];
-		psp[i].pszTemplate = MAKEINTRESOURCE(PROPERTY_BASE+i);
-	}
-	
-	// set data of property sheet
-	memset(&psh, 0, sizeof(PROPSHEETHEADER));
-	psh.dwSize = sizeof(PROPSHEETHEADER);
-	psh.dwFlags = PSH_USEICONID | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
-	psh.hInstance = hInstance;
-	psh.pszIcon = MAKEINTRESOURCE(IDI_MAIN);
-	psh.pszCaption = "T-Clock Redux";
-	psh.nPages = PROPERTY_NUM;
-	psh.nStartPage = page==-1?startpage:page;
-	psh.ppsp = psp;
-	psh.pfnCallback = PropSheetProc;
-	
-	g_bApplyClock = FALSE;
-	g_bApplyTaskbar = FALSE;
-	
-	// show it !
-	g_hwndSheet = (HWND)PropertySheet(&psh);
 	ForceForegroundWindow(g_hwndSheet);
 }
 //================================================================================================
@@ -81,7 +77,7 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 	(void)lParam;
 	if(uMsg == PSCB_INITIALIZED) {
 		// subclass the window
-		oldWndProc = (WNDPROC)GetWindowLongPtr(hDlg, GWL_WNDPROC);
+		m_oldWndProc = (WNDPROC)GetWindowLongPtr(hDlg, GWL_WNDPROC);
 		SetWindowLongPtr(hDlg, GWL_WNDPROC, (LONG_PTR)SubclassProc);
 	}
 	return 0;
@@ -91,15 +87,32 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 ---------------------------------------------------------*/
 LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	LRESULT ret;
-	switch(message) {
+	switch(message){
+	case WM_DESTROY:
+		g_hwndSheet = NULL;
+		m_startpage=(int)SendMessage((HWND)SendMessage(hwnd,PSM_GETTABCONTROL,0,0),TCM_GETCURSEL,0,0);
+		if(m_startpage<0) m_startpage = 0;
+		if(g_bApplyClock) {
+			g_bApplyClock = 0;
+			PostMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
+		}
+//		if(g_bApplyClear) {
+//			g_bApplyClear = 0;
+//			PostMessage(g_hwndClock, CLOCKM_REFRESHCLEARTASKBAR, 0, 0);
+//		}
+		if(g_bApplyTaskbar) {
+			g_bApplyTaskbar = 0;
+			PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
+		}
+		if(g_hDlgTimer && IsWindow(g_hDlgTimer))
+			PostMessage(g_hDlgTimer,WM_CLOSE,0,0);
+		#ifndef _DEBUG
+		EmptyWorkingSet(GetCurrentProcess());
+		#endif
+		break;
 	case WM_SHOWWINDOW: // adjust the window position
 		SetMyDialgPos(hwnd,21);
-		return FALSE; // Returning FALSE Allows it to Maintain Caret Focus
-	}
-	// default
-	ret = CallWindowProc(oldWndProc, hwnd, message, wParam, lParam);
-	switch(message) {
+		break;
 	case WM_ACTIVATE:
 		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
 			SetWindowPos(hwnd,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
@@ -108,47 +121,33 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			SetWindowPos((HWND)wParam,hwnd,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 		}
 		break;
-	case WM_COMMAND: {
-			WORD id = LOWORD(wParam);
-			// close the window by "OK" or "Cancel"
-			if(id == IDOK || id == IDCANCEL) {
-				// MyHelp(hwnd, -1);
-				startpage = (int)SendMessage(
-								(HWND)SendMessage(hwnd, PSM_GETTABCONTROL, 0, 0), TCM_GETCURSEL, 0, 0);
-				if(startpage < 0) startpage = 0;
-				DestroyWindow(hwnd);
-				g_hwndSheet = NULL;
-			}
-			// apply settings
-			if(id == IDOK || id == 0x3021) {
+	case WM_COMMAND:{
+		/// apply settings if applicable
+		if(LOWORD(wParam)==ID_APPLY_NOW){
+			LRESULT ret=CallWindowProc(m_oldWndProc, hwnd, message, wParam, lParam);
+			if(!IsWindowEnabled((HWND)lParam)){ // ID_APPLY_NOW disabled, settings applied
 				if(g_bApplyClock) {
-					SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
-					g_bApplyClock = FALSE;
+					g_bApplyClock = 0;
+					PostMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
 				}
-				if(g_bApplyClear) {
-					SendMessage(g_hwndClock, CLOCKM_REFRESHCLEARTASKBAR, 0, 0);
-					g_bApplyClear = FALSE;
-				}
+//				if(g_bApplyClear) {
+//					g_bApplyClear = 0;
+//					PostMessage(g_hwndClock, CLOCKM_REFRESHCLEARTASKBAR, 0, 0);
+//				}
 				if(g_bApplyTaskbar) {
-					SendMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
-					g_bApplyTaskbar = FALSE;
+					g_bApplyTaskbar = 0;
+					PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
 				}
 			}
-			if(id == IDOK || id == IDCANCEL) {
-				if(g_hDlgTimer && IsWindow(g_hDlgTimer))
-					PostMessage(g_hDlgTimer, WM_CLOSE, 0, 0);
-			}
-			EmptyWorkingSet(GetCurrentProcess());
-			break;
+			return ret;
 		}
-		// close by "x" button
-	case WM_SYSCOMMAND: {
-			if((wParam & 0xfff0) == SC_CLOSE)
-				PostMessage(hwnd, WM_COMMAND, IDCANCEL, 0);
-			break;
-		}
+		break;}
+	case WM_SYSCOMMAND:// close by "x" button
+		if((wParam & 0xfff0) == SC_CLOSE)
+			PostMessage(hwnd, WM_COMMAND, IDCANCEL, 0);
+		break;
 	}
-	return ret;
+	return CallWindowProc(m_oldWndProc, hwnd, message, wParam, lParam);
 }
 
 //=================================================================================================
