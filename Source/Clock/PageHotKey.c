@@ -246,6 +246,9 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 	case WM_INITDIALOG:
 		OnInit(hDlg);
 		return TRUE;
+	case WM_DESTROY:
+		OnDestroy();
+		break;
 		
 	case WM_NOTIFY:
 		switch(((NMHDR*)lParam)->code) {
@@ -256,85 +259,80 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		} return TRUE;
 		
 	case WM_COMMAND: {
-			WORD id, code;
-			id = LOWORD(wParam);
-			code = HIWORD(wParam);
-			
-			if(code == EN_KILLFOCUS) { //--++-> Add This After Bugg Found By:
-				if(!tchk[(id - 1026)].bValid) { // ewemoa - DonationCoder.com
-					SetDlgItemText(hDlg, id, "None");  // Burn the HotKet on
-					tchk[(id - 1026)].bValid = FALSE; // Input Focus Failure
-					bReset = TRUE;
-				} return TRUE;
-			}
-			
-			switch(id) {
-			case IDCB_HK_ADD:
-				EnableWindow(GetDlgItem(hDlg, IDCE_HK_ADD), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_HK_ADD), FALSE);
-				SetDlgItemText(hDlg, IDCE_HK_ADD, "None");
-				SetFocus(GetDlgItem(hDlg, IDCE_HK_ADD));
-				tchk[0].bValid = FALSE; // Required to Clear/Remove HotKey
-				SendPSChanged(hDlg);
-				tchk[0].fsMod = 0;
-				tchk[0].vk = 0;
-				bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-				break;
-				
-			case IDCB_HK_STOP:
-				EnableWindow(GetDlgItem(hDlg, IDCE_HK_STOP), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_HK_STOP), FALSE);
-				SetDlgItemText(hDlg, IDCE_HK_STOP, "None");
-				SetFocus(GetDlgItem(hDlg, IDCE_HK_STOP));
-				tchk[1].bValid = FALSE; // Required to Clear/Remove HotKey
-				SendPSChanged(hDlg);
-				tchk[1].fsMod = 0;
-				tchk[1].vk = 0;
-				bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-				break;
-				
-			case IDCB_HK_TIME:
-				EnableWindow(GetDlgItem(hDlg, IDCE_HK_TIME), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_HK_TIME), FALSE);
-				SetDlgItemText(hDlg, IDCE_HK_TIME, "None");
-				SetFocus(GetDlgItem(hDlg, IDCE_HK_TIME));
-				tchk[2].bValid = FALSE; // Required to Clear/Remove HotKey
-				SendPSChanged(hDlg);
-				tchk[2].fsMod = 0;
-				tchk[2].vk = 0;
-				bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-				break;
-				
-			case IDCB_HK_PROP:
-				EnableWindow(GetDlgItem(hDlg, IDCE_HK_PROP), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_HK_PROP), FALSE);
-				SetDlgItemText(hDlg, IDCE_HK_PROP, "None");
-				SetFocus(GetDlgItem(hDlg, IDCE_HK_PROP));
-				tchk[3].bValid = FALSE; // Required to Clear/Remove HotKey
-				SendPSChanged(hDlg);
-				tchk[3].fsMod = 0;
-				tchk[3].vk = 0;
-				bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-				break;
-				
-			case IDCB_HK_CALN:
-				EnableWindow(GetDlgItem(hDlg, IDCE_HK_CALN), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDCB_HK_CALN), FALSE);
-				SetDlgItemText(hDlg, IDCE_HK_CALN, "None");
-				SetFocus(GetDlgItem(hDlg, IDCE_HK_CALN));
-				tchk[4].bValid = FALSE; // Required to Clear/Remove HotKey
-				SendPSChanged(hDlg);
-				tchk[4].fsMod = 0;
-				tchk[4].vk = 0;
-				bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-				break;
-			}
-		} return TRUE;
+		WORD id, code;
+		id = LOWORD(wParam);
+		code = HIWORD(wParam);
 		
-	case WM_DESTROY:
-		OnDestroy();
-		DestroyWindow(hDlg);
-		break;
+		if(code == EN_KILLFOCUS) { //--++-> Add This After Bugg Found By:
+			if(!tchk[(id - 1026)].bValid) { // ewemoa - DonationCoder.com
+				SetDlgItemText(hDlg, id, "None");  // Burn the HotKet on
+				tchk[(id - 1026)].bValid = FALSE; // Input Focus Failure
+				bReset = TRUE;
+			} return TRUE;
+		}
+		
+		switch(id) {
+		case IDCB_HK_ADD:
+			EnableWindow(GetDlgItem(hDlg, IDCE_HK_ADD), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDCB_HK_ADD), FALSE);
+			SetDlgItemText(hDlg, IDCE_HK_ADD, "None");
+			SetFocus(GetDlgItem(hDlg, IDCE_HK_ADD));
+			tchk[0].bValid = FALSE; // Required to Clear/Remove HotKey
+			SendPSChanged(hDlg);
+			tchk[0].fsMod = 0;
+			tchk[0].vk = 0;
+			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
+			break;
+			
+		case IDCB_HK_STOP:
+			EnableWindow(GetDlgItem(hDlg, IDCE_HK_STOP), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDCB_HK_STOP), FALSE);
+			SetDlgItemText(hDlg, IDCE_HK_STOP, "None");
+			SetFocus(GetDlgItem(hDlg, IDCE_HK_STOP));
+			tchk[1].bValid = FALSE; // Required to Clear/Remove HotKey
+			SendPSChanged(hDlg);
+			tchk[1].fsMod = 0;
+			tchk[1].vk = 0;
+			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
+			break;
+			
+		case IDCB_HK_TIME:
+			EnableWindow(GetDlgItem(hDlg, IDCE_HK_TIME), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDCB_HK_TIME), FALSE);
+			SetDlgItemText(hDlg, IDCE_HK_TIME, "None");
+			SetFocus(GetDlgItem(hDlg, IDCE_HK_TIME));
+			tchk[2].bValid = FALSE; // Required to Clear/Remove HotKey
+			SendPSChanged(hDlg);
+			tchk[2].fsMod = 0;
+			tchk[2].vk = 0;
+			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
+			break;
+			
+		case IDCB_HK_PROP:
+			EnableWindow(GetDlgItem(hDlg, IDCE_HK_PROP), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDCB_HK_PROP), FALSE);
+			SetDlgItemText(hDlg, IDCE_HK_PROP, "None");
+			SetFocus(GetDlgItem(hDlg, IDCE_HK_PROP));
+			tchk[3].bValid = FALSE; // Required to Clear/Remove HotKey
+			SendPSChanged(hDlg);
+			tchk[3].fsMod = 0;
+			tchk[3].vk = 0;
+			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
+			break;
+			
+		case IDCB_HK_CALN:
+			EnableWindow(GetDlgItem(hDlg, IDCE_HK_CALN), TRUE);
+			EnableWindow(GetDlgItem(hDlg, IDCB_HK_CALN), FALSE);
+			SetDlgItemText(hDlg, IDCE_HK_CALN, "None");
+			SetFocus(GetDlgItem(hDlg, IDCE_HK_CALN));
+			tchk[4].bValid = FALSE; // Required to Clear/Remove HotKey
+			SendPSChanged(hDlg);
+			tchk[4].fsMod = 0;
+			tchk[4].vk = 0;
+			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
+			break;
+		}
+		return TRUE;}
 	}
 	return FALSE;
 }

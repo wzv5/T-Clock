@@ -44,7 +44,6 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_INITDIALOG:
 		OnInit(hDlg);
 		return TRUE;
-		
 	case WM_DESTROY:
 		OnDeinit(hDlg);
 		break;
@@ -183,10 +182,6 @@ void OnInit(HWND hDlg)
 {
 	char s[1024] = "";
 	int i, count;
-	HBITMAP hBMPJRPic;
-	
-	hBMPJRPic = LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDB_BITMAP1), IMAGE_BITMAP, 64, 80, LR_DEFAULTCOLOR);
-	SendDlgItemMessage(hDlg, IDC_BMPJACK, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hBMPJRPic);
 	
 	CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM)), 0);
 	
@@ -324,7 +319,6 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 		newlen=GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(name));
 		if(newlen!=oldlen || memcmp(name,pAS->dlgmsg.name,newlen)){
 			HWND combo=GetDlgItem(hDlg,IDC_COMBOALARM);
-			OutputDebugString("GetAlarmFromDlg new name");
 			ComboBox_DeleteString(combo,m_curAlarm);
 			ComboBox_InsertString(combo,m_curAlarm,name);
 			ComboBox_SetItemData(combo,m_curAlarm,pAS);

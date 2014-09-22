@@ -15,14 +15,14 @@
 #define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
 #define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
 
+static WNDPROC m_oldLabProc = NULL;
+static HCURSOR m_hCurHand = NULL;
+
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 static void OnLinkClicked(HWND hDlg, UINT id);
 
 LRESULT CALLBACK LabLinkProc(HWND, UINT, WPARAM, LPARAM);
-static WNDPROC oldLabProc = NULL;
-static HCURSOR hCurHand = NULL;
-static HFONT hfontLink, hFontBold;
 
 static BOOL GetStartupFile(HWND hDlg,char* filename);
 static void AddStartup(HWND hDlg);
@@ -36,7 +36,18 @@ INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_INITDIALOG:
 		OnInit(hDlg);
 		return TRUE;
-	case WM_CTLCOLORSTATIC: {
+	case WM_DESTROY:{
+		int controlid;
+		HFONT hftBold=(HFONT)SendDlgItemMessage(hDlg,IDC_ABT_TITLE,WM_GETFONT,0,0);
+		HFONT hftBigger=(HFONT)SendDlgItemMessage(hDlg,IDC_STARTUP,WM_GETFONT,0,0);
+		SendDlgItemMessage(hDlg,IDC_STARTUP,WM_SETFONT,0,0);
+		for(controlid=IDC_ABT_TITLE; controlid<=IDC_ABT_MAIL; ++controlid){
+			SendDlgItemMessage(hDlg,controlid,WM_SETFONT,0,0);
+		}
+		DeleteObject(hftBold);
+		DeleteObject(hftBigger);
+		break;}
+	case WM_CTLCOLORSTATIC:{
 		int id=GetDlgCtrlID((HWND)lParam);
 		if(id==IDC_ABT_WEBuri || id==IDC_ABT_MAILuri) {
 			SetTextColor((HDC)wParam,RGB(0,0,255));
@@ -57,11 +68,6 @@ INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		switch(((NMHDR*)lParam)->code) {
 		case PSN_APPLY: OnApply(hDlg); break;
 		} return TRUE;
-	case WM_DESTROY:
-		DeleteObject(hfontLink);
-		DeleteObject(hFontBold);
-		DestroyWindow(hDlg);
-		break;
 	}
 	return FALSE;
 }
@@ -71,21 +77,26 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 {
 	char path[MAX_PATH];
 	int controlid;
-	LOGFONT ftBold;
+	LOGFONT logft;
+	HFONT hftBold;
+	HFONT hftStartup;
 	SetDlgItemText(hDlg, IDC_ABT_TITLE, ABT_TITLE);
 	SetDlgItemText(hDlg, IDC_ABT_TCLOCK, ABT_TCLOCK);
 	
-	hFontBold = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
-	GetObject(hFontBold, sizeof(LOGFONT), &ftBold);
-	ftBold.lfWeight = FW_BOLD;
-	hFontBold = CreateFontIndirect(&ftBold);
+	hftBold = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
+	GetObject(hftBold, sizeof(logft), &logft);
+	logft.lfWeight = FW_BOLD;
+	hftBold = CreateFontIndirect(&logft);
+	logft.lfHeight=logft.lfHeight*120/100;
+	hftStartup = CreateFontIndirect(&logft);
 	
 	for(controlid=IDC_ABT_TITLE; controlid<=IDC_ABT_MAIL; ++controlid){
-		SendDlgItemMessage(hDlg,controlid,WM_SETFONT,(WPARAM)hFontBold,0);
+		SendDlgItemMessage(hDlg,controlid,WM_SETFONT,(WPARAM)hftBold,0);
 	}
-	if(!hCurHand) hCurHand = LoadCursor(NULL, IDC_HAND);
+	SendDlgItemMessage(hDlg,IDC_STARTUP,WM_SETFONT,(WPARAM)hftStartup,0);
+	if(!m_hCurHand) m_hCurHand = LoadCursor(NULL, IDC_HAND);
 	
-	oldLabProc = (WNDPROC)GetWindowLongPtr(GetDlgItem(hDlg, IDC_ABT_MAILuri), GWL_WNDPROC);
+	m_oldLabProc = (WNDPROC)GetWindowLongPtr(GetDlgItem(hDlg, IDC_ABT_MAILuri), GWL_WNDPROC);
 	SetWindowLongPtr(GetDlgItem(hDlg, IDC_ABT_WEBuri), GWL_WNDPROC, (LONG_PTR)LabLinkProc);
 	SetWindowLongPtr(GetDlgItem(hDlg, IDC_ABT_MAILuri), GWL_WNDPROC, (LONG_PTR)LabLinkProc);
 //==================================================================================
@@ -122,10 +133,10 @@ LRESULT CALLBACK LabLinkProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 {
 	switch(message) {
 	case WM_SETCURSOR:
-		SetCursor(hCurHand);
+		SetCursor(m_hCurHand);
 		return TRUE;
 	}
-	return CallWindowProc(oldLabProc, hwnd, message, wParam, lParam);
+	return CallWindowProc(m_oldLabProc, hwnd, message, wParam, lParam);
 }
 //================================================================================
 //---------------------------+++--> Does startup file exist? Also creates filename:

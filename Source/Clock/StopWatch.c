@@ -118,9 +118,9 @@ INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 		return TRUE;
 	case WM_DESTROY:{
 		HFONT hfont=(HFONT)SendDlgItemMessage(hDlg,IDCE_SW_ELAPSED,WM_GETFONT,0,0);
-		SendDlgItemMessage(hDlg,IDCE_SW_ELAPSED,WM_SETFONT,SendMessage(hDlg,WM_GETFONT,0,0),0);
+		SendDlgItemMessage(hDlg,IDCE_SW_ELAPSED,WM_SETFONT,0,0);
 		DeleteObject(hfont);
-		return 0;}
+		break;}
 	case WM_ACTIVATE:
 		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
 			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);

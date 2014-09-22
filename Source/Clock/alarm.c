@@ -157,7 +157,9 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 				
 				m_bKillPCBeep = 0;
 				if(PlayFile(hwnd, m_pAS[i].fname, rep)) {
+					#ifndef _DEBUG
 					EmptyWorkingSet(GetCurrentProcess());
+					#endif
 					return; // ^^Return^^ Memory Used by File Play.
 				}
 			}
@@ -178,7 +180,9 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 				rep = 0; // Ring Once & Go Away!
 			}
 			PlayFile(hwnd, fname, rep);
+			#ifndef _DEBUG
 			EmptyWorkingSet(GetCurrentProcess());
+			#endif
 		} // ^^Return^^ Memory Used by File Play.
 	}
 }

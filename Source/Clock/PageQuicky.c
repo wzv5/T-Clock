@@ -84,9 +84,6 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			CreateDialogParam(0,MAKEINTRESOURCE(IDD_QUICKY_ADD),hDlg,PageQuickyMenuProc,itm->iItem); // initializes and kills itself
 		}
 		return TRUE;}
-	case WM_DESTROY:
-		DestroyWindow(hDlg);
-		break;
 	}
 	return FALSE;
 }

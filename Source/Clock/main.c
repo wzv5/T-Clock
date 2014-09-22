@@ -258,7 +258,9 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			bStartTimer = FALSE;
 			HookStart(hwnd); // install a hook
 			nCountFindingClock = 0;
+			#ifndef _DEBUG
 			EmptyWorkingSet(GetCurrentProcess());
+			#endif
 		} else if(wParam == IDTIMER_MAIN) OnTimerMain(hwnd);
 		else if(wParam == IDTIMER_MOUSE) OnTimerMouse(hwnd);
 		return 0;

@@ -56,9 +56,6 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 			OnApply(hDlg);
 		}
 		return TRUE;
-	case WM_DESTROY:
-		DestroyWindow(hDlg);
-		break;
 	}
 	return FALSE;
 }

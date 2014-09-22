@@ -185,6 +185,9 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_INITDIALOG:{
 		OnInit(hDlg,&g_hList);
 		return TRUE;}
+	case WM_DESTROY:
+		OnDestroy(hDlg);
+		break;
 	case WM_COMMAND:{
 		WORD id=LOWORD(wParam);
 		WORD code=HIWORD(wParam);
@@ -272,10 +275,6 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 		}
 		return TRUE;}
-	case WM_DESTROY:
-		OnDestroy(hDlg);
-		DestroyWindow(hDlg);
-		return TRUE;
 	}
 	return FALSE;
 }

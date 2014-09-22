@@ -14,8 +14,6 @@ static void OnChooseColor(HWND hDlg, WORD id);
 static void OnDrawItemColorCombo(LPARAM lParam);
 static void SetComboFontSize(HWND hDlg, int bInit);
 static void OnMeasureItemColorCombo(LPARAM lParam);
-static HFONT hfontb;  // for IDC_BOLD
-static HFONT hfonti;  // for IDC_ITALIC
 
 static char g_bPreviewed=-1;
 static __inline void SendPSChanged(HWND hDlg){
@@ -41,6 +39,14 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message,
 		OnInit(hDlg);
 		g_bPreviewed=0;
 		return TRUE;
+	case WM_DESTROY:{
+		HFONT hfontb=(HFONT)SendDlgItemMessage(hDlg,IDC_BOLD,WM_GETFONT,0,0);
+		HFONT hfonti=(HFONT)SendDlgItemMessage(hDlg,IDC_ITALIC,WM_GETFONT,0,0);
+		SendDlgItemMessage(hDlg,IDC_BOLD,WM_SETFONT,0,0);
+		SendDlgItemMessage(hDlg,IDC_ITALIC,WM_SETFONT,0,0);
+		DeleteObject(hfontb);
+		DeleteObject(hfonti);
+		break;}
 	case WM_MEASUREITEM:
 		OnMeasureItemColorCombo(lParam);
 		return TRUE;
@@ -85,11 +91,6 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message,
 			break;
 		}
 		return TRUE;}
-	case WM_DESTROY:
-		DeleteObject(hfontb);
-		DeleteObject(hfonti);
-		DestroyWindow(hDlg);
-		break;
 	}
 	return FALSE;
 }
@@ -101,7 +102,7 @@ void OnInit(HWND hDlg)
 {
 	HDC hdc;
 	LOGFONT logfont;
-	
+	HFONT hfont;
 	// setting of "background" and "text"
 	InitColor(hDlg);
 	
@@ -121,16 +122,16 @@ void OnInit(HWND hDlg)
 	CheckDlgButton(hDlg, IDC_BOLD, GetMyRegLong("Clock", "Bold", 0));
 	CheckDlgButton(hDlg, IDC_ITALIC, GetMyRegLong("Clock", "Italic", 0));
 	
-	hfontb = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
-	GetObject(hfontb, sizeof(LOGFONT), &logfont);
+	hfont = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
+	GetObject(hfont, sizeof(LOGFONT), &logfont);
 	logfont.lfWeight = FW_BOLD;
-	hfontb = CreateFontIndirect(&logfont);
-	SendDlgItemMessage(hDlg, IDC_BOLD, WM_SETFONT, (WPARAM)hfontb, 0);
+	hfont = CreateFontIndirect(&logfont);
+	SendDlgItemMessage(hDlg, IDC_BOLD, WM_SETFONT, (WPARAM)hfont, 0);
 	
 	logfont.lfWeight = FW_NORMAL;
 	logfont.lfItalic = 1;
-	hfonti = CreateFontIndirect(&logfont);
-	SendDlgItemMessage(hDlg, IDC_ITALIC, WM_SETFONT, (WPARAM)hfonti, 0);
+	hfont = CreateFontIndirect(&logfont);
+	SendDlgItemMessage(hDlg, IDC_ITALIC, WM_SETFONT, (WPARAM)hfont, 0);
 	
 	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETRANGE32, (WPARAM)-999,999);
 	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETPOS32, 0, GetMyRegLong("Clock", "ClockHeight", 0));

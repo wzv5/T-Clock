@@ -40,6 +40,12 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 	case WM_INITDIALOG:
 		OnInit(hDlg);
 		return TRUE;
+	case WM_DESTROY:
+		if(m_pCustomFormat) {
+			free(m_pCustomFormat);
+			m_pCustomFormat = NULL;
+		}
+		break;
 	case WM_COMMAND: {
 			WORD id, code;
 			id = LOWORD(wParam); code = HIWORD(wParam);
@@ -71,14 +77,6 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			OnApply(hDlg);
 			break;
 		} return TRUE;
-		
-	case WM_DESTROY:
-		if(m_pCustomFormat) {
-			free(m_pCustomFormat);
-			m_pCustomFormat = NULL;
-		}
-		DestroyWindow(hDlg);
-		break;
 	}
 	return FALSE;
 }
