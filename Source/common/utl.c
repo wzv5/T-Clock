@@ -134,24 +134,15 @@ BOOL ExecFile(HWND hwnd, const char* command)
 	}
 	return FALSE;
 }
-void ToggleCalendar()
-{
-	if(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL))
-		return;
-	if(g_tos>=TOS_VISTA && !GetMyRegLong("Calendar","bCustom",0))
-		PostMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
-	else
-		ExecFile(g_hwndClock,"XPCalendar.exe");
-}
 
 int atox(const char* p)
 {
 	int r = 0;
-	while(*p) {
-		if('0' <= *p && *p <= '9') r = r * 16 + *p - '0';
-		else if('A' <= *p && *p <= 'F') r = r * 16 + *p - 'A' + 10;
-		else if('a' <= *p && *p <= 'f') r = r * 16 + *p - 'a' + 10;
-		p++;
+	for(; *p; ++p) {
+		if('0' <= *p && *p <= '9') r=(r<<4) + *p-'0';
+		else if('A' <= *p && *p <= 'F') r=(r<<4) + *p-('A'-10);
+		else if('a' <= *p && *p <= 'f') r=(r<<4) + *p-('a'-10);
+		else break;
 	}
 	return r;
 }
@@ -171,10 +162,10 @@ void add_title(char* path, const char* title)
 	if(*p == 0) ;
 	else if(*title && *(title + 1) == ':') ;
 	else if(*title == '\\') {
-		if(*p && *(p + 1) == ':') p += 2;
+		if(*p && p[1]==':') p += 2;
 	} else {
 		while(*p) {
-			if((*p == '\\' || *p == '/') && *(p + 1) == 0) {
+			if((*p=='\\' || *p=='/') && !p[1]) {
 				break;
 			}
 			p = CharNext(p);
@@ -182,7 +173,7 @@ void add_title(char* path, const char* title)
 		*p++ = '\\';
 	}
 	while(*title) *p++ = *title++;
-	*p = 0;
+	*p = '\0';
 }
 
 void del_title(char* path)
@@ -197,7 +188,7 @@ void del_title(char* path)
 		}
 		p = CharNext(p);
 	}
-	*ep = 0;
+	*ep = '\0';
 }
 
 void get_title(char* dst, const char* path)
@@ -309,7 +300,7 @@ char* MyString(UINT id)
 {
 	static char buf[80];
 	
-	buf[0] = 0;
+	*buf = '\0';
 	LoadString(GetModuleHandle(NULL), id, buf, 80);
 	return buf;
 }

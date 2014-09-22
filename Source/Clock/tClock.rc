@@ -343,19 +343,19 @@ CAPTION "HotKeys"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Display Add/Edit Timers Hotkey:",IDC_STATIC,7,4,295,36
-    GROUPBOX        "Display Stopwatch Hotkey:",IDC_STATIC,7,42,295,36
-    GROUPBOX        "Display Timer Watch Hotkey:",IDC_STATIC,7,80,295,36
-    EDITTEXT        IDCE_HK_ADD,29,17,172,14,ES_AUTOHSCROLL | WS_DISABLED | NOT WS_TABSTOP
-    EDITTEXT        IDCE_HK_STOP,29,55,172,14,ES_AUTOHSCROLL | WS_DISABLED | NOT WS_TABSTOP
-    EDITTEXT        IDCE_HK_TIME,29,93,172,14,ES_AUTOHSCROLL | WS_DISABLED | NOT WS_TABSTOP
+    EDITTEXT        IDCE_HK_ADD,29,17,172,14,ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON      "Reset",IDCB_HK_ADD,210,17,50,14
+    GROUPBOX        "Display Stopwatch Hotkey:",IDC_STATIC,7,42,295,36
+    EDITTEXT        IDCE_HK_STOP,29,55,172,14,ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON      "Reset",IDCB_HK_STOP,210,55,50,14
+    GROUPBOX        "Display Timer Watch Hotkey:",IDC_STATIC,7,80,295,36
+    EDITTEXT        IDCE_HK_TIME,29,93,172,14,ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON      "Reset",IDCB_HK_TIME,210,93,50,14
     GROUPBOX        "Display Properties Hotkey:",IDC_STATIC,7,118,295,36
-    GROUPBOX        "Display Calendar Hotkey:",IDC_STATIC,7,156,295,36
     EDITTEXT        IDCE_HK_PROP,29,130,172,14,ES_AUTOHSCROLL | WS_DISABLED
-    EDITTEXT        IDCE_HK_CALN,29,170,172,14,ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON      "Reset",IDCB_HK_PROP,210,130,50,14
+    GROUPBOX        "Display Calendar Hotkey:",IDC_STATIC,7,156,295,36
+    EDITTEXT        IDCE_HK_CALN,29,170,172,14,ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON      "Reset",IDCB_HK_CALN,210,170,50,14
 END
 
@@ -552,10 +552,6 @@ BEGIN
     IDS_MOVETO              "Move To..."
     IDS_LABPROGRAM          "Application"
     IDS_LABFOLDER           "Folder"
-    IDS_LEFTBUTTON          "Left Button"
-    IDS_RIGHTBUTTONM        "Middle Button"
-    IDS_XBUTTON1            "Button 4"
-    IDS_XBUTTON2            "Button 5"
 END
 
 #endif    // English (U.S.) resources

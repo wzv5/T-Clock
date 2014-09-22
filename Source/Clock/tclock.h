@@ -31,6 +31,7 @@
 
 // for mouse.c and pagemouse.c
 #define MOUSEFUNC_NONE			0
+#define MOUSEFUNC_MENU			1
 #define MOUSEFUNC_TIMER			5
 #define MOUSEFUNC_CLIPBOARD		6
 #define MOUSEFUNC_SCREENSAVER	7
@@ -57,7 +58,7 @@ extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
 
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
-void RefreshUs();
+void ToggleCalendar();
 
 // settings.c
 int CheckSettings();
@@ -124,6 +125,8 @@ extern const char g_reg_mouse[];
 void OnTimerMouse(HWND hwnd);
 void OnDropFiles(HWND hwnd, HDROP hdrop);
 void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+// PageMouse.c
+void CheckMouseMenu();
 
 // timer.c
 void UpdateTimerMenu(HMENU hMenu);
@@ -147,10 +150,6 @@ void DialogStopWatch();
 BOOL ShutDown();
 BOOL ReBoot();
 BOOL LogOff();
-
-// TCDLL.DLL‚ÌAPI
-void WINAPI HookStart(HWND hwnd);
-void WINAPI HookEnd();
 
 // PageHotKey.c
 void GetHotKeyInfo(HWND hWnd);

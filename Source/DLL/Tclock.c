@@ -31,11 +31,13 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 HWND g_hwndTClockMain = NULL;
 HWND g_hwndClock = NULL;
 HHOOK g_hhook = 0;
+char g_bCalOpen = 0;
 #pragma data_seg()
 #else
 __attribute__((section(".MYDATA"),shared)) HWND g_hwndTClockMain = NULL;
 __attribute__((section(".MYDATA"),shared)) HWND g_hwndClock = NULL;
 __attribute__((section(".MYDATA"),shared)) HHOOK g_hhook = 0;
+__attribute__((section(".MYDATA"),shared)) char g_bCalOpen = 0;
 #endif // __GNUC__
 
 /*------------------------------------------------
@@ -345,6 +347,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
+		g_bCalOpen=FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL)!=NULL;
 		SetForegroundWindow(g_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;
@@ -359,8 +362,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
 		PostMessage(g_hwndTClockMain, message, wParam, lParam);
-		if(message == WM_RBUTTONUP) break;
 		return 0;
+//	case WM_CONTEXTMENU:
+//		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+//		return 0;
 	case WM_MOUSEMOVE:
 		if(!m_TipState){
 			TRACKMOUSEEVENT tme;
@@ -490,8 +495,10 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
 		PostMessage(g_hwndTClockMain, message, wParam, lParam);
-		if(message == WM_RBUTTONUP) break;
 		return 0;
+//	case WM_CONTEXTMENU:
+//		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+//		return 0;
 	case WM_MOUSEMOVE:
 		if(!m_TipState){
 			TRACKMOUSEEVENT tme;
@@ -525,9 +532,6 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 			InvalidateRect(g_hwndClock,NULL,0);
 		}
 		m_TipState=0;
-		return 0;
-	case WM_CONTEXTMENU:
-		PostMessage(g_hwndTClockMain, message, wParam, lParam);
 		return 0;
 	case WM_DROPFILES:
 		PostMessage(g_hwndTClockMain, WM_DROPFILES, wParam, lParam);

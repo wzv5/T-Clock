@@ -8,7 +8,7 @@ static void OnInit(HWND hDlg,HWND* hList);
 static void OnApply(HWND hDlg);
 static void OnDestroy();
 static void OnSansho(HWND hDlg, WORD id);
-static void InitMouseFuncList(HWND hDlg);
+static void InitMouseControls(HWND hDlg);
 
 static const char* m_mouseButton[]={
 	"Left",
@@ -17,7 +17,7 @@ static const char* m_mouseButton[]={
 	"Button 4",
 	"Button 5",
 };
-static const int m_mouseButtonCount=sizeof(m_mouseButton)/sizeof(char*);
+static const short m_mouseButtonCount=sizeof(m_mouseButton)/sizeof(char*);
 static const char* m_mouseClick[]={
 	"Single",
 	"Double",
@@ -30,6 +30,7 @@ typedef struct{
 } action_t;
 static const action_t m_mouseAction[]={
 //	{MOUSEFUNC_NONE,"<unknown>"},
+	{MOUSEFUNC_MENU,"Context Menu"},
 	{MOUSEFUNC_TIMER,"Timer"},
 	{IDM_TIMEWATCH,"Timer watch"},
 	{MOUSEFUNC_CLIPBOARD,"Copy To Clipboard"},
@@ -52,7 +53,7 @@ typedef struct { //--+++--> Manipulation, & Storage Structure.
 	char format[m_mouseClickCount][256];
 	char fname[m_mouseClickCount][256];
 } CLICKDATA;
-static CLICKDATA* pData=NULL;
+static CLICKDATA* m_pData=NULL;
 
 static char m_bTransition=0;
 static void SendPSChanged(HWND hDlg){
@@ -93,9 +94,8 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 		++lvItem.iItem;
 	}// */
 	for(button=0; button<m_mouseButtonCount; ++button){
-		if(button==1) continue; // We're Skipping the Right Mouse Button
 		for(click=0; click<m_mouseClickCount; ++click){
-			int func=pData[button].func[click];
+			int func=m_pData[button].func[click];
 			if(func){
 				lvItem.iSubItem=0;
 				lvItem.pszText=(char*)m_mouseButton[button];// we set it, so it's "const"
@@ -119,7 +119,7 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 				
 				++lvItem.iSubItem;
 				if(func==MOUSEFUNC_CLIPBOARD)
-					lvItem.pszText=pData[button].format[click];
+					lvItem.pszText=m_pData[button].format[click];
 				else
 					lvItem.pszText="";
 				ListView_SetItem(hList,&lvItem);
@@ -139,11 +139,10 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 	m_bTransition=1; // start transition
 	if(button==-1){
 		button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
-		if(button>0) ++button; // skip right mouse (relative)
 	}else{
-		CBSetCurSel(hDlg,IDC_MOUSEBUTTON,(button>1?button-1:button));
+		CBSetCurSel(hDlg,IDC_MOUSEBUTTON,button);
 		if(click==-1){
-			for(click=0; click<m_mouseClickCount && !pData[button].func[click]; ++click);
+			for(click=0; click<m_mouseClickCount && !m_pData[button].func[click]; ++click);
 		}
 	}
 	if(click==-1){
@@ -154,10 +153,10 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 	CheckRadioButton(hDlg,IDC_RADSINGLE,IDC_RADDOUBLE,IDC_RADSINGLE+click);
 	if(type==1){
 		func=(int)CBGetItemData(hDlg,IDC_MOUSEFUNC,CBGetCurSel(hDlg,IDC_MOUSEFUNC));
-		pData[button].func[click]=func;
+		m_pData[button].func[click]=func;
 	}else{
 		int iter;
-		func=pData[button].func[click];
+		func=m_pData[button].func[click];
 		for(iter=0; iter<m_mouseActionCount+1; ++iter) {
 			if(func==CBGetItemData(hDlg,IDC_MOUSEFUNC,iter)) {
 				CBSetCurSel(hDlg,IDC_MOUSEFUNC,iter);
@@ -170,9 +169,9 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 	EnableWindow(GetDlgItem(hDlg,IDC_MOUSEFILE),(func==MOUSEFUNC_CLIPBOARD));
 	EnableWindow(GetDlgItem(hDlg,IDC_LABMOUSEFILE),(func==MOUSEFUNC_CLIPBOARD));
 	if(func==MOUSEFUNC_CLIPBOARD){
-		if(!*pData[button].format[click])
-			GetMyRegStr("Format","Format",pData[button].format[click],LRG_BUFF,"");
-		SetDlgItemText(hDlg,IDC_MOUSEFILE,pData[button].format[click]);
+		if(!*m_pData[button].format[click])
+			GetMyRegStr("Format","Format",m_pData[button].format[click],LRG_BUFF,"");
+		SetDlgItemText(hDlg,IDC_MOUSEFILE,m_pData[button].format[click]);
 	}
 	m_bTransition=0; // end transition
 }
@@ -200,7 +199,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				EnableWindow(GetDlgItem(hDlg,iter),(sel>=2 && sel<=4));
 			if(!m_bTransition){
 				UpdateUIControls(hDlg,g_hList,-1,-1,0);
-				g_bApplyClock=TRUE;
+				g_bApplyClock=1;
 				SendPSChanged(hDlg);
 			}
 		}else if(id==IDC_DROPFILESAPP && code==EN_CHANGE){
@@ -211,7 +210,6 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		///  button
 		}else if(id == IDC_MOUSEBUTTON && code == CBN_SELCHANGE){
 			int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
-			if(button>0) ++button; // skip right mouse (relative)
 			UpdateUIControls(hDlg,g_hList,button,-1,0);
 		/// clicks
 		}else if(id >= IDC_RADSINGLE && id <= IDC_RADDOUBLE){
@@ -224,22 +222,39 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		}else if(id == IDC_MOUSEFILE && code==EN_CHANGE){
 			int click;
 			int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
-			if(button>0) ++button; // skip right mouse (relative)
 			for(click=0; click<m_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
 			if(click<m_mouseClickCount){
 				if(CBGetItemData(hDlg,IDC_MOUSEFUNC,CBGetCurSel(hDlg,IDC_MOUSEFUNC)==MOUSEFUNC_CLIPBOARD))
-					GetDlgItemText(hDlg,IDC_MOUSEFILE,pData[button].format[click],256);
+					GetDlgItemText(hDlg,IDC_MOUSEFILE,m_pData[button].format[click],256);
 				SendPSChanged(hDlg);
 			}
 		}else if((id==IDC_TOOLTIP && code==EN_CHANGE) || id==IDCB_TOOLTIP){
 			if(id==IDCB_TOOLTIP) EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
-			g_bApplyClock=TRUE;
-			SendPSChanged(hDlg);
+			if(!m_bTransition){
+				g_bApplyClock=1;
+				SendPSChanged(hDlg);
+			}
+		}else if(id==666){
+			MessageBox(hDlg,"You need to set at least one \"Context Menu\" action\nYou wouldn't be able to control T-Clock otherwise","Invalid Setting",MB_OK|MB_ICONERROR);
 		}
 		return TRUE;}
 	case WM_NOTIFY:{
 		NMLISTVIEW* itm=(NMLISTVIEW*)lParam;
 		switch(itm->hdr.code) {
+		case PSN_KILLACTIVE:{
+			int button,click;
+			/// verify settings
+			SetWindowLongPtr(hDlg,DWLP_MSGRESULT,1); // prevent close
+			for(button=0; button<m_mouseButtonCount; ++button) {
+				for(click=0; click<m_mouseClickCount; ++click) {
+					if(m_pData[button].func[click]==MOUSEFUNC_MENU) {
+						SetWindowLongPtr(hDlg,DWLP_MSGRESULT,0); // allow close
+						return TRUE;
+					}
+				}
+			}
+			PostMessage(hDlg,WM_COMMAND,666,0); // show error message
+			break;}
 		case PSN_APPLY:
 			OnApply(hDlg);
 			break;
@@ -262,7 +277,6 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				lvItem.pszText=szClickBuf;
 				ListView_GetItem(g_hList,&lvItem);
 				for(button=0; button<m_mouseButtonCount; ++button){
-					if(button==1) continue; // We're Skipping the Right Mouse Button
 					if(strcmp(m_mouseButton[button],szButton)) continue;
 					for(click=0; click<m_mouseClickCount; ++click){
 						if(strcmp(m_mouseClick[click],lvItem.pszText)) continue;
@@ -296,27 +310,23 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP,buf);
 	/// read mouse click settings
 	entry[2]='\0';
-	pData=malloc(sizeof(CLICKDATA)*m_mouseButtonCount);
+	m_pData=malloc(sizeof(CLICKDATA)*m_mouseButtonCount);
 	for(button=0; button<m_mouseButtonCount; ++button) {
-		if(button==1) continue; // skip right mouse
 		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
-			pData[button].func[click]=GetMyRegLong(g_reg_mouse, entry, MOUSEFUNC_NONE);
-			pData[button].format[click][0]=0; // for Clipboard
-			pData[button].fname[click][0]=0; // for open file (N/A)
-			if(pData[button].func[click]==MOUSEFUNC_CLIPBOARD){
+			m_pData[button].func[click]=GetMyRegLong(g_reg_mouse, entry, MOUSEFUNC_NONE);
+			m_pData[button].format[click][0]=0; // for Clipboard
+			m_pData[button].fname[click][0]=0; // for open file (N/A)
+			if(m_pData[button].func[click]==MOUSEFUNC_CLIPBOARD){
 				memcpy(entry+2,"Clip",5);
-				GetMyRegStr(g_reg_mouse,entry,pData[button].format[click],256,"");
+				GetMyRegStr(g_reg_mouse,entry,m_pData[button].format[click],256,"");
 				entry[2]='\0';
 			}
 		}
 	}
-	/// setup mouse click settings controls
-	for(button=IDS_LEFTBUTTON; button<=IDS_XBUTTON2;++button)
-		CBAddString(hDlg,IDC_MOUSEBUTTON,MyString(button));
-	// set mouse functions to combo box
-	InitMouseFuncList(hDlg); // Populate Mouse Click Action DropDown Menu
+	// set mouse buttons/functions to combo boxes
+	InitMouseControls(hDlg); // Populate Mouse Click Action DropDown Menu
 	
 	if(g_tos<TOS_VISTA){
 		EnableDlgItem(hDlg, IDCB_TOOLTIP, 0);
@@ -375,20 +385,18 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	SetMyRegLong(g_reg_mouse,"DropFiles",sel);
 	GetDlgItemText(hDlg,IDC_DROPFILESAPP,buf,256);
 	SetMyRegStr(g_reg_mouse,"DropFilesApp",buf);
-	
 	entry[2]='\0';
 	for(button=0; button<m_mouseButtonCount; ++button) {
-		if(button==1) continue; // skip right mouse
 		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
-			if(pData[button].func[click])
-				SetMyRegLong(g_reg_mouse, entry, pData[button].func[click]);
+			if(m_pData[button].func[click])
+				SetMyRegLong(g_reg_mouse, entry, m_pData[button].func[click]);
 			else
 				DelMyReg(g_reg_mouse, entry);
-			if(pData[button].func[click]==MOUSEFUNC_CLIPBOARD) {
+			if(m_pData[button].func[click]==MOUSEFUNC_CLIPBOARD) {
 				memcpy(entry+2,"Clip",5);
-				SetMyRegStr(g_reg_mouse, entry, pData[button].format[click]);
+				SetMyRegStr(g_reg_mouse, entry, m_pData[button].format[click]);
 				entry[2]='\0';
 			}
 		}
@@ -401,7 +409,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 //---------------------------//------------+++--> Free CLICKDATA Structure Memory on Exit:
 void OnDestroy()   //--------------------------------------------------------------+++-->
 {
-	free(pData), pData=NULL;
+	free(m_pData), m_pData=NULL;
 }
 /*--------------------------------------------------
 --------------- Handle File Dropped on Clock Options
@@ -446,14 +454,39 @@ void OnSansho(HWND hDlg, WORD id)
 }
 //================================================================================================
 //-----------------------------------//------+++--> Populate the Mouse Click Actions DropDown Menu:
-void InitMouseFuncList(HWND hDlg)   //------------------------------------------------------+++-->
+void InitMouseControls(HWND hDlg)   //------------------------------------------------------+++-->
 {
 	int iter;
+	for(iter=0; iter<m_mouseButtonCount;++iter)
+		CBAddString(hDlg,IDC_MOUSEBUTTON,m_mouseButton[iter]);
 	CBSetDroppedWidth(hDlg,IDC_MOUSEFUNC,180);
 	CBAddString(hDlg,IDC_MOUSEFUNC,MyString(IDS_NONE));
 	CBSetItemData(hDlg,IDC_MOUSEFUNC,0,0);
 	for(iter=0; iter<m_mouseActionCount; ++iter){
 		CBAddString(hDlg,IDC_MOUSEFUNC,m_mouseAction[iter].name);
 		CBSetItemData(hDlg,IDC_MOUSEFUNC,iter+1,m_mouseAction[iter].id);
+	}
+}
+void CheckMouseMenu()
+{
+	short button,click;
+	int hasmenu=0;
+	union{
+		unsigned short entryS;
+		char entry[3];
+	} u;
+	u.entry[2]='\0';
+	for(button=0; button<m_mouseButtonCount; ++button) {
+		for(click=0; click<m_mouseClickCount; ++click) {
+			u.entryS=('0'+button)|(('0'+click)<<8);
+			if(GetMyRegLong(g_reg_mouse,u.entry,0)==MOUSEFUNC_MENU) {
+				hasmenu=1;
+				button=(short)m_mouseButtonCount; break;
+			}
+		}
+	}
+	if(!hasmenu){
+		u.entryS='1'|('1'<<8); // right, 1 click
+		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_MENU);
 	}
 }

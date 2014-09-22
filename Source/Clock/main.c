@@ -44,6 +44,20 @@ BOOL bMonOffOnLock = FALSE;
 // alarm.c
 extern char g_bPlayingNonstop;
 
+//=========================================================
+//-------------------+++--> toggle calendar (close or open):
+void ToggleCalendar()   //---------------------------+++-->
+{
+	if(IsCalendarOpen())
+		return;
+	if(g_tos>=TOS_VISTA && !GetMyRegLong("Calendar","bCustom",0)){
+		PostMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
+	}else{
+		char cal[MAX_PATH];
+		strcpy(cal,g_mydir); add_title(cal,"XPCalendar.exe");
+		ExecFile(g_hwndTClockMain,cal);
+	}
+}
 //================================================================================================
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
 void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 2000 }--------+++-->

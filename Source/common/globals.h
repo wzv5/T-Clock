@@ -32,6 +32,13 @@
 extern HWND		g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
 extern HWND		g_hwndClock;		// Main Clock Window Handle
 extern HHOOK	g_hhook;
+extern char		g_bCalOpen;
+
+// TCDLL.DLL‚API
+int WINAPI IsCalendarOpen();
+void WINAPI HookStart(HWND hwnd);
+void WINAPI HookEnd();
+
 
 #ifndef GWL_WNDPROC // Required for the x64 Edition
 #	define GWL_WNDPROC GWLP_WNDPROC

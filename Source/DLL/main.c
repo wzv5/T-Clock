@@ -12,6 +12,11 @@ void InitClock(HWND hwnd);
 --------------------------------------------------*/
 extern HINSTANCE hInstance;
 
+int WINAPI IsCalendarOpen()
+{
+	if(g_bCalOpen || FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL)) return 1;
+	return g_bCalOpen;
+}
 //================================================================================================
 //-------------------------------------+++--> Entry Point of This (SystemTray Clock ShellHook) DLL:
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   //---------------+++-->

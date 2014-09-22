@@ -4,5 +4,6 @@ SECTIONS
 .MYDATA    SHARED READ WRITE
 
 EXPORTS
+IsCalendarOpen
 HookStart
 HookEnd

@@ -45,6 +45,8 @@ int CheckSettings(){
 		u.entry[2]='\0';
 		u.entryS='0'|('1'<<8); // left, 1 click
 		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_SHOWCALENDER);
+		u.entryS='1'|('1'<<8); // right, 1 click
+		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_MENU);
 		u.entryS='2'|('1'<<8); // middle, 1 click
 		SetMyRegLong(g_reg_mouse,u.entry,IDM_STOPWATCH);
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
@@ -68,6 +70,7 @@ int CheckSettings(){
 		updateflags|=SFORMAT_EFFICIENT|SFORMAT_LESSMEM|SFORMAT_FEATURE;
 		compatibilityflags|=SCOMPAT_FORMAT|SCOMPAT_TIMERS;
 	case 1: /// current version
+		CheckMouseMenu(); // adds right mouse button click to handle context menu if missing
 		break;
 	default:{
 		int ans=MessageBox(NULL,"This version of T-Clock looks older than what you've used before.\nSome settings might not be readable and you might lose some stuff.\n\nDo you want to run this old version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);

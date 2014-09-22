@@ -4,15 +4,18 @@
 ---------------------------------------------*/
 // Last Modified by Stoic Joker: Sunday, 01/09/2011 @ 4:34:56pm
 #include "tclock.h"
-static const char g_click_max = 2;
+static const char m_click_max = 2;
 const char g_reg_mouse[] = "Mouse";
 
-static char g_click_button = -1;
-static char g_click = 0;
-static UINT g_doubleclick_time=0;
+static char m_click_button = -1;
+static char m_click = 0;
+static UINT m_doubleclick_time=0;
 
 static int GetMouseFuncNum(char button, char nclick) {
 	char entry[3];
+//	if(button==1 && nclick==1){ // right mouse default menu
+//		return MOUSEFUNC_MENU;
+//	}
 	entry[0]='0'+button;
 	entry[1]='0'+nclick;
 	entry[2]='\0';
@@ -90,7 +93,6 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	char bDown=0;
 	char button, iter;
 	
-	(void)wParam;
 	(void)lParam;
 	
 	switch(message) {
@@ -110,40 +112,42 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		if(g_click_button!=button) g_click=0;
-		g_click_button=button;
+		if(m_click_button!=button) m_click=0;
+		m_click_button=button;
 		bDown=1;
 		break;
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		if(g_click_button!=button){
-			g_click_button=-1;
-			g_click=0;
-			g_doubleclick_time=0;
+		if(m_click_button!=button){
+			m_click_button=-1;
+			m_click=0;
+			m_doubleclick_time=0;
 			return;
 		}
 		break;
 	}
-	if(!g_doubleclick_time)
-		g_doubleclick_time=GetDoubleClickTime(); // get current mouse double click speed
+	if(!m_doubleclick_time)
+		m_doubleclick_time=GetDoubleClickTime(); // get current mouse double click speed
 	
 	if(bDown) { // click not counted yet (normally we could remove this code and only handle OnUp, but Calendar doesn't hide properly otherwise)
-		int n_func=GetMouseFuncNum(button, g_click+1);
-		if(n_func && n_func!=MOUSEFUNC_SCREENSAVER) { // can we execute this click?
-			for(iter=g_click+2; iter<=g_click_max; ++iter) { // loop thru possible clicks
+		int n_func=GetMouseFuncNum(button, m_click+1);
+		if(n_func) { // can we execute this click?
+			for(iter=m_click+2; iter<=m_click_max; ++iter) { // loop thru possible clicks
 				if(GetMouseFuncNum(button,iter))
 					return; // if there's a mouse function set, wait for timeout or more clicks
 			}
-			++g_click;
-			OnTimerMouse(hwnd); // execute now, no more clicks expected
+			if(n_func==MOUSEFUNC_SHOWCALENDER){ // calendar only on down, others on up
+				++m_click;
+				OnTimerMouse(hwnd); // execute now, no more clicks expected
+			}
 		}
 		return;
 	}
-	if(GetMouseFuncNum(button,++g_click)){
+	if(GetMouseFuncNum(button,++m_click)){
 		int waitable=0;
-		for(iter=g_click+1; iter<=g_click_max; ++iter) {
+		for(iter=m_click+1; iter<=m_click_max; ++iter) {
 			if(GetMouseFuncNum(button,iter)){
 				++waitable;
 				break;
@@ -154,7 +158,7 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			return;
 		}
 	}
-	SetTimer(hwnd,IDTIMER_MOUSE,g_doubleclick_time,0);
+	SetTimer(hwnd,IDTIMER_MOUSE,m_doubleclick_time,0);
 }
 
 /*--------------------------------------------------
@@ -162,9 +166,13 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 --------------------------------------------------*/
 void OnTimerMouse(HWND hwnd)
 {
-	int func=GetMouseFuncNum(g_click_button,g_click);
+	int func=GetMouseFuncNum(m_click_button,m_click);
 	KillTimer(hwnd,IDTIMER_MOUSE);
 	switch(func){
+	case MOUSEFUNC_MENU:{
+		POINT pt; GetCursorPos(&pt);
+		PostMessage(g_hwndTClockMain,WM_CONTEXTMENU,0, MAKELPARAM(pt.x,pt.y));
+		break;}
 	case MOUSEFUNC_TIMER:
 		DialogTimer();
 		break;
@@ -175,7 +183,7 @@ void OnTimerMouse(HWND hwnd)
 		MyPropertySheet(-1);
 		break;
 	case MOUSEFUNC_CLIPBOARD:
-		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKELONG(g_click_button,g_click));
+		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKELONG(m_click_button,m_click));
 		break;
 	case MOUSEFUNC_SCREENSAVER:
 		SendMessage(GetDesktopWindow(),WM_SYSCOMMAND,SC_SCREENSAVE,0);
@@ -183,6 +191,6 @@ void OnTimerMouse(HWND hwnd)
 	default:
 		PostMessage(g_hwndTClockMain,WM_COMMAND,func,0);
 	}
-	g_click_button=-1;
-	g_click=0;
+	m_click_button=-1;
+	m_click=0;
 }

@@ -18,7 +18,6 @@ void RefreshUs(void);
 char PathExists(const char* path);
 void GetFileAndOption(const char* command, char* fname, char* opt);
 BOOL ExecFile(HWND hwnd, const char* command);
-void ToggleCalendar();
 int atox(const char* p);
 void del_title(char* path);
 void ForceForegroundWindow(HWND hwnd);

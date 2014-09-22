@@ -14,10 +14,6 @@
 #define IDS_PLAY                        18
 #define IDS_LABPROGRAM                  19
 #define IDS_LABFOLDER                   20
-#define IDS_LEFTBUTTON                  21
-#define IDS_RIGHTBUTTONM                22
-#define IDS_XBUTTON1                    23
-#define IDS_XBUTTON2                    24
 #define IDS_NOTFOUNDCLOCK               45
 #define IDS_LIST_TASKNAME               76
 #define IDS_LIST_TASKTARGET             77
