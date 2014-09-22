@@ -15,29 +15,25 @@ static void OnDrawItemColorCombo(LPARAM lParam);
 static void SetComboFontSize(HWND hDlg, int bInit);
 static void OnMeasureItemColorCombo(LPARAM lParam);
 
-static char g_bPreviewed=-1;
+static char m_transition=-1; // somehow WM_INITDIALOG gets called quite late, we need to initialize the var here. (related problem caused by spin control)
 static __inline void SendPSChanged(HWND hDlg){
-	g_bApplyTaskbar = TRUE;
-	g_bApplyClock = TRUE;
+	if(m_transition==-1) return;
+	g_bApplyClock = 1;
+	g_bApplyTaskbar = 1;
 	SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)(hDlg), 0);
 	
-	if(g_bPreviewed!=-1){
-		OnApply(hDlg,1);
-		SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCKPREVIEW, 0, 0);
-		g_bPreviewed=1;
-	}
+	OnApply(hDlg,1);
+	SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCKPREVIEW, 0, 0);
 }
 
 /*------------------------------------------------
   Dialog procedure
 --------------------------------------------------*/
-INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message,
-							WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
 	case WM_INITDIALOG:
 		OnInit(hDlg);
-		g_bPreviewed=0;
 		return TRUE;
 	case WM_DESTROY:{
 		HFONT hfontb=(HFONT)SendDlgItemMessage(hDlg,IDC_BOLD,WM_GETFONT,0,0);
@@ -77,17 +73,16 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message,
 		switch(notify->hdr.code) {
 		case PSN_APPLY:
 			OnApply(hDlg,0);
-			g_bPreviewed=-1;
-			if(!notify->lParam)
-				g_bPreviewed=0;
+			if(notify->lParam)
+				m_transition=-1;
 			break;
 		case PSN_RESET:
-			if(g_bPreviewed==1){
+			if(m_transition==1){
 				SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
 				SendMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
 				DelMyRegKey("Preview");
 			}
-			g_bPreviewed=-1;
+			m_transition=-1;
 			break;
 		}
 		return TRUE;}
@@ -103,6 +98,7 @@ void OnInit(HWND hDlg)
 	HDC hdc;
 	LOGFONT logfont;
 	HFONT hfont;
+	m_transition=-1; // start transition lock
 	// setting of "background" and "text"
 	InitColor(hDlg);
 	
@@ -162,6 +158,7 @@ void OnInit(HWND hDlg)
 	CBAddString(hDlg,IDC_FONTQUAL,"ClearType (WinXP+)");	// CLEARTYPE_QUALITY		 = 5
 	CBAddString(hDlg,IDC_FONTQUAL,"ClearType Natural");		// CLEARTYPE_NATURAL_QUALITY = 6
 	CBSetCurSel(hDlg,IDC_FONTQUAL,GetMyRegLong("Clock","FontQuality",CLEARTYPE_QUALITY));
+	m_transition=0; // end transition lock, ready to go
 }
 
 /*------------------------------------------------
@@ -196,8 +193,11 @@ void OnApply(HWND hDlg,BOOL preview)
 	SetMyRegLong(section, "Angle", (int)SendDlgItemMessage(hDlg,IDC_SPINANGLE,UDM_GETPOS32,0,0));
 	SetMyRegLong("Taskbar","AlphaTaskbar",(int)SendDlgItemMessage(hDlg,IDC_SPINALPHA,UDM_GETPOS32,0,0));
 	
-	if(!preview)
+	if(!preview){
 		DelMyRegKey("Preview");
+		m_transition=0;
+	}else
+		m_transition=1;
 }
 
 /*------------------------------------------------

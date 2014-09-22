@@ -19,12 +19,12 @@ extern char g_bHour12, g_bHourZero;
 
 //================================================================================================
 //---------------------------------//+++--> load Localized Strings for Month, Day, & AM/PM Symbols:
-void InitFormat(SYSTEMTIME* lt)   //--------------------------------------------------------+++-->
+void InitFormat(const char* section, SYSTEMTIME* lt)   //--------------------------------------------------------+++-->
 {
 	char str[80];
 	int i, ilang, ioptcal;
 	
-	ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
+	ilang = GetMyRegLong(section, "Locale", GetUserDefaultLangID());
 	
 	GetLocaleInfo(ilang, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&m_codepage, sizeof(m_codepage));
 	if(!IsValidCodePage(m_codepage)) m_codepage=CP_ACP;
@@ -39,12 +39,12 @@ void InitFormat(SYSTEMTIME* lt)   //--------------------------------------------
 	GetLocaleInfo(ilang, LOCALE_SABBREVMONTHNAME1 + i, m_MonthShort, sizeof(m_MonthShort));
 	GetLocaleInfo(ilang, LOCALE_SMONTHNAME1 + i, m_MonthLong, sizeof(m_MonthLong));
 	
-	GetMyRegStr("Format", "AMsymbol", m_AM, sizeof(m_AM), "");
+	GetMyRegStr(section, "AMsymbol", m_AM, sizeof(m_AM), "");
 	if(!*m_AM){
 		if(!GetLocaleInfo(ilang, LOCALE_S1159, m_AM, sizeof(m_AM)))
 			strcpy(m_AM, "AM");
 	}
-	GetMyRegStr("Format", "PMsymbol", m_PM, sizeof(m_PM), "");
+	GetMyRegStr(section, "PMsymbol", m_PM, sizeof(m_PM), "");
 	if(!*m_PM){
 		if(!GetLocaleInfo(ilang, LOCALE_S2359, m_PM, sizeof(m_PM)))
 			strcpy(m_PM, "PM");

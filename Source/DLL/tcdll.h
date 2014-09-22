@@ -29,7 +29,7 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 //extern char szTZone[]; //---+++--> TimeZone String Buffer, Also Used (as External) in Format.c
 
 // FORMAT.C
-void InitFormat(SYSTEMTIME* lt);
+void InitFormat(const char* section, SYSTEMTIME* lt);
 unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100);
 #define FORMAT_SECOND    0x0001
 #define FORMAT_SYSINFO   0x0002

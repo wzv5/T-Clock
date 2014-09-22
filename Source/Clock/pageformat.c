@@ -5,9 +5,10 @@
 ---------------------------------------------*/
 
 #include "tclock.h"
+#define MAX_FORMAT 256
 
 static void OnInit(HWND hDlg);
-static void OnApply(HWND hDlg);
+static void OnApply(HWND hDlg,BOOL preview);
 static void OnLocale(HWND hDlg);
 static void On12Hour(HWND hDlg);
 static void OnCustom(HWND hDlg, BOOL bmouse);
@@ -25,11 +26,15 @@ static char m_sep_date[4]; // date seperator such as / .
 static char m_sep_time[4]; // time seperator such as : .
 
 
-static __inline void SendPSChanged(HWND hDlg)
-{
-	g_bApplyClock = TRUE;
-	g_bApplyTaskbar = TRUE;
+static char m_transition=-1; // can become a problem if not initializes.. see pagecolor.c
+static __inline void SendPSChanged(HWND hDlg){
+	if(m_transition==-1) return;
+	g_bApplyClock = 1;
+	g_bApplyTaskbar = 1;
 	SendMessage(GetParent(hDlg), PSM_CHANGED, (WPARAM)(hDlg), 0);
+	
+	OnApply(hDlg,1);
+	SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCKPREVIEWFORMAT, 0, 0);
 }
 /*------------------------------------------------
    Dialog Procedure for the "Format" page
@@ -47,36 +52,50 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		}
 		break;
 	case WM_COMMAND: {
-			WORD id, code;
-			id = LOWORD(wParam); code = HIWORD(wParam);
-			if(id == IDC_LOCALE && code == CBN_SELCHANGE)
+		WORD id=LOWORD(wParam);
+		switch(id){
+		case IDC_LOCALE:
+			if(HIWORD(wParam)==CBN_SELCHANGE)
 				OnLocale(hDlg);
-			// format textbox
-			else if(id == IDC_FORMAT && code == EN_CHANGE)
-				SendPSChanged(hDlg);
-			// "Custumize Format"
-			else if(id == IDC_CUSTOM)
-				OnCustom(hDlg, TRUE);
-			// "12H"
-			else if(id == IDC_12HOUR)
-				On12Hour(hDlg);
-			// "year" -- "Internet Time"
-			else if(IDC_YEAR4 <= id && id <= IDC_AMPM)
-				OnFormatCheck(hDlg, id);
-			else if(id == IDC_AMSYMBOL && code == CBN_SELCHANGE)
-				SendPSChanged(hDlg);
-			else if(id == IDC_PMSYMBOL && code == CBN_SELCHANGE)
-				SendPSChanged(hDlg);
-			else if(id == IDC_ZERO)
-				SendPSChanged(hDlg);
-			return TRUE;
-		}
-	case WM_NOTIFY:
-		switch(((NMHDR*)lParam)->code) {
-		case PSN_APPLY:
-			OnApply(hDlg);
 			break;
-		} return TRUE;
+		case IDC_CUSTOM:
+			OnCustom(hDlg, TRUE);
+			break;
+		case IDC_12HOUR:
+			On12Hour(hDlg);
+			break;
+		case IDC_AMSYMBOL:
+		case IDC_PMSYMBOL:
+			if(HIWORD(wParam)==CBN_EDITCHANGE || HIWORD(wParam)==CBN_SELCHANGE)
+				SendPSChanged(hDlg);
+			break;
+		case IDC_ZERO:
+		case IDC_FORMAT:
+			SendPSChanged(hDlg);
+			break;
+		default: // "year" -- "Internet Time"
+			if(id>=IDC_YEAR4 && id<=IDC_AMPM)
+				OnFormatCheck(hDlg, id);
+		}
+		return TRUE;}
+	case WM_NOTIFY:{
+		PSHNOTIFY* notify=(PSHNOTIFY*)lParam;
+		switch(notify->hdr.code) {
+		case PSN_APPLY:
+			OnApply(hDlg,0);
+			if(notify->lParam)
+				m_transition=-1;
+			break;
+		case PSN_RESET:
+			if(m_transition==1){
+				SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
+				SendMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
+				DelMyRegKey("Preview");
+			}
+			m_transition=-1;
+			break;
+		}
+		return TRUE;}
 	}
 	return FALSE;
 }
@@ -143,12 +162,13 @@ void OnInit(HWND hDlg)
 	const char* PM[]={"PM","pm","P","p"," ",};
 	const size_t AMPMs=sizeof(AM)/sizeof(AM[0]);
 	HFONT hfont;
-	char fmt[MAX_BUFF];
+	char fmt[MAX_FORMAT];
 	int i, count;
 	int ilang;
 	char ampm_user[TNY_BUFF];
 	char ampm_locale[TNY_BUFF];
 	
+	m_transition=-1; // start transition lock
 	m_hwndPage = hDlg;
 	
 	hfont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
@@ -173,7 +193,7 @@ void OnInit(HWND hDlg)
 	// "year" -- "second"
 	for(i = IDC_YEAR4; i <= IDC_SECOND; i++) {
 		CheckDlgButton(hDlg, i,
-					   GetMyRegLong("Format", ENTRY(i), TRUE));
+					   GetMyRegLong("Format", ENTRY(i), 1));
 	}
 	
 	if(IsDlgButtonChecked(hDlg, IDC_YEAR))
@@ -189,15 +209,15 @@ void OnInit(HWND hDlg)
 	// "Internet Time" -- "Customize format"
 	for(i = IDC_KAIGYO; i <= IDC_CUSTOM; i++) {
 		CheckDlgButton(hDlg, i,
-					   GetMyRegLong("Format", ENTRY(i), FALSE));
+					   GetMyRegLong("Format", ENTRY(i), 0));
 	}
 	
-	GetMyRegStr("Format", "Format", fmt, 1024, "");
+	GetMyRegStr("Format", "Format", fmt, MAX_FORMAT, "");
 	SetDlgItemText(hDlg, IDC_FORMAT, fmt);
 	
-	m_pCustomFormat = malloc(MAX_BUFF);
+	m_pCustomFormat = malloc(MAX_FORMAT);
 	if(m_pCustomFormat)
-		GetMyRegStr("Format", "CustomFormat", m_pCustomFormat, MAX_BUFF, "");
+		GetMyRegStr("Format", "CustomFormat", m_pCustomFormat, MAX_FORMAT, "");
 	
 	// "AM Symbol" and "PM Symbol"
 	CBResetContent(hDlg, IDC_AMSYMBOL);
@@ -230,36 +250,51 @@ void OnInit(HWND hDlg)
 	
 	On12Hour(hDlg);
 	OnCustom(hDlg, FALSE);
+	m_transition=0; // end transition lock, ready to go
 }
 
 //================================================================================================
 //---------------------------------------------------------------------------+++--> "Apply" button:
-void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
+void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------------------+++-->
 {
-	char s[1024];
+	const char* section=preview?"Preview":"Format";
+	char str[MAX_FORMAT];
 	int i;
 	
-	SetMyRegLong("Format", "Locale",
+	SetMyRegLong(section, "Locale",
 				 (DWORD)CBGetItemData(hDlg, IDC_LOCALE, CBGetCurSel(hDlg, IDC_LOCALE)));
 				 
 	for(i = IDC_YEAR4; i <= IDC_CUSTOM; i++) {
-		SetMyRegLong("Format", ENTRY(i), IsDlgButtonChecked(hDlg, i));
+		SetMyRegLong(section, ENTRY(i), IsDlgButtonChecked(hDlg, i));
 	}
 	
-	GetDlgItemText(hDlg, IDC_AMSYMBOL, s, 1024);
-	SetMyRegStr("Format", "AMsymbol", s);
-	GetDlgItemText(hDlg, IDC_PMSYMBOL, s, 1024);
-	SetMyRegStr("Format", "PMsymbol", s);
+	i=(int)SendDlgItemMessage(hDlg,IDC_AMSYMBOL,CB_GETCURSEL,0,0);
+	if(i!=CB_ERR)
+		SendDlgItemMessage(hDlg,IDC_AMSYMBOL,CB_GETLBTEXT,i,(LPARAM)str);
+	else
+		GetDlgItemText(hDlg, IDC_AMSYMBOL, str, sizeof(str));
+	SetMyRegStr(section, "AMsymbol", str);
+	i=(int)SendDlgItemMessage(hDlg,IDC_PMSYMBOL,CB_GETCURSEL,0,0);
+	if(i!=CB_ERR)
+		SendDlgItemMessage(hDlg,IDC_PMSYMBOL,CB_GETLBTEXT,i,(LPARAM)str);
+	else
+		GetDlgItemText(hDlg, IDC_PMSYMBOL, str, sizeof(str));
+	SetMyRegStr(section, "PMsymbol", str);
 	
-	GetDlgItemText(hDlg, IDC_FORMAT, s, 1024);
-	SetMyRegStr("Format", "Format", s);
+	GetDlgItemText(hDlg, IDC_FORMAT, str, sizeof(str));
+	SetMyRegStr(section, "Format", str);
 	
 	if(m_pCustomFormat) {
 		if(IsDlgButtonChecked(hDlg, IDC_CUSTOM)) {
-			strcpy(m_pCustomFormat, s);
-			SetMyRegStr("Format", "CustomFormat", m_pCustomFormat);
+			strcpy(m_pCustomFormat, str);
+			SetMyRegStr(section, "CustomFormat", m_pCustomFormat);
 		}
 	}
+	if(!preview){
+		DelMyRegKey("Preview");
+		m_transition=0;
+	}else
+		m_transition=1;
 }
 //================================================================================================
 //-------------------------------------------+++--> When User's Location (Locale ComboBox) Changes:
@@ -286,7 +321,7 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 			if(m_pCustomFormat[0])
 				SetDlgItemText(hDlg, IDC_FORMAT, m_pCustomFormat);
 		} else {
-			GetDlgItemText(hDlg, IDC_FORMAT, m_pCustomFormat, 1024);
+			GetDlgItemText(hDlg, IDC_FORMAT, m_pCustomFormat, MAX_FORMAT);
 		}
 	}
 	
@@ -314,9 +349,11 @@ void On12Hour(HWND hDlg)   //---------------------------------------------------
 
 void OnFormatCheck(HWND hDlg, WORD id)
 {
-	char s[1024];
+	char fmt[MAX_FORMAT];
 	int checks[15];
 	int i;
+	char oldtransition=m_transition;
+	m_transition=-1; // start transition lock
 	
 	for(i = IDC_YEAR4; i <= IDC_AMPM; i++) {
 		CHECKS(i) = IsDlgButtonChecked(hDlg, i);
@@ -349,8 +386,9 @@ void OnFormatCheck(HWND hDlg, WORD id)
 		On12Hour(hDlg);
 	}
 	
-	CreateFormat(s, checks);
-	SetDlgItemText(hDlg, IDC_FORMAT, s);
+	CreateFormat(fmt, checks);
+	SetDlgItemText(hDlg, IDC_FORMAT, fmt);
+	m_transition=oldtransition; // end transition lock
 	SendPSChanged(hDlg);
 }
 

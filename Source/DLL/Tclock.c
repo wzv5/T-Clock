@@ -9,7 +9,8 @@
 
 void EndClock(void);
 void OnTimer(HWND hwnd);
-void ReadData(HWND hwnd, BOOL preview);
+void ReadStyleData(HWND hwnd, int preview);
+void ReadFormatData(HWND hwnd, int preview);
 void InitClock(HWND hwnd);
 int DestroyClock();
 int UpdateClock(HWND hwnd, HFONT fnt);
@@ -101,7 +102,7 @@ TOOLINFO m_TipInfo;
 char m_format[256];
 SYSTEMTIME m_LastTime={0};
 int m_beatLast = -1;
-int m_bDispSecond = FALSE;
+int m_bDispSecond = 0;
 int m_nDispBeat = 0;
 enum{
 	BLINK_NONE=0,
@@ -224,34 +225,29 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 {
 	CheckSystemVersion();
 	g_hwndClock = hwnd;
-	PostMessage(g_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)g_hwndClock);
+	PostMessage(g_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)hwnd);
+	GetClientRect(hwnd,&m_rcClock); // use original clock size until we've loaded our settings
 	
-	ReadData(hwnd,0); //-+-> Get Configuration Information From Registry
-//	SubsCreate();
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
-	m_oldClockProc = (WNDPROC)GetWindowLongPtr(g_hwndClock, GWL_WNDPROC);
-	SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)WndProc);
-	SetClassLong(g_hwndClock, GCL_STYLE, GetClassLong(g_hwndClock, GCL_STYLE) & ~CS_DBLCLKS);
+	m_oldClockProc = (WNDPROC)GetWindowLongPtr(hwnd, GWL_WNDPROC);
+	SetWindowLongPtr(hwnd, GWL_WNDPROC, (LONG_PTR)WndProc);
+	SetClassLong(hwnd, GCL_STYLE, GetClassLong(hwnd, GCL_STYLE) & ~CS_DBLCLKS);
 	
-	CreateTip(g_hwndClock); // Create Mouse-Over ToolTip Window & Contents
+	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
 	
-	DragAcceptFiles(hwnd, GetMyRegLong(NULL, "DropFiles", FALSE)); // Enable/Disable DropFiles on Clock Based on Reg Info.
-	
-//	SetLayeredTaskbar(g_hwndClock,0); // transparent taskbar & more?
-//	PostMessage(GetParent(GetParent(g_hwndClock)), WM_SIZE, SIZE_RESTORED, 0);
-//	InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, TRUE);
-	
-	// somehow required... first size is smaller... taskbar refresh is also required to update clock position
-	// delaying the call to ReadData here or adding a second later doesn't seem to help...
-	PostMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
-	PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
+	/// for some strange reason, we need read our settings twice, otherwise our size doesn't match correctly (shouldn't be related to our settings but the DC creation or font usage, etc.)
+	ReadFormatData(hwnd,0);
+	ReadStyleData(hwnd,0); // enough for our workaround
+	/// and of workaround, and start of clock creation
+	SendMessage(hwnd, CLOCKM_REFRESHCLOCK, 0, 0); // reads settings and creates clock
+	SendMessage(hwnd, CLOCKM_REFRESHTASKBAR, 0, 0);
 }
 //================================================================================================
 //----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
 void EndClock(void)   //--------------------------------------------------------------------+++-->
 {
-	DragAcceptFiles(g_hwndClock, FALSE);
+	DragAcceptFiles(g_hwndClock, 0);
 	DestroyTip();
 	SubsDestroy();
 	if(m_multiClockClass){
@@ -261,13 +257,13 @@ void EndClock(void)   //--------------------------------------------------------
 	DestroyClock();
 	EndNewAPI(g_hwndClock);
 	if(g_hwndClock && IsWindow(g_hwndClock)) {
-		if(m_bTimer) KillTimer(g_hwndClock, 1); m_bTimer = FALSE;
+		if(m_bTimer) KillTimer(g_hwndClock, 1); m_bTimer = 0;
 		SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)m_oldClockProc);
 		m_oldClockProc=m_oldWorkerProc=NULL;
 	}
 	
 	if(IsWindow(g_hwndTClockMain)) PostMessage(g_hwndTClockMain, MAINM_EXIT, 0, 0);
-//  bClockUseTrans = FALSE;
+//  bClockUseTrans = 0;
 }
 /*------------------------------------------------
   subclass procedure of the clock
@@ -399,9 +395,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		m_TipState=0;
 		return 0;
-	case WM_CONTEXTMENU:
-		PostMessage(g_hwndTClockMain, message, wParam, lParam);
-		return 0;
 	case WM_NCHITTEST: // original clock uses this message for context menu and hover, etc. and we need our own "handler"
 //		return HTCAPTION; // xD
 		return DefWindowProc(hwnd, message, wParam, lParam);
@@ -419,26 +412,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(LOWORD(wParam) == IDM_EXIT) EndClock();
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
-		BOOL b;
 		SubsDestroy();
-		ReadData(hwnd,0); // also creates/updates clock
-		b = GetMyRegLong(NULL, "DropFiles", FALSE);
-		DragAcceptFiles(hwnd, b);
-		InvalidateRect(hwnd, NULL, 0);
-		InvalidateRect(GetParent(g_hwndClock), NULL, 1);
+		ReadFormatData(hwnd,0);
+		ReadStyleData(hwnd,0); // also creates/updates clock
+		DragAcceptFiles(hwnd, GetMyRegLong(NULL,"DropFiles",0)); // enable/disable DropFiles on clock
 		SubsCreate();
 		SubsSendResize();
-		return 0;
-		}
+		return 0;}
 	case CLOCKM_REFRESHCLOCKPREVIEW: // refresh the clock
-		ReadData(hwnd,1); // also creates/updates clock
-		InvalidateRect(hwnd, NULL, 0);
-		InvalidateRect(GetParent(g_hwndClock), NULL, 1);
+		ReadStyleData(hwnd,1); // also creates/updates clock
+	case CLOCKM_REFRESHCLOCKPREVIEWFORMAT: // refresh the clock
+		if(message==CLOCKM_REFRESHCLOCKPREVIEWFORMAT)
+			ReadFormatData(hwnd,1); // also creates/updates clock because of preview
 	case CLOCKM_REFRESHTASKBAR: // refresh other elements than clock (somehow required to actually change the clock's size)
 		SetLayeredTaskbar(g_hwndClock,0);
 		PostMessage(GetParent(GetParent(hwnd)), WM_SIZE, SIZE_RESTORED, 0);
 		InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, 1);
 		return 0;
+//	case CLOCKM_REFRESHCLEARTASKBAR:
+//		SetLayeredTaskbar(g_hwndClock,1);
+//		return 0;
 	case CLOCKM_BLINK: // blink the clock
 		if(wParam)
 			m_BlinkState|=BLINK_HOUR;
@@ -449,9 +442,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case CLOCKM_COPY: // copy format to clipboard
 		OnCopy(hwnd, lParam);
 		return 0;
-	case CLOCKM_REFRESHCLEARTASKBAR: {
-		SetLayeredTaskbar(g_hwndClock,1);
-		return 0;}
 	}
 	return CallWindowProc(m_oldClockProc, hwnd, message, wParam, lParam);
 }
@@ -603,26 +593,60 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 	}
 	return CallWindowProc(m_oldWorkerProc,hwnd,message,wParam,lParam);
 }
-//================================================================================================
-//---------------------------------+++--> Retreive T-Clock Configuration Information From Registry:
-void ReadData(HWND hwnd, BOOL preview)   //---------------------------------------------------------------+++-->
+//==========================================================================
+//---------------------------------+++--> Retreive T-Clock's format settings:
+void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 {
-	const char* section=preview?"Preview":"Clock";
-	char fontname[80];
-	LONG weight, italic;
-	int fontsize;
-	int angle;
-	BYTE fontquality;
+	const char* section=(preview?"Preview":"Format");
 	DWORD dwInfoFormat;
 	SYSTEMTIME lt;
+	m_bNoClock = (char)GetMyRegLong(section, "NoClockCustomize", 0);
+	// read format
+	if(!GetMyRegStr(section, "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
+		m_bNoClock = 1;
+	}
+	g_bHour12 = (char)GetMyRegLong(section, "Hour12", 0);
+	g_bHourZero = (char)GetMyRegLong(section, "HourZero", 0);
+	// parse format
+	dwInfoFormat = FindFormat(m_format);
+	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
+	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
+	if(!m_bTimer) SetTimer(g_hwndClock, 1, 1000, NULL);
+	m_bTimer = 1;
+	GetLocalTime(&lt);
+	m_LastTime.wDay = lt.wDay;
+	InitFormat(section,&lt);      // format.c
+	// update clock if preview
+	if(preview){
+		UpdateClock(hwnd,NULL);
+		InvalidateRect(hwnd, NULL, 0);
+		InvalidateRect(GetParent(g_hwndClock), NULL, 1);
+	}
+}
+//=========================================================================
+//---------------------------------+++--> Retreive T-Clock's style settings:
+void ReadStyleData(HWND hwnd, int preview)   //---------------------+++-->
+{
+	const char* section=(preview?"Preview":"Clock");
+	char fontname[80];
+	LONG weight, italic;
+	int fontsize, angle;
+	BYTE fontquality;
 	HFONT hFon;
-	
+	/// read style
 	m_basecolorFont = GetMyRegLong(section, "ForeColor", TCOLOR(TCOLOR_DEFAULT));
 	m_basecolorBG = GetMyRegLong(section, "BackColor", TCOLOR(TCOLOR_DEFAULT));
 	g_col_update(m_basecolorFont,m_basecolorBG);
-	
+	angle=GetMyRegLong(section,"Angle",0)%360;
+	if(angle<0) angle+=360;
+	m_radian=(double)angle*3.14159265358979323/180.;// ye π doesn't need to be that long :P
+	dlineheight = GetMyRegLong(section, "LineHeight", 0);
+	m_height = GetMyRegLong(section, "ClockHeight", 0);
+	m_width = GetMyRegLong(section, "ClockWidth", 0);
+	dhpos = GetMyRegLong(section, "HorizPos", 0);
+	dvpos = GetMyRegLong(section, "VertPos", 0);
+	/// font
 	GetMyRegStr(section, "Font", fontname, 80, "Arial");
-	
 	fontsize = GetMyRegLong(section, "FontSize", 9);
 	if(fontsize>100 || fontsize<=0) fontsize=9;
 	italic = GetMyRegLong(section, "Italic", 0);
@@ -634,42 +658,13 @@ void ReadData(HWND hwnd, BOOL preview)   //-------------------------------------
 		weight=FW_SEMIBOLD;
 	}
 	fontquality=(BYTE)GetMyRegLong(section, "FontQuality", CLEARTYPE_QUALITY);
-	
-	angle=GetMyRegLong(section,"Angle",0)%360;
-	if(angle<0) angle+=360;
-	
-	m_radian=(double)angle*3.14159265358979323/180.;// ye π doesn't need to be that long :P
-	
-	dlineheight = GetMyRegLong(section, "LineHeight", 0);
-	m_height = GetMyRegLong(section, "ClockHeight", 0);
-	m_width = GetMyRegLong(section, "ClockWidth", 0);
-	dhpos = GetMyRegLong(section, "HorizPos", 0);
-	dvpos = GetMyRegLong(section, "VertPos", 0);
-	
-	m_bNoClock = (char)GetMyRegLong(section, "NoClockCustomize", FALSE);
-	
-	if(!GetMyRegStr("Format", "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
-		m_bNoClock = TRUE;
-	}
-	
-	dwInfoFormat = FindFormat(m_format);
-	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? TRUE:FALSE;
-	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!m_bTimer) SetTimer(g_hwndClock, 1, 1000, NULL);
-	m_bTimer = TRUE;
-	
-	g_bHour12 = (char)GetMyRegLong("Format", "Hour12", FALSE);
-	g_bHourZero = (char)GetMyRegLong("Format", "HourZero", 0);
-	
-	GetLocalTime(&lt);
-	m_LastTime.wDay = lt.wDay;
-	
-	InitFormat(&lt);      // format.c
-	
-	m_bMultimon = GetMyRegLong("Desktop", "Multimon", 1);
-
 	hFon = CreateMyFont(fontname, fontsize, weight, italic, angle*10, fontquality);
+	/// misc
+	m_bMultimon = GetMyRegLong("Desktop", "Multimon", 1);
+	/// create/update clock
 	UpdateClock(hwnd,hFon);
+	InvalidateRect(hwnd, NULL, 0);
+	InvalidateRect(GetParent(g_hwndClock), NULL, 1);
 }
 
 /*------------------------------------------------
@@ -718,7 +713,7 @@ void OnTimer(HWND hwnd)
 	if(m_BlinkState){
 		if(m_LastTime.wMinute && m_BlinkState&BLINK_HOUR)
 			m_BlinkState^=BLINK_HOUR; // disable hourly blink
-		bRedraw = TRUE;
+		bRedraw = 1;
 		/* --+++--> This Will Disable the AutoHide...
 				abd.cbSize = sizeof(APPBARDATA);
 				abd.hWnd = FindWindow("Shell_TrayWnd","");
@@ -727,16 +722,16 @@ void OnTimer(HWND hwnd)
 		
 	}
 	
-	else if(m_bDispSecond) bRedraw = TRUE;
-	else if(m_nDispBeat == 1 && m_beatLast != (beat100/100)) bRedraw = TRUE;
-	else if(m_nDispBeat == 2 && m_beatLast != beat100) bRedraw = TRUE;
-//	else if(bDispSysInfo) bRedraw = TRUE;
+	else if(m_bDispSecond) bRedraw = 1;
+	else if(m_nDispBeat == 1 && m_beatLast != (beat100/100)) bRedraw = 1;
+	else if(m_nDispBeat == 2 && m_beatLast != beat100) bRedraw = 1;
+//	else if(bDispSysInfo) bRedraw = 1;
 	else if(m_LastTime.wHour != (int)t.wHour
-			|| m_LastTime.wMinute != (int)t.wMinute) bRedraw = TRUE;
+			|| m_LastTime.wMinute != (int)t.wMinute) bRedraw = 1;
 	
 	if(m_LastTime.wDay != t.wDay || m_LastTime.wMonth != t.wMonth ||
 	   m_LastTime.wYear != t.wYear) {
-		InitFormat(&t); // format.c
+		InitFormat("Format", &t); // format.c
 		InitDaylightTimeTransition();
 	}
 	
@@ -757,7 +752,7 @@ void FillClockBG()
 		BGRQUAD quad;
 		COLORREF ref;
 	} col;
-	if(!m_colorBG_end) return;
+	if(!m_colorBG_start) return;
 	if(m_colBG.ref==TCOLOR(TCOLOR_DEFAULT)){
 		if(IsXPThemeActive()){
 			DrawXPClockBackground(g_hwndClock,m_hdcClockBG,&m_rcClock);
@@ -775,7 +770,7 @@ void FillClockBG()
 }
 void FillClockBGHover()
 {
-	if(!m_colorBG_end) return;
+	if(!m_colorBG_start) return;
 	if(IsXPThemeActive()) {
 		DrawXPClockHover(g_hwndClock,m_hdcClockBG,&m_rcClock);
 	}
@@ -783,10 +778,8 @@ void FillClockBGHover()
 void CalculateClockTextPosition(){
 	double cos_=cos(m_radian);
 	double sin_=sin(m_radian);
-	int hleading=(int)(sin_*m_leading);
-	int leading=(int)(cos_*m_leading);
-	int textwidth=(int)(sin_*m_textheight);
-	int textheight=(int)(cos_*m_textheight);
+	int textwidth=(int)(sin_*(m_textheight+m_leading));
+	int textheight=(int)(cos_*(m_textheight+m_leading));
 	/// use width / height based on angle.
 	GetClientRect(GetParent(GetParent(g_hwndClock)),&m_rcClock);
 	m_bHorizontalTaskbar=m_rcClock.right>m_rcClock.bottom;
@@ -810,8 +803,8 @@ void CalculateClockTextPosition(){
 	if(m_rcClock.right<5) m_rcClock.right=5;
 	if(m_rcClock.bottom<5) m_rcClock.bottom=5;
 	/// position
-	m_vertpos=(m_rcClock.bottom-textheight-leading+(int)(cos_*dlineheight))/2 + dvpos;
-	m_horizpos=(m_rcClock.right-textwidth-hleading+(int)(sin_*dlineheight))/2 + dhpos;
+	m_vertpos=(m_rcClock.bottom-textheight+(int)(cos_*dlineheight))/2 + dvpos;
+	m_horizpos=(m_rcClock.right-textwidth+(int)(sin_*dlineheight))/2 + dhpos;
 }
 void CalculateClockTextSize(){
 	SYSTEMTIME time;
@@ -880,10 +873,12 @@ int UpdateClock(HWND hwnd, HFONT fnt)
 		SetTextAlign(m_hdcClock,TA_CENTER|TA_TOP);
 		SetTextColor(m_hdcClock,0x00000000);
 	}
-	if(!m_oldfnt)
-		m_oldfnt=SelectObject(m_hdcClock,fnt);
-	else
-		DeleteObject(SelectObject(m_hdcClock,fnt));
+	if(fnt){
+		if(!m_oldfnt)
+			m_oldfnt=SelectObject(m_hdcClock,fnt);
+		else
+			DeleteObject(SelectObject(m_hdcClock,fnt));
+	}
 	CalculateClockTextSize(); // height change only, bugs...
 	SetWindowPos(hwnd,HWND_TOP,0,0,m_rcClock.right+1,m_rcClock.bottom,SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOMOVE|SWP_NOCOPYBITS); // without doing this...
 	return 1;
@@ -892,7 +887,7 @@ int UpdateClockSize(HWND hwnd)
 {
 	static BITMAPINFO bmi={{sizeof(BITMAPINFO),0,0,1,32,BI_RGB},};
 	HBITMAP hbm;
-	if(!m_hdcClock)
+	if(!m_oldfnt)
 		return 0;
 	bmi.bmiHeader.biWidth=m_rcClock.right;
 	bmi.bmiHeader.biHeight=m_rcClock.bottom;
