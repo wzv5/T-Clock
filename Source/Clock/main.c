@@ -85,6 +85,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	WNDCLASS wndclass;
 	HWND hwnd;
 	MSG msg;
+	int updated;
 	
 	(void)hPrevInstance;
 	(void)nCmdShow;
@@ -114,7 +115,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	del_title(g_mydir);
 	
 	// Update settings if required and setup defaults
-	if(CheckSettings()){
+	if((updated=CheckSettings())<0){
 		ExitProcess(1);
 	}
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
@@ -160,7 +161,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			SessionReged = TRUE;
 		}
 	}
-	
+	if(updated==1){
+		PostMessage(hwnd,WM_COMMAND,IDM_SHOWPROP,0);
+	}
 	while(GetMessage(&msg, NULL, 0, 0)) {
 		if(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg)){
 			if(g_hwndSheet && !PropSheet_GetCurrentPageHwnd(g_hwndSheet))

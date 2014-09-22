@@ -95,25 +95,18 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 		for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
-	CheckDlgButton(hDlg, IDCB_CLOSECAL,
-					GetMyRegLongEx("Calendar", "CloseCalendar", FALSE));
-	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS,
-					GetMyRegLongEx("Calendar", "ShowWeekNums", FALSE));
-	CheckDlgButton(hDlg, IDCB_CALTOPMOST,
-				GetMyRegLongEx("Calendar", "CalendarTopMost", FALSE));
-	CheckDlgButton(hDlg, IDCB_SHOW_DOY,
-					GetMyRegLongEx("Calendar", "ShowDayOfYear", FALSE));
-	CheckDlgButton(hDlg, IDCB_TRANS2KICONS,
-					GetMyRegLong("Desktop", "Transparent2kIconText", FALSE));
-	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK,
-					bMonOffOnLock);
-	CheckDlgButton(hDlg, IDCB_MULTIMON,
-					GetMyRegLong("Desktop","Multimon",1));
+	CheckDlgButton(hDlg, IDCB_SHOW_DOY, GetMyRegLongEx("Calendar","ShowDayOfYear",1));
+	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, GetMyRegLongEx("Calendar","ShowWeekNums",0));
+	CheckDlgButton(hDlg, IDCB_CLOSECAL, GetMyRegLongEx("Calendar","CloseCalendar",1));
+	CheckDlgButton(hDlg, IDCB_CALTOPMOST, GetMyRegLongEx("Calendar","CalendarTopMost",0));
+	CheckDlgButton(hDlg, IDCB_TRANS2KICONS, GetMyRegLong("Desktop","Transparent2kIconText",0));
+	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, bMonOffOnLock);
+	CheckDlgButton(hDlg, IDCB_MULTIMON, GetMyRegLong("Desktop","Multimon",1));
 	
-	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETRANGE32,12,1);
-	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS32,0,GetMyRegLong("Calendar","ViewMonths",1));
-	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETRANGE32,2,0);
-	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,GetMyRegLong("Calendar","ViewMonthsPast",0));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETRANGE32,1,12);
+	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS32,0,GetMyRegLong("Calendar","ViewMonths",3));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETRANGE32,0,2);
+	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,GetMyRegLong("Calendar","ViewMonthsPast",1));
 	
 	CBResetContent(hDlg, IDC_FIRSTWEEK);
 	CBAddString(hDlg, IDC_FIRSTWEEK, "0");
@@ -157,7 +150,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);
 	SetMySysWeek(szWeek);
 	
-	if(g_tos>TOS_2000) { // This Feature is Not For Windows 2000, It's Only XP and Above!
+	if(g_tos>=TOS_XP) { // This feature requires XP+
 		BOOL enabled=IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK);
 		if(enabled){
 			if(!bMonOffOnLock) {

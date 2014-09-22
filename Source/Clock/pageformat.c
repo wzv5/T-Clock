@@ -83,7 +83,7 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
 char* entrydate[] = { "Year4", "Year", "Month", "MonthS", "Day", "Weekday",
 					  "Hour", "Minute", "Second", "Kaigyo", "InternetTime",
-					  "AMPM", "Hour12", "Custom",
+					  "AMPM", "Hour12", "HourZero", "Custom",
 					};
 #define ENTRY(id) entrydate[(id)-IDC_YEAR4]
 
@@ -144,13 +144,10 @@ void OnInit(HWND hDlg)
 	const size_t AMPMs=sizeof(AM)/sizeof(AM[0]);
 	HFONT hfont;
 	char fmt[MAX_BUFF];
-	int i, count, nKaigyo;
-	
+	int i, count;
+	int ilang;
 	char ampm_user[TNY_BUFF];
 	char ampm_locale[TNY_BUFF];
-	int ilang;
-	
-	//ilang = (int)lParam;
 	
 	m_hwndPage = hDlg;
 	
@@ -188,23 +185,9 @@ void OnInit(HWND hDlg)
 		CheckRadioButton(hDlg, IDC_MONTH, IDC_MONTHS, IDC_MONTH);
 	if(IsDlgButtonChecked(hDlg, IDC_MONTHS))
 		CheckRadioButton(hDlg, IDC_MONTH, IDC_MONTHS, IDC_MONTHS);
-		
-	nKaigyo = GetMyRegLong("Format", ENTRY(IDC_KAIGYO), -1);
-	if(nKaigyo < 0) {
-		RECT rc;
-		HWND hwnd;
-		nKaigyo = 1;
-		hwnd = FindWindow("Shell_TrayWnd", NULL);
-		if(hwnd != NULL) {
-			GetClientRect(hwnd, &rc);
-			// if the task bar is positioned horizontally
-			if(rc.right > rc.bottom) nKaigyo = 0;
-		}
-	}
-	CheckDlgButton(hDlg, IDC_KAIGYO, nKaigyo);
 	
 	// "Internet Time" -- "Customize format"
-	for(i = IDC_INTERNETTIME; i <= IDC_CUSTOM; i++) {
+	for(i = IDC_KAIGYO; i <= IDC_CUSTOM; i++) {
 		CheckDlgButton(hDlg, i,
 					   GetMyRegLong("Format", ENTRY(i), FALSE));
 	}
@@ -245,9 +228,6 @@ void OnInit(HWND hDlg)
 	}
 	CBSetCurSel(hDlg, IDC_PMSYMBOL, 0);
 	
-	CheckDlgButton(hDlg, IDC_ZERO,
-				   GetMyRegLong("Format", "HourZero", FALSE));
-				   
 	On12Hour(hDlg);
 	OnCustom(hDlg, FALSE);
 }
@@ -270,8 +250,6 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	SetMyRegStr("Format", "AMsymbol", s);
 	GetDlgItemText(hDlg, IDC_PMSYMBOL, s, 1024);
 	SetMyRegStr("Format", "PMsymbol", s);
-	
-	SetMyRegLong("Format", "HourZero", IsDlgButtonChecked(hDlg, IDC_ZERO));
 	
 	GetDlgItemText(hDlg, IDC_FORMAT, s, 1024);
 	SetMyRegStr("Format", "Format", s);
@@ -302,8 +280,6 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 	
 	for(i = IDC_YEAR4; i <= IDC_AMPM; i++)
 		EnableDlgItem(hDlg, i, !b);
-		
-	EnableDlgItem(hDlg, IDC_ZERO, !b);
 	
 	if(m_pCustomFormat && bmouse) {
 		if(b) {
@@ -385,8 +361,6 @@ void InitFormat()
 {
 	char format[LRG_BUFF];
 	int iter, checks[15];
-	RECT rc;
-	BOOL linebreak;
 	
 	if(GetMyRegLong("Format", ENTRY(IDC_CUSTOM), FALSE))
 		return;
@@ -402,22 +376,9 @@ void InitFormat()
 	if(CHECKS(IDC_MONTH))  CHECKS(IDC_MONTHS) = FALSE;
 	if(CHECKS(IDC_MONTHS)) CHECKS(IDC_MONTH) = FALSE;
 	
-	CHECKS(IDC_INTERNETTIME) = GetMyRegLong("Format",
-											ENTRY(IDC_INTERNETTIME), FALSE);
-											
-	if(g_tos>=TOS_VISTA)
-		linebreak = TRUE;
-	else{ /// @todo : XP: measure taskbar height to chose font size and offsets (small vs "normal" taskbar)
-		HWND hwnd;
-		linebreak = FALSE;
-		hwnd = FindWindow("Shell_TrayWnd", NULL);
-		if(hwnd!=NULL) {
-			GetClientRect(hwnd, &rc);
-			if(rc.right < rc.bottom) linebreak = TRUE;
-		}
+	for(iter=IDC_KAIGYO; iter<=IDC_CUSTOM; ++iter) {
+		CHECKS(iter) = GetMyRegLong("Format", ENTRY(iter), FALSE);
 	}
-	CHECKS(IDC_KAIGYO) = GetMyRegLong("Format",ENTRY(IDC_KAIGYO),linebreak);
-	CHECKS(IDC_AMPM) = GetMyRegLong("Format",ENTRY(IDC_AMPM),g_tos>=TOS_VISTA);
 	
 	CreateFormat(format, checks);
 	SetMyRegStr("Format", "Format", format);

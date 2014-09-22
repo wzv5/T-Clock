@@ -23,7 +23,6 @@
 #define IDS_LIST_TASKTARGET             77
 #define IDS_LIST_TASKSWITCHES           78
 #define PROPERTY_BASE                   100
-#define PROPERTY_NUM                    8
 #define IDD_PAGEABOUT                   100 /* group */
 #define IDD_PAGEALARM                   101
 #define IDD_PAGECLOCKTEXT               102
@@ -211,7 +210,7 @@
 #define IDC_ANGLE                       1124
 #define IDC_SPINANGLE                   1125
 #define IDC_LOCALE                      1200
-#define IDC_YEAR4                       1201 /* group */
+#define IDC_YEAR4                       1201 /* group, group */
 #define IDC_YEAR                        1202
 #define IDC_MONTH                       1203
 #define IDC_MONTHS                      1204
@@ -219,17 +218,17 @@
 #define IDC_WEEKDAY                     1206
 #define IDC_HOUR                        1207
 #define IDC_MINUTE                      1208
-#define IDC_SECOND                      1209
-#define IDC_KAIGYO                      1210
+#define IDC_SECOND                      1209 /* end group */
+#define IDC_KAIGYO                      1210 /* group */
 #define IDC_INTERNETTIME                1211
 #define IDC_AMPM                        1212
 #define IDC_12HOUR                      1213
-#define IDC_CUSTOM                      1214 /* end group */
-#define IDC_FORMAT                      1215
-#define IDC_FORMATDETAIL                1216
+#define IDC_ZERO                        1214
+#define IDC_CUSTOM                      1215 /* end group, end group */
+#define IDC_FORMAT                      1216
+#define IDC_FORMATDETAIL                1217
 #define IDC_AMSYMBOL                    1251
 #define IDC_PMSYMBOL                    1252
-#define IDC_ZERO                        1253
 #define IDC_LABAMSYMBOL                 1254
 #define IDC_LABPMSYMBOL                 1255
 #define IDC_ALARM                       1300

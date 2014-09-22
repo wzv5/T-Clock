@@ -43,14 +43,25 @@ int CheckSettings(){
 			char entry[3];
 		} u;
 		u.entry[2]='\0';
-		u.entryS='0'+('1'<<8); // left, 1 click
+		u.entryS='0'|('1'<<8); // left, 1 click
 		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_SHOWCALENDER);
-		u.entryS='2'+('1'<<8); // middle, 1 click
+		u.entryS='2'|('1'<<8); // middle, 1 click
 		SetMyRegLong(g_reg_mouse,u.entry,IDM_STOPWATCH);
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
 		SetMyRegStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
+		SetMyRegLong("Format", "Hour12", 1);
+		u.entryS=g_tos>=TOS_VISTA;
+		SetMyRegLong("Format", "AMPM", u.entryS);
+		if(!u.entryS){ /// @todo : XP: measure taskbar height to chose font size and offsets (small vs "normal" taskbar)
+			HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
+			if(hwnd != NULL) {
+				RECT rc; GetClientRect(hwnd, &rc);
+				if(rc.right > rc.bottom) u.entryS = 1;
+			}
+		}
+		SetMyRegLong("Format", "Kaigyo", u.entryS);
 		SetMyRegLong("","Ver",CURRENT_VER);
-		return 0;
+		return 1;
 	}
 	switch(GetMyRegLong("","Ver",0)){
 	case 0: /// we no longer use the "FontRotateDirection" as it's replaced by "Angle", timers also work differently
@@ -64,7 +75,7 @@ int CheckSettings(){
 			ConvertSettings(); // should do nothing, just downgrade our version number
 			return 0;
 		}else
-			return 1;
+			return -1;
 		}
 	}
 	/// check if update is "required"
@@ -86,8 +97,9 @@ int CheckSettings(){
 		ans=MessageBox(NULL,msg,"T-Clock updated?",MB_OKCANCEL|MB_ICONINFORMATION);
 		if(ans==IDOK){
 			ConvertSettings();
+			return 2;
 		}else
-			return 1;
+			return -1;
 	}
 	return 0;
 }
