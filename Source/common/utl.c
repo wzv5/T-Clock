@@ -127,6 +127,7 @@ BOOL ExecFile(HWND hwnd, const char* command)
 {
 	char fname[MAX_PATH], opt[MAX_PATH];
 	if(*command){
+		if(hwnd) SetForegroundWindow(hwnd);
 		GetFileAndOption(command,fname,opt);
 		if((intptr_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOWNORMAL)>32)
 			return TRUE;
@@ -343,21 +344,7 @@ DWORDLONG M32x32to64(DWORD a, DWORD b)   //-------------------------------------
 	*p3 += HIWORD(a) * HIWORD(b);
 	return *(DWORDLONG*)(&r);
 }
-//================================================================================================
-//-----------+++--> (Momentarily) Force Window X Into the Foreground So we Interact With IT (only):
-//void ForceForegroundWindow(HWND hWnd)   //---{ Required to Dismiss Context Menu Properly }--+++-->
-//{
-//	DWORD thread1, thread2, pid;
-//	
-//	thread1 = GetWindowThreadProcessId(GetForegroundWindow(), &pid);
-//	thread2 = GetCurrentThreadId();
-//	
-//	AttachThreadInput(thread2, thread1, TRUE);
-//	SetForegroundWindow(hWnd);
-//	
-//	AttachThreadInput(thread2, thread1, FALSE);
-//	BringWindowToTop(hWnd);
-//}
+/*
 #include <stddef.h>
 void ForceForegroundWindow(HWND hwnd)
 {
@@ -372,7 +359,7 @@ void ForceForegroundWindow(HWND hwnd)
 	}
 	SetForegroundWindow(hwnd);
 	BringWindowToTop(hwnd);
-}
+}// */
 //===============================================================================
 //--+++-->
 int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval)

@@ -117,7 +117,7 @@ void CreateFormat(char* s, int* checks);
 
 // menu.c
 void OnTClockCommand(HWND hwnd, WORD wID);
-void OnContextMenu(HWND hwnd, HWND hwndClicked, int xPos, int yPos);
+void OnContextMenu(HWND hwnd, int xPos, int yPos);
 
 // mouse.c
 extern const char g_reg_mouse[];
@@ -148,7 +148,7 @@ BOOL ShutDown();
 BOOL ReBoot();
 BOOL LogOff();
 
-// TCDLL.DLLâ€šÃŒAPI
+// TCDLL.DLL‚ÌAPI
 void WINAPI HookStart(HWND hwnd);
 void WINAPI HookEnd();
 

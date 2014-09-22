@@ -21,7 +21,7 @@ BOOL ExecFile(HWND hwnd, const char* command);
 void ToggleCalendar();
 int atox(const char* p);
 void del_title(char* path);
-void ForceForegroundWindow(HWND hWnd);
+void ForceForegroundWindow(HWND hwnd);
 DWORDLONG M32x32to64(DWORD a, DWORD b);
 void parse(char* dst, const char* src, int n);
 void add_title(char* path, const char* title);

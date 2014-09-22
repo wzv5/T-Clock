@@ -169,7 +169,6 @@ void DialogTimer()
 {
 	if(!g_hDlgTimer || !IsWindow(g_hDlgTimer))
 		g_hDlgTimer=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMER),NULL,DlgProcTimer);
-	ForceForegroundWindow(g_hDlgTimer);
 }
 //==============================================================================*
 // ---------------------------------- Dialog Procedure for Add/Edit Timers Dialog
@@ -180,7 +179,6 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 	case WM_INITDIALOG:
 		OnInit(hDlg);
 		return TRUE;
-		
 	case WM_DESTROY:
 		OnDestroy(hDlg);
 		break;
@@ -817,5 +815,4 @@ void WatchTimer(int reset)   //-------------------------------------------------
 	if(!g_hDlgTimerWatch || !IsWindow(g_hDlgTimerWatch)) {
 		g_hDlgTimerWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMERVIEW),NULL,DlgTimerViewProc);
 	}
-	ForceForegroundWindow(g_hDlgTimerWatch);
 }

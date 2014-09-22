@@ -9,7 +9,7 @@ static char g_undo=0; // did we change windows and can undo it?
 /*-----------------------------------------------------------------
  ----------------  when the clock is right-clicked show pop-up menu
 -----------------------------------------------------------------*/
-void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
+void OnContextMenu(HWND hWnd, int xPos, int yPos)
 {
 	BOOL g_bQMAudio;
 	BOOL g_bQMNet;
@@ -18,8 +18,6 @@ void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 	BOOL g_bQMDisplay;
 	HMENU hPopupMenu;
 	HMENU hMenu;
-	
-	(void)hwndClicked;
 	
 	g_bQMAudio   = GetMyRegLong("QuickyMenu", "AudioProperties",   TRUE);
 	g_bQMNet     = GetMyRegLong("QuickyMenu", "NetworkDrives",     TRUE);
@@ -68,8 +66,10 @@ void OnContextMenu(HWND hWnd, HWND hwndClicked, int xPos, int yPos)
 		}
 	}
 	
-	ForceForegroundWindow(hWnd);
+	/// http://support.microsoft.com/kb/135788
+	SetForegroundWindow(hWnd);
 	TrackPopupMenu(hPopupMenu, TPM_NONOTIFY|TPM_LEFTBUTTON, xPos, yPos, 0, hWnd, NULL);
+	PostMessage(hWnd,WM_NULL,0,0);
 	DestroyMenu(hMenu); // Starting Over is Simpler & Recommended
 }
 #ifdef __GNUC__

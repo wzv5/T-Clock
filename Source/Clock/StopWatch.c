@@ -201,5 +201,4 @@ void DialogStopWatch()   //-----------------------------------------------------
 {
 	if(!g_hDlgStopWatch || !IsWindow(g_hDlgStopWatch))
 		g_hDlgStopWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_STOPWATCH),NULL,DlgProcStopwatch);
-	ForceForegroundWindow(g_hDlgStopWatch);
 }

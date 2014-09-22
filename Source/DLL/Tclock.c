@@ -349,6 +349,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
+		SetForegroundWindow(g_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;
 			InvalidateRect(hwnd, NULL, 1);

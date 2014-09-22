@@ -29,13 +29,13 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 const char g_szClassName[] = "TClockMainClass"; // window class name
 const char g_szWindowText[] = "TClock";        // caption of the window
 
-void CheckCommandLine(HWND hwnd,const char* cmdline,int other);
+static void CheckCommandLine(HWND hwnd,const char* cmdline,int other);
 static void OnTimerMain(HWND hwnd);
-void FindTrayServer();
+static void FindTrayServer();
 static void InitError(int n);
 static BOOL CheckTCDLL(void);
 static BOOL CheckDLL(char* fname);
-void SetDesktopIconTextBk(void);
+static void SetDesktopIconTextBk(void);
 static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;
 static int nCountFindingClock = -1;
@@ -132,7 +132,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_hwndSheet = g_hDlgTimer = NULL;
 	
 	// register a window class
-	wndclass.style         = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+	wndclass.style         = 0;
 	wndclass.lpfnWndProc   = WndProc;
 	wndclass.cbClsExtra    = 0;
 	wndclass.cbWndExtra    = 0;
@@ -145,7 +145,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	RegisterClass(&wndclass);
 	
 	// create a hidden window
-	hwnd = CreateWindowEx(WS_EX_TOOLWINDOW, g_szClassName, g_szWindowText,
+	hwnd = CreateWindowEx(WS_EX_NOACTIVATE, g_szClassName, g_szWindowText,
 						  0, 0, 0, 0, 0, NULL, NULL, hInstance, NULL);
 						  
 	CheckCommandLine(hwnd,lpCmdLine,0); // This Checks for First Instance Startup Options
@@ -401,7 +401,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		
 		// messages transfered from the dll
 	case WM_CONTEXTMENU: //-------------------------------------- menu.c
-		OnContextMenu(hwnd, (HWND)wParam, LOWORD(lParam), HIWORD(lParam));
+		OnContextMenu(hwnd, LOWORD(lParam), HIWORD(lParam));
 		return 0;
 		
 	case WM_DROPFILES: //------ mouse.c

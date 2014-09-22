@@ -68,7 +68,7 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		// show it !
 		g_hwndSheet = (HWND)PropertySheet(&psh);
 	}
-	ForceForegroundWindow(g_hwndSheet);
+	SetForegroundWindow(g_hwndSheet);
 }
 //================================================================================================
 //--------------------------------------------------------+++--> Property Sheet Callback Procedure:
