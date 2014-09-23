@@ -9,12 +9,8 @@
 //#include <WinUser.h>
 #include <time.h>
 #include "../common/utl.h"
-HWND g_hwndClock=0; // required in utl.c
-//void ForceForegroundWindow(HWND hwnd);
 //other
-BOOL bAutoClose;
-BOOL bV7up = FALSE;
-//BOOL b2000 = FALSE;
+BOOL m_bAutoClose;
 //================================================================================================
 //------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
 void SetMyDialgPos(HWND hwnd)   //----------------------------------------------------------+++-->
@@ -69,7 +65,7 @@ void GetDayOfYearTitle(char* szTitle, int ivMonths)   //------------------------
 //  strftime(szDoY, 8, "%#j", &today); // <--{OutPut}--> Day 95
 	strftime(szDoY, 8, "%j", &today);   // <--{OutPut}--> Day 095
 	
-	if(!bV7up && ivMonths==1) {
+	if(g_tos<TOS_VISTA && ivMonths==1) {
 		wsprintf(szTitle, "Calendar:  Day: %s", szDoY);
 	} else {
 		wsprintf(szTitle, "T-Clock: Calendar  Day: %s", szDoY);
@@ -122,7 +118,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				rc.bottom*=2;
 				break;
 			}
-			if(bV7up)
+			if(g_tos>=TOS_VISTA)
 				MonthCal_SizeRectToMin(hCal,&rc);//removes some empty space.. (eg at 4 months)
 			else{ // brute force correct size
 				//rc.right+=6*ivMonths;
@@ -147,18 +143,15 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		SetFocus(hCal);
 		AdjustWindowRectEx(&rc,WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,FALSE,0);
-//		AdjustWindowRectEx(&rc,GetWindowLongPtr(hwnd,GWL_STYLE),GetMenu(hwnd)?TRUE:FALSE,GetWindowLongPtr(hwnd,GWL_EXSTYLE));
 		SetWindowPos(hwnd,HWND_TOPMOST,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
-		if(!bAutoClose && !GetMyRegLong("Calendar","CalendarTopMost",FALSE))
+		if(!m_bAutoClose && !GetMyRegLong("Calendar","CalendarTopMost",FALSE))
 			SetWindowPos(hwnd,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 		SetMyDialgPos(hwnd);
-//		ForceForegroundWindow(hwnd);
-//		if(bAutoClose && GetForegroundWindow()!=hwnd)
-//			PostMessage(hwnd,WM_CLOSE,0,0);
-		return 0;
-		break;}
+		if(m_bAutoClose && GetForegroundWindow()!=hwnd)
+			PostMessage(hwnd,WM_CLOSE,0,0);
+		return 0;}
 	case WM_ACTIVATE:
-		if(!bAutoClose) break;
+		if(!m_bAutoClose) break;
 		if(LOWORD(wParam)!=WA_ACTIVE && LOWORD(wParam)!=WA_CLICKACTIVE){
 			PostMessage(hwnd,WM_CLOSE,0,0);//adds a little more delay which is good
 		}
@@ -177,7 +170,7 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	INITCOMMONCONTROLSEX icex;
 	WNDCLASSEX wcx;
 	ATOM calclass;
-	bAutoClose = GetMyRegLong("Calendar", "CloseCalendar", FALSE);
+	m_bAutoClose = GetMyRegLong("Calendar", "CloseCalendar", FALSE);
 	icex.dwSize=sizeof(icex);
 	icex.dwICC=ICC_DATE_CLASSES;
 	InitCommonControlsEx(&icex);
@@ -197,7 +190,6 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	wcx.hIconSm=NULL;
 	calclass=RegisterClassEx(&wcx);
 	hwnd=CreateWindowEx(0,(LPCSTR)MAKELPARAM(calclass,0),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,hInstance,NULL);
-	ForceForegroundWindow(hwnd);
 	return hwnd;
 }
 
@@ -206,14 +198,8 @@ int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine
 {
 	MSG msg;
 	BOOL bRet;
-	OSVERSIONINFOEX osvi;
 	(void)hPrevInstance; (void)lpCmdLine; (void)nCmdShow;// don't warn me about they being unused
-	memset(&osvi,0,sizeof(OSVERSIONINFOEX));
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-	if(!GetVersionEx((OSVERSIONINFO*)&osvi)) return -1;
-	if(osvi.dwMajorVersion>=6) bV7up=TRUE;
-//	else if((osvi.dwMajorVersion==5) && (osvi.dwMinorVersion==0)) b2000=TRUE;
-//	if(osvi.dwMajorVersion>=5) return TRUE;
+	CheckSystemVersion();
 	if(!CreateCalender(hInstance,0)) return 1;
 	while((bRet=GetMessage(&msg,NULL,0,0))!=0){
 		if(bRet==-1){//handle the error and possibly exit
