@@ -184,7 +184,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				DestroyWindow(g_hwndSheet);
 		}else if(!(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg)) &&
 			!(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg)) &&
-			!(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogMessage(g_hDlgStopWatch,&msg))
+			!(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,&msg))
 			){
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -217,29 +217,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //--------------------------------------------+++-->
 {
 	const char* p=cmdline;
-	while(*p) {
+	for(; *p; ++p) {
 		if(*p == '/') {
-			p++;
+			++p;
 			if(_strnicmp(p, "prop", 4) == 0) {
 				SendMessage(hwnd, WM_COMMAND, IDM_SHOWPROP, 0);
 				p += 4;
 			} else if(_strnicmp(p, "exit", 4) == 0) {
 				SendMessage(hwnd, WM_CLOSE, 0, 0);
 				p += 4;
-			} else if(_strnicmp(p, "Start", 5) == 0) {
-				if(!IsWindow(g_hDlgStopWatch))
-					SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH, 0);
-				SendMessage(hwnd, WM_COMMAND, IDCB_SW_START, 0);
+			} else if(_strnicmp(p, "start", 5) == 0) {
+				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_START, 0);
 				p += 5;
-			} else if(_strnicmp(p, "Stop", 4) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDCB_SW_STOP, 0);
+			} else if(_strnicmp(p, "stop", 4) == 0) {
+				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_STOP, 0);
 				p += 4;
-			} else if(_strnicmp(p, "Lap", 3) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDCB_SW_LAP, 0);
-				p += 3;
-			} else if(_strnicmp(p, "Reset", 5) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDCB_SW_RESET, 0);
+			} else if(_strnicmp(p, "reset", 5) == 0) {
+				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_RESET, 0);
 				p += 5;
+			} else if(_strnicmp(p, "pause", 5) == 0) {
+				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_PAUSE, 0);
+				p += 5;
+			} else if(_strnicmp(p, "resume", 6) == 0) {
+				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_RESUME, 0);
+				p += 6;
+			} else if(_strnicmp(p, "lap", 3) == 0) {
+				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
+				p += 3;
 			} else if(_strnicmp(p, "SyncOpt", 7) == 0) {
 				NetTimeConfigDialog();
 				p += 7;
@@ -256,7 +260,6 @@ void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //-------------
 				}
 			}
 		}
-		p++;
 	}
 }
 //================================================================================================

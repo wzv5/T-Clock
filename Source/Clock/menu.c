@@ -159,24 +159,11 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		GetWindowsDirectory(RooT,MAX_PATH);
 		ShellExecute(hwnd, "open","cmd.exe", "/f:on /t:0a", RooT, SW_SHOWNORMAL);
 		break;}
-	
+		
 	case IDM_QUICKY_EMPTYRB:
 		SHEmptyRecycleBin(0, NULL, SHERB_NOCONFIRMATION);
 		break;
-//-----------------------//--------------------------------------------+++-->
-	case IDCB_SW_START: //-> These Messages are Bounced From the Command Line
-		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_START, 0); //-+> Through Here
-		break; //-+-> Then to the StopWatch Window - IF/When it is/Gets Opened
-	case IDCB_SW_STOP:
-		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_STOP, 0);
-		break;
-	case IDCB_SW_RESET:
-		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_RESET, 0);
-		break;
-	case IDCB_SW_LAP:
-		SendMessage(g_hDlgStopWatch, WM_COMMAND, IDCB_SW_LAP, 0);
-		break; //------------------------+++--> End of Bounce Through Messages
-//-----------//--------------------------------------------------------+++-->
+		
 	case IDM_SHUTDOWN:
 		if(!ShutDown())
 			MessageBox(0, "Shutdown Request Failed!", "ERROR:", MB_OK|MB_ICONERROR);
@@ -225,6 +212,31 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		
 	case IDM_STOPWATCH: /// Timers
 		DialogStopWatch();
+		break;
+	case IDM_STOPWATCH_START:
+		if(!IsWindow(g_hDlgStopWatch))
+			DialogStopWatch();
+		StopWatch_Start(g_hDlgStopWatch);
+		break;
+	case IDM_STOPWATCH_STOP:
+		if(IsWindow(g_hDlgStopWatch))
+			StopWatch_Stop(g_hDlgStopWatch);
+		break;
+	case IDM_STOPWATCH_RESET:
+		if(IsWindow(g_hDlgStopWatch))
+			StopWatch_Reset(g_hDlgStopWatch);
+		break;
+	case IDM_STOPWATCH_PAUSE:
+		if(IsWindow(g_hDlgStopWatch))
+			StopWatch_Pause(g_hDlgStopWatch);
+		break;
+	case IDM_STOPWATCH_RESUME:
+		if(IsWindow(g_hDlgStopWatch))
+			StopWatch_Resume(g_hDlgStopWatch);
+		break;
+	case IDM_STOPWATCH_LAP:
+		if(IsWindow(g_hDlgStopWatch))
+			StopWatch_Lap(g_hDlgStopWatch);
 		break;
 	case IDM_TIMER:
 		DialogTimer();

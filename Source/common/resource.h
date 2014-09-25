@@ -71,6 +71,14 @@
 #define IDM_TIMEWATCH                   287
 #define IDM_TIMEWATCHRESET              288
 #define IDM_EXIT                        289
+// stopwatch
+#define IDM_STOPWATCH_START             321
+#define IDM_STOPWATCH_STOP              322
+#define IDM_STOPWATCH_RESET             323
+#define IDM_STOPWATCH_PAUSE             324
+#define IDM_STOPWATCH_RESUME            325
+#define IDM_STOPWATCH_LAP               326
+
 #define IDM_FWD_RUNAPP                  401 /* group (forward commands, keep ids) */
 #define IDM_FWD_CASCADE                 403
 #define IDM_FWD_SIDEBYSIDE              404
@@ -114,14 +122,14 @@
 #define IDC_MID_CANCEL                  1007
 #define IDC_ALPHATB                     1016
 #define IDC_SPINALPHA                   1017
-#define IDCLB_SW_LAPS                   1020
-#define IDCE_SW_ELAPSED                 1021
-#define IDCB_SW_LAP                     1022
-#define IDCB_SW_START                   1023
-#define IDCB_SW_STOP                    1024
-#define IDCB_SW_RESET                   1025
-#define IDCE_HK_ADD                     1026
+#define IDC_SW_ELAPSED                  1020
+#define IDC_SW_LAP                      1021
+#define IDC_SW_LAPS                     1022
+#define IDC_SW_START                    1023
+//#define IDC_SW_STOP                     1024
+#define IDC_SW_PAUSE                    1025
 #define IDCE_SYNCHOTKEY                 1026
+#define IDCE_HK_ADD                     1026
 #define IDCE_HK_STOP                    1027
 #define IDCE_HK_TIME                    1028
 #define IDCE_HK_PROP                    1029
