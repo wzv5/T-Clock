@@ -31,7 +31,7 @@ const char g_szWindowText[] = "TClock";        // caption of the window
 
 static void CheckCommandLine(HWND hwnd,const char* cmdline,int other);
 static void OnTimerMain(HWND hwnd);
-static void FindTrayServer();
+//static void FindTrayServer(); // Redux: what ever it was supposed to be..
 static void InitError(int n);
 static BOOL CheckTCDLL(void);
 static BOOL CheckDLL(char* fname);
@@ -116,12 +116,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ExitProcess(1);
 	}
 	
+//	FindTrayServer(hwnd);
 	// Do Not Allow the Program to Execute Twice!
-	hwnd = FindWindow(g_szClassName, g_szWindowText);
-	FindTrayServer(hwnd);
-	if(hwnd) { // This One Sends Commands to the Instance
-		CheckCommandLine(hwnd,lpCmdLine,1); // That is Currently Running.
-		ExitProcess(0);
+	for(updated=0; updated<25; ++updated){ // up to 5 sec
+		HANDLE processlock=CreateMutex(NULL,FALSE,g_szClassName);
+		if(processlock && GetLastError()==ERROR_ALREADY_EXISTS){
+			CloseHandle(processlock);
+			hwnd=FindWindow(g_szClassName, g_szWindowText);
+			if(hwnd) { // This One Sends Commands to the Instance
+				CheckCommandLine(hwnd,lpCmdLine,1); // That is Currently Running.
+				ExitProcess(0);
+			}
+			Sleep(200);
+			continue;
+		}
+		break;
 	}
 	
 	// get the path where .exe is positioned
@@ -447,12 +456,13 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			SendMessage(HWND_BROADCAST, WM_SYSCOMMAND,SC_MONITORPOWER, (LPARAM)2);
 			return 0;
 		}
-	}
-	
-	if(message == s_uTaskbarRestart) { // IF the Explorer Shell Crashes,
-		HookEnd();                     //  and the taskbar is recreated.
-		SetTimer(hwnd, IDTIMER_START, 1000, NULL);
-		bStartTimer = TRUE;
+		break;
+	default:
+		if(message == s_uTaskbarRestart) { // IF the Explorer Shell Crashes,
+			HookEnd();                     //  and the taskbar is recreated.
+			SetTimer(hwnd, IDTIMER_START, 1000, NULL);
+			bStartTimer = TRUE;
+		}
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
@@ -584,9 +594,9 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 	}
 }
 //================================================================================================
-//-----------------------+++--> Go Find the Default Windows Clock Window - So We Can Assimilate it:
-void FindTrayServer()   //---------------------------------------------------------+++-->
-{
-	HWND hwndTrayServer = FindWindow("Shell_TrayWnd", "CTrayServer");
-	if(hwndTrayServer > 0) SendMessage(hwndTrayServer, WM_CLOSE, 0, 0);
-}
+//-----------------------+++--> Go Find the Default Windows Clock Window - So We Can Assimilate it: (was this at anypoint from Windows itself?)
+//void FindTrayServer()   //---------------------------------------------------------+++-->
+//{ // Redux: dunno what this is.. not needed
+//	HWND hwndTrayServer = FindWindow("Shell_TrayWnd", "CTrayServer");
+//	if(hwndTrayServer > 0) SendMessage(hwndTrayServer, WM_CLOSE, 0, 0);
+//}

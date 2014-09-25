@@ -14,7 +14,8 @@ extern HINSTANCE hInstance;
 
 int WINAPI IsCalendarOpen()
 {
-	if(g_bCalOpen || FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL)) return 1;
+	if(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL))
+		return 1;
 	return g_bCalOpen;
 }
 //================================================================================================

@@ -87,7 +87,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	GetObject(hftBold, sizeof(logft), &logft);
 	logft.lfWeight = FW_BOLD;
 	hftBold = CreateFontIndirect(&logft);
-	logft.lfHeight=logft.lfHeight*120/100;
+	logft.lfHeight=logft.lfHeight*140/100;
 	hftStartup = CreateFontIndirect(&logft);
 	
 	for(controlid=IDC_ABT_TITLE; controlid<=IDC_ABT_MAIL; ++controlid){

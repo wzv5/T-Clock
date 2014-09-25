@@ -129,7 +129,7 @@ BEGIN
     LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features",IDC_STATIC,13,74,283,20
     LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.",IDC_STATIC,13,97,283,28
     LTEXT           "",IDC_ABT_TCLOCK,13,127,283,50
-    CONTROL         "Start T-Clock Redux when Windows starts",IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,56,185,209,10
+    CONTROL         "Start T-Clock Redux when Windows starts",IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,184,222,11
 END
 
 IDD_PAGEALARM DIALOGEX 0, 0, 310, 199
