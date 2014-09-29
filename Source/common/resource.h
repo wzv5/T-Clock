@@ -35,6 +35,7 @@
 #define IDD_SNTPCONFIG                  130
 #define IDB_BITMAP1                     131
 #define IDD_ALARMMSG                    132
+#define IDD_STOPWATCH_EXPORT            133
 #define IDI_MAIN                        190
 #define IDI_STOICJOKER                  191
 #define IDI_PLAY                        192
@@ -128,6 +129,7 @@
 #define IDC_SW_START                    1023
 //#define IDC_SW_STOP                     1024
 #define IDC_SW_PAUSE                    1025
+#define IDC_SW_EXPORT                   1026
 #define IDCE_SYNCHOTKEY                 1026
 #define IDCE_HK_ADD                     1026
 #define IDCE_HK_STOP                    1027
@@ -313,34 +315,12 @@
 #define IDC_TIMERREPEAT                 2013
 #define IDC_TIMERBLINK                  2014
 #define IDCB_STOPTIMER                  2015
-#define IDC_STARTMENULIST               2101
-#define IDC_STARTMENUTEXT               2102
-#define IDC_STARTMENUHIDE               2103
-#define IDC_STARTMENUUP                 2105
-#define IDC_STARTMENUDOWN               2106
-#define IDC_LABFILLSTYLE                3501
-#define IDC_FILLSTYLEMENU               3502
-#define IDC_FRAMESKIN                   3503
-#define IDC_LABSKINFILE                 3504
-#define IDC_FILECLOCKSKIN               3505
-#define IDC_SANSHOCLOCKSKIN             3506
-#define IDC_LABSKINEDGELEFT             3507
-#define IDC_CLOCKSKINEDGELEFT           3508
-#define IDC_SPINSKINEDGELEFT            3509
-#define IDC_LABSKINEDGETOP              3510
-#define IDC_CLOCKSKINEDGETOP            3511
-#define IDC_SPINSKINEDGETOP             3512
-#define IDC_LABSKINEDGERIGHT            3513
-#define IDC_CLOCKSKINEDGERIGHT          3514
-#define IDC_SPINSKINEDGERIGHT           3515
-#define IDC_LABSKINEDGEBOTTOM           3516
-#define IDC_CLOCKSKINEDGEBOTTOM         3517
-#define IDC_SPINSKINEDGEBOTTOM          3518
-#define ICD_FRAMECOLOR                  3519
-#define IDC_LABCLOCKSKIN                3526
-#define IDC_CLOCKSKINFILE               3527
-#define IDC_CLOCKSKINSELECT             3528
-#define IDC_CLOCKSKINTRANS              3529
+
+#define IDC_SWE_EXPORT                  2100
+#define IDC_SWE_TOTAL                   2101
+#define IDC_SWE_LAP                     2102
+#define IDC_SWE_OUT                     2103
+
 #define IDM_I_ALARM                     60000 /* first alarm menu index */
 #define IDM_I_TIMER                     61000 /* first timer menu index */
 #define IDM_I_MENU                      62000 /* first custom menu index */

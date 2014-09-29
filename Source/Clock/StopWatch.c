@@ -8,7 +8,17 @@ static LARGE_INTEGER m_lap;// latest lap time
 static LARGE_INTEGER m_stop;// latest lap time
 static char m_paused; // Global Pause/Resume Displayed Counter.
 
-void OnTimer(HWND hDlg);
+static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK DlgProcStopwatchExport(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+static void OnTimer(HWND hDlg);
+
+//================================================================================================
+// -------------------------------------------------------------------+++--> Open Stopwatch Dialog:
+void DialogStopWatch()   //--------------------------------------------------------+++-->
+{
+	if(!g_hDlgStopWatch || !IsWindow(g_hDlgStopWatch))
+		g_hDlgStopWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_STOPWATCH),NULL,DlgProcStopwatch);
+}
 
 BOOL IsDialogStopWatchMessage(HWND hwnd, MSG* msg){ // handles hotkeys
 	int msgid=LOWORD(msg->message);
@@ -24,6 +34,9 @@ BOOL IsDialogStopWatchMessage(HWND hwnd, MSG* msg){ // handles hotkeys
 				break;
 			case 'A':
 				control=IDC_SW_LAP;
+				break;
+			case 'E':
+				control=IDC_SW_EXPORT;
 				break;
 			default:
 				return IsDialogMessage(hwnd,msg);
@@ -136,7 +149,7 @@ void StopWatch_Lap(HWND hDlg){ // Get Current Time as Lap Time and Add it to the
 }
 //================================================================================================
 // ----------------------------------------------------+++--> Initialize Stopwatch Dialog Controls:
-void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
+static void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
 	LVCOLUMN lvCol;
 	HWND hList=GetDlgItem(hDlg,IDC_SW_LAPS);
@@ -167,16 +180,22 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		HFONT hfont;
 		hfont=(HFONT)SendMessage(hDlg,WM_GETFONT,0,0);
 		GetObject(hfont,sizeof(LOGFONT),&logfont);
-		logfont.lfHeight=logfont.lfHeight*120/100;
+		logfont.lfHeight=logfont.lfHeight*130/100;
 		logfont.lfWeight=FW_BOLD;
 		hfont=CreateFontIndirect(&logfont);
 		SendDlgItemMessage(hDlg,IDC_SW_ELAPSED,WM_SETFONT,(WPARAM)hfont,0);
+		hfont=(HFONT)SendMessage(hDlg,WM_GETFONT,0,0);
+		GetObject(hfont,sizeof(LOGFONT),&logfont);
+		logfont.lfHeight=logfont.lfHeight*160/100;
+		hfont=CreateFontIndirect(&logfont);
+		SendDlgItemMessage(hDlg,IDC_SW_START,WM_SETFONT,(WPARAM)hfont,0);
+		SendDlgItemMessage(hDlg,IDC_SW_PAUSE,WM_SETFONT,(WPARAM)hfont,0);
 	}
 	SetDlgItemText(hDlg, IDC_SW_ELAPSED, DEFAULT_TIMETEXT);
 }
 //================================================================================================
 //-------------------------//------------------+++--> Updates the Stopwatch's Elapsed Time Display:
-void OnTimer(HWND hDlg)   //----------------------------------------------------------------+++-->
+static void OnTimer(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
 	char szElapsed[TNY_BUFF];
 	int hrs, min, sec;
@@ -197,7 +216,7 @@ void OnTimer(HWND hDlg)   //----------------------------------------------------
 }
 //================================================================================================
 // --------------------------------------------------+++--> Message Processor for Stopwatch Dialog:
-INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
+static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
 	switch(msg) {
 	case WM_INITDIALOG:
@@ -205,8 +224,14 @@ INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 		SetMyDialgPos(hDlg,21);
 		return TRUE;
 	case WM_DESTROY:{
+		// cleaup elapsed font
 		HFONT hfont=(HFONT)SendDlgItemMessage(hDlg,IDC_SW_ELAPSED,WM_GETFONT,0,0);
 		SendDlgItemMessage(hDlg,IDC_SW_ELAPSED,WM_SETFONT,0,0);
+		DeleteObject(hfont);
+		// cleanup button font
+		hfont=(HFONT)SendDlgItemMessage(hDlg,IDC_SW_START,WM_GETFONT,0,0);
+		SendDlgItemMessage(hDlg,IDC_SW_START,WM_SETFONT,0,0);
+		SendDlgItemMessage(hDlg,IDC_SW_PAUSE,WM_SETFONT,0,0);
 		DeleteObject(hfont);
 		break;}
 	case WM_ACTIVATE:
@@ -237,6 +262,9 @@ INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 			case IDC_SW_PAUSE:
 				StopWatch_TogglePause(hDlg);
 				break;
+			case IDC_SW_EXPORT:
+				DialogBox(0,MAKEINTRESOURCE(IDD_STOPWATCH_EXPORT),hDlg,DlgProcStopwatchExport);
+				break;
 			case IDC_SW_LAP:
 				StopWatch_Lap(hDlg);
 				break;
@@ -250,10 +278,121 @@ INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 	}
 	return FALSE;
 }
-//================================================================================================
-// -------------------------------------------------------------------+++--> Open Stopwatch Dialog:
-void DialogStopWatch()   //--------------------------------------------------------+++-->
+
+static BOOL SaveFileDialog(HWND hDlg, char* file /*in/out*/, int filebuflen)
 {
-	if(!g_hDlgStopWatch || !IsWindow(g_hDlgStopWatch))
-		g_hDlgStopWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_STOPWATCH),NULL,DlgProcStopwatch);
+	OPENFILENAME ofn={sizeof(OPENFILENAME)};
+	ofn.hwndOwner=hDlg;
+	ofn.lpstrFile=file;
+	ofn.nMaxFile=filebuflen;
+	ofn.Flags=OFN_NOCHANGEDIR|OFN_OVERWRITEPROMPT|OFN_PATHMUSTEXIST;
+	return GetSaveFileName(&ofn);
+}
+static void export_print(char** out, const char* fmt, const char* time, int num){
+	const char* pos;
+	for(pos=fmt; *pos; ++pos){
+		if(*pos=='\\'){
+			++pos;
+			switch(*pos){
+			case 'n': // new line
+				*out+=wsprintf(*out,"\r\n");
+				break;
+			case 't': // (lap) time
+				*out+=wsprintf(*out,time);
+				break;
+			case 'i': // (lap) num
+				*out+=wsprintf(*out,"%2i",num);
+				break;
+			default:
+				**out=*--pos; ++(*out);
+			}
+			continue;
+		}
+		**out=*pos; ++(*out);
+	}
+}
+static void export_text(HWND hDlg){
+	HWND hList=GetDlgItem(GetParent(hDlg),IDC_SW_LAPS);
+	int laps=ListView_GetItemCount(hList);
+	int iter;
+	char* buf,* bufpos;
+	char total[128], lap[128], time[32];
+	GetDlgItemText(hDlg,IDC_SWE_TOTAL,total,sizeof(total));
+	GetDlgItemText(hDlg,IDC_SWE_LAP,lap,sizeof(lap));
+	buf=bufpos=malloc(32 + strlen(total) + ((strlen(lap)+32)*laps));
+	if(total[0]!='\\' || total[1]!='n'){
+		GetDlgItemText(GetParent(hDlg),IDC_SW_ELAPSED,time,sizeof(time));
+		export_print(&bufpos,total,time,laps);
+	}
+	for(iter=0; iter<laps; ++iter){
+		ListView_GetItemText(hList,laps-1-iter,1,time,sizeof(time));
+		export_print(&bufpos,lap,time,iter+1);
+	}
+	if(total[0]=='\\' && total[1]=='n'){
+		GetDlgItemText(GetParent(hDlg),IDC_SW_ELAPSED,time,sizeof(time));
+		export_print(&bufpos,total+2,time,laps);
+		bufpos+=wsprintf(bufpos,"\r\n");
+	}
+	*bufpos='\0';
+	SetDlgItemText(hDlg,IDC_SWE_OUT,buf);
+	free(buf);
+}
+static INT_PTR CALLBACK DlgProcStopwatchExport(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	(void)lParam; // unused
+	switch(msg) {
+	case WM_INITDIALOG:{
+		char buf[128];
+		GetMyRegStr("Timers","SwExT",buf,sizeof(buf),"");
+		SetDlgItemText(hDlg,IDC_SWE_TOTAL,buf);
+		GetMyRegStr("Timers","SwExL",buf,sizeof(buf),"");
+		SetDlgItemText(hDlg,IDC_SWE_LAP,buf);
+		SendMessage(hDlg,WM_COMMAND,IDOK,0);
+		Edit_SetSel(GetDlgItem(hDlg,IDC_SWE_OUT),0,-1);
+		SetFocus(GetDlgItem(hDlg,IDC_SWE_OUT));
+		return FALSE;}
+	case WM_DESTROY:{
+		break;}
+	case WM_COMMAND: {
+			switch(LOWORD(wParam)) {
+			case IDC_SWE_EXPORT:{
+				char filename[MAX_PATH];
+				unsigned buflen=(unsigned)SendDlgItemMessage(hDlg,IDC_SWE_OUT,WM_GETTEXTLENGTH,0,0);
+				char* buf=malloc(buflen+1);
+				if(buf && buflen){
+					GetDlgItemText(hDlg,IDC_SWE_OUT,buf,buflen+1);
+					*filename='\0';
+					if(SaveFileDialog(hDlg,filename,sizeof(filename))){
+						FILE* fp=fopen(filename,"wb");
+						if(fp){
+							fwrite(buf,1,buflen,fp);
+							fclose(fp);
+						}
+					}
+				}
+				free(buf);
+				break;}
+			case IDOK:{
+				char buf[128];
+				GetDlgItemText(hDlg,IDC_SWE_TOTAL,buf,sizeof(buf));
+				if(!*buf){
+					DelMyReg("Timers","SwExT");
+					SetDlgItemText(hDlg,IDC_SWE_TOTAL,"\\n--------------------\\n\\t");
+				}else
+					SetMyRegStr("Timers","SwExT",buf);
+				GetDlgItemText(hDlg,IDC_SWE_LAP,buf,sizeof(buf));
+				if(!*buf){
+					DelMyReg("Timers","SwExL");
+					SetDlgItemText(hDlg,IDC_SWE_LAP,"Lap \\i: \\t\\n");
+				}else
+					SetMyRegStr("Timers","SwExL",buf);
+				export_text(hDlg);
+				break;}
+			case IDCANCEL:
+				EndDialog(hDlg, TRUE);
+			}
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
