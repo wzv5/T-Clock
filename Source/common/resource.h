@@ -152,25 +152,32 @@
 #define IDC_CHIMEALARM                  1046
 #define IDC_REPEATIMES                  1047
 #define IDC_SPINTIMES                   1048
-#define IDC_TOPMOST                     1053
-#define IDC_MSG_ALARM                   1054
-#define IDCB_MSG_ALARM                  1055
-#define IDC_BMPJACK                     1056
-#define IDC_JRMSG_TEXT                  1057
-#define IDC_JRMSG_TEST                  1058
-#define IDC_JRMSG_SPEED                 1059
-#define IDC_SPIN_JRSPD                  1060
-#define IDC_JRMSG_DELTA                 1061
-#define IDC_SPIN_JRDLT                  1062
-#define IDC_JRMSG_CAPT                  1063
-#define IDC_JRMSG_RAND                  1064
-#define IDC_JRMSG_SKEW                  1065
-#define IDC_SPIN_JRSKW                  1066
-#define IDC_JRMSG_BOUN                  1067
-#define IDC_SPIN_JRBNC                  1068
-#define IDC_JRMSG_PAWS                  1069
-#define IDC_SPIN_JRPAW                  1070
-#define IDC_JR_SETTINGS                 1071
+
+#define IDC_MSG_ALARM                   1050
+#define IDCB_MSG_ALARM                  1051
+#define IDC_ALRMMSG_SETTINGS            1052
+#define IDC_ALRMMSG_TOPMOST             1053
+#define IDC_ALRMMSG_CAPT                1054
+#define IDC_ALRMMSG_TEXT                1055
+#define IDC_ALRMMSG_BOUN_ENABLE         1056
+#define IDC_ALRMMSG_SPEED_ST            1057 /* group */
+#define IDC_ALRMMSG_SPEED               1058
+#define IDC_ALRMMSG_SPEED_SPIN          1059
+#define IDC_ALRMMSG_DELTA_ST            1060
+#define IDC_ALRMMSG_DELTA               1061
+#define IDC_ALRMMSG_DELTA_SPIN          1062
+#define IDC_ALRMMSG_TEST                1063
+#define IDC_ALRMMSG_RAND                1064
+#define IDC_ALRMMSG_SKEW_ST             1065
+#define IDC_ALRMMSG_SKEW                1066
+#define IDC_ALRMMSG_SKEW_SPIN           1067
+#define IDC_ALRMMSG_BOUN_ST             1068
+#define IDC_ALRMMSG_BOUN                1069
+#define IDC_ALRMMSG_BOUN_SPIN           1070
+#define IDC_ALRMMSG_PAWS_ST             1071
+#define IDC_ALRMMSG_PAWS                1072
+#define IDC_ALRMMSG_PAWS_SPIN           1073 /* end group */
+
 #define IDC_FONTQUAL                    1072
 #define IDCB_TRANS2KICONS_GRP           1073 /* group */
 #define IDCB_TRANS2KICONS               1074 /* end group */
@@ -258,6 +265,7 @@
 #define IDC_BLINKALARM                  1318 /* end group */
 #define IDC_COMBOALARM                  1319
 #define IDC_DELALARM                    1320
+#define IDC_BMPJACK                     1321
 #define IDC_JIHOU                       1322
 #define IDC_LABSOUNDJIHOU               1323 /* group */
 #define IDC_FILEJIHOU                   1324

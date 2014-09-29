@@ -110,11 +110,11 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		case IDCB_MSG_ALARM:{
 			dlgmsg_t dlg;
 			GetDlgItemText(hDlg, IDC_COMBOALARM, dlg.name, sizeof(dlg.name));
-			GetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg.message, sizeof(dlg.message));
-			GetDlgItemText(hDlg, IDC_JR_SETTINGS, dlg.settings, sizeof(dlg.settings));
+			GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg.message, sizeof(dlg.message));
+			GetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, dlg.settings, sizeof(dlg.settings));
 			if(BounceWindOptions(hDlg,&dlg)){
-				SetDlgItemText(hDlg, IDC_JR_SETTINGS, dlg.settings);
-				SetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg.message);
+				SetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, dlg.settings);
+				SetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg.message);
 				SendPSChanged(hDlg);
 			}
 			break;}
@@ -342,8 +342,8 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 	GetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname, MAX_PATH);
 	
 	pAS->bDlg = (char)IsDlgButtonChecked(hDlg, IDC_MSG_ALARM);
-	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message));
-	GetDlgItemText(hDlg, IDC_JR_SETTINGS, pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings));
+	GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message));
+	GetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings));
 }
 //================================================================================================
 //-------------------------------------------------+++--> Load Dialog With Settings for This Alarm:
@@ -361,8 +361,8 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	SetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname);
 	
 	CheckDlgButton(hDlg, IDC_MSG_ALARM, pAS->bDlg);
-	SetDlgItemText(hDlg, IDC_JRMSG_TEXT, pAS->dlgmsg.message);
-	SetDlgItemText(hDlg, IDC_JR_SETTINGS, pAS->dlgmsg.settings);
+	SetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message);
+	SetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings);
 	
 	CheckDlgButton(hDlg, IDC_12HOURALARM, pAS->bHour12);
 	CheckDlgButton(hDlg, IDC_AMPM_CHECK, pAS->bPM);

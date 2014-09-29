@@ -47,19 +47,26 @@ INT_PTR CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 	case WM_COMMAND: {
 			WORD id = LOWORD(wParam);
 			switch(id) {
-			case IDC_JRMSG_TEST:{
+			case IDC_ALRMMSG_BOUN_ENABLE:{
+				int control;
+				int check=IsDlgButtonChecked(hDlg,IDC_ALRMMSG_BOUN_ENABLE);
+				for(control=IDC_ALRMMSG_SPEED_ST; control<=IDC_ALRMMSG_PAWS_SPIN; ++control){
+					EnableDlgItem(hDlg,control,check);
+				}
+				break;}
+			case IDC_ALRMMSG_TEST:{
 				dlgmsg_t* dlg=(dlgmsg_t*)GetWindowLongPtr(hDlg,DWLP_USER);
-				m_iBounce = GetDlgItemInt(hDlg, IDC_JRMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
-				m_iSkew = GetDlgItemInt(hDlg, IDC_JRMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
-				m_iPaws = GetDlgItemInt(hDlg, IDC_JRMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
+				m_iBounce = GetDlgItemInt(hDlg, IDC_ALRMMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
+				m_iSkew = GetDlgItemInt(hDlg, IDC_ALRMMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
+				m_iPaws = GetDlgItemInt(hDlg, IDC_ALRMMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
 				
-				m_iSpeed = GetDlgItemInt(hDlg, IDC_JRMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
-				m_iDelta = GetDlgItemInt(hDlg, IDC_JRMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
-				GetDlgItemText(hDlg, IDC_JRMSG_CAPT, dlg->name, sizeof(dlg->name));
-				GetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg->message, sizeof(dlg->message));
+				m_iSpeed = GetDlgItemInt(hDlg, IDC_ALRMMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
+				m_iDelta = GetDlgItemInt(hDlg, IDC_ALRMMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
+				GetDlgItemText(hDlg, IDC_ALRMMSG_CAPT, dlg->name, sizeof(dlg->name));
+				GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg->message, sizeof(dlg->message));
 				m_flags=0;
-				if(IsDlgButtonChecked(hDlg,IDC_JRMSG_RAND)) m_flags|=BFLAG_RAND;
-				if(IsDlgButtonChecked(hDlg,IDC_TOPMOST)) m_flags|=BFLAG_TOPMOST;
+				if(IsDlgButtonChecked(hDlg,IDC_ALRMMSG_RAND)) m_flags|=BFLAG_RAND;
+				if(IsDlgButtonChecked(hDlg,IDC_ALRMMSG_TOPMOST)) m_flags|=BFLAG_TOPMOST;
 				ReleaseTheHound(hDlg,dlg->name,dlg->message,NULL);
 				break;}
 				
@@ -89,21 +96,30 @@ void OnInit(HWND hDlg, dlgmsg_t* dlg)   //--------------------------------------
 	SetWindowLongPtr(hDlg,DWLP_USER,(LONG_PTR)dlg);
 	ParseSettings(dlg->settings);
 	
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETRANGE32, 0,200);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSPD, UDM_SETPOS32, 0, m_iSpeed);  // Movement Timer Rate
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETRANGE32, m_iSkew,42);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRDLT, UDM_SETPOS32, 0, m_iDelta); // Pixel Distance Moved
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_SPEED_SPIN, UDM_SETRANGE32, 0,200);
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_SPEED_SPIN, UDM_SETPOS32, 0, m_iSpeed);  // Movement Timer Rate
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_DELTA_SPIN, UDM_SETRANGE32, m_iSkew,42);
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_DELTA_SPIN, UDM_SETPOS32, 0, m_iDelta); // Pixel Distance Moved
 	
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETRANGE32, 1,6);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRSKW, UDM_SETPOS32, 0, m_iSkew); //----+++--> Skew Factor
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETRANGE32, 0,10);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRPAW, UDM_SETPOS32, 0, m_iPaws); //-+++--> Paws/Sit! Time
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETRANGE32, 0,10);
-	SendDlgItemMessage(hDlg, IDC_SPIN_JRBNC, UDM_SETPOS32, 0, m_iBounce); //--+++--> Bounce Time
-	SetDlgItemText(hDlg, IDC_JRMSG_CAPT, dlg->name);
-	SetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg->message);
-	CheckDlgButton(hDlg, IDC_JRMSG_RAND,	m_flags&BFLAG_RAND);
-	CheckDlgButton(hDlg, IDC_TOPMOST,		m_flags&BFLAG_TOPMOST);
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_SKEW_SPIN, UDM_SETRANGE32, 1,6);
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_SKEW_SPIN, UDM_SETPOS32, 0, m_iSkew); //----+++--> Skew Factor
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_PAWS_SPIN, UDM_SETRANGE32, 0,10);
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_PAWS_SPIN, UDM_SETPOS32, 0, m_iPaws); //-+++--> Paws/Sit! Time
+	SendDlgItemMessage(hDlg, IDC_ALRMMSG_BOUN_SPIN, UDM_SETRANGE32, 1,10);
+	if(!m_iBounce){
+		int control;
+		for(control=IDC_ALRMMSG_SPEED_ST; control<=IDC_ALRMMSG_PAWS_SPIN; ++control){
+			EnableDlgItem(hDlg,control,0);
+		}
+		SendDlgItemMessage(hDlg, IDC_ALRMMSG_BOUN_SPIN, UDM_SETPOS32, 0, 3); // default bounce 3
+	}else{
+		CheckDlgButton(hDlg, IDC_ALRMMSG_BOUN_ENABLE, 1);
+		SendDlgItemMessage(hDlg, IDC_ALRMMSG_BOUN_SPIN, UDM_SETPOS32, 0, m_iBounce); //--+++--> Bounce Time
+	}
+	SetDlgItemText(hDlg, IDC_ALRMMSG_CAPT, dlg->name);
+	SetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg->message);
+	CheckDlgButton(hDlg, IDC_ALRMMSG_RAND, m_flags&BFLAG_RAND);
+	CheckDlgButton(hDlg, IDC_ALRMMSG_TOPMOST, m_flags&BFLAG_TOPMOST);
 	m_iScreenW = GetSystemMetrics(SM_CXSCREEN);
 	m_iScreenH = GetSystemMetrics(SM_CYSCREEN);
 	
@@ -164,18 +180,20 @@ void CenterDoggie(HWND hWnd)   //--------------------------------------------+++
 void OnOK(HWND hDlg)   //----------------------------------------------------+++-->
 {
 	dlgmsg_t* dlg=(dlgmsg_t*)GetWindowLongPtr(hDlg,DWLP_USER);
-	m_iBounce = GetDlgItemInt(hDlg, IDC_JRMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
-	m_iSkew = GetDlgItemInt(hDlg, IDC_JRMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
-	m_iPaws = GetDlgItemInt(hDlg, IDC_JRMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
+	m_iBounce = GetDlgItemInt(hDlg, IDC_ALRMMSG_BOUN, NULL, TRUE); // Get Users Attention!!!
+	if(!IsDlgButtonChecked(hDlg,IDC_ALRMMSG_BOUN_ENABLE))
+		m_iBounce=0;
+	m_iSkew = GetDlgItemInt(hDlg, IDC_ALRMMSG_SKEW, NULL, TRUE); // Hop vs. Ricochet deviation
+	m_iPaws = GetDlgItemInt(hDlg, IDC_ALRMMSG_PAWS, NULL, TRUE); // Sit! & Wait for User Input
 	
-	m_iSpeed = GetDlgItemInt(hDlg, IDC_JRMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
-	m_iDelta = GetDlgItemInt(hDlg, IDC_JRMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
-//	GetDlgItemText(hDlg, IDC_JRMSG_CAPT, dlg->name, sizeof(dlg->name));
-	GetDlgItemText(hDlg, IDC_JRMSG_TEXT, dlg->message, sizeof(dlg->message));
+	m_iSpeed = GetDlgItemInt(hDlg, IDC_ALRMMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
+	m_iDelta = GetDlgItemInt(hDlg, IDC_ALRMMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
+//	GetDlgItemText(hDlg, IDC_ALRMMSG_CAPT, dlg->name, sizeof(dlg->name));
+	GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg->message, sizeof(dlg->message));
 	
 	m_flags=0;
-	if(IsDlgButtonChecked(hDlg,IDC_JRMSG_RAND)) m_flags|=BFLAG_RAND;
-	if(IsDlgButtonChecked(hDlg,IDC_TOPMOST)) m_flags|=BFLAG_TOPMOST;
+	if(IsDlgButtonChecked(hDlg,IDC_ALRMMSG_RAND)) m_flags|=BFLAG_RAND;
+	if(IsDlgButtonChecked(hDlg,IDC_ALRMMSG_TOPMOST)) m_flags|=BFLAG_TOPMOST;
 	
 	if(m_iSkew < 1) m_iSkew = 1; // Divide by Zero = Bad...
 	
@@ -190,7 +208,7 @@ void ParseSettings(char* data)   //------------------------------------------+++
 	int i=0;
 	
 	if(!*data)
-		strcpy(data,"3,4,3,90,42,3"); // last one is "flags" BFLAG_RAND|BFLAG_TOPMOST = 3
+		strcpy(data,"0,4,3,90,42,3"); // last one is "flags" BFLAG_RAND|BFLAG_TOPMOST = 3
 		//			 0,1,2, 3, 4,5
 	
 	szToken = strtok_s(data, seps, &nxToken);
