@@ -329,15 +329,15 @@ int PlayMCI(HWND hwnd, int nt)
 	
 	strcpy(command, "play myfile");
 	if(nt >= 0) {
-		char s[80],start[40],end[40];
-		wsprintf(s, "status myfile position track %d", nt);
-		if(mciSendString(s, start, 40, NULL) == 0) {
+		char cmdpos[64],out[32];
+		wsprintf(cmdpos, "status myfile position track %d", nt);
+		if(mciSendString(cmdpos, out, sizeof(out), NULL) == 0) {
 			strcat(command, " from ");
-			strcat(command, start);
-			wsprintf(s, "status myfile position track %d", nt+1);
-			if(mciSendString(s, end, 40, NULL) == 0) {
+			strcat(command, out);
+			wsprintf(cmdpos+29, "%d", nt+1); // status myfile position track XXX
+			if(mciSendString(cmdpos, out, sizeof(out), NULL) == 0) {
 				strcat(command, " to ");
-				strcat(command, end);
+				strcat(command, out);
 			}
 		}
 	}

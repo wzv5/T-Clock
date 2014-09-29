@@ -125,8 +125,8 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 --------------------------------------------------*/
 BOOL ExecFile(HWND hwnd, const char* command)
 {
-	char fname[MAX_PATH], opt[MAX_PATH];
 	if(*command){
+		char fname[MAX_PATH], opt[MAX_PATH];
 		if(hwnd) SetForegroundWindow(hwnd);
 		GetFileAndOption(command,fname,opt);
 		if((intptr_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOWNORMAL)>32)

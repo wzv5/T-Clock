@@ -536,7 +536,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	// Load & Display the Configured Synchronization HotKey:
 //=========================//=======================================================
 
-	tchk = malloc(sizeof(hotkey_t));
+	tchk = (hotkey_t*)malloc(sizeof(hotkey_t));
 	tchk[0].bValid = GetMyRegLongEx("HotKeys\\HK5", "bValid", 0);
 	GetMyRegStrEx("HotKeys\\HK5", "szText", tchk[0].szText, TNY_BUFF, "None");
 	tchk[0].fsMod = GetMyRegLongEx("HotKeys\\HK5", "fsMod", 0);

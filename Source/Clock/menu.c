@@ -189,10 +189,10 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		if(hwndTray) PostMessage(hwndTray, WM_COMMAND, (WPARAM)wID, 0);
 		break;}
 	case IDM_DATETIME_EX:{
-		int wait=40;
 		HWND hwnd1=FindWindow("Shell_TrayWnd",NULL);
 		if(hwnd1){
 			HWND hwnd2;
+			int wait=40;
 			SendMessage(hwnd1,WM_COMMAND,IDM_FWD_DATETIME,0);
 			while((hwnd2=FindWindow(MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
 			if(hwnd2){
@@ -279,7 +279,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 {
 	char buf[MAX_PATH];
 	alarm_t pAS;
-	int count,idx;
+	int count;
 	GetMyRegStr("","JihouFile",buf,MAX_PATH,"");
 	if(PathExists(buf)==1)
 		EnableMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_ENABLED);
@@ -289,6 +289,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 	count=GetMyRegLong("","AlarmNum",0);
 	if(count<1) count=0;
 	if(count){
+		int idx;
 		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
 		for(idx=0; idx<count; ++idx) {
 			ReadAlarmFromReg(&pAS,idx);

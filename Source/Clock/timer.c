@@ -790,9 +790,9 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 			LPNMLVKEYDOWN nmkey = (LPNMLVKEYDOWN)lParam;
 			switch(nmkey->wVKey) {
 			case VK_DELETE:{
-				char szTimer[GEN_BUFF];
 				int i;
 				if((i = ListView_GetNextItem (hList,-1,LVNI_SELECTED)) != -1) {
+					char szTimer[GEN_BUFF];
 					ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
 					RemoveFromWatch(hDlg, hList, szTimer, i);
 				}

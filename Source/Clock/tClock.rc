@@ -155,7 +155,7 @@ BEGIN
     RTEXT           "Sound File",IDC_LABTIMEALARM_X,16,67,40,11
     EDITTEXT        IDC_FILEALARM,63,65,213,13,ES_AUTOHSCROLL
     PUSHBUTTON      "...",IDC_SANSHOALARM,280,66,12,12
-    CONTROL         IDB_BITMAP1,IDC_BMPJACK,"Static",SS_BITMAP | SS_SUNKEN | NOT WS_VISIBLE,12,78,44,50
+    CONTROL         IDI_JACKRUSSEL,IDC_BMPJACK,"Static",SS_BITMAP | SS_SUNKEN | NOT WS_VISIBLE,12,78,44,50
     RTEXT           "Test",IDC_LABTESTALARM,59,86,18,11
     PUSHBUTTON      "",IDC_TESTALARM,80,83,13,14,BS_ICON
     CONTROL         "Chime Hour",IDC_CHIMEALARM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,115,85,53,11
@@ -536,7 +536,7 @@ IDI_DEL                 ICON                    "del.ico"
 // Bitmap
 //
 
-IDB_BITMAP1             BITMAP                  "JackRussel.bmp"
+IDI_JACKRUSSEL          BITMAP                  "JackRussel.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -184,41 +184,39 @@ void SubsCreate(){
 	HWND hwndBar;
 	HWND hwndChild;
 	int i;
-	if(m_multiClocks) return;
+	if(m_multiClocks || !m_bMultimon) return;
 	// loop all secondary taskbars
-	if(m_bMultimon){
-		hwndBar=FindWindowEx(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
-		while(hwndBar){
-			hwndChild=GetWindow(hwndBar,GW_CHILD);
-			while(hwndChild){
-				GetClassName(hwndChild,classname,sizeof(classname));
-				if(!lstrcmpi(classname,"WorkerW")){
-					if(m_multiClocks==MAX_MULTIMON_CLOCKS)
-						break;
-					for(i=0; i<m_multiClocks && hwndChild!=m_multiClock[i].worker; ++i);
-					if(i==m_multiClocks){
-						if(!m_multiClockClass){
-							WNDCLASSEX wndclass={sizeof(WNDCLASSEX),CS_CLASSDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
-							wndclass.hCursor=LoadCursor(NULL,IDC_ARROW);
-							wndclass.hInstance=hInstance;
-							m_multiClockClass=RegisterClassEx(&wndclass);
-						}
-						m_multiClock[i].clock=CreateWindowEx(0,(LPCSTR)m_multiClockClass,NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
-						if(!m_multiClock[i].clock)
-							break;
-						if(!i) m_multiClockDC=GetDC(m_multiClock[0].clock);
-						GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
-						m_multiClock[i].worker=hwndChild;
-						m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWL_WNDPROC);
-						SetWindowLongPtr(hwndChild,GWL_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
-						++m_multiClocks;
-					}
+	hwndBar=FindWindowEx(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
+	while(hwndBar){
+		hwndChild=GetWindow(hwndBar,GW_CHILD);
+		while(hwndChild){
+			GetClassName(hwndChild,classname,sizeof(classname));
+			if(!lstrcmpi(classname,"WorkerW")){
+				if(m_multiClocks==MAX_MULTIMON_CLOCKS)
 					break;
+				for(i=0; i<m_multiClocks && hwndChild!=m_multiClock[i].worker; ++i);
+				if(i==m_multiClocks){
+					if(!m_multiClockClass){
+						WNDCLASSEX wndclass={sizeof(WNDCLASSEX),CS_CLASSDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
+						wndclass.hCursor=LoadCursor(NULL,IDC_ARROW);
+						wndclass.hInstance=hInstance;
+						m_multiClockClass=RegisterClassEx(&wndclass);
+					}
+					m_multiClock[i].clock=CreateWindowEx(0,(LPCSTR)m_multiClockClass,NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
+					if(!m_multiClock[i].clock)
+						break;
+					if(!i) m_multiClockDC=GetDC(m_multiClock[0].clock);
+					GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
+					m_multiClock[i].worker=hwndChild;
+					m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWL_WNDPROC);
+					SetWindowLongPtr(hwndChild,GWL_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
+					++m_multiClocks;
 				}
-				hwndChild=GetWindow(hwndChild,GW_HWNDNEXT);
+				break;
 			}
-			hwndBar=FindWindowEx(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
+			hwndChild=GetWindow(hwndChild,GW_HWNDNEXT);
 		}
+		hwndBar=FindWindowEx(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
 	}
 }
 //================================================================================================

@@ -33,14 +33,14 @@
 #define IDD_STOPWATCH                   124
 #define IDD_TIMERVIEW                   125
 #define IDD_SNTPCONFIG                  130
-#define IDB_BITMAP1                     131
-#define IDD_ALARMMSG                    132
-#define IDD_STOPWATCH_EXPORT            133
+#define IDD_ALARMMSG                    131
+#define IDD_STOPWATCH_EXPORT            132
 #define IDI_MAIN                        190
 #define IDI_STOICJOKER                  191
 #define IDI_PLAY                        192
 #define IDI_STOP                        193
 #define IDI_DEL                         194
+#define IDI_JACKRUSSEL                  195
 /// messages / commands (menu, hotkey etc)
 #define IDR_MENU                        200
 #define IDC_SOUNDAUDIO                  201 /* group */

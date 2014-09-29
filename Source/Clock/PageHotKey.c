@@ -204,7 +204,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	int i;
 	
 	bFirstTime = TRUE;
-	tchk = malloc(sizeof(hotkey_t) * 5);
+	tchk = (hotkey_t*)malloc(sizeof(hotkey_t) * 5);
 	for(i=0; i <= 4; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
 		tchk[i].bValid = GetMyRegLong(subkey, "bValid", 0);
@@ -341,10 +341,9 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 void GetHotKeyInfo(HWND hWnd)
 {
 	char subkey[TNY_BUFF] = {0};
-	hotkey_t* hk = NULL;
 	int i;
 	
-	hk = malloc(sizeof(hotkey_t) * 6);
+	hotkey_t* hk = (hotkey_t*)malloc(sizeof(hotkey_t) * 6);
 	
 	for(i = 0; i <= 5; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
