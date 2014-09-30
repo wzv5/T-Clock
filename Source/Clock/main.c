@@ -46,12 +46,14 @@ extern char g_bPlayingNonstop;
 
 //=========================================================
 //-------------------+++--> toggle calendar (close or open):
-void ToggleCalendar()   //---------------------------+++-->
+void ToggleCalendar(int type)   //---------------------------+++-->
 {
 	if(IsCalendarOpen())
 		return;
-	if(g_tos>=TOS_VISTA && !GetMyRegLong("Calendar","bCustom",0)){
-		PostMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
+	if(g_tos>=TOS_VISTA && (!GetMyRegLong("Calendar","bCustom",0) && type!=1)){
+		SendMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
+		// for multi-monitor support, 11px padding is Win8 default
+		SetMyDialgPos(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL),11);
 	}else{
 		char cal[MAX_PATH];
 		strcpy(cal,g_mydir); add_title(cal,"XPCalendar.exe");

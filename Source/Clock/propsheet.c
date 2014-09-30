@@ -69,6 +69,7 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		g_hwndSheet = (HWND)PropertySheet(&psh);
 	}
 	SetForegroundWindow(g_hwndSheet);
+	SetMyDialgPos(g_hwndSheet,21);
 }
 //================================================================================================
 //--------------------------------------------------------+++--> Property Sheet Callback Procedure:
@@ -109,9 +110,6 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		#ifndef _DEBUG
 		EmptyWorkingSet(GetCurrentProcess());
 		#endif
-		break;
-	case WM_SHOWWINDOW: // adjust the window position
-		SetMyDialgPos(hwnd,21);
 		break;
 	case WM_ACTIVATE:
 		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
@@ -154,37 +152,31 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 //------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
 void SetMyDialgPos(HWND hwnd,int padding)   //-----------------------------------------------+++-->
 {
-	int wscreen, hscreen, wProp, hProp;
-	RECT rc;
-	HWND hwndTray;
+	MONITORINFO moni;
+	int wProp, hProp;
 	
-	GetWindowRect(hwnd,&rc); // Properties Dialog Dimensions
-	wProp = rc.right-rc.left;  //----------+++--> Width
-	hProp = rc.bottom-rc.top; //----------+++--> Height
+	GetWindowRect(hwnd,&moni.rcWork); // Properties Dialog Dimensions
+	wProp = moni.rcWork.right-moni.rcWork.left;  //----------+++--> Width
+	hProp = moni.rcWork.bottom-moni.rcWork.top; //----------+++--> Height
 	
-	wscreen = GetSystemMetrics(SM_CXSCREEN);  // Desktop Width
-	hscreen = GetSystemMetrics(SM_CYSCREEN); // Desktop Height
+	GetCursorPos((POINT*)&moni.rcWork);
+	moni.cbSize=sizeof(moni);
+	GetMonitorInfo(MonitorFromPoint(*(POINT*)&moni.rcWork,MONITOR_DEFAULTTONEAREST),&moni);
 	
-	hwndTray = FindWindow("Shell_TrayWnd", NULL);
-	if(!hwndTray) return;
-	GetWindowRect(hwndTray,&rc);
-	
-	if(rc.right-rc.left > rc.bottom-rc.top) { // IF Width is Greater Than Height, Taskbar is
-		rc.left=wscreen-wProp-padding; // at Either Top or Bottom of Screen
-		if(rc.top < hscreen/2)
-			rc.top=rc.bottom+padding; // Taskbar is on Top of Screen
-		else // ELSE Taskbar is Where it Belongs! (^^^Mac Fag?^^^)
-			rc.top-=hProp+padding;
-		if(rc.top<0) rc.top=0;
-	} else { //---+++--> ELSE Taskbar is on Left or Right Side of Screen
-		rc.top=hscreen-hProp-padding; // Down is a Fixed Position
-		if(rc.left < wscreen/2)
-			rc.left=rc.right+padding; //--+++--> Taskbar is on Left Side of Screen
-		else
-			rc.left-=wProp+padding; // Taskbar is on Right Side of Screen
-		if(rc.left<0) rc.left=0;
+	if(moni.rcWork.top!=moni.rcMonitor.top || moni.rcWork.bottom!=moni.rcMonitor.bottom) { // taskbar is horizontal
+		moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
+		if(moni.rcWork.bottom!=moni.rcMonitor.bottom) // bottom
+			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
+		else // top
+			moni.rcMonitor.top=moni.rcWork.top+padding;
+	}else{ // vertical
+		moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
+		if(moni.rcWork.left!=moni.rcMonitor.left) // left
+			moni.rcMonitor.left=moni.rcWork.left+padding;
+		else // right
+			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
 	}
-	MoveWindow(hwnd,rc.left,rc.top,wProp,hProp,FALSE);
+	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOREDRAW|SWP_NOZORDER);
 }
 /*------------------------------------------------
    select file

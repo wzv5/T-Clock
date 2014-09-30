@@ -177,7 +177,7 @@ void OnTimerMouse(HWND hwnd)
 		DialogTimer();
 		break;
 	case MOUSEFUNC_SHOWCALENDER:
-		ToggleCalendar();
+		ToggleCalendar(0);
 		break;
 	case MOUSEFUNC_SHOWPROPERTY:
 		MyPropertySheet(-1);

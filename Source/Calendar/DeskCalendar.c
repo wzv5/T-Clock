@@ -15,42 +15,32 @@ BOOL m_bAutoClose;
 //------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
 void SetMyDialgPos(HWND hwnd)   //----------------------------------------------------------+++-->
 {
-	#define PADDING 12
-	int wscreen, hscreen, wProp, hProp;
-	int wTray, hTray, x, y;
-	RECT rc;
-	HWND hwndTray;
+	#define PADDING 11 // 11 is Win8 default
+	MONITORINFO moni;
+	int wProp, hProp;
 	
-	GetWindowRect(hwnd, &rc); // Properties Dialog Dimensions
-	wProp = rc.right - rc.left;  //----------+++--> Width
-	hProp = rc.bottom - rc.top; //----------+++--> Height
+	GetWindowRect(hwnd,&moni.rcWork); // Properties Dialog Dimensions
+	wProp = moni.rcWork.right-moni.rcWork.left;  //----------+++--> Width
+	hProp = moni.rcWork.bottom-moni.rcWork.top; //----------+++--> Height
 	
-	wscreen = GetSystemMetrics(SM_CXSCREEN);  // Desktop Width
-	hscreen = GetSystemMetrics(SM_CYSCREEN); // Desktop Height
+	GetCursorPos((POINT*)&moni.rcWork);
+	moni.cbSize=sizeof(moni);
+	GetMonitorInfo(MonitorFromPoint(*(POINT*)&moni.rcWork,MONITOR_DEFAULTTONEAREST),&moni);
 	
-	hwndTray = FindWindow("Shell_TrayWnd", NULL);
-	if(!hwndTray) return;
-	
-	GetWindowRect(hwndTray, &rc);
-	wTray = rc.right - rc.left;
-	hTray = rc.bottom - rc.top;
-	
-	if(wTray > hTray) { // IF Width is Greater Than Height, Taskbar is
-		x = wscreen - wProp - PADDING; // at Either Top or Bottom of Screen
-		if(rc.top < hscreen / 2)
-			y = rc.bottom + PADDING; // Taskbar is on Top of Screen
-		else // ELSE Taskbar is Where it Belongs! (^^^Mac Fag?^^^)
-			y = rc.top - hProp - PADDING;
-		if(y < 0) y = 0;
-	} else { //---+++--> ELSE Taskbar is on Left or Right Side of Screen
-		y = hscreen - hProp - PADDING; // Down is a Fixed Position
-		if(rc.left < wscreen / 2)
-			x = rc.right + PADDING; //--+++--> Taskbar is on Left Side of Screen
-		else
-			x = rc.left - wProp - PADDING; // Taskbar is on Right Side of Screen
-		if(x < 0) x = 0;
+	if(moni.rcWork.top!=moni.rcMonitor.top || moni.rcWork.bottom!=moni.rcMonitor.bottom) { // taskbar is horizontal
+		moni.rcMonitor.left=moni.rcWork.right-wProp-PADDING;
+		if(moni.rcWork.bottom!=moni.rcMonitor.bottom) // bottom
+			moni.rcMonitor.top=moni.rcWork.bottom-hProp-PADDING;
+		else // top
+			moni.rcMonitor.top=moni.rcWork.top+PADDING;
+	}else{ // vertical
+		moni.rcMonitor.top=moni.rcWork.bottom-hProp-PADDING;
+		if(moni.rcWork.left!=moni.rcMonitor.left) // left
+			moni.rcMonitor.left=moni.rcWork.left+PADDING;
+		else // right
+			moni.rcMonitor.left=moni.rcWork.right-wProp-PADDING;
 	}
-	MoveWindow(hwnd, x, y, wProp, hProp, FALSE);
+	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOREDRAW|SWP_NOZORDER);
 }
 //===========================================================================================
 //----------------------------------------------------+++--> Get the Current Day of the Year:

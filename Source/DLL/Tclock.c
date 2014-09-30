@@ -481,18 +481,11 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		if(m_BlinkState){
-			m_BlinkState=BLINK_NONE;
-			InvalidateRect(g_hwndClock, NULL, 1);
-			return 0;
-		}
-		PostMessage(g_hwndTClockMain, message, wParam, lParam);
-		return 0;
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+		SendMessage(g_hwndClock,message,wParam,lParam);
 		return 0;
 //	case WM_CONTEXTMENU:
 //		PostMessage(g_hwndTClockMain, message, wParam, lParam);

@@ -58,7 +58,7 @@ extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
 
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
-void ToggleCalendar();
+void ToggleCalendar(int type);
 
 // settings.c
 int CheckSettings();

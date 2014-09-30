@@ -118,7 +118,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		break;
 		
 	case IDM_SHOWCALENDER: //-------------------------------+++--> Display Calender
-		ToggleCalendar();
+		ToggleCalendar(1); // 1=own calendar
 		break;
 		
 	case IDM_DISPLAYPROP: //------------------------------+++--> Display Properties
