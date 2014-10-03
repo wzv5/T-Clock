@@ -307,9 +307,7 @@ char* MyString(UINT id)
 
 int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT uBeep)
 {
-	MSGBOXPARAMS mbp;
-	memset(&mbp, 0, sizeof(MSGBOXPARAMS));
-	mbp.cbSize = sizeof(MSGBOXPARAMS);
+	MSGBOXPARAMS mbp={sizeof(MSGBOXPARAMS)};
 	mbp.hwndOwner = hwnd;
 	mbp.hInstance = GetModuleHandle(NULL);
 	mbp.lpszText = msg;

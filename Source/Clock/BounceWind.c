@@ -286,7 +286,7 @@ void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* setti
 	if(m_iSpeed < 10) m_iSpeed = 10; // Required to Ensure Paws.
 	// our notify
 	m_caption=caption;
-	MessageBox(NULL, text, caption, MB_OK|(m_flags&BFLAG_TOPMOST?MB_SYSTEMMODAL:0));
+	MyMessageBox(NULL, text, caption, MB_OK|(m_flags&BFLAG_TOPMOST?MB_SYSTEMMODAL:0),MB_OK);
 	KillTimer(hwnd, ID_DOGGIE);
 	m_caption=NULL;
 	free(caption); // we use a copy since it's possible to have more then one dialog... (ugly but somewhat works)
