@@ -83,7 +83,7 @@ void ToggleDesk()   //----------------------------------------------------------
 	IShellDispatch4* pDisp;
 	HRESULT hres;
 	
-	CoInitialize(NULL);
+	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
 	
 	hres = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, &IID_IShellDispatch4, (LPVOID*)&pDisp);
 	

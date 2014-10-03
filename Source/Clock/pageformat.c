@@ -160,7 +160,7 @@ void OnInit(HWND hDlg)
 {
 	const char* AM[]={"AM","am","A","a"," ",};
 	const char* PM[]={"PM","pm","P","p"," ",};
-	const size_t AMPMs=sizeof(AM)/sizeof(AM[0]);
+	const int AMPMs=sizeof(AM)/sizeof(AM[0]);
 	HFONT hfont;
 	char fmt[MAX_FORMAT];
 	int i, count;

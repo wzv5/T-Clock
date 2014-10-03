@@ -3,13 +3,6 @@ REQUESTED .ini Based Portable Version.
 
 ADD Time Difference (from TClock Lite)
 
-Show Active Alarms in Context Menu
-
-NEED TO ADD/Fix Clock Face/Font(size) Recalculation when Line Number X/Y/W/H is Changed 
-
-NEED TO FIX - Switching From Single to Multi Line Format Doesn't Display
-				New Line Without First Toggling the Font Size, Why?
-	
 Can we Control T-Clock's Volume Individually...?
 
 Can we ADD - Shutdown/Startup Event/Timer Option.
@@ -50,6 +43,8 @@ http://en.wikipedia.org/wiki/Iranian_calendars
  ========= =========================== [COMPLETED OBJECTIVES] =========================== =========
    ========= ========================================================================== =========
      ========= ====================================================================== =========
+DONE - Show Active Alarms in Context Menu
+
 DONE - being able to launch systems default calendar + tooltip
 
 DONE - Calendar - Is Boaring as Hell.

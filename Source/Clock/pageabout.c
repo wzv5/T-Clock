@@ -186,7 +186,7 @@ BOOL CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 	HRESULT hres;
 	IShellLink* psl;
 	
-	CoInitialize(NULL);
+	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
 	
 	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
 	if(SUCCEEDED(hres)) {

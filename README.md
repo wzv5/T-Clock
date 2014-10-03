@@ -48,7 +48,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [ ] + maybe current sun state picture as clock background (plugin) *tbd*
 
 ### Requirements
-* Windows 2000+ (up to Win8.1 as of 2014)
+* Windows 2000+ (up to Windows 10 as of 2014)
 * Microsoft Visual C++ 2010 Redistributables
 ([32bit](http://microsoft.com/en-us/download/details.aspx?id=8328) |
 [64bit](http://microsoft.com/en-us/download/details.aspx?id=13523)) *(might add static builds on request)*
