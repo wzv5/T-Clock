@@ -6,9 +6,17 @@
 #include <Uxtheme.h>
 #include "../common/utl.h"
 
-//#define WS_EX_LAYERED 0x80000
-//#define LWA_ALPHA     2
-//#define LWA_COLORKEY  1
+int IsWow64(){
+	int ret=0;
+	#ifndef __x86_64__
+	typedef BOOL (WINAPI *IsWow64Process_t)(HANDLE hProcess,BOOL* iswow64);
+	IsWow64Process_t pIsWow64Process=(IsWow64Process_t)GetProcAddress(GetModuleHandle("kernel32"),"IsWow64Process");
+	if(pIsWow64Process){
+		pIsWow64Process(GetCurrentProcess(),&ret);
+	}
+	#endif // __x86_64__
+	return ret;
+}
 
 static HMODULE hmodUSER32 = NULL;
 static HMODULE hmodUxTheme = NULL;

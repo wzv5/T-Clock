@@ -4,7 +4,7 @@
 	<Project>
 		<Option title="T-Clock" />
 		<Option pch_mode="2" />
-		<Option default_target="app debug" />
+		<Option default_target="app-64" />
 		<Option compiler="msvc10" />
 		<Build>
 			<Target title="AutoVersion">
@@ -24,7 +24,7 @@
 				</Compiler>
 			</Target>
 			<Target title="app">
-				<Option output="../Release/Win32/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../Release/Clock" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/" />
 				<Option type="0" />
 				<Option compiler="msvc10" />
@@ -45,20 +45,16 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
-					<Add library="tClock" />
-					<Add directory="../Release/Win32" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
 				</ExtraCommands>
 			</Target>
-			<Target title="dll">
-				<Option output="../Release/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
-				<Option object_output=".obj/" />
-				<Option type="3" />
-				<Option compiler="msvc10" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
+			<Target title="app-64">
+				<Option output="../Release/Clock64" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj64/" />
+				<Option type="0" />
+				<Option compiler="microsoft_visual_c_2010_64bit" />
 				<Compiler>
 					<Add option="/MD" />
 					<Add option="/GL" />
@@ -67,14 +63,22 @@
 				</Compiler>
 				<Linker>
 					<Add option="/LTCG" />
-					<Add option="/def:DLL\DLL.def" />
+					<Add library="Psapi" />
+					<Add library="ole32" />
+					<Add library="Comdlg32" />
+					<Add library="shlwapi" />
+					<Add library="Version" />
+					<Add library="comctl32" />
+					<Add library="Winmm" />
+					<Add library="Ws2_32" />
+					<Add library="Mpr" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
 				</ExtraCommands>
 			</Target>
 			<Target title="app debug">
-				<Option output="../Debug/Win32/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../Debug/Clock" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg/" />
 				<Option type="0" />
 				<Option compiler="msvc10" />
@@ -94,20 +98,98 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
-					<Add library="tClock" />
-					<Add directory="../Debug/Win32" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
+			</Target>
+			<Target title="app-64 debug">
+				<Option output="../Debug/Clock64" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj64/dbg/" />
+				<Option type="0" />
+				<Option compiler="microsoft_visual_c_2010_64bit" />
+				<Compiler>
+					<Add option="/MDd" />
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/debug" />
+					<Add library="Psapi" />
+					<Add library="ole32" />
+					<Add library="Comdlg32" />
+					<Add library="shlwapi" />
+					<Add library="Version" />
+					<Add library="comctl32" />
+					<Add library="Winmm" />
+					<Add library="Ws2_32" />
+					<Add library="Mpr" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
+			</Target>
+			<Target title="dll">
+				<Option output="../Release/misc/T-Clock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj/" />
+				<Option type="3" />
+				<Option compiler="msvc10" />
+				<Compiler>
+					<Add option="/MD" />
+					<Add option="/GL" />
+					<Add option="/Ox" />
+					<Add option="/DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/LTCG" />
+					<Add option="/def:DLL\DLL.def" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
+			</Target>
+			<Target title="dll-64">
+				<Option output="../Release/misc/T-Clock64" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj64/" />
+				<Option type="3" />
+				<Option compiler="microsoft_visual_c_2010_64bit" />
+				<Compiler>
+					<Add option="/MD" />
+					<Add option="/GL" />
+					<Add option="/Ox" />
+					<Add option="/DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/LTCG" />
+					<Add option="/def:DLL\DLL.def" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
 				</ExtraCommands>
 			</Target>
 			<Target title="dll debug">
-				<Option output="../Debug/Win32/tClock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option output="../Debug/misc/T-Clock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg/" />
 				<Option type="3" />
 				<Option compiler="msvc10" />
-				<Option createDefFile="1" />
-				<Option createStaticLib="1" />
+				<Compiler>
+					<Add option="/MDd" />
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/debug" />
+					<Add option="/def:DLL\DLL.def" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
+			</Target>
+			<Target title="dll-64 debug">
+				<Option output="../Debug/misc/T-Clock64" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj64/dbg/" />
+				<Option type="3" />
+				<Option compiler="microsoft_visual_c_2010_64bit" />
 				<Compiler>
 					<Add option="/MDd" />
 					<Add option="/Zi" />
@@ -123,8 +205,11 @@
 			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="debug" targets="dll debug;app debug;" />
-			<Add alias="release" targets="dll;app;" />
+			<Add alias="debug-32" targets="dll debug;app debug;" />
+			<Add alias="debug-64" targets="dll-64 debug;app-64 debug;" />
+			<Add alias="release" targets="AutoVersion;app;app-64;dll-64;dll;" />
+			<Add alias="release-32" targets="dll;app;" />
+			<Add alias="release-64" targets="dll-64;app-64;" />
 		</VirtualTargets>
 		<Compiler>
 			<Add option="/Gy" />
@@ -142,163 +227,235 @@
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/ExitWindows.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/GetSetTimePerms.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/PageHotKey.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/PageMisc.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/PageMouse.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/PageQuicky.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/PageQuickyMenu.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/SNTP.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/StopWatch.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/alarm.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/alarmday.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/guiddef.h">
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/main.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/menu.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/mouse.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/pageabout.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/pagealarm.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/pagecolor.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/pageformat.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/propsheet.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/settings.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/soundselect.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/tClock.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/tclock.h">
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/timer.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
 			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="Clock/version.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="app" />
 			<Option target="app debug" />
 		</Unit>
+		<Unit filename="Clock/version64.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
+		</Unit>
 		<Unit filename="DLL/Tclock.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
+			<Option target="dll-64" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="DLL/font.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
+			<Option target="dll-64" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="DLL/format.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
 			<Option target="dll debug" />
+			<Option target="dll-64" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="DLL/main.c">
 			<Option compilerVar="CC" />
 			<Option target="dll debug" />
 			<Option target="dll" />
+			<Option target="dll-64" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="DLL/tcdll.h">
 			<Option target="dll" />
 			<Option target="dll debug" />
+			<Option target="dll-64" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="DLL/version.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="dll" />
 			<Option target="dll debug" />
+		</Unit>
+		<Unit filename="DLL/version64.rc">
+			<Option compilerVar="WINDRES" />
+			<Option target="dll-64" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/autoversion.cpp">
 			<Option target="AutoVersion" />
@@ -308,6 +465,10 @@
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/newapi.c">
 			<Option compilerVar="CC" />
@@ -315,18 +476,30 @@
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/newapi.h">
 			<Option target="app" />
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/resource.h">
 			<Option target="app" />
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/tcolor.c">
 			<Option compilerVar="CC" />
@@ -334,12 +507,20 @@
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/tcolor.h">
 			<Option target="app" />
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />
@@ -347,18 +528,30 @@
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/utl.h">
 			<Option target="app" />
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Unit filename="common/version.h">
 			<Option target="app" />
 			<Option target="dll" />
 			<Option target="app debug" />
 			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+			<Option target="app-64 debug" />
+			<Option target="dll-64 debug" />
 		</Unit>
 		<Extensions>
 			<code_completion />

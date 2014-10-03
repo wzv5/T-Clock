@@ -16,6 +16,12 @@
 
 #define TZNAME_MAX		  256//10
 
+// main.c
+int WINAPI IsCalendarOpen();
+void WINAPI HookStart(HWND hwnd);
+void WINAPI HookEnd();
+
+
 // tclock.c
 void DrawClock(HDC hdc);
 void GetDisplayTime(SYSTEMTIME* pt, int* beat100);

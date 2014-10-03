@@ -2,8 +2,12 @@
 #define TCLOCK_NEWAPI_H
 
 void EndNewAPI(HWND hwnd);
+
+int IsWow64();
+
 void SetLayeredTaskbar(HWND hwndClock,BOOL refresh);
 void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans);
+
 COLORREF GetXPClockColor();
 COLORREF GetXPClockColorBG();
 

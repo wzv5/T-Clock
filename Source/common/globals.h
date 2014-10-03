@@ -24,6 +24,14 @@
 #	define strdup _strdup
 #endif // __GNUC__
 
+#define ARCH_SUFFIX_32 ""
+#define ARCH_SUFFIX_64 "64"
+#ifndef __x86_64__
+#	define ARCH_SUFFIX ARCH_SUFFIX_32
+#else
+#	define ARCH_SUFFIX ARCH_SUFFIX_64
+#endif // __x86_64__
+
 #include "resource.h"
 
 /*------------------------------------------------
@@ -33,11 +41,6 @@ extern HWND		g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
 extern HWND		g_hwndClock;		// Main Clock Window Handle
 extern HHOOK	g_hhook;
 extern char		g_bCalOpen;
-
-// TCDLL.DLL‚API
-int WINAPI IsCalendarOpen();
-void WINAPI HookStart(HWND hwnd);
-void WINAPI HookEnd();
 
 
 #ifndef GWL_WNDPROC // Required for the x64 Edition

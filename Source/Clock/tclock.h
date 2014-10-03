@@ -15,12 +15,13 @@
 #include "../common/newapi.h"
 #include "../common/utl.h"
 
-// replacement of standard library's functions
-//int _strnicmp(const char* d, const char* s, size_t n);
-//int _stricmp(const char* d, const char* s);
-//#define malloc(s) GlobalAllocPtr(GHND,(s))
-//#define free(p) GlobalFreePtr(p);
-//int atoi(const char* p);
+// TCDLL.DLL‚API
+typedef int (WINAPI *IsCalendarOpen_t)();
+typedef void (WINAPI *HookStart_t)(HWND hwnd);
+typedef void (WINAPI *HookEnd_t)();
+extern IsCalendarOpen_t IsCalendarOpen;
+extern HookStart_t HookStart;
+extern HookEnd_t HookEnd;
 
 // IDs for timer
 #define IDTIMER_START				2

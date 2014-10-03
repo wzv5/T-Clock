@@ -24,9 +24,9 @@ static void OnLinkClicked(HWND hDlg, UINT id);
 
 LRESULT CALLBACK LabLinkProc(HWND, UINT, WPARAM, LPARAM);
 
-static BOOL GetStartupFile(HWND hDlg,char* filename);
-static void AddStartup(HWND hDlg);
-static void RemoveStartup(HWND hDlg);
+BOOL GetStartupFile(HWND hDlg,char filename[MAX_PATH]);
+void AddStartup(HWND hDlg);
+void RemoveStartup(HWND hDlg);
 BOOL CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name);
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 /////////////////////////////////////////////////////////////////////////////////////
@@ -140,11 +140,9 @@ LRESULT CALLBACK LabLinkProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 }
 //================================================================================
 //---------------------------+++--> Does startup file exist? Also creates filename:
-BOOL GetStartupFile(HWND hDlg,char* filename){   //-------------------------+++-->
-	LPITEMIDLIST pidl;
+BOOL GetStartupFile(HWND hDlg,char filename[MAX_PATH]){   //-------------------------+++-->
 	size_t offset;
-	if(SHGetSpecialFolderLocation(hDlg,CSIDL_STARTUP,&pidl)!=S_OK || !SHGetPathFromIDList(pidl,filename)){
-		*filename='\0';
+	if(SHGetFolderPath(hDlg,CSIDL_STARTUP,NULL,SHGFP_TYPE_CURRENT,filename)!=S_OK){
 		return 0;
 	}
 	offset=strlen(filename);

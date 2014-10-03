@@ -8,6 +8,11 @@
 #include "../common/version.h"
 #include "../common/tcolor.h" // WM_DWMCOLORIZATIONCOLORCHANGED
 
+// TCDLL.DLL‚API
+IsCalendarOpen_t IsCalendarOpen;
+HookStart_t HookStart;
+HookEnd_t HookEnd;
+
 // Application Global Window Handles
 HWND	g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
 HWND	g_hwndClock;		// Main Clock Window Handle
@@ -33,8 +38,7 @@ static void CheckCommandLine(HWND hwnd,const char* cmdline,int other);
 static void OnTimerMain(HWND hwnd);
 //static void FindTrayServer(); // Redux: what ever it was supposed to be..
 static void InitError(int n);
-static BOOL CheckTCDLL(void);
-static BOOL CheckDLL(char* fname);
+static int LoadTClockDLL(void);
 static void SetDesktopIconTextBk(void);
 static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;
@@ -56,7 +60,7 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 		SetMyDialgPos(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL),11);
 	}else{
 		char cal[MAX_PATH];
-		strcpy(cal,g_mydir); add_title(cal,"XPCalendar.exe");
+		strcpy(cal,g_mydir); add_title(cal,"misc\\XPCalendar.exe");
 		ExecFile(g_hwndTClockMain,cal);
 	}
 }
@@ -106,7 +110,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	(void)hPrevInstance;
 	(void)nCmdShow;
 	
-	// Make Sure We're Running Windows 2000 or Newer!
+	// get the path where .exe is positioned
+	GetModuleFileName(hInstance, g_mydir, sizeof(g_mydir));
+	del_title(g_mydir);
+	
+	// Make sure we're running Windows 2000 and above
 	if(!CheckSystemVersion()) {
 		MessageBox(NULL,"T-Clock requires Windows 2000 or newer","old OS",MB_OK|MB_ICONERROR);
 		ExitProcess(1);
@@ -119,6 +127,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 //	FindTrayServer(hwnd);
+	
+	// Make sure we're not running 32bit on 64bit OS / start the other one
+	#ifndef __x86_64__
+	if(IsWow64()){
+		hwnd=FindWindow(g_szClassName, g_szWindowText);
+		if(hwnd) { // send commands to existing instance
+			CheckCommandLine(hwnd,lpCmdLine,1);
+		}else{ // start new instance
+			char clock64[MAX_PATH];
+			strcpy(clock64,g_mydir); add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
+			ExecFile(NULL,clock64);
+		}
+		ExitProcess(0);
+	}
+	#endif // __x86_64__
+	
 	// Do Not Allow the Program to Execute Twice!
 	for(updated=0; updated<25; ++updated){ // up to 5 sec
 		HANDLE processlock=CreateMutex(NULL,FALSE,g_szClassName);
@@ -135,10 +159,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		break;
 	}
 	
-	// get the path where .exe is positioned
-	GetModuleFileName(hInstance, g_mydir, MAX_PATH);
-	del_title(g_mydir);
-	
 	// Update settings if required and setup defaults
 	if((updated=CheckSettings())<0){
 		ExitProcess(1);
@@ -146,7 +166,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
 	m_bTrans2kIcons = GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE);
 	CancelAllTimersOnStartUp();
-	if(!CheckTCDLL()) { ExitProcess(2);}
+	if(!LoadTClockDLL())
+		ExitProcess(2);
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
 	s_uTaskbarRestart = RegisterWindowMessage("TaskbarCreated");
@@ -508,22 +529,15 @@ void OnTimerMain(HWND hwnd)   //------------------------------------------------
 	if(0 <= nCountFindingClock && nCountFindingClock < 20) nCountFindingClock++;
 	else if(nCountFindingClock == 20) nCountFindingClock++;
 }
-//================================================================================================
-//-----------------------//----------------------------+++--> Check the File Version of tClock.dll:
-BOOL CheckTCDLL(void)   //------------------------------------------------------------------+++-->
-{
-	char fname[MAX_PATH];
-	strcpy(fname, g_mydir); add_title(fname, "tClock.dll");
-	return CheckDLL(fname);
-}
-//================================================================================================
-//----------------------------//--------+++--> Verify the Correct Version of tClock.dll is Present:
-BOOL CheckDLL(char* fname)   //-------------------------------------------------------------+++-->
+//=================================================================================================
+//----------------------------//--------+++--> Verify the Correct Version of T-Clock.dll is Present:
+int CheckDLL(char* fname)   //---------------------------------------------------------------+++-->
 {
 	DWORD size;
-	char szVersion[32] = {0};
-	BOOL br = FALSE;
+	char szVersion[32];
+	int ret = 0;
 	
+	*szVersion='\0';
 	size = GetFileVersionInfoSize(fname, 0);
 	if(size > 0) {
 		char* pBlock = malloc(size);
@@ -531,13 +545,11 @@ BOOL CheckDLL(char* fname)   //-------------------------------------------------
 			VS_FIXEDFILEINFO* pffi;
 			UINT uLen;
 			if(VerQueryValue(pBlock, "\\\0", (LPVOID*)&pffi, &uLen)) {
-				if(HIWORD(pffi->dwFileVersionMS) == VER_MAJOR &&
-				   LOWORD(pffi->dwFileVersionMS) == VER_MINOR &&
-				   HIWORD(pffi->dwFileVersionLS) == VER_BUILD &&
-				   LOWORD(pffi->dwFileVersionLS) == VER_REVISION) {
-					br = TRUE; //--+++--> Correct tClock.dll File Version Found!
+				if(pffi->dwFileVersionMS == MAKELONG(VER_MINOR,VER_MAJOR)  &&
+				   pffi->dwFileVersionLS == MAKELONG(VER_REVISION,VER_BUILD)){
+					ret = 1; //--+++--> Correct T-Clock.dll File Version Found!
 				} else {
-					wsprintf(szVersion, "Version: %d.%d.%d.%d",
+					wsprintf(szVersion, "Version: %hu.%hu.%hu.%hu",
 							 HIWORD(pffi->dwFileVersionMS),
 							 LOWORD(pffi->dwFileVersionMS),
 							 HIWORD(pffi->dwFileVersionLS),
@@ -547,14 +559,33 @@ BOOL CheckDLL(char* fname)   //-------------------------------------------------
 		}
 		free(pBlock);
 	}
-	if(!br) {
+	if(!ret) {
 		char msg[MAX_PATH+30];
-		strcpy(msg, "Invalid file version: ");
+		if(*szVersion){
+			strcpy(msg, "Invalid file version: ");
+		}else{
+			strcpy(msg, "Error loading: ");
+		}
 		get_title(msg + strlen(msg), fname);
 		MyMessageBox(NULL, msg,
 					 szVersion, MB_OK, MB_ICONEXCLAMATION);
 	}
-	return br;
+	return ret;
+}
+//================================================================================================
+//-----------------------//---------------------------+++--> Check the File Version of T-Clock.dll:
+int LoadTClockDLL(void)   //----------------------------------------------------------------+++-->
+{
+	char fname[MAX_PATH];
+	strcpy(fname, g_mydir); add_title(fname, "misc\\T-Clock" ARCH_SUFFIX ".dll");
+	if(CheckDLL(fname)){
+		HMODULE dll=LoadLibrary(fname);
+		IsCalendarOpen=(IsCalendarOpen_t)GetProcAddress(dll,"IsCalendarOpen");
+		HookStart=(HookStart_t)GetProcAddress(dll,"HookStart");
+		HookEnd=(HookEnd_t)GetProcAddress(dll,"HookEnd");
+		return 1;
+	}
+	return 0;
 }
 //================================================================================================
 //----------+++--> Make Background of Desktop Icon Text Labels Transparent (For Windows 2000 Only):
