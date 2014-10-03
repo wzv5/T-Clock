@@ -9,7 +9,6 @@
 #include <stdio.h>//sprintf
 #include <Uxtheme.h>//SetWindowTheme
 #include <WindowsX.h>//Edit_SetText
-#include <ShlObj.h>//IShellDispatch4
 #include <Shlwapi.h>//PathFileExists
 #include <Psapi.h>//EmptyWorkingSet
 #include "../common/newapi.h"
@@ -60,6 +59,10 @@ extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
 void ToggleCalendar(int type);
+int GetStartupFile(HWND hDlg,char filename[MAX_PATH]);
+void AddStartup(HWND hDlg);
+void RemoveStartup(HWND hDlg);
+int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name);
 
 // settings.c
 int CheckSettings();

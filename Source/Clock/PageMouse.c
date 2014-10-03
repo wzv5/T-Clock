@@ -3,6 +3,7 @@
 //-------------------------------------------------------*/
 // Modified by Stoic Joker: Saturday, March 6, 2010 - 8:11:17pm
 #include "tclock.h"
+#include <ShlObj.h>//SHBrowseForFolder
 
 static void OnInit(HWND hDlg,HWND* hList);
 static void OnApply(HWND hDlg);

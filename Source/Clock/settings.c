@@ -123,9 +123,7 @@ int CheckSettings(){
 	}
 	return 0;
 }
-// temporarily forward defines from pageabout.c
-extern BOOL GetStartupFile(HWND hDlg,char filename[MAX_PATH]);
-extern void AddStartup(HWND hDlg);
+
 void ConvertSettings(){
 	char buf[MAX_PATH];
 	int idx, idx2;

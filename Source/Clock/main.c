@@ -5,6 +5,7 @@
 #include "tclock.h" //---------------{ Stoic Joker 2006-2011 }---------------+++-->
 #include <winver.h>
 #include <wtsapi32.h>
+#include <ShlObj.h>//SHGetFolderPath
 #include "../common/version.h"
 #include "../common/tcolor.h" // WM_DWMCOLORIZATIONCOLORCHANGED
 
@@ -95,6 +96,87 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 		}
 		FreeLibrary(handle);
 	}
+}
+//====================================================================================
+//---------------------------+++--> Does our startup file exist? Also creates filename:
+int GetStartupFile(HWND hDlg,char filename[MAX_PATH]){   //--------------------+++-->
+	size_t offset;
+	if(SHGetFolderPath(hDlg,CSIDL_STARTUP,NULL,SHGFP_TYPE_CURRENT,filename)!=S_OK){
+		return 0;
+	}
+	offset=strlen(filename);
+	filename[offset]='\\';
+	filename[offset+1]='\0'; // old Stoic Joker link
+	strcat(filename,CONF_START_OLD);
+	strcat(filename,".lnk");
+	if(PathFileExists(filename))
+		return 1;
+	filename[offset+1]='\0'; // new name
+	strcat(filename,CONF_START);
+	strcat(filename,".lnk");
+	if(PathFileExists(filename))
+		return 1;
+	return 0;
+}
+//================================================================================================
+//----------------------------------------+++--> Remove Launch T-Clock on Windows Startup ShortCut:
+void RemoveStartup(HWND hDlg)   //----------------------------------------------------------+++-->
+{
+	char path[MAX_PATH];
+	if(!GetStartupFile(hDlg,path))
+		return;
+	DeleteFile(path);
+}
+//===================================
+void AddStartup(HWND hDlg) //--+++-->
+{
+	char path[MAX_PATH], myexe[MAX_PATH];
+	if(GetStartupFile(hDlg,path) || !*path)
+		return;
+	*strrchr(path,'\\')='\0';
+	GetModuleFileName(GetModuleHandle(NULL),myexe,MAX_PATH);
+	CreateLink(myexe,path,CONF_START);
+}
+//==========================
+//--+++--> Create Launch T-Clock on Windows Startup ShortCut:
+int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
+{
+	HRESULT hres;
+	IShellLink* psl;
+	
+	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
+	
+	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
+	if(SUCCEEDED(hres)) {
+		IPersistFile* ppf;
+		char path[MAX_PATH];
+		
+		psl->lpVtbl->SetPath(psl, fname);
+		psl->lpVtbl->SetDescription(psl, name);
+		strcpy(path, fname);
+		del_title(path);
+		psl->lpVtbl->SetWorkingDirectory(psl, path);
+		
+		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
+		if(SUCCEEDED(hres)) {
+			WORD wsz[MAX_PATH];
+			char lnkfile[MAX_PATH];
+			strcpy(lnkfile, dstpath);
+			add_title(lnkfile, (char*)name);
+			strcat(lnkfile, ".lnk");
+			
+			MultiByteToWideChar(CP_ACP, 0, lnkfile, -1, wsz, MAX_PATH);
+			
+			hres = ppf->lpVtbl->Save(ppf, wsz, TRUE);
+			ppf->lpVtbl->Release(ppf);
+		}
+		psl->lpVtbl->Release(psl);
+	}
+	CoUninitialize();
+	
+	if(SUCCEEDED(hres))
+		return 1;
+	return 0;
 }
 
 //================================================================================================

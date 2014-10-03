@@ -2,6 +2,7 @@
 //--+++--> menu.c - pop-up menu on right button click - KAZUBON 1997-2001 =========
 //================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
+#include <ShlObj.h>//IShellDispatch4
 
 void UpdateAlarmMenu(HMENU hMenu);
 static char g_undo=0; // did we change windows and can undo it?

@@ -5,16 +5,6 @@
 #include "tclock.h"
 #include "../common/version.h"
 
-#ifdef _WIN64
-#	define TCLOCK_SUFFIX " x64"
-#else
-#	define TCLOCK_SUFFIX ""
-#endif
-#define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - " VER_SHORT_DOTS " build " STR(VER_REVISION)
-#define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux tries to continue Stoic Joker's efforts."
-#define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
-#define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
-
 static WNDPROC m_oldLabProc = NULL;
 static HCURSOR m_hCurHand = NULL;
 
@@ -24,10 +14,6 @@ static void OnLinkClicked(HWND hDlg, UINT id);
 
 LRESULT CALLBACK LabLinkProc(HWND, UINT, WPARAM, LPARAM);
 
-BOOL GetStartupFile(HWND hDlg,char filename[MAX_PATH]);
-void AddStartup(HWND hDlg);
-void RemoveStartup(HWND hDlg);
-BOOL CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name);
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 /////////////////////////////////////////////////////////////////////////////////////
 INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -137,86 +123,4 @@ LRESULT CALLBACK LabLinkProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 		return TRUE;
 	}
 	return CallWindowProc(m_oldLabProc, hwnd, message, wParam, lParam);
-}
-//================================================================================
-//---------------------------+++--> Does startup file exist? Also creates filename:
-BOOL GetStartupFile(HWND hDlg,char filename[MAX_PATH]){   //-------------------------+++-->
-	size_t offset;
-	if(SHGetFolderPath(hDlg,CSIDL_STARTUP,NULL,SHGFP_TYPE_CURRENT,filename)!=S_OK){
-		return 0;
-	}
-	offset=strlen(filename);
-	filename[offset]='\\';
-	filename[offset+1]='\0'; // old Stoic Joker link
-	strcat(filename,CONF_START_OLD);
-	strcat(filename,".lnk");
-	if(PathFileExists(filename))
-		return 1;
-	filename[offset+1]='\0'; // new name
-	strcat(filename,CONF_START);
-	strcat(filename,".lnk");
-	if(PathFileExists(filename))
-		return 1;
-	return 0;
-}
-//================================================================================================
-//----------------------------------------+++--> Remove Launch T-Clock on Windows Startup ShortCut:
-void RemoveStartup(HWND hDlg)   //----------------------------------------------------------+++-->
-{
-	char path[MAX_PATH];
-	if(!GetStartupFile(hDlg,path))
-		return;
-	DeleteFile(path);
-}
-//======================================
-//--+++-->
-void AddStartup(HWND hDlg)
-{
-	char path[MAX_PATH], myexe[MAX_PATH];
-	if(GetStartupFile(hDlg,path) || !*path)
-		return;
-	*strrchr(path,'\\')='\0';
-	GetModuleFileName(GetModuleHandle(NULL),myexe,MAX_PATH);
-	CreateLink(myexe,path,CONF_START);
-}
-//==========================
-//--+++--> Create Launch T-Clock on Windows Startup ShortCut:
-BOOL CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
-{
-	HRESULT hres;
-	IShellLink* psl;
-	
-	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
-	
-	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
-	if(SUCCEEDED(hres)) {
-		IPersistFile* ppf;
-		char path[MAX_PATH];
-		
-		psl->lpVtbl->SetPath(psl, fname);
-		psl->lpVtbl->SetDescription(psl, name);
-		strcpy(path, fname);
-		del_title(path);
-		psl->lpVtbl->SetWorkingDirectory(psl, path);
-		
-		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
-		
-		if(SUCCEEDED(hres)) {
-			WORD wsz[MAX_PATH];
-			char lnkfile[MAX_PATH];
-			strcpy(lnkfile, dstpath);
-			add_title(lnkfile, (char*)name);
-			strcat(lnkfile, ".lnk");
-			
-			MultiByteToWideChar(CP_ACP, 0, lnkfile, -1, wsz, MAX_PATH);
-			
-			hres = ppf->lpVtbl->Save(ppf, wsz, TRUE);
-			ppf->lpVtbl->Release(ppf);
-		}
-		psl->lpVtbl->Release(psl);
-	}
-	CoUninitialize();
-	
-	if(SUCCEEDED(hres)) return TRUE;
-	else return FALSE;
 }
