@@ -28,10 +28,10 @@
 #define ARCH_SUFFIX_64 "64"
 #ifndef __x86_64__
 #	define ARCH_SUFFIX ARCH_SUFFIX_32
-#	define TCLOCK_SUFFIX " x64"
+#	define TCLOCK_SUFFIX ""
 #else
 #	define ARCH_SUFFIX ARCH_SUFFIX_64
-#	define TCLOCK_SUFFIX ""
+#	define TCLOCK_SUFFIX " x64"
 #endif // __x86_64__
 
 #define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - " VER_SHORT_DOTS " build " STR(VER_REVISION)
