@@ -215,29 +215,23 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		DialogStopWatch();
 		break;
 	case IDM_STOPWATCH_START:
+	case IDM_STOPWATCH_RESUME:
 		if(!IsWindow(g_hDlgStopWatch))
 			DialogStopWatch();
-		StopWatch_Start(g_hDlgStopWatch);
+		StopWatch_Resume(g_hDlgStopWatch);
 		break;
 	case IDM_STOPWATCH_STOP:
+	case IDM_STOPWATCH_PAUSE:
 		if(IsWindow(g_hDlgStopWatch))
-			StopWatch_Stop(g_hDlgStopWatch);
+			StopWatch_Pause(g_hDlgStopWatch);
 		break;
 	case IDM_STOPWATCH_RESET:
 		if(IsWindow(g_hDlgStopWatch))
 			StopWatch_Reset(g_hDlgStopWatch);
 		break;
-	case IDM_STOPWATCH_PAUSE:
-		if(IsWindow(g_hDlgStopWatch))
-			StopWatch_Pause(g_hDlgStopWatch);
-		break;
-	case IDM_STOPWATCH_RESUME:
-		if(IsWindow(g_hDlgStopWatch))
-			StopWatch_Resume(g_hDlgStopWatch);
-		break;
 	case IDM_STOPWATCH_LAP:
 		if(IsWindow(g_hDlgStopWatch))
-			StopWatch_Lap(g_hDlgStopWatch);
+			StopWatch_Lap(g_hDlgStopWatch,0);
 		break;
 	case IDM_TIMER:
 		DialogTimer();

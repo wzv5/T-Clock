@@ -153,7 +153,7 @@ void StopWatch_Stop(HWND hDlg);
 void StopWatch_Reset(HWND hDlg);
 void StopWatch_Pause(HWND hDlg);
 void StopWatch_Resume(HWND hDlg);
-void StopWatch_Lap(HWND hDlg);
+void StopWatch_Lap(HWND hDlg,int bFromStop);
 void StopWatch_TogglePause(HWND hDlg);
 
 // ExitWindows.c
