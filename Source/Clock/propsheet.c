@@ -78,8 +78,8 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 	(void)lParam;
 	if(uMsg == PSCB_INITIALIZED) {
 		// subclass the window
-		m_oldWndProc = (WNDPROC)GetWindowLongPtr(hDlg, GWL_WNDPROC);
-		SetWindowLongPtr(hDlg, GWL_WNDPROC, (LONG_PTR)SubclassProc);
+		m_oldWndProc = (WNDPROC)GetWindowLongPtr(hDlg, GWLP_WNDPROC);
+		SetWindowLongPtr(hDlg, GWLP_WNDPROC, (LONG_PTR)SubclassProc);
 	}
 	return 0;
 }

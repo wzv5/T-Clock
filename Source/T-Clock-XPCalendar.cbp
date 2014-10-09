@@ -14,8 +14,7 @@
 				<Compiler>
 					<Add option="/MD" />
 					<Add option="/GL" />
-					<Add option="/Gy" />
-					<Add option="/Ox" />
+					<Add option="/O2" />
 					<Add option="/DNDEBUG" />
 				</Compiler>
 				<Linker>
@@ -34,6 +33,7 @@
 					<Add option="/D_DEBUG" />
 				</Compiler>
 				<Linker>
+					<Add option="/debug" />
 					<Add option="/DEBUG" />
 					<Add directory="../Debug/Win32" />
 				</Linker>
@@ -44,7 +44,8 @@
 			<Add alias="release" targets="app;" />
 		</VirtualTargets>
 		<Compiler>
-			<Add option="/Wall" />
+			<Add option="/W3" />
+			<Add option="/Zi" />
 			<Add option="/wd4100" />
 			<Add option="/wd4244" />
 			<Add option="/wd4242" />
@@ -58,6 +59,8 @@
 			<Add option="/DTCLOCK_LIGHT" />
 		</Compiler>
 		<Linker>
+			<Add option="/pdb:$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).pdb" />
+			<Add option="/debug" />
 			<Add library="User32" />
 			<Add library="Shell32" />
 			<Add library="Advapi32" />

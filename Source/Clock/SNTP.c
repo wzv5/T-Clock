@@ -545,8 +545,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SetDlgItemText(hDlg, IDCE_SYNCHOTKEY, tchk[0].szText);
 	
 	// Subclass the Edit Controls
-	OldEditClassProc  = (WNDPROC)(LONG_PTR)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWL_WNDPROC);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWL_WNDPROC, (LONG_PTR)SubClassEditProc);
+	OldEditClassProc  = (WNDPROC)(LONG_PTR)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC);
+	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
 	//-+> Create & Show the Log File ListView Control:
 //===============================//=================================================
 	hLogView = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|

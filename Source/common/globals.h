@@ -50,10 +50,6 @@ extern HHOOK	g_hhook;
 extern char		g_bCalOpen;
 
 
-#ifndef GWL_WNDPROC // Required for the x64 Edition
-#	define GWL_WNDPROC GWLP_WNDPROC
-#endif
-
 // messages to send the main/helper app
 #define MAINM_CLOCKINIT				(WM_USER)
 #define MAINM_ERROR					(WM_USER+1)

@@ -165,7 +165,7 @@ void ShowTip(HWND clock){
 void SubsDestroy(){
 	for(; m_multiClocks; ){
 		if(IsWindow(m_multiClock[--m_multiClocks].worker)){
-			SetWindowLongPtr(m_multiClock[m_multiClocks].worker,GWL_WNDPROC,(LONG_PTR)m_oldWorkerProc);
+			SetWindowLongPtr(m_multiClock[m_multiClocks].worker,GWLP_WNDPROC,(LONG_PTR)m_oldWorkerProc);
 			SendMessage(m_multiClock[m_multiClocks].clock,WM_CLOSE,0,0);
 			SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0,0,
 						m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
@@ -208,8 +208,8 @@ void SubsCreate(){
 					if(!i) m_multiClockDC=GetDC(m_multiClock[0].clock);
 					GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
 					m_multiClock[i].worker=hwndChild;
-					m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWL_WNDPROC);
-					SetWindowLongPtr(hwndChild,GWL_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
+					m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWLP_WNDPROC);
+					SetWindowLongPtr(hwndChild,GWLP_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
 					++m_multiClocks;
 				}
 				break;
@@ -230,8 +230,8 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
-	m_oldClockProc = (WNDPROC)GetWindowLongPtr(hwnd, GWL_WNDPROC);
-	SetWindowLongPtr(hwnd, GWL_WNDPROC, (LONG_PTR)WndProc);
+	m_oldClockProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
+	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
 	SetClassLong(hwnd, GCL_STYLE, GetClassLong(hwnd, GCL_STYLE) & ~CS_DBLCLKS);
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
@@ -258,7 +258,7 @@ void EndClock(void)   //--------------------------------------------------------
 	EndNewAPI(g_hwndClock);
 	if(g_hwndClock && IsWindow(g_hwndClock)) {
 		if(m_bTimer) KillTimer(g_hwndClock, 1); m_bTimer = 0;
-		SetWindowLongPtr(g_hwndClock, GWL_WNDPROC, (LONG_PTR)m_oldClockProc);
+		SetWindowLongPtr(g_hwndClock, GWLP_WNDPROC, (LONG_PTR)m_oldClockProc);
 		m_oldClockProc=m_oldWorkerProc=NULL;
 	}
 	
