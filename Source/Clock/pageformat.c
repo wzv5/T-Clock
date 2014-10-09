@@ -171,7 +171,9 @@ void OnInit(HWND hDlg)
 	m_transition=-1; // start transition lock
 	m_hwndPage = hDlg;
 	
-	hfont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT);
+//	hfont = (HFONT)GetStockObject(SYSTEM_FIXED_FONT); // pixel, bold
+//	hfont = (HFONT)GetStockObject(ANSI_FIXED_FONT); // pixel, "normal"
+	hfont = (HFONT)GetStockObject(OEM_FIXED_FONT); // cleartype, bold (same as console?)
 	if(hfont)
 		SendDlgItemMessage(hDlg, IDC_FORMAT, WM_SETFONT, (WPARAM)hfont, 0);
 		

@@ -15,7 +15,7 @@ BOOL m_bAutoClose;
 //------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
 void SetMyDialgPos(HWND hwnd)   //----------------------------------------------------------+++-->
 {
-	#define PADDING 11 // 11 is Win8 default
+	#define padding 11 // 11 is Win8 default
 	MONITORINFO moni;
 	int wProp, hProp;
 	
@@ -28,17 +28,46 @@ void SetMyDialgPos(HWND hwnd)   //----------------------------------------------
 	GetMonitorInfo(MonitorFromPoint(*(POINT*)&moni.rcWork,MONITOR_DEFAULTTONEAREST),&moni);
 	
 	if(moni.rcWork.top!=moni.rcMonitor.top || moni.rcWork.bottom!=moni.rcMonitor.bottom) { // taskbar is horizontal
-		moni.rcMonitor.left=moni.rcWork.right-wProp-PADDING;
-		if(moni.rcWork.bottom!=moni.rcMonitor.bottom) // bottom
-			moni.rcMonitor.top=moni.rcWork.bottom-hProp-PADDING;
-		else // top
-			moni.rcMonitor.top=moni.rcWork.top+PADDING;
-	}else{ // vertical
-		moni.rcMonitor.top=moni.rcWork.bottom-hProp-PADDING;
+		moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
+		if(moni.rcWork.top!=moni.rcMonitor.top) // top
+			moni.rcMonitor.top=moni.rcWork.top+padding;
+		else // bottom
+			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
+	}else if(moni.rcWork.left!=moni.rcMonitor.left || moni.rcWork.right!=moni.rcMonitor.right){ // vertical
+		moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
 		if(moni.rcWork.left!=moni.rcMonitor.left) // left
-			moni.rcMonitor.left=moni.rcWork.left+PADDING;
+			moni.rcMonitor.left=moni.rcWork.left+padding;
 		else // right
-			moni.rcMonitor.left=moni.rcWork.right-wProp-PADDING;
+			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
+	}else{ // autohide taskbar
+		MONITORINFO taskbarMoni;
+		HWND taskbar=FindWindow("Shell_TrayWnd",NULL);
+		RECT taskbarRC;
+		int tbW,tbH;
+		if(!taskbar)
+			return;
+		taskbarMoni.cbSize=sizeof(moni);
+		GetMonitorInfo(MonitorFromWindow(taskbar,MONITOR_DEFAULTTONEAREST),&taskbarMoni); // correct monitor for single monitor setup, probably wrong for multimon
+		GetWindowRect(taskbar,&taskbarRC);
+		tbW=taskbarRC.right-taskbarRC.left;
+		tbH=taskbarRC.bottom-taskbarRC.top;
+		if(tbW > tbH){ // horizontal
+			int diff=taskbarMoni.rcMonitor.top-taskbarRC.top;
+			int visiblesize=taskbarMoni.rcMonitor.bottom-taskbarMoni.rcMonitor.top+diff;
+			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
+			if((diff>0 && diff>tbH/10) || !diff || (diff<0 && (visiblesize!=tbH && visiblesize>tbH/10))) // top
+				moni.rcMonitor.top=moni.rcWork.top+padding+tbH;
+			else // bottom
+				moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding-tbH;
+		}else{
+			int diff=taskbarMoni.rcMonitor.left-taskbarRC.left;
+			int visiblesize=taskbarMoni.rcMonitor.right-taskbarMoni.rcMonitor.left+diff;
+			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
+			if((diff>0 && diff>tbW/10) || !diff || (diff<0 && (visiblesize!=tbW && visiblesize>tbW/10))) // left
+				moni.rcMonitor.left=moni.rcWork.left+padding+tbW;
+			else // right
+				moni.rcMonitor.left=moni.rcWork.right-wProp-padding-tbW;
+		}
 	}
 	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOREDRAW|SWP_NOZORDER);
 }
