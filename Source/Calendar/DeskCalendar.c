@@ -94,15 +94,15 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
 	switch(uMsg) {
 	case WM_CREATE:{
-		int ivMonths,ivMonthsPast;
+		int iMonths,iMonthsPast;
 		DWORD dwCalStyle;
 		RECT rc; HWND hCal;
-		ivMonths=GetMyRegLongEx("Calendar","ViewMonths",3);
-		ivMonthsPast=GetMyRegLongEx("Calendar","ViewMonthsPast",1);
+		iMonths=GetMyRegLongEx("Calendar","ViewMonths",3);
+		iMonthsPast=GetMyRegLongEx("Calendar","ViewMonthsPast",1);
 		
 		if(GetMyRegLong("Calendar", "ShowDayOfYear", 1)) {
 			char szTitle[32];
-			GetDayOfYearTitle(szTitle,ivMonths);
+			GetDayOfYearTitle(szTitle,iMonths);
 			SetWindowText(hwnd,szTitle);
 		}
 		
@@ -114,49 +114,47 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		if(!hCal) return -1;
 		
 		MonthCal_GetMinReqRect(hCal,&rc);//size for a single month
-		if(ivMonths>1){
-			switch(ivMonths){
+		if(iMonths>1){
+			#define CALBORDER 4
+			#define CALTODAYTEXTHEIGHT 13
+			rc.right+=CALBORDER;
+			rc.bottom-=CALTODAYTEXTHEIGHT;
+			switch(iMonths){
 			case 1: case 2: case 3:
 			case 4: case 5:
-				rc.right*=ivMonths;
+				rc.right*=iMonths;
 				break;
 			case 6:
 				rc.bottom*=3;
 			case 7: case 8:
 				rc.right*=2;
-				if(ivMonths!=6) rc.bottom*=4;
+				if(iMonths!=6) rc.bottom*=4;
 				break;
 			case 9:
-				rc.bottom*=4;
+				rc.bottom*=3;
 			case 11: case 12:
 				rc.right*=3;
-				if(ivMonths!=9) rc.bottom*=4;
+				if(iMonths!=9) rc.bottom*=4;
 				break;
 			case 10:
 				rc.right*=5;
 				rc.bottom*=2;
 				break;
 			}
+			rc.right-=CALBORDER;
+			rc.bottom+=CALTODAYTEXTHEIGHT;
 			if(g_tos>=TOS_VISTA)
 				MonthCal_SizeRectToMin(hCal,&rc);//removes some empty space.. (eg at 4 months)
-			else{ // brute force correct size
-				//rc.right+=6*ivMonths;
-				SetWindowPos(hCal,HWND_TOP,0,0,rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
-				while(MonthCal_GetCalendarCount(hCal)>=(DWORD)ivMonths) SetWindowPos(hCal,HWND_TOP,0,0,--rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
-				SetWindowPos(hCal,HWND_TOP,0,0,++rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
-				while(MonthCal_GetCalendarCount(hCal)>=(DWORD)ivMonths) SetWindowPos(hCal,HWND_TOP,0,0,rc.right,--rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
-				++rc.bottom;
-			}
 		}else{
 			if(rc.right<(LONG)MonthCal_GetMaxTodayWidth(hCal))
 				rc.right=MonthCal_GetMaxTodayWidth(hCal);
 		}
 		SetWindowPos(hCal,HWND_TOP,0,0,rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
-		if(ivMonthsPast){
+		if(iMonthsPast){
 			SYSTEMTIME st,stnew; MonthCal_GetCurSel(hCal,&st); stnew=st;
-			if(stnew.wMonth<ivMonthsPast){ --stnew.wYear; stnew.wMonth+=12; }
-			stnew.wMonth-=(short)ivMonthsPast;
-			if(stnew.wMonth>12){ ++stnew.wYear; stnew.wMonth-=12; }  // in case ivMonthsPast is negative
+			if(stnew.wMonth<iMonthsPast){ --stnew.wYear; stnew.wMonth+=12; }
+			stnew.wMonth-=(short)iMonthsPast;
+			if(stnew.wMonth>12){ ++stnew.wYear; stnew.wMonth-=12; }  // in case iMonthsPast is negative
 			MonthCal_SetCurSel(hCal,&stnew);
 			MonthCal_SetCurSel(hCal,&st);
 		}
