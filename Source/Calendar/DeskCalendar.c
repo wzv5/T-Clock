@@ -69,7 +69,7 @@ void SetMyDialgPos(HWND hwnd)   //----------------------------------------------
 				moni.rcMonitor.left=moni.rcWork.right-wProp-padding-tbW;
 		}
 	}
-	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOREDRAW|SWP_NOZORDER);
+	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
 }
 //===========================================================================================
 //----------------------------------------------------+++--> Get the Current Day of the Year:
