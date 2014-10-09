@@ -10,6 +10,12 @@ static LARGE_INTEGER m_start;// start time
 static LARGE_INTEGER m_lap;// latest lap time
 static LARGE_INTEGER m_stop;// latest lap time
 static char m_paused; // Global Pause/Resume Displayed Counter.
+// resize vars
+static int m_rezCX; // original dialog width (fixed)
+static int m_rezCY; // original dialog height (minimal)
+static int m_rezYcontrols;
+static int m_rezCXlist;
+static int m_rezCYlist;
 
 static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 static INT_PTR CALLBACK DlgProcStopwatchExport(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -164,14 +170,26 @@ void StopWatch_Lap(HWND hDlg,int bFromStop){ // Get Current Time as Lap Time and
 // ----------------------------------------------------+++--> Initialize Stopwatch Dialog Controls:
 static void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
+	RECT rc;
 	LVCOLUMN lvCol;
 	HWND hList=GetDlgItem(hDlg,IDC_SW_LAPS);
+	/// basic init
 	m_paused=1;
 	m_start.QuadPart=0;
 	QueryPerformanceFrequency(&m_frequency);
 	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
 	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
-	
+	/// init resize info
+	GetWindowRect(hDlg,&rc);
+	m_rezCX=rc.right-rc.left;
+	m_rezCY=rc.bottom-rc.top;
+	GetWindowRect(GetDlgItem(hDlg,IDC_SW_START),&rc);
+	ScreenToClient(hDlg,(POINT*)&rc);
+	m_rezYcontrols=rc.top;
+	GetWindowRect(hList,&rc);
+	m_rezCYlist=rc.bottom-rc.top;
+	m_rezCXlist=rc.right-rc.left;
+	/// init list view
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
 	SetXPWindowTheme(hList,L"Explorer",NULL);
 	
@@ -193,7 +211,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	lvCol.fmt = LVCFMT_LEFT;
 	lvCol.pszText = TEXT("Total");
 	ListView_InsertColumn(hList,2,&lvCol);
-	
+	/// init font
 	{
 		LOGFONT logfont;
 		HFONT hfont;
@@ -252,6 +270,7 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 		SendDlgItemMessage(hDlg,IDC_SW_RESET,WM_SETFONT,0,0);
 		DeleteObject(hfont);
 		break;}
+	/// handling
 	case WM_ACTIVATE:
 		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
 			SetWindowPos(hDlg,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
@@ -267,6 +286,38 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 		SetBkColor((HDC)wParam,0x00FFFFFF);
 		SetBkMode((HDC)wParam, TRANSPARENT);
 		return (INT_PTR)GetStockObject(WHITE_BRUSH);
+	/// resizing
+	case WM_WINDOWPOSCHANGING:{
+		WINDOWPOS* info=(WINDOWPOS*)lParam;
+		if(!(info->flags&SWP_NOSIZE)){
+			if(info->cx!=m_rezCX || info->cy<m_rezCY){
+				RECT rc; GetWindowRect(hDlg,&rc);
+				if(info->cx!=m_rezCX){
+					info->cx=m_rezCX;
+					info->x=rc.left;
+				}
+				if(info->cy<m_rezCY){
+					info->cy=m_rezCY;
+					info->y=rc.top;
+				}
+			}
+		}
+		return TRUE;}
+	case WM_WINDOWPOSCHANGED:{
+		WINDOWPOS* info=(WINDOWPOS*)lParam;
+		if(!(info->flags&SWP_NOSIZE)){
+			int diff=info->cy-m_rezCY;
+			int control;
+			for(control=IDC_SW_START; control<=IDC_SW_EXPORT; ++control){
+				HWND hwnd=GetDlgItem(hDlg,control);
+				RECT rc; GetWindowRect(hwnd,&rc);
+				ScreenToClient(hDlg,(POINT*)&rc);
+				SetWindowPos(hwnd,HWND_TOP,rc.left,m_rezYcontrols+diff,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
+			}
+			SetWindowPos(GetDlgItem(hDlg,IDC_SW_LAPS),HWND_TOP,0,0,m_rezCXlist,m_rezCYlist+diff,SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOZORDER);
+		}
+		return TRUE;}
+	/// user interaction
 	case WM_TIMER:
 		if(!m_paused)
 			OnTimer(hDlg);

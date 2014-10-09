@@ -126,10 +126,10 @@
 #define IDC_SW_ELAPSED                  1020
 #define IDC_SW_LAP                      1021
 #define IDC_SW_LAPS                     1022
-#define IDC_SW_START                    1023
+#define IDC_SW_START                    1023 /* group */
 //#define IDC_SW_STOP                     1024
-#define IDC_SW_RESET                    1025
-#define IDC_SW_EXPORT                   1026
+#define IDC_SW_RESET                    1024
+#define IDC_SW_EXPORT                   1025 /* end group */
 #define IDCE_SYNCHOTKEY                 1026
 #define IDCE_HK_ADD                     1026
 #define IDCE_HK_STOP                    1027
