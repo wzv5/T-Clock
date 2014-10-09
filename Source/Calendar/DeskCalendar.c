@@ -97,17 +97,17 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		int ivMonths,ivMonthsPast;
 		DWORD dwCalStyle;
 		RECT rc; HWND hCal;
-		ivMonths=GetMyRegLongEx("Calendar","ViewMonths",1);
-		ivMonthsPast=GetMyRegLongEx("Calendar","ViewMonthsPast",0);
+		ivMonths=GetMyRegLongEx("Calendar","ViewMonths",3);
+		ivMonthsPast=GetMyRegLongEx("Calendar","ViewMonthsPast",1);
 		
-		if(GetMyRegLong("Calendar", "ShowDayOfYear", FALSE)) {
+		if(GetMyRegLong("Calendar", "ShowDayOfYear", 1)) {
 			char szTitle[32];
 			GetDayOfYearTitle(szTitle,ivMonths);
 			SetWindowText(hwnd,szTitle);
 		}
 		
 		dwCalStyle=WS_BORDER|WS_CHILD|WS_VISIBLE|MCS_NOTODAYCIRCLE;
-		if(GetMyRegLong("Calendar","ShowWeekNums",FALSE))
+		if(GetMyRegLong("Calendar","ShowWeekNums",0))
 			dwCalStyle|=MCS_WEEKNUMBERS;
 		
 		hCal=CreateWindowEx(0,MONTHCAL_CLASS,"",dwCalStyle,0,0,0,0,hwnd,NULL,NULL,NULL);
@@ -163,7 +163,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		SetFocus(hCal);
 		AdjustWindowRectEx(&rc,WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,FALSE,0);
 		SetWindowPos(hwnd,HWND_TOPMOST,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
-		if(!m_bAutoClose && !GetMyRegLong("Calendar","CalendarTopMost",FALSE))
+		if(!m_bAutoClose && !GetMyRegLong("Calendar","CalendarTopMost",0))
 			SetWindowPos(hwnd,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 		SetMyDialgPos(hwnd);
 		if(m_bAutoClose && GetForegroundWindow()!=hwnd)
@@ -189,7 +189,7 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	INITCOMMONCONTROLSEX icex;
 	WNDCLASSEX wcx;
 	ATOM calclass;
-	m_bAutoClose = GetMyRegLong("Calendar", "CloseCalendar", FALSE);
+	m_bAutoClose = GetMyRegLong("Calendar", "CloseCalendar", 1);
 	icex.dwSize=sizeof(icex);
 	icex.dwICC=ICC_DATE_CLASSES;
 	InitCommonControlsEx(&icex);

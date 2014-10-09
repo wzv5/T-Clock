@@ -95,6 +95,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 		for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
+	/// on Calendar defaults change, also update the Calendar itself to stay sync!
 	CheckDlgButton(hDlg, IDCB_SHOW_DOY, GetMyRegLongEx("Calendar","ShowDayOfYear",1));
 	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, GetMyRegLongEx("Calendar","ShowWeekNums",0));
 	CheckDlgButton(hDlg, IDCB_CLOSECAL, GetMyRegLongEx("Calendar","CloseCalendar",1));
