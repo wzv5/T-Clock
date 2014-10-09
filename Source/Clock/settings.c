@@ -47,11 +47,11 @@ int CheckSettings(){
 		} u;
 		u.entry[2]='\0';
 		u.entryS='0'|('1'<<8); // left, 1 click
-		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_SHOWCALENDER);
+		SetMyRegLong(REG_MOUSE,u.entry,MOUSEFUNC_SHOWCALENDER);
 		u.entryS='1'|('1'<<8); // right, 1 click
-		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_MENU);
+		SetMyRegLong(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
 		u.entryS='2'|('1'<<8); // middle, 1 click
-		SetMyRegLong(g_reg_mouse,u.entry,IDM_STOPWATCH);
+		SetMyRegLong(REG_MOUSE,u.entry,IDM_STOPWATCH);
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
 		SetMyRegStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
 		SetMyRegLong("Format", "Hour12", 1);
@@ -75,7 +75,7 @@ int CheckSettings(){
 		compatibilityflags|=SCOMPAT_FORMAT|SCOMPAT_TIMERS;
 		
 		
-	case 1: /// v2.3.0#() T-Clock file structure changed, startup link must be updated.
+	case 1: /// v2.3.0#106(63ba670) T-Clock file structure changed, startup link must be updated.
 		updateflags|=SFORMAT_SILENT;
 		
 		

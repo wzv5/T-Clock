@@ -4,6 +4,9 @@
 // Modified by Stoic Joker: Tuesday, March 2 2010 - 10:42:42
 #include "tcdll.h"
 #include "../common/tcolor.h"
+#undef NTDDI_VERSION // allow our own runtime OS check
+#define NTDDI_VERSION NTDDI_VISTA // used for drag&drop tooltip
+#include <Shlobj.h>//CFSTR_SHELLIDLIST
 
 #define CLOCK_BORDER_MARGIN 2
 
@@ -116,6 +119,264 @@ int m_width=0, m_height=0, dvpos=0, dlineheight=0, dhpos=0;
 char m_bTimer=0;
 char g_bHour12, g_bHourZero;
 char m_bNoClock=0;
+static IDropTarget* m_droptarget;
+/// drag&drop stuff
+IDropTargetHelper* m_drophelper;
+static FORMATETC m_mydroptextfmt={0,NULL,DVASPECT_CONTENT,-1,TYMED_HGLOBAL};
+static FORMATETC m_mydropfmt={0,NULL,DVASPECT_CONTENT,-1,TYMED_HGLOBAL};
+typedef struct{
+	IDropTarget droptarget;
+	IDataObject* dropobj;
+	wchar_t* szTarget;
+	HWND hwnd;
+	LONG refs;
+	int lasteffect;
+	char disabled;
+	char type;
+} MyDragDrop_t;
+///=============================================================================
+///------------------------------------------------------+++--> drag&drop helper:
+static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
+{
+	char fname[MAX_PATH], sname[MAX_PATH];
+	char app[MAX_PATH];
+	char* buf,* pos;
+	int i, num;
+	STGMEDIUM med;
+	if(self->dropobj->lpVtbl->GetData(self->dropobj,&m_mydropfmt,&med) != S_OK)
+		return;
+	
+	num=DragQueryFile(med.hGlobal, (UINT)-1, NULL, 0);
+	if(num<=0)
+		return;
+	buf=malloc(num*MAX_PATH);
+	if(!buf)
+		return;
+	pos=buf;
+	for(i=0; i<num; ++i) {
+		DragQueryFile(med.hGlobal,i,fname,sizeof(fname));
+		if(self->type==DF_RECYCLE || self->type==DF_COPY || self->type==DF_MOVE) {
+			strcpy(pos,fname);
+			pos+=strlen(pos)+1;
+		} else if(self->type==DF_OPEN) {
+			if(num>1)
+				GetShortPathName(fname,sname,sizeof(sname));
+			else
+				strcpy(sname,fname);
+			strcpy(pos,sname);
+			pos+=strlen(pos);
+			if(num>1 && i<num-1)
+				*pos++=' ';
+		}
+	}
+	*pos='\0';
+	
+	num=GetMyRegStr(REG_MOUSE, "DropFilesApp",app,sizeof(app),"");
+	
+	if(self->type==DF_RECYCLE || self->type==DF_COPY || self->type==DF_MOVE) {
+		SHFILEOPSTRUCT shfos={0};
+		shfos.hwnd = NULL;
+		shfos.pFrom = buf;
+		shfos.fFlags = FOF_ALLOWUNDO|FOF_NOCONFIRMATION;
+		switch(self->type){
+		case DF_COPY:
+			shfos.wFunc=FO_COPY;
+		case DF_MOVE:
+			if(self->type==DF_MOVE)
+				shfos.wFunc=FO_MOVE;
+			shfos.pTo=app;
+			break;
+		default: // DF_RECYCLE:
+			shfos.wFunc=FO_DELETE;
+			break;
+		}
+		SHFileOperation(&shfos);
+	} else if(self->type==DF_OPEN) {
+		char* command=malloc(2+num+(pos-buf));
+		if(command){
+			memcpy(command,app,num);
+			command[num]=' ';
+			memcpy(command+num+1,buf,(pos-buf)+1);
+			ExecFile(NULL, command);
+		}
+	}
+	free(buf);
+}
+static void MyDragDrop__SetDropTip_(MyDragDrop_t* self,int effect,const wchar_t* msg)
+{
+	if(g_tos>=TOS_VISTA && effect!=self->lasteffect){
+		HGLOBAL hDesc=GlobalAlloc(GMEM_MOVEABLE,sizeof(DROPDESCRIPTION));
+		if(hDesc){
+			STGMEDIUM medium={TYMED_HGLOBAL};
+			DROPDESCRIPTION* desc=GlobalLock(hDesc);
+			medium.hGlobal=hDesc;
+			desc->type=self->lasteffect=effect;
+			if(msg){
+				wcscpy(desc->szMessage,msg);
+				wcscpy(desc->szInsert,self->szTarget);
+			}else{
+				desc->szMessage[0]='\0';
+				desc->szInsert[0]='\0';
+			}
+			GlobalUnlock(hDesc);
+			if(FAILED(self->dropobj->lpVtbl->SetData(self->dropobj,&m_mydroptextfmt,&medium,TRUE))){
+				GlobalFree(hDesc);
+			}
+		}
+	}
+}
+static void MyDragDrop__SetEffect_(MyDragDrop_t* self, DWORD grfKeyState, POINTL* pt, DWORD* pdwEffect){
+	const wchar_t* msg=NULL;
+	(void)grfKeyState;
+	(void)pt;
+	if(!self->disabled){
+//		grfKeyState&=MK_CONTROL|MK_SHIFT|MK_ALT; // MK_BUTTON,MK_LBUTTON,MK_RBUTTON,MK_MBUTTON
+//		if(grfKeyState==(MK_CONTROL|MK_SHIFT) || grfKeyState==MK_ALT){
+//			*pdwEffect = DROPEFFECT_LINK; // Pin to... / Create link
+//		}else if(grfKeyState==MK_CONTROL){
+//			*pdwEffect = DROPEFFECT_COPY; // Open with... / Copy
+//		}else
+//			*pdwEffect = DROPEFFECT_MOVE; // Move
+		switch(self->type){
+		case DF_OPEN:
+			msg=L"Open with %1";
+		case DF_COPY:
+			if(!msg) msg=L"Copy to %1";
+			*pdwEffect=DROPEFFECT_COPY; break;
+		case DF_RECYCLE:
+		case DF_MOVE:
+			msg=L"Move to %1";
+			*pdwEffect=DROPEFFECT_MOVE; break;
+		default:
+			*pdwEffect=DROPEFFECT_MOVE;
+			return;
+		}
+	}else
+		*pdwEffect = DROPEFFECT_NONE;
+	MyDragDrop__SetDropTip_(self,*pdwEffect,msg);
+}
+///======================================================================================================================
+///----------------------------------------------------------------------------+++--> IDropTarget callback implementation:
+static HRESULT __stdcall MyDragDrop__QueryInterface(IDropTarget* droptarget, REFIID riid, void** ppvObject)   ///--+++-->
+{ // unused
+	(void)droptarget;
+	(void)riid;
+	(void)ppvObject;
+	return E_NOINTERFACE;
+}
+static ULONG __stdcall MyDragDrop__AddRef(IDropTarget* droptarget)
+{ // called on RegisterDragDrop
+	MyDragDrop_t* self=(MyDragDrop_t*)droptarget;
+	return InterlockedIncrement(&self->refs);
+}
+static ULONG __stdcall MyDragDrop__Release(IDropTarget* droptarget)
+{ // called on RevokeDragDrop (frees object)
+	MyDragDrop_t* self=(MyDragDrop_t*)droptarget;
+	LONG ref=InterlockedDecrement(&self->refs);
+	if(!ref){ // self destruct
+		free(self->szTarget);
+		free(self);
+	}
+	return ref;
+}
+static HRESULT __stdcall MyDragDrop__DragEnter(IDropTarget* droptarget, IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+	MyDragDrop_t* self=(MyDragDrop_t*)droptarget;
+	if(pDataObject->lpVtbl->QueryGetData(pDataObject,&m_mydropfmt)!=S_OK)
+		self->disabled|=0x80;
+	else
+		self->disabled&=~0x80;
+	
+	if(!self->disabled) // forward to helper for file preview (but only of not disabled to improve usability)
+		m_drophelper->lpVtbl->DragEnter(m_drophelper,self->hwnd,pDataObject,(POINT*)&pt,*pdwEffect);
+	self->dropobj=pDataObject;
+	self->dropobj->lpVtbl->AddRef(self->dropobj);
+	MyDragDrop__SetEffect_(self,grfKeyState,&pt,pdwEffect);
+	return S_OK;
+}
+static HRESULT __stdcall MyDragDrop__DragOver(IDropTarget* droptarget, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+	MyDragDrop_t* self=(MyDragDrop_t*)droptarget;
+	if(!self->disabled) // forward to helper for file preview (but only of not disabled to improve usability)
+		m_drophelper->lpVtbl->DragOver(m_drophelper,(POINT*)&pt,*pdwEffect);
+	MyDragDrop__SetEffect_(self,grfKeyState,&pt,pdwEffect);
+	return S_OK;
+}
+static HRESULT __stdcall MyDragDrop__DragLeave(IDropTarget* droptarget)
+{ // don't care
+	MyDragDrop_t* self=(MyDragDrop_t*)droptarget;
+	if(!self->disabled) // forward to helper for file preview (but only of not disabled to improve usability)
+		m_drophelper->lpVtbl->DragLeave(m_drophelper);
+	MyDragDrop__SetDropTip_(self,-1,NULL); // kill text
+	self->dropobj->lpVtbl->Release(self->dropobj);
+	return S_OK;
+}
+static HRESULT __stdcall MyDragDrop__Drop(IDropTarget* droptarget, IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
+{
+	MyDragDrop_t* self=(MyDragDrop_t*)droptarget;
+	if(!self->disabled) // forward to helper for file preview (but only of not disabled to improve usability)
+		m_drophelper->lpVtbl->Drop(m_drophelper,pDataObject,(POINT*)&pt,*pdwEffect);
+	MyDragDrop__SetEffect_(self,grfKeyState,&pt,pdwEffect);
+	MyDragDrop__OnDropFiles_(self);
+	MyDragDrop__SetDropTip_(self,-1,NULL); // kill text
+	self->dropobj->lpVtbl->Release(self->dropobj);
+	return S_OK;
+}
+///=============================================================================================
+///--------------------------------------------------------------+++--> drag&drop base functions:
+static void MyDragDrop_Init(){   ///------------------------------------------------------+++-->
+	m_mydroptextfmt.cfFormat=(CLIPFORMAT)RegisterClipboardFormat(CFSTR_DROPDESCRIPTION);
+//	m_mydropfmt.cfFormat=(CLIPFORMAT)RegisterClipboardFormat(CFSTR_SHELLIDLIST);
+	m_mydropfmt.cfFormat=CF_HDROP;
+	CoCreateInstance(&CLSID_DragDropHelper,NULL,CLSCTX_INPROC_SERVER,&IID_IDropTargetHelper,&m_drophelper);
+}
+static void MyDragDrop_DeInit(){
+	m_drophelper->lpVtbl->Release(m_drophelper);
+}
+static IDropTarget* MyDragDrop_Create(HWND hwnd){
+	static IDropTargetVtbl dropfuncs={
+		MyDragDrop__QueryInterface,
+		MyDragDrop__AddRef,
+		MyDragDrop__Release,
+		MyDragDrop__DragEnter,
+		MyDragDrop__DragOver,
+		MyDragDrop__DragLeave,
+		MyDragDrop__Drop,
+	};
+	MyDragDrop_t* self=calloc(1,sizeof(MyDragDrop_t));
+	self->droptarget.lpVtbl=&dropfuncs;
+	self->hwnd=hwnd;
+	return (IDropTarget*)self;
+}
+static void MyDragDrop_Enable(IDropTarget* myobj, int bEnable){
+	MyDragDrop_t* self=(MyDragDrop_t*)myobj;
+	self->disabled=!bEnable;
+	free(self->szTarget); self->szTarget=NULL;
+	if(bEnable){
+		self->type=(char)GetMyRegLong(REG_MOUSE,"DropFiles",DF_RECYCLE);
+		switch(self->type){
+		case DF_NONE:
+			self->disabled=1;
+			break;
+		case DF_RECYCLE:
+			self->szTarget=wcsdup(L"Recycle Bin");
+			break;
+		default:{
+			char app[MAX_PATH];
+			int num=GetMyRegStr(REG_MOUSE,"DropFilesApp",app,sizeof(app),"");
+			if(!num){
+				self->disabled=1;
+			}else{
+				get_title(app,app); // get only exe/folder name
+				num=(int)strlen(app)+1;
+				self->szTarget=malloc(sizeof(wchar_t)*num);
+				if(self->szTarget)
+					MultiByteToWideChar(CP_ACP,0,app,num,self->szTarget,num);
+			}
+			break;}
+		}
+	}
+}
 
 //================================================================================================
 //---------------------------------------------------------+++--> Create Mouse-Over ToolTip Window:
@@ -208,8 +469,10 @@ void SubsCreate(){
 					if(!i) m_multiClockDC=GetDC(m_multiClock[0].clock);
 					GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
 					m_multiClock[i].worker=hwndChild;
-					m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWLP_WNDPROC);
-					SetWindowLongPtr(hwndChild,GWLP_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
+					if(!i){ // all subs should use same worker proc (untested), so only get it once (otherwise we might get ourselves...)
+						m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWLP_WNDPROC);
+						SetWindowLongPtr(hwndChild,GWLP_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
+					}
 					++m_multiClocks;
 				}
 				break;
@@ -235,6 +498,9 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	SetClassLong(hwnd, GCL_STYLE, GetClassLong(hwnd, GCL_STYLE) & ~CS_DBLCLKS);
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
+	MyDragDrop_Init();
+	m_droptarget=MyDragDrop_Create(hwnd);
+	RegisterDragDrop(hwnd,m_droptarget);
 	
 	/// for some strange reason, we need read our settings twice, otherwise our size doesn't match correctly (shouldn't be related to our settings but the DC creation or font usage, etc.)
 	ReadFormatData(hwnd,0);
@@ -247,14 +513,15 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 //----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
 void EndClock(void)   //--------------------------------------------------------------------+++-->
 {
-	DragAcceptFiles(g_hwndClock, 0);
-	DestroyTip();
 	SubsDestroy();
 	if(m_multiClockClass){
 		UnregisterClass((LPCSTR)m_multiClockClass,0);
 		m_multiClockClass=0;
 	}
+	RevokeDragDrop(g_hwndClock); // frees m_droptarget
+	MyDragDrop_DeInit();
 	DestroyClock();
+	DestroyTip();
 	EndNewAPI(g_hwndClock);
 	if(g_hwndClock && IsWindow(g_hwndClock)) {
 		if(m_bTimer) KillTimer(g_hwndClock, 1); m_bTimer = 0;
@@ -403,9 +670,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	case WM_MOUSEACTIVATE:
 		return MA_ACTIVATE;
-	case WM_DROPFILES:
-		PostMessage(g_hwndTClockMain, WM_DROPFILES, wParam, lParam);
-		return 0;
 	case WM_NOTIFY: {
 		UINT code=((LPNMHDR)lParam)->code;
 		if(code==TTN_NEEDTEXT || code==TTN_NEEDTEXTW)
@@ -418,7 +682,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SubsDestroy();
 		ReadFormatData(hwnd,0);
 		ReadStyleData(hwnd,0); // also creates/updates clock
-		DragAcceptFiles(hwnd, GetMyRegLong(NULL,"DropFiles",0)); // enable/disable DropFiles on clock
+		MyDragDrop_Enable(m_droptarget,1); // enable/disable DropFiles on clock
 		SubsCreate();
 		SubsSendResize();
 		return 0;}
@@ -458,9 +722,11 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 		return 1;
 	}
 	case WM_CREATE:{
+		RegisterDragDrop(hwnd,m_droptarget); // setup DropFiles on sub-clock
 		return 0;
 	}
 	case WM_CLOSE:{
+		RevokeDragDrop(hwnd); // kill DropFiles on sub-clock
 		DestroyWindow(hwnd);
 		return 0;
 	}
@@ -523,9 +789,6 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 			InvalidateRect(g_hwndClock,NULL,0);
 		}
 		m_TipState=0;
-		return 0;
-	case WM_DROPFILES:
-		PostMessage(g_hwndTClockMain, WM_DROPFILES, wParam, lParam);
 		return 0;
 	}
 	return DefWindowProc(hwnd,message,wParam,lParam);

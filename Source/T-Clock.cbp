@@ -223,6 +223,7 @@
 			<Add library="user32" />
 			<Add library="gdi32" />
 			<Add library="shell32" />
+			<Add library="Ole32" />
 		</Linker>
 		<Unit filename="Clock/BounceWind.c">
 			<Option compilerVar="CC" />

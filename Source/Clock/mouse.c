@@ -5,7 +5,6 @@
 // Last Modified by Stoic Joker: Sunday, 01/09/2011 @ 4:34:56pm
 #include "tclock.h"
 static const char m_click_max = 2;
-const char g_reg_mouse[] = "Mouse";
 
 static char m_click_button = -1;
 static char m_click = 0;
@@ -19,64 +18,7 @@ static int GetMouseFuncNum(char button, char nclick) {
 	entry[0]='0'+button;
 	entry[1]='0'+nclick;
 	entry[2]='\0';
-	return GetMyRegLong(g_reg_mouse,entry,0);
-}
-
-/*------------------------------------------------
-   when files dropped to the clock
---------------------------------------------------*/
-void OnDropFiles(HWND hwnd, HDROP hdrop)
-{
-	char fname[MAX_PATH], sname[MAX_PATH];
-	char app[1024];
-	SHFILEOPSTRUCT shfos;
-	char* buf, *p;
-	int i, num;
-	int nType;
-	
-	nType = GetMyRegLong(g_reg_mouse, "DropFiles", 0);
-	
-	num = DragQueryFile(hdrop, (UINT)-1, NULL, 0);
-	if(num <= 0) return;
-	buf = malloc(num*MAX_PATH);
-	if(buf == NULL) return;
-	p = buf;
-	for(i = 0; i < num; i++) {
-		DragQueryFile(hdrop, i, fname, MAX_PATH);
-		if(nType == 1 || nType == 3 || nType == 4) {
-			strcpy(p, fname); p += strlen(p) + 1;
-		} else if(nType == 2) {
-			if(num > 1) GetShortPathName(fname, sname, MAX_PATH);
-			else strcpy(sname, fname);
-			strcpy(p, sname);
-			p += strlen(p);
-			if(num > 1 && i < num - 1) { *p = ' '; p++; }
-		}
-	}
-	*p = 0;
-	DragFinish(hdrop);
-	
-	GetMyRegStr(g_reg_mouse, "DropFilesApp", app, 1024, "");
-	
-	if(nType == 1 || nType == 3 || nType == 4) {
-		memset(&shfos, 0, sizeof(SHFILEOPSTRUCT));
-		shfos.hwnd = NULL;
-		if(nType == 1) shfos.wFunc = FO_DELETE;
-		else if(nType == 3) shfos.wFunc = FO_COPY;
-		else if(nType == 4) shfos.wFunc = FO_MOVE;
-		shfos.pFrom = buf;
-		if(nType == 3 || nType == 4) shfos.pTo = app;
-		shfos.fFlags = FOF_ALLOWUNDO|FOF_NOCONFIRMATION;
-		SHFileOperation(&shfos);
-	} else if(nType == 2) {
-		char command[MAX_PATH*2];
-		//	<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< MODIFY Run With Swithces HERE!!!
-		strcpy(command, app);
-		strcat(command, " ");
-		strcat(command, buf);
-		ExecFile(hwnd, command);
-	}
-	free(buf);
+	return GetMyRegLong(REG_MOUSE,entry,0);
 }
 
 /*------------------------------------------------------------

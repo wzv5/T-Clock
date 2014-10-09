@@ -22,6 +22,7 @@
 #	define gmtime_s _gmtime64_s
 #else
 #	define strdup _strdup
+#	define wcsdup _wcsdup
 #endif // __GNUC__
 
 #define ARCH_SUFFIX_32 ""
@@ -49,6 +50,14 @@ extern HWND		g_hwndClock;		// Main Clock Window Handle
 extern HHOOK	g_hhook;
 extern char		g_bCalOpen;
 
+#define REG_MOUSE "Mouse"
+enum{ // Drop&File enum / registry settings
+	DF_NONE=0,
+	DF_RECYCLE, // default
+	DF_OPEN,
+	DF_COPY,
+	DF_MOVE,
+};
 
 // messages to send the main/helper app
 #define MAINM_CLOCKINIT				(WM_USER)

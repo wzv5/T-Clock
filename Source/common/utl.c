@@ -155,81 +155,74 @@ __inline int toupper(int c)
 
 void add_title(char* path, const char* title)
 {
-	char* p;
-	
-	p = path;
-	
-	if(*p == 0) ;
-	else if(*title && *(title + 1) == ':') ;
-	else if(*title == '\\') {
-		if(*p && p[1]==':') p += 2;
-	} else {
-		while(*p) {
-			if((*p=='\\' || *p=='/') && !p[1]) {
-				break;
+	char* p=path;
+	if(*path && (!*title || title[1]!=':')){ // not absolute device path
+		if(*title == '\\') { // absolute path
+			if(*p && p[1]==':') p+=2;
+		}else{ // relative path
+			for(; *p; p=CharNext(p)) {
+				if((*p=='\\' || *p=='/') && !p[1]) {
+					break;
+				}
 			}
-			p = CharNext(p);
+			*p++='\\';
 		}
-		*p++ = '\\';
 	}
-	while(*title) *p++ = *title++;
-	*p = '\0';
+	while(*title) *p++=*title++;
+	*p='\0';
 }
 
 void del_title(char* path)
 {
-	char* p, *ep;
+	char* p,* ep;
 	
-	p = ep = path;
-	while(*p) {
-		if(*p == '\\' || *p == '/') {
-			if(p > path && *(p - 1) == ':') ep = p + 1;
-			else ep = p;
+	for(p=ep=path; *p; p=CharNext(p)) {
+		if(*p=='\\' || *p=='/') {
+			if(p>path && p[-1]==':') ep=p+1;
+			else ep=p;
 		}
-		p = CharNext(p);
 	}
-	*ep = '\0';
+	*ep='\0';
 }
 
 void get_title(char* dst, const char* path)
 {
-	const char* p, *ep;
+	const char* p,* ep;
 	
-	p = ep = path;
-	while(*p) {
-		if(*p == '\\' || *p == '/') {
-			if(p > path && *(p - 1) == ':') ep = p + 1;
-			else ep = p;
+	for(p=ep=path; *p; p=CharNext(p)) {
+		if(*p=='\\' || *p=='/') {
+			if(!*CharNext(p)) break;
+			if(p>path && p[-1]==':') ep=p+1;
+			else ep=p;
 		}
-		p = CharNext(p);
 	}
 	
-	if(*ep == '\\' || *ep == '/') ep++;
+	if(*ep == '\\' || *ep == '/') ++ep;
 	
-	while(*ep) *dst++ = *ep++;
-	*dst = 0;
+	while(*ep) *dst++=*ep++;
+	if(dst[-1]=='\\' || dst[-1]=='/')
+		--dst;
+	*dst='\0';
 }
 
 int ext_cmp(const char* fname, const char* ext)
 {
 	const char* p, *sp;
 	
-	sp = NULL; p = fname;
-	while(*p) {
-		if(*p == '.') sp = p;
-		else if(*p == '\\' || *p == '/') sp = NULL;
-		p = CharNext(p);
+	sp=NULL;
+	for(p=fname; *p; p=CharNext(p)) {
+		if(*p=='.') sp=p;
+		else if(*p=='\\' || *p=='/') sp=NULL;
 	}
 	
-	if(sp == NULL) sp = p;
-	if(*sp == '.') sp++;
+	if(!sp) sp=p;
+	if(*sp=='.') ++sp;
 	
-	for(;;) {
-		if(*sp == 0 && *ext == 0) return 0;
-		if(toupper(*sp) != toupper(*ext))
-			return (toupper(*sp) - toupper(*ext));
-		sp++; ext++;
+	for(;*sp||*ext; ++sp,++ext) {
+		if(toupper(*sp)!=toupper(*ext))
+			return (toupper(*sp)-toupper(*ext));
 	}
+	return 0;
 }
 /*
 void parse(char* dst, char* src, int n)

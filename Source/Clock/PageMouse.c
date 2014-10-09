@@ -74,7 +74,7 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 	lvItem.iItem=0;
 	ListView_DeleteAllItems(hList); // cleanup ListView
 	/*
-	if(GetMyRegLong(g_reg_mouse,"DropFiles",0)){
+	if(GetMyRegLong(REG_MOUSE,"DropFiles",DF_RECYCLE)){
 		char szApp[LRG_BUFF];
 		lvItem.iSubItem=0;
 		lvItem.pszText="Drag";
@@ -203,9 +203,11 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				g_bApplyClock=1;
 				SendPSChanged(hDlg);
 			}
+		// drop file path
 		}else if(id==IDC_DROPFILESAPP && code==EN_CHANGE){
+			g_bApplyClock=1;
 			SendPSChanged(hDlg);
-		/// non-functioning drag&drop handler (at least on Win8)
+		// drag&drop file chooser
 		}else if(id == IDC_DROPFILESAPPSANSHO){
 			OnSansho(hDlg, id);
 		///  button
@@ -305,9 +307,9 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	/// setup basic controls
 	for(click=IDS_NONE; click<=IDS_MOVETO; ++click)
 		CBAddString(hDlg,IDC_DROPFILES,MyString(click));
-	CBSetCurSel(hDlg,IDC_DROPFILES,GetMyRegLong(g_reg_mouse,"DropFiles",0));
+	CBSetCurSel(hDlg,IDC_DROPFILES,GetMyRegLong(REG_MOUSE,"DropFiles",DF_RECYCLE));
 	SendMessage(hDlg,WM_COMMAND,MAKEWPARAM(IDC_DROPFILES,CBN_SELCHANGE),0); // update IDC_DROPFILES related
-	GetMyRegStr(g_reg_mouse,"DropFilesApp",buf,256,"");
+	GetMyRegStr(REG_MOUSE,"DropFilesApp",buf,256,"");
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP,buf);
 	/// read mouse click settings
 	entry[2]='\0';
@@ -316,12 +318,12 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
-			m_pData[button].func[click]=GetMyRegLong(g_reg_mouse, entry, MOUSEFUNC_NONE);
+			m_pData[button].func[click]=GetMyRegLong(REG_MOUSE, entry, MOUSEFUNC_NONE);
 			m_pData[button].format[click][0]=0; // for Clipboard
 			m_pData[button].fname[click][0]=0; // for open file (N/A)
 			if(m_pData[button].func[click]==MOUSEFUNC_CLIPBOARD){
 				memcpy(entry+2,"Clip",5);
-				GetMyRegStr(g_reg_mouse,entry,m_pData[button].format[click],256,"");
+				GetMyRegStr(REG_MOUSE,entry,m_pData[button].format[click],256,"");
 				entry[2]='\0';
 			}
 		}
@@ -382,22 +384,21 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	char buf[LRG_BUFF], entry[3+4];
 	int sel, button, click;
 	sel = (int)CBGetCurSel(hDlg,IDC_DROPFILES);
-	SetMyRegLong("","DropFiles",(sel>0));
-	SetMyRegLong(g_reg_mouse,"DropFiles",sel);
+	SetMyRegLong(REG_MOUSE,"DropFiles",sel);
 	GetDlgItemText(hDlg,IDC_DROPFILESAPP,buf,256);
-	SetMyRegStr(g_reg_mouse,"DropFilesApp",buf);
+	SetMyRegStr(REG_MOUSE,"DropFilesApp",buf);
 	entry[2]='\0';
 	for(button=0; button<m_mouseButtonCount; ++button) {
 		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
 			if(m_pData[button].func[click])
-				SetMyRegLong(g_reg_mouse, entry, m_pData[button].func[click]);
+				SetMyRegLong(REG_MOUSE, entry, m_pData[button].func[click]);
 			else
-				DelMyReg(g_reg_mouse, entry);
+				DelMyReg(REG_MOUSE, entry);
 			if(m_pData[button].func[click]==MOUSEFUNC_CLIPBOARD) {
 				memcpy(entry+2,"Clip",5);
-				SetMyRegStr(g_reg_mouse, entry, m_pData[button].format[click]);
+				SetMyRegStr(REG_MOUSE, entry, m_pData[button].format[click]);
 				entry[2]='\0';
 			}
 		}
@@ -480,7 +481,7 @@ void CheckMouseMenu()
 	for(button=0; button<m_mouseButtonCount; ++button) {
 		for(click=0; click<m_mouseClickCount; ++click) {
 			u.entryS=('0'+button)|(('0'+click)<<8);
-			if(GetMyRegLong(g_reg_mouse,u.entry,0)==MOUSEFUNC_MENU) {
+			if(GetMyRegLong(REG_MOUSE,u.entry,0)==MOUSEFUNC_MENU) {
 				hasmenu=1;
 				button=(short)m_mouseButtonCount; break;
 			}
@@ -488,6 +489,6 @@ void CheckMouseMenu()
 	}
 	if(!hasmenu){
 		u.entryS='1'|('1'<<8); // right, 1 click
-		SetMyRegLong(g_reg_mouse,u.entry,MOUSEFUNC_MENU);
+		SetMyRegLong(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
 	}
 }

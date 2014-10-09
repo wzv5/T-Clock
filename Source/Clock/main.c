@@ -538,10 +538,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		OnContextMenu(hwnd, LOWORD(lParam), HIWORD(lParam));
 		return 0;
 		
-	case WM_DROPFILES: //------ mouse.c
-		OnDropFiles(hwnd, (HDROP)wParam);
-		return 0;
-		
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
