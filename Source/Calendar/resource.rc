@@ -6,7 +6,7 @@
 #include <commctrl.h>
 #include <richedit.h>
 #include "resource.h"
-
+#include "../common/version.h"
 
 
 
@@ -21,37 +21,36 @@ IDI_MAIN           ICON           ".\\calendar.ico"
 //
 // Version Information resources
 //
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-2 VERSIONINFO
-    FILEVERSION     1,0,0,0
-    PRODUCTVERSION  1,0,0,0
-    FILEOS          VOS_NT
-    FILETYPE        VFT_APP
-    FILESUBTYPE     VFT2_UNKNOWN
-    FILEFLAGSMASK   0x00000000
-    FILEFLAGS       0x00000000
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION VER_RC_REVISION
+ PRODUCTVERSION VER_RC_REVISION
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
 {
     BLOCK "StringFileInfo"
     {
-        BLOCK "04090025"
+        BLOCK "000004b0"
         {
             VALUE "Comments", ""
-            VALUE "CompanyName", "Stoic Joker's Network"
-            VALUE "FileDescription", "T-Clock 2010's Calendar"
-            VALUE "FileVersion", "1,0,0,0"
-            VALUE "InternalName", "XPCalendar"
-            VALUE "LegalCopyright", "Stoic Joker's Network  2006 - 2013"
-            VALUE "LegalTrademarks", "Stoic Joker's Network 2000 - 2013"
+            VALUE "CompanyName", "-"
+            VALUE "FileDescription", "T-Clock Calendar"
+            VALUE "FileVersion", VER_SHORT " #" STR(VER_REVISION)
+            VALUE "InternalName", "XPCalendar.exe"
             VALUE "OriginalFilename", "XPCalendar.exe"
-            VALUE "PrivateBuild", ""
-            VALUE "ProductName", "XPCalendar"
-            VALUE "ProductVersion", "1,0,0,0"
-            VALUE "SpecialBuild", ""
+            VALUE "ProductName", "T-Clock Redux"
+            VALUE "ProductVersion", VER_SHORT " #" STR(VER_REVISION)
         }
     }
     BLOCK "VarFileInfo"
     {
-        VALUE "Translation", 0x0409, 0x0025
+        VALUE "Translation", 0x0, 1200
     }
 }
 

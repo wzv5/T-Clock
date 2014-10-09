@@ -34,7 +34,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="/debug" />
-					<Add option="/DEBUG" />
 					<Add directory="../Debug/Win32" />
 				</Linker>
 			</Target>
@@ -56,7 +55,6 @@
 			<Add option="/wd4711" />
 			<Add option="/wd4710" />
 			<Add option="/DWINVER=0x0501" />
-			<Add option="/DTCLOCK_LIGHT" />
 		</Compiler>
 		<Linker>
 			<Add option="/pdb:$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).pdb" />
@@ -66,6 +64,9 @@
 			<Add library="Advapi32" />
 			<Add library="Comctl32" />
 		</Linker>
+		<ExtraCommands>
+			<Add before="common/AutoVersion --git . common/version.h" />
+		</ExtraCommands>
 		<Unit filename="Calendar/DeskCalendar.c">
 			<Option compilerVar="CC" />
 		</Unit>
