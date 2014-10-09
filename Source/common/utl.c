@@ -11,6 +11,22 @@ static const char m_mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
 
 char g_bIniSetting = 0;
 char g_inifile[MAX_PATH];
+
+#ifdef RegDeleteKeyEx
+#	undef RegDeleteKeyEx
+#endif // RegDeleteKeyEx
+#define RegDeleteKeyEx MyRegDeleteKeyEx
+static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,char* lpSubKey,REGSAM samDesired,DWORD Reserved){
+	typedef LONG (WINAPI* RegDeleteKeyEx_t)(HKEY hKey,char* lpSubKey,REGSAM samDesired,DWORD Reserved);
+	static RegDeleteKeyEx_t pRegDeleteKeyEx=NULL;
+	if(g_tos>TOS_XP){ // actually XP 64bit supports it...
+		if(!pRegDeleteKeyEx)
+			pRegDeleteKeyEx=(RegDeleteKeyEx_t)GetProcAddress(GetModuleHandle("Advapi32"),"RegDeleteKeyExA");
+		if(pRegDeleteKeyEx)
+			return pRegDeleteKeyEx(hKey,lpSubKey,samDesired,Reserved);
+	}
+	return RegDeleteKey(hKey,lpSubKey);
+}
 //================================================================================================
 //---------------------------//-----+++--> Find Out If it's Older Then Windows 2000 If it is, Die!:
 BOOL CheckSystemVersion()   //--------------------------------------------------------------+++-->
