@@ -36,7 +36,7 @@ BOOL CheckSystemVersion()   //--------------------------------------------------
 		return FALSE;
 	switch(osvi.dwMajorVersion){
 	case 5: // 2000-Vista
-		switch(osvi.dwMajorVersion){
+		switch(osvi.dwMinorVersion ){
 		case 0:
 			g_tos=TOS_2000; break;
 		default:
@@ -44,7 +44,7 @@ BOOL CheckSystemVersion()   //--------------------------------------------------
 		}
 		break;
 	case 6: // Vista+
-		switch(osvi.dwMajorVersion){
+		switch(osvi.dwMinorVersion ){
 		case 0:
 			g_tos=TOS_VISTA; break;
 		case 1:
@@ -53,6 +53,8 @@ BOOL CheckSystemVersion()   //--------------------------------------------------
 			g_tos=TOS_WIN8; break;
 		case 3:
 			g_tos=TOS_WIN8_1; break;
+		case 4:
+			g_tos=TOS_WIN10; break;
 		default:
 			g_tos=TOS_NEWER;
 		}

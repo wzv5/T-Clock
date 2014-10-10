@@ -9,7 +9,8 @@ enum{
 	TOS_VISTA	=0x0004,
 	TOS_WIN7	=0x0008,
 	TOS_WIN8	=0x0010,
-	TOS_WIN8_1	=0x0011,//requires weird manifest...
+	TOS_WIN8_1	=0x0020,//starts to require weird/stupid manifest...
+	TOS_WIN10	=0x0040,
 	TOS_NEWER	=0x8000,
 };
 extern unsigned short g_tos; // holds current OS version flags

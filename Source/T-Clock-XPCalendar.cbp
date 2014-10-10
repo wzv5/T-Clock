@@ -74,6 +74,7 @@
 		<Unit filename="Calendar/resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
+		<Unit filename="common/manifest.xml" />
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />
 		</Unit>

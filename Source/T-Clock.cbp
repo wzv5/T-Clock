@@ -478,6 +478,16 @@
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
 		</Unit>
+		<Unit filename="common/manifest.xml">
+			<Option target="app" />
+			<Option target="app-64" />
+			<Option target="app debug" />
+			<Option target="app-64 debug" />
+			<Option target="dll" />
+			<Option target="dll-64" />
+			<Option target="dll debug" />
+			<Option target="dll-64 debug" />
+		</Unit>
 		<Unit filename="common/newapi.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
