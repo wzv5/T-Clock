@@ -115,7 +115,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		break;
 		
 	case IDM_EXIT: //--------------------------------------+++--> Exit T-Clock 2010
-		PostMessage(g_hwndClock, WM_COMMAND, IDM_EXIT, 0);
+		PostMessage(hwnd,WM_CLOSE,0,0);
 		break;
 		
 	case IDM_SHOWCALENDER: //-------------------------------+++--> Display Calender

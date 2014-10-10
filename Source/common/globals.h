@@ -47,7 +47,6 @@
 --------------------------------------------------*/
 extern HWND		g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
 extern HWND		g_hwndClock;		// Main Clock Window Handle
-extern HHOOK	g_hhook;
 extern char		g_bCalOpen;
 
 #define REG_MOUSE "Mouse"

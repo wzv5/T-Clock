@@ -18,9 +18,11 @@
 typedef int (WINAPI *IsCalendarOpen_t)();
 typedef void (WINAPI *HookStart_t)(HWND hwnd);
 typedef void (WINAPI *HookEnd_t)();
+typedef void (WINAPI *ClockExit_t)();
 extern IsCalendarOpen_t IsCalendarOpen;
 extern HookStart_t HookStart;
 extern HookEnd_t HookEnd;
+extern ClockExit_t ClockExit;
 
 // IDs for timer
 #define IDTIMER_START				2

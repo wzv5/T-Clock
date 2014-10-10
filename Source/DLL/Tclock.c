@@ -10,7 +10,7 @@
 
 #define CLOCK_BORDER_MARGIN 2
 
-void EndClock(void);
+void EndClock(HWND hwnd);
 void OnTimer(HWND hwnd);
 void ReadStyleData(HWND hwnd, int preview);
 void ReadFormatData(HWND hwnd, int preview);
@@ -33,13 +33,11 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 #pragma data_seg(".MYDATA") //--------------------------------------------------------------+++-->
 HWND g_hwndTClockMain = NULL;
 HWND g_hwndClock = NULL;
-HHOOK g_hhook = 0;
 char g_bCalOpen = 0;
 #pragma data_seg()
 #else
 __attribute__((section(".MYDATA"),shared)) HWND g_hwndTClockMain = NULL;
 __attribute__((section(".MYDATA"),shared)) HWND g_hwndClock = NULL;
-__attribute__((section(".MYDATA"),shared)) HHOOK g_hhook = 0;
 __attribute__((section(".MYDATA"),shared)) char g_bCalOpen = 0;
 #endif // __GNUC__
 
@@ -433,6 +431,7 @@ void SubsDestroy(){
 						SWP_NOMOVE);
 		}
 	}
+	m_oldWorkerProc=NULL;
 }
 void SubsSendResize(){
 	int i;
@@ -482,13 +481,14 @@ void SubsCreate(){
 		hwndBar=FindWindowEx(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
 	}
 }
+HMODULE m_hself;
 //================================================================================================
 //---------------------------------------------------------------------+++--> Initialize the Clock:
 void InitClock(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
-	CheckSystemVersion();
 	g_hwndClock = hwnd;
-	PostMessage(g_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)hwnd);
+	m_hself=LoadLibrary("T-Clock" ARCH_SUFFIX);
+	CheckSystemVersion();
 	GetClientRect(hwnd,&m_rcClock); // use original clock size until we've loaded our settings
 	
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
@@ -509,28 +509,29 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	SendMessage(hwnd, CLOCKM_REFRESHCLOCK, 0, 0); // reads settings and creates clock
 	SendMessage(hwnd, CLOCKM_REFRESHTASKBAR, 0, 0);
 }
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 //================================================================================================
 //----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
-void EndClock(void)   //--------------------------------------------------------------------+++-->
+void EndClock(HWND hwnd)   //--------------------------------------------------------------------+++-->
 {
 	SubsDestroy();
 	if(m_multiClockClass){
 		UnregisterClass((LPCSTR)m_multiClockClass,0);
 		m_multiClockClass=0;
 	}
-	RevokeDragDrop(g_hwndClock); // frees m_droptarget
+	RevokeDragDrop(hwnd); // frees m_droptarget
 	MyDragDrop_DeInit();
 	DestroyClock();
 	DestroyTip();
-	EndNewAPI(g_hwndClock);
-	if(g_hwndClock && IsWindow(g_hwndClock)) {
-		if(m_bTimer) KillTimer(g_hwndClock, 1); m_bTimer = 0;
-		SetWindowLongPtr(g_hwndClock, GWLP_WNDPROC, (LONG_PTR)m_oldClockProc);
-		m_oldClockProc=m_oldWorkerProc=NULL;
-	}
+	EndNewAPI(hwnd);
+	if(m_bTimer) KillTimer(hwnd,1); m_bTimer=0;
+	SetWindowLongPtr(hwnd,GWLP_WNDPROC,(LONG_PTR)m_oldClockProc);
+	m_oldClockProc=NULL;
 	
-	if(IsWindow(g_hwndTClockMain)) PostMessage(g_hwndTClockMain, MAINM_EXIT, 0, 0);
 //  bClockUseTrans = 0;
+//	if(IsWindow(g_hwndTClockMain))
+//		PostMessage(g_hwndTClockMain,MAINM_EXIT,0,0);
+	CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)FreeLibrary,&__ImageBase,0,NULL);
 }
 /*------------------------------------------------
   subclass procedure of the clock
@@ -676,7 +677,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			OnTooltipNeedText(code,lParam);
 		return 0;}
 	case WM_COMMAND:
-		if(LOWORD(wParam) == IDM_EXIT) EndClock();
+		if(LOWORD(wParam)==IDM_EXIT)
+			EndClock(hwnd);
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
 		SubsDestroy();

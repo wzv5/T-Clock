@@ -13,6 +13,7 @@
 IsCalendarOpen_t IsCalendarOpen;
 HookStart_t HookStart;
 HookEnd_t HookEnd;
+HookEnd_t ClockExit;
 
 // Application Global Window Handles
 HWND	g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
@@ -401,31 +402,28 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		else if(wParam == IDTIMER_MOUSE) OnTimerMouse(hwnd);
 		return 0;
 		
+	case WM_ENDSESSION:
+		if(!wParam)
+			break;
 	case WM_DESTROY:
+		if(g_hwndSheet && IsWindow(g_hwndSheet))
+			SendMessage(g_hwndSheet, WM_CLOSE, 0, 0);
+		if(g_hDlgTimer && IsWindow(g_hDlgTimer))
+			SendMessage(g_hDlgTimer, WM_CLOSE, 0, 0);
+		if(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch))
+			SendMessage(g_hDlgStopWatch, WM_CLOSE, 0, 0);
+		g_hwndSheet = g_hDlgTimer = g_hDlgStopWatch = NULL;
 		EndAlarm();
 		EndAllTimers();
 		KillTimer(hwnd, IDTIMER_MAIN);
 		if(bStartTimer) {
 			KillTimer(hwnd, IDTIMER_START);
 			bStartTimer = FALSE;
-		} else {
-			HookEnd();  // uninstall a hook
 		}
-		PostQuitMessage(0);
+		ClockExit(); // exit clock, remove injection
+		if(message!=WM_ENDSESSION)
+			PostQuitMessage(0);
 		return 0;
-		
-	case WM_ENDSESSION:
-		if(wParam) {
-			EndAlarm();
-			EndAllTimers();
-			if(bStartTimer) {
-				KillTimer(hwnd, IDTIMER_START);
-				bStartTimer = FALSE;
-			} else {
-				HookEnd();  // uninstall a hook
-			}
-		} break;
-		
 	case WM_PAINT: {
 //			HDC hdc;
 //			PAINTSTRUCT ps;
@@ -464,23 +462,17 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case MAINM_CLOCKINIT: // Messages sent/posted from TCDLL.dll
 		nCountFindingClock = -1;
 		g_hwndClock = (HWND)lParam;
+		HookEnd(); // injected, now remove hook
 		return 0;
 		
 	case MAINM_ERROR:    // error
 		nCountFindingClock = -1;
 		InitError((int)lParam);
-		PostMessage(hwnd, WM_CLOSE, 0, 0);
+		SendMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
 		
 	case MAINM_EXIT:    // exit
-		if(g_hwndSheet && IsWindow(g_hwndSheet))
-			PostMessage(g_hwndSheet, WM_CLOSE, 0, 0);
-		if(g_hDlgTimer && IsWindow(g_hDlgTimer))
-			PostMessage(g_hDlgTimer, WM_CLOSE, 0, 0);
-		if(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch))
-			PostMessage(g_hDlgStopWatch, WM_CLOSE, 0, 0);
-		g_hwndSheet = g_hDlgTimer = g_hDlgStopWatch = NULL;
-		PostMessage(hwnd, WM_CLOSE, 0, 0);
+		SendMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
 		
 	case MAINM_BLINKOFF:    // clock no longer blinks
@@ -560,8 +552,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		break;
 	default:
 		if(message == s_uTaskbarRestart) { // IF the Explorer Shell Crashes,
-			HookEnd();                     //  and the taskbar is recreated.
-			SetTimer(hwnd, IDTIMER_START, 1000, NULL);
+			SetTimer(hwnd, IDTIMER_START, 1000, NULL); //  and the taskbar is recreated.
 			bStartTimer = TRUE;
 		}
 	}
@@ -661,6 +652,7 @@ int LoadTClockDLL(void)   //----------------------------------------------------
 		IsCalendarOpen=(IsCalendarOpen_t)GetProcAddress(dll,"IsCalendarOpen");
 		HookStart=(HookStart_t)GetProcAddress(dll,"HookStart");
 		HookEnd=(HookEnd_t)GetProcAddress(dll,"HookEnd");
+		ClockExit=(ClockExit_t)GetProcAddress(dll,"ClockExit");
 		return 1;
 	}
 	return 0;

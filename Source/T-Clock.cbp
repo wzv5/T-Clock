@@ -415,6 +415,12 @@
 			<Option target="app-64" />
 			<Option target="app-64 debug" />
 		</Unit>
+		<Unit filename="DLL/DLL.def">
+			<Option target="dll" />
+			<Option target="dll-64" />
+			<Option target="dll debug" />
+			<Option target="dll-64 debug" />
+		</Unit>
 		<Unit filename="DLL/Tclock.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />

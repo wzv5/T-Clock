@@ -106,7 +106,7 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 			PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
 		}
 		if(g_hDlgTimer && IsWindow(g_hDlgTimer))
-			PostMessage(g_hDlgTimer,WM_CLOSE,0,0);
+			SendMessage(g_hDlgTimer,WM_CLOSE,0,0);
 		#ifndef _DEBUG
 		EmptyWorkingSet(GetCurrentProcess());
 		#endif
