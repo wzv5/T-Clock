@@ -68,8 +68,8 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		// show it !
 		g_hwndSheet = (HWND)PropertySheet(&psh);
 	}
-	SetForegroundWindow(g_hwndSheet);
 	SetMyDialgPos(g_hwndSheet,21);
+	SetForegroundWindow(g_hwndSheet);
 }
 //================================================================================================
 //--------------------------------------------------------+++--> Property Sheet Callback Procedure:

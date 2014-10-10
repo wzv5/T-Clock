@@ -7,6 +7,7 @@
 #undef NTDDI_VERSION // allow our own runtime OS check
 #define NTDDI_VERSION NTDDI_VISTA // used for drag&drop tooltip
 #include <Shlobj.h>//CFSTR_SHELLIDLIST
+#include <process.h>//_beginthread
 
 #define CLOCK_BORDER_MARGIN 2
 
@@ -508,8 +509,16 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	/// and of workaround, and start of clock creation
 	SendMessage(hwnd, CLOCKM_REFRESHCLOCK, 0, 0); // reads settings and creates clock
 	SendMessage(hwnd, CLOCKM_REFRESHTASKBAR, 0, 0);
+	if(!m_color_start) // fixes display issue when clock has same size as T-Clock (Win7 + default settings)
+		UpdateClockSize(hwnd);
 }
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+static void SelfDestruct(void* hwnd)
+{ // never crashed without this SelfDestruct stub, but better safe then sorry :P Crashing the explorer isn't that nice.
+	SendMessage(hwnd,WM_NULL,0,0); // make sure we're out of our hooked message loop
+	// we could use FreeLibraryAndExitThread on XP+, but this "hack" should be ok for now.
+	CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)FreeLibrary,&__ImageBase,0,NULL); // die painfully
+}
 //================================================================================================
 //----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
 void EndClock(HWND hwnd)   //--------------------------------------------------------------------+++-->
@@ -531,7 +540,7 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 //  bClockUseTrans = 0;
 //	if(IsWindow(g_hwndTClockMain))
 //		PostMessage(g_hwndTClockMain,MAINM_EXIT,0,0);
-	CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)FreeLibrary,&__ImageBase,0,NULL);
+	_beginthread(SelfDestruct,0,hwnd);
 }
 /*------------------------------------------------
   subclass procedure of the clock
