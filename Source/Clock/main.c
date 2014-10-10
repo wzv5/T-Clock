@@ -274,11 +274,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wndclass.lpszClassName = g_szClassName;
 	RegisterClass(&wndclass);
 	
+	if(g_tos>=TOS_VISTA) { // allow non elevated processes to send control messages (eg, App with admin rights, explorer without)
+		#define MSGFLT_ADD 1
+		#define MSGFLT_REMOVE 2
+		typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message,DWORD dwFlag);
+		ChangeWindowMessageFilter_t ChangeWindowMessageFilter=(ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandle("User32"),"ChangeWindowMessageFilter");
+		if(ChangeWindowMessageFilter){
+			int msgid;
+			ChangeWindowMessageFilter(WM_COMMAND,MSGFLT_ADD);
+			for(msgid=WM_MOUSEFIRST; msgid<=WM_MOUSELAST; ++msgid)
+				ChangeWindowMessageFilter(msgid,MSGFLT_ADD);
+			for(msgid=MAINMFIRST; msgid<=MAINMLAST; ++msgid)
+				ChangeWindowMessageFilter(msgid,MSGFLT_ADD);
+		}
+	}
+	
 	// create a hidden window
 	hwnd = CreateWindowEx(WS_EX_NOACTIVATE, g_szClassName, g_szWindowText,
 						  0, 0, 0, 0, 0, NULL, NULL, hInstance, NULL);
-						  
-	CheckCommandLine(hwnd,lpCmdLine,0); // This Checks for First Instance Startup Options
+	// This Checks for First Instance Startup Options
+	CheckCommandLine(hwnd,lpCmdLine,0); 
 	g_hwndTClockMain = hwnd; // Main Window Anchor for HotKeys Only!
 	
 	GetHotKeyInfo(hwnd);
@@ -339,7 +354,7 @@ void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //-------------
 				SendMessage(hwnd, WM_COMMAND, IDM_SHOWPROP, 0);
 				p += 4;
 			} else if(_strnicmp(p, "exit", 4) == 0) {
-				SendMessage(hwnd, WM_CLOSE, 0, 0);
+				SendMessage(hwnd, MAINM_EXIT, 0, 0);
 				p += 4;
 			} else if(_strnicmp(p, "start", 5) == 0) {
 				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_START, 0);
