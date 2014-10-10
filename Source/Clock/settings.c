@@ -54,12 +54,9 @@ int CheckSettings(){
 		SetMyRegLong(REG_MOUSE,u.entry,IDM_STOPWATCH);
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
 		SetMyRegStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
-		SetMyRegLong("Format", "Hour12", 1);
-		u.entryS=g_tos>=TOS_VISTA;
-		SetMyRegLong("Format", "AMPM", u.entryS);
 		if(!u.entryS){ /// @todo : XP: measure taskbar height to chose font size and or multiline/singleline (small vs "normal" taskbar)
 			HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
-			if(hwnd != NULL) {
+			if(hwnd) {
 				RECT rc; GetClientRect(hwnd, &rc);
 				if(rc.right > rc.bottom) u.entryS = 1;
 			}

@@ -223,21 +223,24 @@
 #define IDC_ANGLE                       1124
 #define IDC_SPINANGLE                   1125
 #define IDC_LOCALE                      1200
-#define IDC_YEAR4                       1201 /* group, group */
+#define FORMAT_BEGIN                    IDC_YEAR4
+#define IDC_YEAR4                       1201 /* groupA, groupB, groupC, groupD, groupE */
 #define IDC_YEAR                        1202
 #define IDC_MONTH                       1203
 #define IDC_MONTHS                      1204
-#define IDC_DAY                         1205
-#define IDC_WEEKDAY                     1206
-#define IDC_HOUR                        1207
+#define IDC_DAY                         1205 /* end groupE */
+#define IDC_WEEKDAY                     1206 /* end groupD */
+#define IDC_HOUR                        1207 /* groupF */
 #define IDC_MINUTE                      1208
-#define IDC_SECOND                      1209 /* end group */
-#define IDC_KAIGYO                      1210 /* group */
-#define IDC_INTERNETTIME                1211
-#define IDC_AMPM                        1212
+#define IDC_SECOND                      1209 /* end groupB */
+#define IDC_AMPM                        1210 /* groupG */
+#define IDC_INTERNETTIME                1211 /* end groupF */
+#define IDC_KAIGYO                      1212 /* end groupC */
 #define IDC_12HOUR                      1213
 #define IDC_ZERO                        1214
-#define IDC_CUSTOM                      1215 /* end group, end group */
+#define IDC_CUSTOM                      1215 /* end groupG, end groupA */
+#define FORMAT_END                      IDC_CUSTOM
+#define FORMAT_NUM                      /*15*/1+FORMAT_END-FORMAT_BEGIN
 #define IDC_FORMAT                      1216
 #define IDC_FORMATDETAIL                1217
 #define IDC_AMSYMBOL                    1251

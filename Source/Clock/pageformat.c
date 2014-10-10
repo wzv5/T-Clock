@@ -7,6 +7,15 @@
 #include "tclock.h"
 #define MAX_FORMAT 256
 
+static char* m_entrydate[FORMAT_NUM]={
+	"Year4", "Year", "Month", "MonthS", "Day", "Weekday",
+	"Hour", "Minute", "Second", "AMPM", "InternetTime",
+	"Kaigyo", "Hour12", "HourZero", "Custom",
+};
+#define ENTRY(id) m_entrydate[(id)-FORMAT_BEGIN]
+#define CHECKS(id) checks[(id)-FORMAT_BEGIN]
+static void CreateFormat(char* s, char* checks);
+
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg,BOOL preview);
 static void OnLocale(HWND hDlg);
@@ -20,6 +29,7 @@ static char* m_pCustomFormat = NULL;
 static char m_sMon[10];  //
 
 static char m_bDayOfWeekIsLast;   // yy/mm/dd ddd
+static char m_bTimeMarker; // use AM/PM (+12h format)
 static char m_bTimeMarkerIsFirst; // AM/PM hh:nn:ss
 
 static char m_sep_date[4]; // date seperator such as / .
@@ -74,7 +84,7 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			SendPSChanged(hDlg);
 			break;
 		default: // "year" -- "Internet Time"
-			if(id>=IDC_YEAR4 && id<=IDC_AMPM)
+			if(id>=IDC_YEAR4 && id<=IDC_INTERNETTIME)
 				OnFormatCheck(hDlg, id);
 		}
 		return TRUE;}
@@ -100,30 +110,29 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 	return FALSE;
 }
 
-char* entrydate[] = { "Year4", "Year", "Month", "MonthS", "Day", "Weekday",
-					  "Hour", "Minute", "Second", "Kaigyo", "InternetTime",
-					  "AMPM", "Hour12", "HourZero", "Custom",
-					};
-#define ENTRY(id) entrydate[(id)-IDC_YEAR4]
-
 /*------------------------------------------------
   Initialize Locale Infomation
 --------------------------------------------------*/
-void InitLocale(HWND hwnd)
+void InitLocale(int ilang/*=0*/)
 {
+	char ampm[10];
 	int i;
 	const int aLangDayOfWeekIsLast[]={LANG_JAPANESE,LANG_KOREAN,0};
 	
-	if(hwnd) {
-		int sel = (int)CBGetCurSel(hwnd, IDC_LOCALE);
-		m_ilang = (int)CBGetItemData(hwnd, IDC_LOCALE, sel);
-	} else {
+	if(!ilang)
 		m_ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID())&0x00ff;
-	}
+	// seperator
 	GetLocaleInfo(m_ilang,LOCALE_SDATE,m_sep_date,sizeof(m_sep_date));
 	GetLocaleInfo(m_ilang,LOCALE_STIME,m_sep_time,sizeof(m_sep_time));
+	// AM/PM (seems to always use user's choice, not matter which locale. Also true for "is first"?)
+	*ampm='\0';
+	GetLocaleInfo(m_ilang,LOCALE_S1159,ampm,sizeof(ampm));/*!AM*/
+	if(!*ampm)
+		GetLocaleInfo(m_ilang,LOCALE_S2359,ampm,sizeof(ampm));/*!PM*/
+	m_bTimeMarker=*ampm; // use 24h w/o AM/PM or 12h w/ AM/PM based on user locale
 	GetLocaleInfo(m_ilang, LOCALE_ITIMEMARKPOSN|LOCALE_RETURN_NUMBER, (LPSTR)&i, sizeof(i));
 	m_bTimeMarkerIsFirst=(char)i;
+	// date
 	GetLocaleInfo(m_ilang, LOCALE_IDATE|LOCALE_RETURN_NUMBER, (LPSTR)&m_idate, sizeof(m_idate));
 	GetLocaleInfo(m_ilang, LOCALE_SABBREVDAYNAME1, m_sMon, sizeof(m_sMon));
 	
@@ -190,12 +199,11 @@ void OnInit(HWND hDlg)
 		}
 	}
 	
-	InitLocale(hDlg);
+	InitLocale(ilang);
 	
 	// "year" -- "second"
-	for(i = IDC_YEAR4; i <= IDC_SECOND; i++) {
-		CheckDlgButton(hDlg, i,
-					   GetMyRegLong("Format", ENTRY(i), 1));
+	for(i=IDC_YEAR4; i<=IDC_SECOND; ++i) {
+		CheckDlgButton(hDlg, i, GetMyRegLong("Format", ENTRY(i), 1));
 	}
 	
 	if(IsDlgButtonChecked(hDlg, IDC_YEAR))
@@ -208,11 +216,14 @@ void OnInit(HWND hDlg)
 	if(IsDlgButtonChecked(hDlg, IDC_MONTHS))
 		CheckRadioButton(hDlg, IDC_MONTH, IDC_MONTHS, IDC_MONTHS);
 	
-	// "Internet Time" -- "Customize format"
-	for(i = IDC_KAIGYO; i <= IDC_CUSTOM; i++) {
-		CheckDlgButton(hDlg, i,
-					   GetMyRegLong("Format", ENTRY(i), 0));
+	// "AM/PM" -- "Customize format"
+	for(i=IDC_AMPM; i<=IDC_CUSTOM; ++i) {
+		CheckDlgButton(hDlg, i, GetMyRegLong("Format", ENTRY(i), 0));
 	}
+	
+	// AM/PM, 12h: always overwrite above defaults with new ones based on user locale
+	CheckDlgButton(hDlg,IDC_AMPM,GetMyRegLong("Format",ENTRY(IDC_AMPM),m_bTimeMarker));
+	CheckDlgButton(hDlg,IDC_12HOUR,GetMyRegLong("Format",ENTRY(IDC_12HOUR),m_bTimeMarker));
 	
 	GetMyRegStr("Format", "Format", fmt, MAX_FORMAT, "");
 	SetDlgItemText(hDlg, IDC_FORMAT, fmt);
@@ -302,7 +313,11 @@ void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------
 //-------------------------------------------+++--> When User's Location (Locale ComboBox) Changes:
 void OnLocale(HWND hDlg)   //---------------------------------------------------------------+++-->
 {
-	InitLocale(hDlg);
+	int ilang=(int)CBGetItemData(hDlg,IDC_LOCALE,CBGetCurSel(hDlg,IDC_LOCALE));
+	InitLocale(ilang);
+	// use AM/PM and 12h format from new selected locale
+	CheckDlgButton(hDlg,IDC_AMPM,m_bTimeMarker);
+	CheckDlgButton(hDlg,IDC_12HOUR,m_bTimeMarker);
 	OnCustom(hDlg, FALSE);
 }
 //================================================================================================
@@ -315,7 +330,7 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 	b = IsDlgButtonChecked(hDlg, IDC_CUSTOM);
 	EnableDlgItem(hDlg, IDC_FORMAT, b);
 	
-	for(i = IDC_YEAR4; i <= IDC_AMPM; i++)
+	for(i = IDC_YEAR4; i <= IDC_KAIGYO; i++)
 		EnableDlgItem(hDlg, i, !b);
 	
 	if(m_pCustomFormat && bmouse) {
@@ -347,18 +362,16 @@ void On12Hour(HWND hDlg)   //---------------------------------------------------
   When clicked "year" -- "am/pm"
 --------------------------------------------------*/
 
-#define CHECKS(a) checks[(a)-IDC_YEAR4]
-
 void OnFormatCheck(HWND hDlg, WORD id)
 {
-	char fmt[MAX_FORMAT];
-	int checks[15];
 	int i;
+	char fmt[MAX_FORMAT];
+	char checks[FORMAT_NUM];
 	char oldtransition=m_transition;
 	m_transition=-1; // start transition lock
 	
-	for(i = IDC_YEAR4; i <= IDC_AMPM; i++) {
-		CHECKS(i) = IsDlgButtonChecked(hDlg, i);
+	for(i = IDC_YEAR4; i <= IDC_KAIGYO; i++) {
+		CHECKS(i) = (char)IsDlgButtonChecked(hDlg, i);
 	}
 	
 	if(id == IDC_YEAR4 || id == IDC_YEAR) {
@@ -399,15 +412,16 @@ void OnFormatCheck(HWND hDlg, WORD id)
 --------------------------------------------------*/
 void InitFormat()
 {
+	int iter;
 	char format[LRG_BUFF];
-	int iter, checks[15];
+	char checks[FORMAT_NUM];
 	
 	if(GetMyRegLong("Format", ENTRY(IDC_CUSTOM), FALSE))
 		return;
-	InitLocale(NULL);
+	InitLocale(0);
 	
 	for(iter=IDC_YEAR4; iter<=IDC_SECOND; ++iter) {
-		CHECKS(iter) = GetMyRegLong("Format", ENTRY(iter), TRUE);
+		CHECKS(iter) = (char)GetMyRegLong("Format", ENTRY(iter), 1);
 	}
 	
 	if(CHECKS(IDC_YEAR))  CHECKS(IDC_YEAR4) = FALSE;
@@ -416,9 +430,14 @@ void InitFormat()
 	if(CHECKS(IDC_MONTH))  CHECKS(IDC_MONTHS) = FALSE;
 	if(CHECKS(IDC_MONTHS)) CHECKS(IDC_MONTH) = FALSE;
 	
-	for(iter=IDC_KAIGYO; iter<=IDC_CUSTOM; ++iter) {
-		CHECKS(iter) = GetMyRegLong("Format", ENTRY(iter), FALSE);
+	for(iter=IDC_AMPM; iter<=IDC_CUSTOM; ++iter) {
+		CHECKS(iter) = (char)GetMyRegLong("Format", ENTRY(iter), 0);
 	}
+	
+	// always overwrite above defaults with new ones based on user locale
+	CHECKS(IDC_AMPM)=(char)GetMyRegLong("Format",ENTRY(IDC_AMPM),m_bTimeMarker);
+	CHECKS(IDC_12HOUR)=(char)GetMyRegLong("Format",ENTRY(IDC_12HOUR),m_bTimeMarker);
+	SetMyRegLong("Format",ENTRY(IDC_12HOUR),CHECKS(IDC_12HOUR));
 	
 	CreateFormat(format, checks);
 	SetMyRegStr("Format", "Format", format);
@@ -427,34 +446,34 @@ void InitFormat()
 /*--------------------------------------------------
 =============== Create a format string automatically
 --------------------------------------------------*/
-void CreateFormat(char* dst, int* checks)
+void CreateFormat(char* dst, char* checks)
 {
-	BOOL bdate = FALSE, btime = FALSE;
-	int i;
+	char bdate=0, btime=0;
+	int control;
 	
-	for(i = IDC_YEAR4; i <= IDC_WEEKDAY; i++) {
-		if(CHECKS(i)) {
-			bdate = TRUE;
+	for(control=IDC_YEAR4; control<=IDC_WEEKDAY; ++control) {
+		if(CHECKS(control)) {
+			bdate=1;
 			break;
 		}
 	}
 	
-	for(i = IDC_HOUR; i <= IDC_AMPM; i++) {
-		if(CHECKS(i)) {
-			btime = TRUE;
+	for(control=IDC_HOUR; control<=IDC_INTERNETTIME; ++control) {
+		if(CHECKS(control)) {
+			btime=1;
 			break;
 		}
 	}
 	
-	dst[0] = 0;
+	*dst = '\0';
 	
 	if(!m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
 		strcat(dst, "ddd");
-		for(i = IDC_YEAR4; i <= IDC_DAY; i++) {
-			if(CHECKS(i)) {
-				if((m_ilang & 0x00ff) == LANG_CHINESE) strcat(dst, " ");
+		for(control=IDC_YEAR4; control<=IDC_DAY; ++control) {
+			if(CHECKS(control)) {
+				if((m_ilang & 0x00ff) == LANG_CHINESE) strcat(dst," ");
 				else if(m_sMon[0] && m_sMon[ strlen(m_sMon) - 1 ] == '.')
-					strcat(dst, " ");
+					strcat(dst," ");
 				else strcat(dst, ", ");
 				break;
 			}
@@ -468,7 +487,7 @@ void CreateFormat(char* dst, int* checks)
 			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
 			if(CHECKS(IDC_DAY) || CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
 				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
-				else strcat(dst, " ");
+				else strcat(dst," ");
 			}
 		}
 		if(CHECKS(IDC_DAY)) {
@@ -486,7 +505,7 @@ void CreateFormat(char* dst, int* checks)
 			strcat(dst, "dd");
 			if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
 				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
-				else strcat(dst, " ");
+				else strcat(dst," ");
 			} else if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) strcat(dst, m_sep_date);
 		}
 		if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
@@ -494,7 +513,7 @@ void CreateFormat(char* dst, int* checks)
 			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
 			if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
 				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
-				else strcat(dst, " ");
+				else strcat(dst," ");
 			}
 		}
 		if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
@@ -506,7 +525,7 @@ void CreateFormat(char* dst, int* checks)
 			if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
 			if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)
 			   || CHECKS(IDC_DAY)) {
-				if(CHECKS(IDC_MONTHS)) strcat(dst, " ");
+				if(CHECKS(IDC_MONTHS)) strcat(dst," ");
 				else strcat(dst, m_sep_date);
 			}
 		}
@@ -514,7 +533,7 @@ void CreateFormat(char* dst, int* checks)
 			if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
 			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
 			if(CHECKS(IDC_DAY)) {
-				if(CHECKS(IDC_MONTHS)) strcat(dst, " ");
+				if(CHECKS(IDC_MONTHS)) strcat(dst," ");
 				else strcat(dst, m_sep_date);
 			}
 		}
@@ -522,51 +541,49 @@ void CreateFormat(char* dst, int* checks)
 	}
 	
 	if(m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
-		for(i = IDC_YEAR4; i <= IDC_DAY; i++) {
-			if(CHECKS(i)) { strcat(dst, " "); break; }
+		for(control=IDC_YEAR4; control<=IDC_DAY; ++control) {
+			if(CHECKS(control)) { strcat(dst," "); break; }
 		}
 		strcat(dst, "ddd");
 	}
 	
 	if(bdate && btime) {
-		if(CHECKS(IDC_KAIGYO)) strcat(dst, "\\n");
-		else {
+		if(CHECKS(IDC_KAIGYO))
+			strcat(dst,"\\n");
+		else{
 			if(m_idate < 2 && CHECKS(IDC_MONTHS) &&
 			   (CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)))
-				strcat(dst, " ");
-			strcat(dst, " ");
+				strcat(dst," ");
+			strcat(dst," ");
 		}
 	}
 	
 	if(m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
 		strcat(dst, "tt");
-		if(CHECKS(IDC_HOUR) || CHECKS(IDC_MINUTE) ||
-		   CHECKS(IDC_SECOND) || CHECKS(IDC_INTERNETTIME))
-			strcat(dst, " ");
+		if(btime) strcat(dst," ");
 	}
+	btime=0;
 	
 	if(CHECKS(IDC_HOUR)) {
 		strcat(dst, "hh");
-		if(CHECKS(IDC_MINUTE) || CHECKS(IDC_SECOND)) strcat(dst, m_sep_time);
-		else if(CHECKS(IDC_INTERNETTIME) ||
-				(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
+		++btime;
 	}
 	if(CHECKS(IDC_MINUTE)) {
+		if(btime++) strcat(dst, m_sep_time);
 		strcat(dst, "nn");
-		if(CHECKS(IDC_SECOND)) strcat(dst, m_sep_time);
-		else if(CHECKS(IDC_INTERNETTIME) ||
-				(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
 	}
 	if(CHECKS(IDC_SECOND)) {
+		if(btime++) strcat(dst, m_sep_time);
 		strcat(dst, "ss");
-		if(CHECKS(IDC_INTERNETTIME) ||
-		   (!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM))) strcat(dst, " ");
 	}
 	
 	if(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
+		if(btime) strcat(dst," ");
 		strcat(dst, "tt");
-		if(CHECKS(IDC_INTERNETTIME)) strcat(dst, " ");
 	}
 	
-	if(CHECKS(IDC_INTERNETTIME)) strcat(dst, "@@@");
+	if(CHECKS(IDC_INTERNETTIME)){
+		if(btime||CHECKS(IDC_AMPM)) strcat(dst," ");
+		strcat(dst,"@@@");
+	}
 }

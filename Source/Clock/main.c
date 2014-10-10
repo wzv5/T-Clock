@@ -399,7 +399,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	switch(message) {
 	case WM_CREATE:
 		InitAlarm();  // initialize alarms
-		InitFormat(); // initialize a Date/Time format
+		InitFormat(); // initialize/reset Date/Time format
 		SendMessage(hwnd, WM_TIMER, IDTIMER_START, 0);
 		SetTimer(hwnd, IDTIMER_MAIN, 1000, NULL);
 		return 0;

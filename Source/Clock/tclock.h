@@ -120,7 +120,6 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname);
 
 // pageformat.c
 void InitFormat();
-void CreateFormat(char* s, int* checks);
 
 // menu.c
 void OnTClockCommand(HWND hwnd, WORD wID);

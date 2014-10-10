@@ -21,7 +21,7 @@ extern char g_bHour12, g_bHourZero;
 //---------------------------------//+++--> load Localized Strings for Month, Day, & AM/PM Symbols:
 void InitFormat(const char* section, SYSTEMTIME* lt)   //--------------------------------------------------------+++-->
 {
-	char str[80];
+	char year[6];
 	int i, ilang, ioptcal;
 	
 	ilang = GetMyRegLong(section, "Locale", GetUserDefaultLangID());
@@ -41,13 +41,13 @@ void InitFormat(const char* section, SYSTEMTIME* lt)   //-----------------------
 	
 	GetMyRegStr(section, "AMsymbol", m_AM, sizeof(m_AM), "");
 	if(!*m_AM){
-		if(!GetLocaleInfo(ilang, LOCALE_S1159, m_AM, sizeof(m_AM)))
-			strcpy(m_AM, "AM");
+		GetLocaleInfo(ilang, LOCALE_S1159, m_AM, sizeof(m_AM));
+		if(!*m_AM) strcpy(m_AM,"AM");
 	}
 	GetMyRegStr(section, "PMsymbol", m_PM, sizeof(m_PM), "");
 	if(!*m_PM){
-		if(!GetLocaleInfo(ilang, LOCALE_S2359, m_PM, sizeof(m_PM)))
-			strcpy(m_PM, "PM");
+		GetLocaleInfo(ilang, LOCALE_S2359, m_PM, sizeof(m_PM));
+		if(!*m_PM) strcpy(m_PM,"PM");
 	}
 	
 	m_AltYear = -1;
@@ -60,8 +60,8 @@ void InitFormat(const char* section, SYSTEMTIME* lt)   //-----------------------
 	if(!GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, "gg", m_EraStr, sizeof(m_EraStr)))
 		*m_EraStr='\0';
 	
-	if(GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, "yyyy", str, 6))
-		m_AltYear=atoi(str);
+	if(GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, "yyyy", year, sizeof(year)))
+		m_AltYear=atoi(year);
 }
 //================================================================================================
 //--+++-->
