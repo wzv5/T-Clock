@@ -72,7 +72,7 @@ int CheckSettings(){
 		compatibilityflags|=SCOMPAT_FORMAT|SCOMPAT_TIMERS;
 		
 		
-	case 1: /// v2.3.0#106(63ba670) T-Clock file structure changed, startup link must be updated.
+	case 1: /// v2.3.0#127(dff0300,63ba670#106) T-Clock file structure changed, startup link must be updated.
 		updateflags|=SFORMAT_SILENT;
 		
 		

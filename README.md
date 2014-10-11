@@ -1,6 +1,6 @@
 T-Clock Redux
 ==============
-**T-Clock Redux** in an extended fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/) <br>
+**T-Clock Redux** in an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/) <br>
 with ISO week number support, bug fixes and the ability to use Windows default calendar and ToolTip.
 
 The Original T-Clock written by Kazubon in the early 90's was a popular classic that was on the edge of extinction when Windows started going 64bit. ... Stoic Joker simply chose not to let that happen. And now it's up to us to continue his tale.
@@ -12,6 +12,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 * [**view all available**](https://github.com/White-Tiger/T-Clock/releases)
 
 #### Differences to Stoic Joker's T-Clock 2010 [Build 95/98](http://www.donationcoder.com/forum/index.php?topic=21944.0)
+- [x] * improved file structure
 - [x] + ISO-8601 week number support *(Wi)*
 - [x] + original Windows calendar and tooltip usable
 - [x] + support for clocks on every additional taskbar on Win8+
@@ -19,6 +20,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] + clock text angle freely adjustable
 - [x] + live update of clock text related changes *(see what happens as you change it and before you apply it)*
 - [x] + clock text always automatically centered
+- [x] + right mouse click can be customized
 - [x] + mouse button 4 and 5 supported
 - [x] * improved taskbar support such as horizontal vs vertical and size
 - [x] + calendar hides on 2nd click if opened before *(autohide must be enabled, Windows default behavior)*
@@ -28,7 +30,8 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] + simplified mouse click preferences page
 - [x] + default configuration with Windows like behavior and clock with line-break on Vista+ *(easier for first-time users)*
 - [x] + more mouse commands / customization
-- [x] * improved Stopwatch
+- [x] * improved Stopwatch *(hotkeys, export, stats)*
+- [x] * improved drag&drop support
 - [x] ! some bugfixes
 - [x] * some minor and major rewrites and changes
 - [x] ! can be compiled with MinGW/GCC *(allows more people to work on it and also fixed bugs)*
@@ -37,7 +40,6 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [ ] + ability to use different timezones on modifiers *tbd*
 - [ ] + LClock formating options such as different fonts and positions for time and date *tbd*
 - [ ] + working timezone identifiers *tbd*
-- [ ] + restructured file structure with only 1 executable for both 32bit and 64bit *tbd*
 - [ ] + portable mode using .ini files as configuration storage *tbd*
 - [ ] + multilingual version? *tbd*
 - [ ] + resource usage % format option (CPU,RAM maybe GPU) *tbd*

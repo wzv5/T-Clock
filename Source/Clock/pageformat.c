@@ -84,7 +84,7 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			SendPSChanged(hDlg);
 			break;
 		default: // "year" -- "Internet Time"
-			if(id>=IDC_YEAR4 && id<=IDC_INTERNETTIME)
+			if(id>=IDC_YEAR4 && id<=IDC_KAIGYO)
 				OnFormatCheck(hDlg, id);
 		}
 		return TRUE;}
