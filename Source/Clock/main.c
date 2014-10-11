@@ -540,11 +540,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		OnTClockCommand(hwnd, LOWORD(wParam)); // menu.c
 		return 0;
 		
-		// messages transfered from the dll
-	case WM_CONTEXTMENU: //-------------------------------------- menu.c
-		OnContextMenu(hwnd, LOWORD(lParam), HIWORD(lParam));
-		return 0;
-		
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:

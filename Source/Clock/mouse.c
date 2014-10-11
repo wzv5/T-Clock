@@ -113,7 +113,7 @@ void OnTimerMouse(HWND hwnd)
 	switch(func){
 	case MOUSEFUNC_MENU:{
 		POINT pt; GetCursorPos(&pt);
-		PostMessage(g_hwndTClockMain,WM_CONTEXTMENU,0, MAKELPARAM(pt.x,pt.y));
+		OnContextMenu(hwnd, pt.x, pt.y);
 		break;}
 	case MOUSEFUNC_TIMER:
 		DialogTimer();
