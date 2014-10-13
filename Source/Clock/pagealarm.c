@@ -479,7 +479,7 @@ void OnAlermJihou(HWND hDlg, WORD id)
 			OnMsgAlarm(hDlg, IDC_MSG_ALARM);
 		} else {
 			ShowWindow(GetDlgItem(hDlg, IDC_BMPJACK), SW_HIDE);
-			EnableWindow(GetDlgItem(hDlg, IDCB_MSG_ALARM), FALSE);
+			EnableDlgItem(hDlg, IDCB_MSG_ALARM, FALSE);
 		}
 	} else {
 		cstart = IDC_LABSOUNDJIHOU; cend = IDC_BLINKJIHOU;
@@ -509,10 +509,10 @@ void OnMsgAlarm(HWND hDlg, WORD id)   //-------------------------------------+++
 	b = IsDlgButtonChecked(hDlg, id);
 	if(b) {
 		ShowWindow(GetDlgItem(hDlg, IDC_BMPJACK), SW_SHOW);
-		EnableWindow(GetDlgItem(hDlg, IDCB_MSG_ALARM), TRUE);
+		EnableDlgItem(hDlg, IDCB_MSG_ALARM, TRUE);
 	} else {
 		ShowWindow(GetDlgItem(hDlg, IDC_BMPJACK), SW_HIDE);
-		EnableWindow(GetDlgItem(hDlg, IDCB_MSG_ALARM), FALSE);
+		EnableDlgItem(hDlg, IDCB_MSG_ALARM, FALSE);
 	}
 }
 /*------------------------------------------------

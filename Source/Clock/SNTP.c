@@ -564,7 +564,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	// Test For: SE_SYSTEMTIME_NAME Priviledge Before Enabling Sync Now Button:
 //======//==========================================================================
-	EnableWindow(GetDlgItem(hDlg, IDCB_SYNCNOW), GetSetTimePermissions());
+	EnableDlgItem(hDlg, IDCB_SYNCNOW, GetSetTimePermissions());
 	
 	// Load the Time Synchronization Log File:
 //=======================================//=========================================

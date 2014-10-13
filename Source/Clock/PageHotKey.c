@@ -72,16 +72,16 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	}
 	//////////////////////////////////////////////////////////////////////////////////
 	bFirstTime = FALSE; // DO NOT Let Property Sheet Manager Fire OnApply(...) Twice!
-	EnableWindow(GetDlgItem(hDlg, IDCE_HK_ADD),  FALSE);
-	EnableWindow(GetDlgItem(hDlg, IDCE_HK_STOP), FALSE);
-	EnableWindow(GetDlgItem(hDlg, IDCE_HK_TIME), FALSE);
-	EnableWindow(GetDlgItem(hDlg, IDCE_HK_PROP), FALSE);
-	EnableWindow(GetDlgItem(hDlg, IDCE_HK_CALN), FALSE);
-	EnableWindow(GetDlgItem(hDlg, IDCB_HK_ADD),  TRUE);
-	EnableWindow(GetDlgItem(hDlg, IDCB_HK_STOP), TRUE);
-	EnableWindow(GetDlgItem(hDlg, IDCB_HK_TIME), TRUE);
-	EnableWindow(GetDlgItem(hDlg, IDCB_HK_PROP), TRUE);
-	EnableWindow(GetDlgItem(hDlg, IDCB_HK_CALN), TRUE);
+	EnableDlgItem(hDlg, IDCE_HK_ADD,  FALSE);
+	EnableDlgItem(hDlg, IDCE_HK_STOP, FALSE);
+	EnableDlgItem(hDlg, IDCE_HK_TIME, FALSE);
+	EnableDlgItem(hDlg, IDCE_HK_PROP, FALSE);
+	EnableDlgItem(hDlg, IDCE_HK_CALN, FALSE);
+	EnableDlgItem(hDlg, IDCB_HK_ADD,  TRUE);
+	EnableDlgItem(hDlg, IDCB_HK_STOP, TRUE);
+	EnableDlgItem(hDlg, IDCB_HK_TIME, TRUE);
+	EnableDlgItem(hDlg, IDCB_HK_PROP, TRUE);
+	EnableDlgItem(hDlg, IDCB_HK_CALN, TRUE);
 }
 //================================================================================================
 //-------------------------------------------+++--> Display the HotKey Combination Pressed by User:
@@ -273,8 +273,8 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		
 		switch(id) {
 		case IDCB_HK_ADD:
-			EnableWindow(GetDlgItem(hDlg, IDCE_HK_ADD), TRUE);
-			EnableWindow(GetDlgItem(hDlg, IDCB_HK_ADD), FALSE);
+			EnableDlgItem(hDlg, IDCE_HK_ADD, TRUE);
+			EnableDlgItem(hDlg, IDCB_HK_ADD, FALSE);
 			SetDlgItemText(hDlg, IDCE_HK_ADD, "None");
 			SetFocus(GetDlgItem(hDlg, IDCE_HK_ADD));
 			tchk[0].bValid = FALSE; // Required to Clear/Remove HotKey
@@ -285,8 +285,8 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 			
 		case IDCB_HK_STOP:
-			EnableWindow(GetDlgItem(hDlg, IDCE_HK_STOP), TRUE);
-			EnableWindow(GetDlgItem(hDlg, IDCB_HK_STOP), FALSE);
+			EnableDlgItem(hDlg, IDCE_HK_STOP, TRUE);
+			EnableDlgItem(hDlg, IDCB_HK_STOP, FALSE);
 			SetDlgItemText(hDlg, IDCE_HK_STOP, "None");
 			SetFocus(GetDlgItem(hDlg, IDCE_HK_STOP));
 			tchk[1].bValid = FALSE; // Required to Clear/Remove HotKey
@@ -297,8 +297,8 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 			
 		case IDCB_HK_TIME:
-			EnableWindow(GetDlgItem(hDlg, IDCE_HK_TIME), TRUE);
-			EnableWindow(GetDlgItem(hDlg, IDCB_HK_TIME), FALSE);
+			EnableDlgItem(hDlg, IDCE_HK_TIME, TRUE);
+			EnableDlgItem(hDlg, IDCB_HK_TIME, FALSE);
 			SetDlgItemText(hDlg, IDCE_HK_TIME, "None");
 			SetFocus(GetDlgItem(hDlg, IDCE_HK_TIME));
 			tchk[2].bValid = FALSE; // Required to Clear/Remove HotKey
@@ -309,8 +309,8 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 			
 		case IDCB_HK_PROP:
-			EnableWindow(GetDlgItem(hDlg, IDCE_HK_PROP), TRUE);
-			EnableWindow(GetDlgItem(hDlg, IDCB_HK_PROP), FALSE);
+			EnableDlgItem(hDlg, IDCE_HK_PROP, TRUE);
+			EnableDlgItem(hDlg, IDCB_HK_PROP, FALSE);
 			SetDlgItemText(hDlg, IDCE_HK_PROP, "None");
 			SetFocus(GetDlgItem(hDlg, IDCE_HK_PROP));
 			tchk[3].bValid = FALSE; // Required to Clear/Remove HotKey
@@ -321,8 +321,8 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 			
 		case IDCB_HK_CALN:
-			EnableWindow(GetDlgItem(hDlg, IDCE_HK_CALN), TRUE);
-			EnableWindow(GetDlgItem(hDlg, IDCB_HK_CALN), FALSE);
+			EnableDlgItem(hDlg, IDCE_HK_CALN, TRUE);
+			EnableDlgItem(hDlg, IDCB_HK_CALN, FALSE);
 			SetDlgItemText(hDlg, IDCE_HK_CALN, "None");
 			SetFocus(GetDlgItem(hDlg, IDCE_HK_CALN));
 			tchk[4].bValid = FALSE; // Required to Clear/Remove HotKey

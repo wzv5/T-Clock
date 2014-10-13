@@ -436,11 +436,11 @@ void OnTimerName(HWND hDlg)   //------------------------------------------------
 			CheckDlgButton(hDlg, IDC_TIMERREPEAT,	pts->bRepeat);
 			CheckDlgButton(hDlg, IDC_TIMERBLINK,	pts->bBlink);
 			if(pts->bActive){
-				EnableWindow(GetDlgItem(hDlg, IDCB_STOPTIMER), TRUE);
-				EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
+				EnableDlgItem(hDlg, IDCB_STOPTIMER, TRUE);
+				EnableDlgItem(hDlg, IDOK, FALSE);
 			}else{
-				EnableWindow(GetDlgItem(hDlg, IDCB_STOPTIMER), FALSE);
-				EnableWindow(GetDlgItem(hDlg, IDOK), TRUE);
+				EnableDlgItem(hDlg, IDCB_STOPTIMER, FALSE);
+				EnableDlgItem(hDlg, IDOK, TRUE);
 			}
 			break;
 		}
@@ -620,8 +620,8 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 			StopTimer(id);
 			pts->bActive = 0;
 			
-			EnableWindow(GetDlgItem(hWnd, IDOK), 1);
-			EnableWindow(GetDlgItem(hWnd, IDCB_STOPTIMER), 0);
+			EnableDlgItem(hWnd, IDOK, 1);
+			EnableDlgItem(hWnd, IDCB_STOPTIMER, 0);
 			break;
 		}
 	}

@@ -167,8 +167,8 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 	}
 	if(type!=2)
 		UpdateUIList(hDlg,hList,button,click); // little recursion here, will call UpdateUIControls later on selection change
-	EnableWindow(GetDlgItem(hDlg,IDC_MOUSEFILE),(func==MOUSEFUNC_CLIPBOARD));
-	EnableWindow(GetDlgItem(hDlg,IDC_LABMOUSEFILE),(func==MOUSEFUNC_CLIPBOARD));
+	EnableDlgItem(hDlg,IDC_MOUSEFILE,(func==MOUSEFUNC_CLIPBOARD));
+	EnableDlgItem(hDlg,IDC_LABMOUSEFILE,(func==MOUSEFUNC_CLIPBOARD));
 	if(func==MOUSEFUNC_CLIPBOARD){
 		if(!*m_pData[button].format[click])
 			GetMyRegStr("Format","Format",m_pData[button].format[click],LRG_BUFF,"");
@@ -197,7 +197,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			sel=(int)CBGetCurSel(hDlg,IDC_DROPFILES);
 			SetDlgItemText(hDlg, IDC_LABDROPFILESAPP, MyString(sel>=3?IDS_LABFOLDER:IDS_LABPROGRAM));
 			for(iter=IDC_LABDROPFILESAPP; iter<=IDC_DROPFILESAPPSANSHO; ++iter)
-				EnableWindow(GetDlgItem(hDlg,iter),(sel>=2 && sel<=4));
+				EnableDlgItem(hDlg,iter,(sel>=2 && sel<=4));
 			if(!m_bTransition){
 				UpdateUIControls(hDlg,g_hList,-1,-1,0);
 				g_bApplyClock=1;
