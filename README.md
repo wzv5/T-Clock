@@ -1,5 +1,6 @@
 T-Clock Redux
 ==============
+![clockshowcase](https://cloud.githubusercontent.com/assets/1467733/4608572/71b48156-5283-11e4-960f-b0415b5b7cec.png)
 **T-Clock Redux** in an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/) <br>
 with ISO week number support, bug fixes and the ability to use Windows default calendar and ToolTip.
 
