@@ -50,8 +50,22 @@ BOOL bMonOffOnLock = FALSE;
 // alarm.c
 extern char g_bPlayingNonstop;
 
-//=========================================================
-//-------------------+++--> toggle calendar (close or open):
+//=================================================================
+//---------------------------+++--> fixes lost-keyboard-control bug:
+BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus)
+{
+	HWND hwnd=GetDlgItem(hDlg,control);
+	if(!bEnable && GetFocus()==hwnd){
+		if(nextFocus){
+			HWND hwndnext=GetDlgItem(hDlg,nextFocus);
+			SendMessage(hDlg,WM_NEXTDLGCTL,(WPARAM)hwndnext,TRUE);
+		}else
+			SendMessage(hDlg,WM_NEXTDLGCTL,0,FALSE);
+	}
+	return EnableWindow(hwnd,bEnable);
+}
+//=================================================================
+//--------------------------+++--> toggle calendar (close or open):
 void ToggleCalendar(int type)   //---------------------------+++-->
 {
 	if(IsCalendarOpen())

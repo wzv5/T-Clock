@@ -77,7 +77,7 @@ void StopWatch_Stop(HWND hDlg){
 	OnTimer(hDlg); // update time text
 	m_start.QuadPart=0;
 	SetDlgItemText(hDlg,IDC_SW_START,"Start (s)");
-	EnableDlgItem(hDlg,IDC_SW_RESET,0);
+	EnableDlgItemSafeFocus(hDlg,IDC_SW_RESET,0,IDC_SW_START);
 }
 void StopWatch_Reset(HWND hDlg){
 	if(!m_start.QuadPart) return;
@@ -85,7 +85,7 @@ void StopWatch_Reset(HWND hDlg){
 	ListView_DeleteAllItems(GetDlgItem(hDlg,IDC_SW_LAPS));
 	if(m_paused){ // paused
 		m_start.QuadPart=0;
-		EnableDlgItem(hDlg,IDC_SW_RESET,0);
+		EnableDlgItemSafeFocus(hDlg,IDC_SW_RESET,0,IDC_SW_START);
 	}else{ // running
 		QueryPerformanceCounter(&m_start);
 		m_lap=m_start;

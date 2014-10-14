@@ -621,7 +621,7 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 			pts->bActive = 0;
 			
 			EnableDlgItem(hWnd, IDOK, 1);
-			EnableDlgItem(hWnd, IDCB_STOPTIMER, 0);
+			EnableDlgItemSafeFocus(hWnd, IDCB_STOPTIMER, 0, IDOK);
 			break;
 		}
 	}

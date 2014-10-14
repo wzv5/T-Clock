@@ -174,6 +174,7 @@ int BounceWindOptions(HWND hDlg, dlgmsg_t* dlg);
 void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* settings);
 
 // Macros
+BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus);
 #define EnableDlgItem(hDlg,id,b) EnableWindow(GetDlgItem((hDlg),(id)),(b))
 #define ShowDlgItem(hDlg,id,b) ShowWindow(GetDlgItem((hDlg),(id)),(b)?SW_SHOW:SW_HIDE)
 
