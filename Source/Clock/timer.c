@@ -568,21 +568,25 @@ int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------
 		if(bNameOnly) {
 			wsprintf(dst, "    %s	(%i", m_timer[num].name,num+1);
 		} else {
+			char* out=dst;
 			DWORD tick = GetTickCount()/1000;
 			int iTCount = tick - m_timer[num].tickonstart;
-			int days,hours,minutes,seconds;
+			int days,hours,minutes;
+			// Homeless Timers Are Automatically Picked-Up
+			// By the Timer Watch Window for Display.
+			// The Watch Window Then Becomes Their New Home.
+			// Don't Ya Just Love Happy Endings...
+			m_timer[num].bHomeless = 1;
 			iTCount = m_timer[num].seconds - iTCount;
-			m_timer[num].bHomeless = 1; // Homeless Timers Are Automatically Picked-Up
-			if(iTCount <= 0) {					  //-++--> By the Timer Watch Window for Display.
+			if(iTCount <= 0) {
 				wsprintf(dst, " <- Time Expired!");
 				return -1;
 			}
-			
-			days = iTCount / 86400;			 // The Watch Window Then Becomes Their New Home.
-			hours   = (iTCount - (days * 86400)) / 3600;  // Don't Ya Just Love Happy Endings...
-			minutes = (iTCount - ((days * 86400) + (hours * 3600))) / 60;
-			seconds = (iTCount - ((days * 86400) + (hours * 3600) + (minutes * 60)));
-			wsprintf(dst, "%02dD:%02dH:%02dM:%02dS", days, hours, minutes, seconds);
+			days = iTCount/86400; iTCount%=86400;
+			hours = iTCount/3600; iTCount%=3600;
+			minutes = iTCount/60; iTCount%=60;
+			if(days) out+=wsprintf(out,"%d day%s ",days,(days==1?"":"s"));
+			wsprintf(out,"%02d:%02d:%02d",hours,minutes,iTCount);
 		}
 		return (int)strlen(dst);
 	}
