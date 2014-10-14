@@ -144,7 +144,6 @@ void CancelAllTimersOnStartUp();
 void EndAllTimers();
 void DialogTimer();
 void OnTimerTimer(HWND hwnd);
-int GetTimerInfo(char* dst, int num, BOOL bNameOnly);
 
 // StopWatch.c
 BOOL IsDialogStopWatchMessage(HWND hwnd, MSG* msg);

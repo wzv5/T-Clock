@@ -28,7 +28,7 @@ typedef struct { // Close Socket on Request TimeOut Structure
 
 extern hotkey_t* tchk;
 
-HWND hLogView;
+static HWND m_dlg;
 static BOOL bSaveLog;
 static BOOL bMessage;
 static BOOL bGUI = FALSE;
@@ -77,7 +77,7 @@ void Log(const char* msg)   //--------------------------------------------------
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
 		lvItem.iItem = 0; //-----+++--> Which Puts the Most Recent Info on Top.
 		lvItem.pszText = s;
-		ListView_InsertItem(hLogView, &lvItem);
+		ListView_InsertItem(GetDlgItem(m_dlg,IDC_LIST), &lvItem);
 	}
 	
 	if(bMessage) {
@@ -491,10 +491,11 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	LVCOLUMN lvCol;
 	LVITEM lvItem;
 	int i, count;
-	// Get the List of Configured Time Servers:
-//======================================//==========================================
-	GetMyRegStr(subkey, "Server", server, 80, "");
+	HWND hList=GetDlgItem(hDlg,IDC_LIST);
 	
+	m_dlg=hDlg;
+	// Get the List of Configured Time Servers:
+	GetMyRegStr(subkey, "Server", server, 80, "");
 	count = GetMyRegLong(subkey, "ServerNum", 0);
 	for(i = 1; i <= count; i++) {
 		char s[MAX_BUFF], entry[TNY_BUFF];
@@ -503,7 +504,6 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		GetMyRegStr(subkey, entry, s, 80, "");
 		if(s[0]) CBAddString(hDlg, IDCBX_NTPSERVER, s);
 	}
-	
 	if(server[0]) {
 		i = (int)CBFindStringExact(hDlg, IDCBX_NTPSERVER, server);
 		if(i == LB_ERR) {
@@ -512,7 +512,6 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		}
 		CBSetCurSel(hDlg, IDCBX_NTPSERVER, i);
 	}
-	
 	if(!g_hIconDel) {
 		g_hIconDel = LoadImage((HANDLE)GetModuleHandle(NULL),
 							   MAKEINTRESOURCE(IDI_DEL),
@@ -523,19 +522,16 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 					   IMAGE_ICON, (LPARAM)g_hIconDel);
 					   
 	// Get the Sync Sound File:
-//======================================================//==========================
 	GetMyRegStr(subkey, "Sound", szFile, MAX_BUFF, "");
 	SetDlgItemText(hDlg, IDCE_SYNCSOUND, szFile);
+	
 	// Get the Confirmation Options:
-//=================================================//===============================
 	bSaveLog = GetMyRegLongEx(subkey, "SaveLog", 0);
 	CheckDlgButton(hDlg, IDCBX_SNTPLOG, bSaveLog);
 	bMessage = GetMyRegLongEx(subkey, "MessageBox", 0);
 	CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, bMessage);
 	
 	// Load & Display the Configured Synchronization HotKey:
-//=========================//=======================================================
-
 	tchk = (hotkey_t*)malloc(sizeof(hotkey_t));
 	tchk[0].bValid = GetMyRegLongEx("HotKeys\\HK5", "bValid", 0);
 	GetMyRegStrEx("HotKeys\\HK5", "szText", tchk[0].szText, TNY_BUFF, "None");
@@ -547,27 +543,21 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	// Subclass the Edit Controls
 	OldEditClassProc  = (WNDPROC)(LONG_PTR)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC);
 	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
-	//-+> Create & Show the Log File ListView Control:
-//===============================//=================================================
-	hLogView = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
-							LVS_NOSORTHEADER|LVS_SINGLESEL, 19, 188, 428, 89, hDlg, 0, 0, NULL);
-	ListView_SetExtendedListViewStyle(hLogView, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
-	SetXPWindowTheme(hLogView,L"Explorer",NULL);
 	
-	ShowWindow(hLogView, SW_SHOW);							 // Populate Its Column:
-//==========================================================//======================
+	// init listview
+	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
+	SetXPWindowTheme(hList,L"Explorer",NULL);
+	
 	lvCol.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvCol.cx = 280; //-+-// Set Column Width in Pixels
 	lvCol.iSubItem = 0; // This is the First & Only Column
 	lvCol.pszText = "Synchronization History"; // Header Text
-	ListView_InsertColumn(hLogView, 0, &lvCol);
+	ListView_InsertColumn(hList, 0, &lvCol);
 	
 	// Test For: SE_SYSTEMTIME_NAME Priviledge Before Enabling Sync Now Button:
-//======//==========================================================================
 	EnableDlgItem(hDlg, IDCB_SYNCNOW, GetSetTimePermissions());
 	
 	// Load the Time Synchronization Log File:
-//=======================================//=========================================
 	strcpy(szFile, g_mydir);
 	add_title(szFile, "SNTP.log");
 	
@@ -584,7 +574,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 			if(fgets(szLine, MAX_BUFF, stReport)) {
 				szLine[strcspn(szLine, "\n")] = '\0'; // Remove the Newline Character
 				lvItem.pszText = szLine;
-				ListView_InsertItem(hLogView, &lvItem);
+				ListView_InsertItem(hList, &lvItem);
 			} else {
 				fclose(stReport);
 				return; // Remember: Any Code Placed Below Here Will FAIL

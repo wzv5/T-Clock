@@ -5,6 +5,7 @@
 #include "tclock.h"
 
 char g_szTimersSubKey[]="Timers";
+static int GetTimerInfo(char* dst, int num);
 //==================================================================
 //----------+++--> enumerate & display all times to our context menu:
 void UpdateTimerMenu(HMENU hMenu)   //------------------------+++-->
@@ -20,10 +21,10 @@ void UpdateTimerMenu(HMENU hMenu)   //------------------------+++-->
 		EnableMenuItem(hMenu,IDM_TIMEWATCHRESET,MF_BYCOMMAND|MF_ENABLED);
 		InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
 		for(idx=0; idx<count; ++idx){
-			size_t len;
+			char* pos=buf+4;
 			wsprintf(subkey+offset, "%d", idx+1);
-			len=GetMyRegStr(subkey,"Name",buf+4,GEN_BUFF,"");
-			wsprintf(buf+4+len,"	(%i",idx+1);
+			pos+=GetMyRegStr(subkey,"Name",pos,GEN_BUFF,"");
+			wsprintf(pos,"	(%i",idx+1);
 			InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_STRING,IDM_I_TIMER+idx,buf);
 			if(GetMyRegLong(subkey,"Active",0))
 				CheckMenuItem(hMenu,IDM_I_TIMER+idx,MF_BYCOMMAND|MF_CHECKED);
@@ -159,8 +160,8 @@ static void OnTimerName(HWND hDlg);
 static void Ring(HWND hwnd, int id);
 static void OnTest(HWND hDlg, WORD id);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
+static void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, char bGoUp);
 
-void UpdateNextCtrl(HWND, int, int, BOOL);
 INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 //=========================================================================================*
 // ------------------------------------------------------------- Open Add/Edit Timers Dialog
@@ -562,39 +563,30 @@ void Ring(HWND hwnd, int id)   //-----------------------------------------------
 }
 //================================================================================================
 //---------+++--> Get Active Timer Name(s) to Populate Menu -or- Mark Selected Timer as "Homeless":
-int GetTimerInfo(char* dst, int num, BOOL bNameOnly)   //-----------------------------------+++-->
+int GetTimerInfo(char* dst, int num)   //-----------------------------------+++-->
 {
 	if(num < m_timers) {
-		if(bNameOnly) {
-			wsprintf(dst, "    %s	(%i", m_timer[num].name,num+1);
-		} else {
-			char* out=dst;
-			DWORD tick = GetTickCount()/1000;
-			int iTCount = tick - m_timer[num].tickonstart;
-			int days,hours,minutes;
-			// Homeless Timers Are Automatically Picked-Up
-			// By the Timer Watch Window for Display.
-			// The Watch Window Then Becomes Their New Home.
-			// Don't Ya Just Love Happy Endings...
-			m_timer[num].bHomeless = 1;
-			iTCount = m_timer[num].seconds - iTCount;
-			if(iTCount <= 0) {
-				wsprintf(dst, " <- Time Expired!");
-				return -1;
-			}
-			days = iTCount/86400; iTCount%=86400;
-			hours = iTCount/3600; iTCount%=3600;
-			minutes = iTCount/60; iTCount%=60;
-			if(days) out+=wsprintf(out,"%d day%s ",days,(days==1?"":"s"));
-			wsprintf(out,"%02d:%02d:%02d",hours,minutes,iTCount);
+		char* out=dst;
+		DWORD tick = GetTickCount()/1000;
+		int iTCount = tick - m_timer[num].tickonstart;
+		int days,hours,minutes;
+		iTCount = m_timer[num].seconds - iTCount;
+		if(iTCount <= 0) {
+			return wsprintf(dst, " <- Time Expired!");
 		}
-		return (int)strlen(dst);
+		days = iTCount/86400; iTCount%=86400;
+		hours = iTCount/3600; iTCount%=3600;
+		minutes = iTCount/60; iTCount%=60;
+		if(days) out+=wsprintf(out,"%d day%s ",days,(days==1?"":"s"));
+		out+=wsprintf(out,"%02d:%02d:%02d",hours,minutes,iTCount);
+		return (int)(out-dst);
 	}
+	*dst='\0';
 	return 0;
 }
 //================================================================================================
 //-------------------------------------+++--> Spoof Control Message to Force Update of Nexe Window:
-void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, BOOL bGoUp)   //-----------------------+++-->
+void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, char bGoUp)   //-----------------------+++-->
 {
 	NMUPDOWN nmud;
 	
@@ -647,15 +639,13 @@ void CancelAllTimersOnStartUp()   //--------------------------------------------
 }
 //================================================================================================
 // -------------------------------------------//+++--> Initialize Timer View/Watch Dialog Controls:
-void OnInitTimeView(HWND hDlg, HWND hList)   //---------------------------------------------+++-->
+void OnInitTimeView(HWND hDlg)   //---------------------------------------------+++-->
 {
 	LVCOLUMN lvCol;
-	RECT rc;
+	HWND hList=GetDlgItem(hDlg,IDC_LIST);
 	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
 	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	
-	hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|LVS_REPORT|
-						 LVS_NOSORTHEADER|LVS_SINGLESEL, 0, 0, 261, 104, hDlg, 0, 0, NULL);
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
 	SetXPWindowTheme(hList,L"Explorer",NULL);
 	
@@ -671,29 +661,24 @@ void OnInitTimeView(HWND hDlg, HWND hList)   //---------------------------------
 	lvCol.fmt = LVCFMT_LEFT;
 	lvCol.pszText = TEXT("Remaining");
 	ListView_InsertColumn(hList, 1, &lvCol);
-	
-	GetClientRect(hDlg, &rc);
-	SetWindowPos(hList, NULL, 0, 0, rc.right-rc.left, rc.bottom-rc.top, SWP_SHOWWINDOW);
 }
 //================================================================================================
 //-------------------------------------+++--> Gather Status Info About the Timers User is Watching:
-BOOL OnWatchTimer(HWND hList)   //-----------------------------------------------+++-->
+BOOL OnWatchTimer(HWND hDlg)   //-----------------------------------------------+++-->
 {
-	char szStatus[MIN_BUFF] = {0};
+	HWND hList=GetDlgItem(hDlg,IDC_LIST);
+	char szStatus[MIN_BUFF];
 	BOOL bNeeded = FALSE;
 	LVFINDINFO lvFind;
-	int iTc;
 	LVITEM lvItem;
-	
-	iTc = m_timers;
-	for(; iTc > 0; --iTc) {
-		int iTn = (iTc - 1);
-		if(m_timer[iTn].bHomeless) {
+	int id;
+	for(id=m_timers; id--; ) {
+		if(m_timer[id].bHomeless) {
 			int iF;
-			GetTimerInfo(szStatus, iTn, FALSE);
+			GetTimerInfo(szStatus,id);
 			
 			lvFind.flags = LVFI_STRING;
-			lvFind.psz = m_timer[iTn].name;
+			lvFind.psz = m_timer[id].name;
 			if((iF = ListView_FindItem(hList, -1, &lvFind)) != -1) {
 				ListView_SetItemText(hList, iF, 1, szStatus); // IF Timer Pre-Exists,
 				bNeeded = TRUE; //------------+++--> Update the Existing Timer Entry.
@@ -703,7 +688,7 @@ BOOL OnWatchTimer(HWND hList)   //----------------------------------------------
 				lvItem.iSubItem = 0;
 				lvItem.iItem = 0;
 				
-				lvItem.pszText = m_timer[iTn].name;
+				lvItem.pszText = m_timer[id].name;
 				ListView_InsertItem(hList, &lvItem);
 				
 				lvItem.iSubItem = 1;
@@ -760,27 +745,22 @@ void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 // -----------------------+++--> Message Processor for the Selected Running Timers Watching Dialog:
 INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
-	WORD id; HWND hList;
-	hList = FindWindowEx(hDlg, NULL, WC_LISTVIEW, NULL);
-	
-	id = LOWORD(wParam);
-	
 	switch(msg) {
 	case WM_INITDIALOG:
-		OnInitTimeView(hDlg, hList);
+		OnInitTimeView(hDlg);
 		SetTimer(hDlg, 3, 285, NULL); // Timer Refresh Times Above 400ms Make
 		SetMyDialgPos(hDlg,21); //-----+++--> Timer Watch Dialog Appear Sluggish.
 		return TRUE; //-------------------------------+++--> END of Case WM_INITDOALOG
 //================//================================================================
 	case WM_TIMER:
-		if(!OnWatchTimer(hList)) { // When the Last Monitored Timer
+		if(!OnWatchTimer(hDlg)) { // When the Last Monitored Timer
 			KillTimer(hDlg, 3);			 // Expires, Close the Now UnNeeded
 			EndDialog(hDlg, TRUE);		 // Timer Watch/View Dialog Window.
 			g_hDlgTimerWatch = NULL;
 		} return TRUE; //--------------------------------+++--> END of Case WM_TIMER
 //====================//============================================================
 	case WM_COMMAND:
-		switch(id) {
+		switch(LOWORD(wParam)) {
 		case IDCANCEL:
 			KillTimer(hDlg, 3);
 			EndDialog(hDlg, TRUE);
@@ -792,10 +772,11 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 		//--------------------------------------------------------------------+++-->
 		if(((LPNMHDR)lParam)->code == LVN_KEYDOWN) { //-+> Capture Key Strokes Here.
 			LPNMLVKEYDOWN nmkey = (LPNMLVKEYDOWN)lParam;
+			HWND hList=GetDlgItem(hDlg,IDC_LIST);
 			switch(nmkey->wVKey) {
 			case VK_DELETE:{
 				int i;
-				if((i = ListView_GetNextItem (hList,-1,LVNI_SELECTED)) != -1) {
+				if((i = ListView_GetNextItem(hList,-1,LVNI_SELECTED)) != -1) {
 					char szTimer[GEN_BUFF];
 					ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
 					RemoveFromWatch(hDlg, hList, szTimer, i);

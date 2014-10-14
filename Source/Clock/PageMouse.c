@@ -5,7 +5,7 @@
 #include "tclock.h"
 #include <ShlObj.h>//SHBrowseForFolder
 
-static void OnInit(HWND hDlg,HWND* hList);
+static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 static void OnDestroy();
 static void OnSansho(HWND hDlg, WORD id);
@@ -64,8 +64,9 @@ static void SendPSChanged(HWND hDlg){
 
 //========================================================================================
 //------------------------------------------------------+++--> Update UI, listview control:
-static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   //---+++-->
+static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 {
+	HWND hList=GetDlgItem(hDlg,IDC_LIST);
 	LVITEM lvItem; // ListView item		Mouse Buttons:
 	int button;  // mouse button				0=>Left, 1=>Right, 2=>Middle, 
 	int click; // click count					3=>XButton 1, 4=>XButton 2
@@ -133,7 +134,7 @@ static void UpdateUIList(HWND hDlg, HWND hList, int selButton, int selClick)   /
 }
 //====================================================================================================
 //----------------------------------------------+++--> Update UI controls: combo boxes and radiobutton:
-static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int type)   //-------+++-->
+static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //-------+++-->
 {
 	int func;
 	if(m_bTransition) return;
@@ -166,7 +167,7 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 		}
 	}
 	if(type!=2)
-		UpdateUIList(hDlg,hList,button,click); // little recursion here, will call UpdateUIControls later on selection change
+		UpdateUIList(hDlg,button,click); // little recursion here, will call UpdateUIControls later on selection change
 	EnableDlgItem(hDlg,IDC_MOUSEFILE,(func==MOUSEFUNC_CLIPBOARD));
 	EnableDlgItem(hDlg,IDC_LABMOUSEFILE,(func==MOUSEFUNC_CLIPBOARD));
 	if(func==MOUSEFUNC_CLIPBOARD){
@@ -180,10 +181,9 @@ static void UpdateUIControls(HWND hDlg, HWND hList, int button, int click, int t
 //-------------------------------------------+++--> Dialog Procedure for Mouse Tab Dialog Messages:
 INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-----+++-->
 {
-	static HWND g_hList=NULL;
 	switch(message){
 	case WM_INITDIALOG:{
-		OnInit(hDlg,&g_hList);
+		OnInit(hDlg);
 		return TRUE;}
 	case WM_DESTROY:
 		OnDestroy(hDlg);
@@ -199,7 +199,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			for(iter=IDC_LABDROPFILESAPP; iter<=IDC_DROPFILESAPPSANSHO; ++iter)
 				EnableDlgItem(hDlg,iter,(sel>=2 && sel<=4));
 			if(!m_bTransition){
-				UpdateUIControls(hDlg,g_hList,-1,-1,0);
+				UpdateUIControls(hDlg,-1,-1,0);
 				g_bApplyClock=1;
 				SendPSChanged(hDlg);
 			}
@@ -213,13 +213,13 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		///  button
 		}else if(id == IDC_MOUSEBUTTON && code == CBN_SELCHANGE){
 			int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
-			UpdateUIControls(hDlg,g_hList,button,-1,0);
+			UpdateUIControls(hDlg,button,-1,0);
 		/// clicks
 		}else if(id >= IDC_RADSINGLE && id <= IDC_RADDOUBLE){
-			UpdateUIControls(hDlg,g_hList,-1,id-IDC_RADSINGLE,0);
+			UpdateUIControls(hDlg,-1,id-IDC_RADSINGLE,0);
 		///  Mouse Function
 		}else if(id == IDC_MOUSEFUNC && code == CBN_SELCHANGE){
-			UpdateUIControls(hDlg,g_hList,-1,-1,1);
+			UpdateUIControls(hDlg,-1,-1,1);
 			SendPSChanged(hDlg);
 		/// Mouse Function - File
 		}else if(id == IDC_MOUSEFILE && code==EN_CHANGE){
@@ -263,6 +263,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 		case LVN_ITEMCHANGED:
 			if(itm->uNewState&LVIS_SELECTED){
+				HWND hList=GetDlgItem(hDlg,IDC_LIST);
 				char szButtonBuf[TNY_BUFF];
 				char szClickBuf[TNY_BUFF];
 				char* szButton;
@@ -274,16 +275,16 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				lvItem.cchTextMax=TNY_BUFF;
 				lvItem.iSubItem=0;
 				lvItem.pszText=szButtonBuf;
-				ListView_GetItem(g_hList,&lvItem);
+				ListView_GetItem(hList,&lvItem);
 				szButton=lvItem.pszText;
 				lvItem.iSubItem=1;
 				lvItem.pszText=szClickBuf;
-				ListView_GetItem(g_hList,&lvItem);
+				ListView_GetItem(hList,&lvItem);
 				for(button=0; button<m_mouseButtonCount; ++button){
 					if(strcmp(m_mouseButton[button],szButton)) continue;
 					for(click=0; click<m_mouseClickCount; ++click){
 						if(strcmp(m_mouseClick[click],lvItem.pszText)) continue;
-						UpdateUIControls(hDlg,g_hList,button,click,2);
+						UpdateUIControls(hDlg,button,click,2);
 						button=m_mouseButtonCount;
 						break;
 					}
@@ -297,8 +298,9 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 }
 //================================================================================================
 //------------------------//----------------------------++--> Initialize Mouse Tab Dialog Controls:
-void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------------------+++-->
+void OnInit(HWND hDlg)   //-----------------------------------------------------+++-->
 {
+	HWND hList=GetDlgItem(hDlg,IDC_LIST);
 	char entry[3+4];
 	char buf[LRG_BUFF];
 	int button, click;
@@ -342,40 +344,37 @@ void OnInit(HWND hDlg,HWND* hList)   //-----------------------------------------
 	if(!*buf) memcpy(buf,"\"T-Clock\" LDATE",16);
 	SetDlgItemText(hDlg,IDC_TOOLTIP,buf);
 	/// setup list view
-	*hList = CreateWindow(WC_LISTVIEW, NULL, WS_CHILD|WS_VSCROLL|
-							LVS_NOSORTHEADER|LVS_REPORT|LVS_SINGLESEL, 17, 117, 430, 160, hDlg, 0, 0, NULL);
-	ListView_SetExtendedListViewStyle(*hList,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
-	SetXPWindowTheme(*hList,L"Explorer",NULL);
-	SetWindowLongPtr(*hList,GWLP_ID,IDC_LIST);
+	ListView_SetExtendedListViewStyle(hList,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
+	SetXPWindowTheme(hList,L"Explorer",NULL);
 	
 	lvCol.mask=LVCF_FMT|LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM;
 	lvCol.iSubItem=0;
 	lvCol.pszText="Button";
 	lvCol.fmt=LVCFMT_CENTER;
 	lvCol.cx=60;
-	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
+	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Click Type";
 	lvCol.fmt=LVCFMT_CENTER;
 	lvCol.cx=70;
-	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
+	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Action";
 	lvCol.fmt=LVCFMT_LEFT;
 	lvCol.cx=160;
-	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
+	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Other";
 	lvCol.fmt=LVCFMT_LEFT;
-	lvCol.cx=140;
-	ListView_InsertColumn(*hList,lvCol.iSubItem,&lvCol);
-	ShowWindow(*hList,SW_SHOW);
+	lvCol.cx=151;
+	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
+	ShowWindow(hList,SW_SHOW);
 	m_bTransition=0; // end transition
 	/// select first mouse setup and UpdateMouseClickList
-	UpdateUIControls(hDlg,*hList,0,-1,0); // pre-select first mouse button
+	UpdateUIControls(hDlg,0,-1,0); // pre-select first mouse button
 }
 //================================================================================================
 //-------------------------//-------------------------+++--> Apply (Settings) Button Event Handler:
