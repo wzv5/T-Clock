@@ -15,7 +15,8 @@ enum{
 };
 extern unsigned short g_tos; // holds current OS version flags
 BOOL CheckSystemVersion();
-void RefreshUs(void);
+HWND FindClock();
+void RefreshUs();
 char PathExists(const char* path);
 void GetFileAndOption(const char* command, char* fname, char* opt);
 BOOL ExecFile(HWND hwnd, const char* command);

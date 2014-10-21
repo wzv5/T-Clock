@@ -66,31 +66,35 @@ BOOL CheckSystemVersion()   //--------------------------------------------------
 	}
 	return TRUE;
 }
-//================================================================================================
-//--------------------------------------------------+++--> Force a ReDraw of T-Clock & the TaskBar:
-void RefreshUs(void)   //-------------------------------------------------------------------+++-->
+//==================================================================================
+//--------------------------------------------------+++--> finds the tray clock hwnd:
+HWND FindClock()   //---------------------------------------------------------+++-->
 {
-	char classname[GEN_BUFF] = {0};
-	HWND hwndBar, hwndChild;
-	
-	hwndBar = FindWindow("Shell_TrayWnd", NULL);
-	
+	char classname[80];
+	HWND hwndBar = FindWindow("Shell_TrayWnd",NULL);
 	// find the clock window
-	hwndChild = GetWindow(hwndBar, GW_CHILD);
-	while(hwndChild) {
-		GetClassName(hwndChild, classname, 80);
-		if(lstrcmpi(classname, "TrayNotifyWnd") == 0) {
-			hwndChild = GetWindow(hwndChild, GW_CHILD);
-			while(hwndChild) {
-				GetClassName(hwndChild, classname, 80);
-				if(lstrcmpi(classname, "TrayClockWClass") == 0) {
-					SendMessage(hwndChild, CLOCKM_REFRESHCLOCK, 0, 0);
-					SendMessage(hwndChild, CLOCKM_REFRESHTASKBAR, 0, 0);
-					break;
-				}
-			} break;
+	HWND hwndChild;
+	for(hwndChild=GetWindow(hwndBar,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
+		GetClassName(hwndChild,classname,sizeof(classname));
+		if(!lstrcmpi(classname,"TrayNotifyWnd")) {
+			for(hwndChild=GetWindow(hwndChild,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
+				GetClassName(hwndChild,classname,sizeof(classname));
+				if(!lstrcmpi(classname,"TrayClockWClass"))
+					return hwndChild;
+			}
+			break;
 		}
-		hwndChild = GetWindow(hwndChild, GW_HWNDNEXT);
+	}
+	return NULL;
+}
+//===================================================================================
+//-------------------------------------+++--> Force a ReDraw of T-Clock & the TaskBar:
+void RefreshUs()   //----------------------------------------------------------+++-->
+{
+	HWND hclock=FindClock();
+	if(hclock){
+		SendMessage(hclock,CLOCKM_REFRESHCLOCK,0,0);
+		SendMessage(hclock,CLOCKM_REFRESHTASKBAR,0,0);
 	}
 }
 #ifndef S_ISDIR

@@ -9,7 +9,7 @@
 #include "../common/version.h"
 #include "../common/tcolor.h" // WM_DWMCOLORIZATIONCOLORCHANGED
 
-// TCDLL.DLL‚API
+// TCDLL.DLLâ€šAPI
 IsCalendarOpen_t IsCalendarOpen;
 HookStart_t HookStart;
 HookEnd_t HookEnd;
@@ -517,39 +517,16 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		StopFile();
 		return 0;
 		
-	case WM_WININICHANGE: {
-			HWND hwndBar;
-			HWND hwndChild;
-			char classname[80];
-			
-			hwndBar = FindWindow("Shell_TrayWnd", NULL);
-			
-			// find the clock window
-			hwndChild = GetWindow(hwndBar, GW_CHILD);
-			while(hwndChild) {
-				GetClassName(hwndChild, classname, 80);
-				if(lstrcmpi(classname, "TrayNotifyWnd") == 0) {
-					hwndChild = GetWindow(hwndChild, GW_CHILD);
-					while(hwndChild) {
-						GetClassName(hwndChild, classname, 80);
-						if(lstrcmpi(classname, "TrayClockWClass") == 0) {
-							SendMessage(hwndChild, CLOCKM_REFRESHTASKBAR, 0, 0);
-							break;
-						}
-					}
-					break;
-				}
-				hwndChild = GetWindow(hwndChild, GW_HWNDNEXT);
-			}
-			return 0;
-		}
-		// inform clock about DWM color change
+	case WM_WININICHANGE:
+		RefreshUs();
+		return 0;
+	// inform clock about DWM color change
 	case WM_DWMCOLORIZATIONCOLORCHANGED:
 		OnTColor_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
 		PostMessage(g_hwndClock, WM_DWMCOLORIZATIONCOLORCHANGED, wParam, lParam);
 		return 0;
 		
-		// context menu
+	// context menu
 	case WM_COMMAND:
 		OnTClockCommand(hwnd, LOWORD(wParam)); // menu.c
 		return 0;

@@ -38,15 +38,15 @@ HHOOK m_hhook = NULL;
 //-----------------------------------------------+++--> Install SystemTray Clock ShellHook:
 void WINAPI HookStart(HWND hwnd)   //-----------------------------------------------+++-->
 {
-	char classname[80];
-	HWND hwndBar, hwndChild;
+	HWND hwndBar, hwndClock;
 	DWORD dwThreadId;
 	
 	g_hwndTClockMain = hwnd;
-	if(g_hwndClock && IsWindow(g_hwndClock)){
+	if(g_hwndClock && IsWindow(g_hwndClock) && g_hwndClock==FindClock()){
 		PostMessage(g_hwndTClockMain,MAINM_CLOCKINIT,0,(LPARAM)g_hwndClock);
 		return; // already hooked / old instance
 	}
+	g_hwndClock=NULL;
 	
 	// find the taskbar
 	hwndBar = FindWindow("Shell_TrayWnd", NULL);
@@ -73,22 +73,8 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 	// refresh the taskbar
 	PostMessage(hwndBar, WM_SIZE, SIZE_RESTORED, 0);
 	
-	// find the clock window
-	hwndChild = GetWindow(hwndBar, GW_CHILD);
-	while(hwndChild) {
-		GetClassName(hwndChild, classname, sizeof(classname));
-		if(lstrcmpi(classname, "TrayNotifyWnd") == 0) {
-			hwndChild = GetWindow(hwndChild, GW_CHILD);
-			while(hwndChild) {
-				GetClassName(hwndChild, classname, sizeof(classname));
-				if(lstrcmpi(classname, "TrayClockWClass") == 0) {
-					SendMessage(hwndChild, WM_NULL, 0, 0);
-					break;
-				}
-			} break;
-		}
-		hwndChild = GetWindow(hwndChild, GW_HWNDNEXT);
-	}
+	hwndClock=FindClock();
+	SendMessage(hwndClock, WM_NULL, 0, 0);
 }
 //========================================================================================
 //------------------------------------------------+++--> Remove SystemTray Clock ShellHook:
