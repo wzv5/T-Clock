@@ -11,11 +11,11 @@
 
 #define CLOCK_BORDER_MARGIN 2
 
-void EndClock(HWND hwnd);
 void OnTimer(HWND hwnd);
 void ReadStyleData(HWND hwnd, int preview);
 void ReadFormatData(HWND hwnd, int preview);
 void InitClock(HWND hwnd);
+void EndClock(HWND hwnd);
 int DestroyClock();
 int UpdateClock(HWND hwnd, HFONT fnt);
 int UpdateClockSize(HWND hwnd);
@@ -659,7 +659,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0)){
 			ShowTip(hwnd);//show custom tooltip
 		}else{
-			PostMessage(g_hwndClock, WM_USER+103,1,0);//show system tooltip
+			PostMessage(hwnd, WM_USER+103,1,0);//show system tooltip
 		}
 		return 0;
 	case WM_MOUSELEAVE:
@@ -668,7 +668,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
-					PostMessage(g_hwndClock, WM_USER+103,0,0);//hide system tooltip
+					PostMessage(hwnd, WM_USER+103,0,0);//hide system tooltip
 			}
 			FillClockBG(hwnd);
 			InvalidateRect(hwnd,NULL,0);
@@ -702,13 +702,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case CLOCKM_REFRESHCLOCKPREVIEWFORMAT: // refresh the clock
 		if(message==CLOCKM_REFRESHCLOCKPREVIEWFORMAT)
 			ReadFormatData(hwnd,1); // also creates/updates clock because of preview
-	case CLOCKM_REFRESHTASKBAR: // refresh other elements than clock (somehow required to actually change the clock's size)
-		SetLayeredTaskbar(g_hwndClock,0);
-		PostMessage(GetParent(GetParent(hwnd)), WM_SIZE, SIZE_RESTORED, 0);
-		InvalidateRect(GetParent(GetParent(g_hwndClock)), NULL, 1);
-		return 0;
+	case CLOCKM_REFRESHTASKBAR:{ // refresh other elements than clock (somehow required to actually change the clock's size)
+		HWND taskbar=GetParent(GetParent(hwnd));
+		SetLayeredTaskbar(hwnd,0);
+		PostMessage(taskbar, WM_SIZE, SIZE_RESTORED, 0);
+		InvalidateRect(taskbar, NULL, 1);
+		return 0;}
 //	case CLOCKM_REFRESHCLEARTASKBAR:
-//		SetLayeredTaskbar(g_hwndClock,1);
+//		SetLayeredTaskbar(hwnd,1);
 //		return 0;
 	case CLOCKM_BLINK: // blink the clock
 		if(wParam)
@@ -880,7 +881,7 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	dwInfoFormat = FindFormat(m_format);
 	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
 	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!m_bTimer) SetTimer(g_hwndClock, 1, 1000, NULL);
+	if(!m_bTimer) SetTimer(hwnd, 1, 1000, NULL);
 	m_bTimer = 1;
 	GetLocalTime(&lt);
 	m_LastTime.wDay = lt.wDay;
@@ -889,7 +890,7 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	if(preview){
 		UpdateClock(hwnd,NULL);
 		InvalidateRect(hwnd, NULL, 0);
-		InvalidateRect(GetParent(g_hwndClock), NULL, 1);
+		InvalidateRect(GetParent(hwnd), NULL, 1);
 	}
 }
 //=========================================================================
@@ -933,7 +934,7 @@ void ReadStyleData(HWND hwnd, int preview)   //---------------------+++-->
 	/// create/update clock
 	UpdateClock(hwnd,hFon);
 	InvalidateRect(hwnd, NULL, 0);
-	InvalidateRect(GetParent(g_hwndClock), NULL, 1);
+	InvalidateRect(GetParent(hwnd), NULL, 1);
 }
 
 /*------------------------------------------------
@@ -943,7 +944,7 @@ void GetDisplayTime(SYSTEMTIME* pt, int* beat100)
 {
 	if(beat100) {
 		GetSystemTime(pt);
-		if(++pt->wHour>23)
+		if(++pt->wHour>23) // beat time is UTC+1
 			pt->wHour=0;
 		*beat100 = pt->wHour*3600 + pt->wMinute*60 + pt->wSecond;
 		*beat100 = (*beat100 * 1000) / 864;
@@ -958,7 +959,7 @@ void OnTimer(HWND hwnd)
 {
 	SYSTEMTIME t;
 	int beat100=0;
-	BOOL bRedraw;
+	int bRedraw;
 	static char bCalibration=0;
 	
 	GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
@@ -978,7 +979,7 @@ void OnTimer(HWND hwnd)
 		GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
 	}
 	
-	bRedraw = FALSE;
+	bRedraw = 0;
 	if(m_BlinkState){
 		if(m_LastTime.wMinute && m_BlinkState&BLINK_HOUR)
 			m_BlinkState^=BLINK_HOUR; // disable hourly blink
@@ -995,13 +996,14 @@ void OnTimer(HWND hwnd)
 	else if(m_nDispBeat == 1 && m_beatLast != (beat100/100)) bRedraw = 1;
 	else if(m_nDispBeat == 2 && m_beatLast != beat100) bRedraw = 1;
 //	else if(bDispSysInfo) bRedraw = 1;
-	else if(m_LastTime.wHour != (int)t.wHour
-			|| m_LastTime.wMinute != (int)t.wMinute) bRedraw = 1;
+	else if(m_LastTime.wHour!=t.wHour || m_LastTime.wMinute!=t.wMinute) bRedraw = 1;
 	
-	if(m_LastTime.wDay != t.wDay || m_LastTime.wMonth != t.wMonth ||
-	   m_LastTime.wYear != t.wYear) {
-		InitFormat("Format", &t); // format.c
+	if(m_LastTime.wDay!=t.wDay || m_LastTime.wMonth!=t.wMonth || m_LastTime.wYear!=t.wYear) {
+		InitFormat("Format",&t); // format.c
 		InitDaylightTimeTransition();
+		UpdateClock(hwnd,NULL); // resize clock
+		SendMessage(hwnd,CLOCKM_REFRESHTASKBAR,0,0); // reposition clock (inform taskbar about new size)
+		bRedraw=0;
 	}
 	
 	memcpy(&m_LastTime, &t, sizeof(t));
@@ -1082,8 +1084,18 @@ void CalculateClockTextSize(){
 	unsigned len;
 	SIZE sz;
 	TEXTMETRIC tm;
-	GetDisplayTime(&time, m_nDispBeat ? &beat100 : NULL);
+	/// fake time/date to use up most possible space for (static) size calculation
+//	GetDisplayTime(&time, m_nDispBeat ? &beat100 : NULL);
+	time.wYear=2222;
+	time.wMonth=12;
+	time.wDayOfWeek=3;
+	time.wDay=22;
+	time.wHour=12;
+	time.wMinute=time.wSecond=22;
+	time.wMilliseconds=666;
+	beat100=666;
 	len=MakeFormat(buf, m_format, &time, beat100);
+	/// calc size
 	GetTextMetrics(m_hdcClock,&tm);
 	m_textpadding=tm.tmAveCharWidth*2;
 	m_textheight=m_textwidth=0;
@@ -1148,7 +1160,7 @@ int UpdateClock(HWND hwnd, HFONT fnt)
 		else
 			DeleteObject(SelectObject(m_hdcClock,fnt));
 	}
-	CalculateClockTextSize(); // height change only, bugs...
+	CalculateClockTextSize(); // height only change bugs...
 	SetWindowPos(hwnd,HWND_TOP,0,0,m_rcClock.right+1,m_rcClock.bottom,SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOMOVE|SWP_NOCOPYBITS); // without doing this...
 	return 1;
 }
@@ -1344,8 +1356,8 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 			iMinuteTransition = plt->wMinute;
 		}
 	}
-//	wsprintf(szTZone, "Day: %S, Std: %S", tzi.DaylightName, TEXT(tzi.StandardName));
-//		MessageBox(0, szTZone, "is TimeZone??", MB_OK);
+//	wsprintf(szTZone, "Day: %S, Std: %S", tzi.DaylightName, tzi.StandardName);
+//	MessageBox(0, szTZone, "is TimeZone??", MB_OK);
 }
 //================================================================================================
 //-+++--> iHourTransition & iMinuteTransition Are Now Used to Pass Local Time-Zone Offset to Clock:
