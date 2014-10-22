@@ -14,7 +14,7 @@ static void SetAlarmToDlg(HWND hDlg, alarm_t* pAS);
 static void OnChangeAlarm(HWND hDlg);
 static void OnDropDownAlarm(HWND hDlg);
 static void OnDay(HWND hDlg);
-static void OnAlermJihou(HWND hDlg, WORD id);
+static void OnAlarmJihou(HWND hDlg, WORD id);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
 static void On12Hour(HWND hDlg);
 static void OnDelAlarm(HWND hDlg);
@@ -55,7 +55,7 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		/// global hourly chime and "chime hour"
 		case IDC_ALARM:
 		case IDC_JIHOU:
-			OnAlermJihou(hDlg, id);
+			OnAlarmJihou(hDlg, id);
 			SendPSChanged(hDlg);
 			break;
 		// file name changed
@@ -140,9 +140,10 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			EnableDlgItem(hDlg, IDC_SPINTIMES, FALSE);
 		case IDC_REPEATALARM:
 			if(id==IDC_REPEATALARM) {
+				int checked=IsDlgButtonChecked(hDlg,IDC_REPEATALARM);
 				CheckDlgButton(hDlg, IDC_CHIMEALARM, FALSE);
-				EnableDlgItem(hDlg, IDC_REPEATIMES, TRUE);
-				EnableDlgItem(hDlg, IDC_SPINTIMES, TRUE);
+				EnableDlgItem(hDlg, IDC_REPEATIMES, checked);
+				EnableDlgItem(hDlg, IDC_SPINTIMES, checked);
 			}
 		// checked other checkboxes
 		case IDC_REPEATJIHOU:
@@ -218,7 +219,7 @@ void OnInit(HWND hDlg)
 	CheckDlgButton(hDlg, IDC_BLINKJIHOU,
 				   GetMyRegLong("", "JihouBlink", FALSE));
 				   
-	OnAlermJihou(hDlg, IDC_JIHOU);
+	OnAlarmJihou(hDlg, IDC_JIHOU);
 	
 	SendDlgItemMessage(hDlg, IDC_TESTALARM, BM_SETIMAGE, IMAGE_ICON,
 					   (LPARAM)g_hIconPlay);
@@ -326,22 +327,25 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 		}
 	}else
 		GetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name));
-	pAS->bAlarm = (char)IsDlgButtonChecked(hDlg, IDC_ALARM);
 	
 	pAS->hour = (int)SendDlgItemMessage(hDlg,IDC_SPINHOUR,UDM_GETPOS32,0,0);
 	pAS->minute = (int)SendDlgItemMessage(hDlg,IDC_SPINMINUTE,UDM_GETPOS32,0,0);
 	pAS->days = m_days;
 	
 	pAS->iTimes = GetDlgItemInt(hDlg, IDC_REPEATIMES, NULL, FALSE);
-	pAS->bHour12 = (char)IsDlgButtonChecked(hDlg, IDC_12HOURALARM);
-	pAS->bChimeHr = (char)IsDlgButtonChecked(hDlg, IDC_CHIMEALARM);
-	pAS->bRepeat = (char)IsDlgButtonChecked(hDlg, IDC_REPEATALARM);
-	pAS->bBlink = (char)IsDlgButtonChecked(hDlg, IDC_BLINKALARM);
-	pAS->bPM = (char)IsDlgButtonChecked(hDlg, IDC_AMPM_CHECK);
+	
+	pAS->uFlags=0;
+	if(IsDlgButtonChecked(hDlg,IDC_ALARM)) pAS->uFlags|=ALRM_ENABLED;
+	if(IsDlgButtonChecked(hDlg,IDC_ALRM_ONCE)) pAS->uFlags|=ALRM_ONESHOT;
+	if(IsDlgButtonChecked(hDlg,IDC_12HOURALARM)) pAS->uFlags|=ALRM_12H;
+	if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)) pAS->uFlags|=ALRM_PM;
+	if(IsDlgButtonChecked(hDlg,IDC_CHIMEALARM)) pAS->uFlags|=ALRM_CHIMEHR;
+	if(IsDlgButtonChecked(hDlg,IDC_REPEATALARM)) pAS->uFlags|=ALRM_REPEAT;
+	if(IsDlgButtonChecked(hDlg,IDC_BLINKALARM)) pAS->uFlags|=ALRM_BLINK;
+	if(IsDlgButtonChecked(hDlg,IDC_MSG_ALARM)) pAS->uFlags|=ALRM_DIALOG;
 	
 	GetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname, MAX_PATH);
 	
-	pAS->bDlg = (char)IsDlgButtonChecked(hDlg, IDC_MSG_ALARM);
 	GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message));
 	GetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings));
 }
@@ -350,7 +354,6 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------------------+++-->
 {
 	SetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
-	CheckDlgButton(hDlg, IDC_ALARM, pAS->bAlarm);
 	
 	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETRANGE32, 0,23);
 	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETPOS32, 0, pAS->hour);
@@ -360,25 +363,25 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETPOS32, 0, pAS->iTimes);
 	SetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname);
 	
-	CheckDlgButton(hDlg, IDC_MSG_ALARM, pAS->bDlg);
 	SetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message);
 	SetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings);
 	
-	CheckDlgButton(hDlg, IDC_12HOURALARM, pAS->bHour12);
-	CheckDlgButton(hDlg, IDC_AMPM_CHECK, pAS->bPM);
-	CheckDlgButton(hDlg, IDC_CHIMEALARM, pAS->bChimeHr);
-	CheckDlgButton(hDlg, IDC_REPEATALARM, pAS->bRepeat);
-	CheckDlgButton(hDlg, IDC_BLINKALARM, pAS->bBlink);
+	CheckDlgButton(hDlg,IDC_ALARM,pAS->uFlags&ALRM_ENABLED);
+	CheckDlgButton(hDlg,IDC_ALRM_ONCE,pAS->uFlags&ALRM_ONESHOT);
+	CheckDlgButton(hDlg,IDC_12HOURALARM,pAS->uFlags&ALRM_12H);
+	CheckDlgButton(hDlg,IDC_AMPM_CHECK,pAS->uFlags&ALRM_PM);
+	CheckDlgButton(hDlg,IDC_CHIMEALARM,pAS->uFlags&ALRM_CHIMEHR);
+	CheckDlgButton(hDlg,IDC_REPEATALARM,pAS->uFlags&ALRM_REPEAT);
+	CheckDlgButton(hDlg,IDC_BLINKALARM,pAS->uFlags&ALRM_BLINK);
+	CheckDlgButton(hDlg,IDC_MSG_ALARM,pAS->uFlags&ALRM_DIALOG);
+	
 	m_days=pAS->days;
 	
 	On12Hour(hDlg);
 	OnFileChange(hDlg, IDC_FILEALARM);
 	OnMsgAlarm(hDlg, IDC_MSG_ALARM);
-	OnAlermJihou(hDlg, IDC_ALARM);
+	OnAlarmJihou(hDlg, IDC_ALARM);
 	UpdateAMPMDisplay(hDlg);
-	
-	EnableDlgItem(hDlg, IDC_REPEATIMES, pAS->bRepeat);
-	EnableDlgItem(hDlg, IDC_SPINTIMES, pAS->bRepeat);
 }
 /*------------------------------------------------
    selected an alarm name by combobox
@@ -462,7 +465,7 @@ void OnDay(HWND hDlg)
 /*------------------------------------------------
   checked "Enable" or "Play sound every hour"
 --------------------------------------------------*/
-void OnAlermJihou(HWND hDlg, WORD id)
+void OnAlarmJihou(HWND hDlg, WORD id)
 {
 	int cstart, cend, i;
 	BOOL enabled;
@@ -470,13 +473,12 @@ void OnAlermJihou(HWND hDlg, WORD id)
 	enabled = IsDlgButtonChecked(hDlg, id);
 	
 	if(id == IDC_ALARM) {
-		cstart = IDC_LABTIMEALARM; cend = IDC_BLINKALARM;
-		EnableDlgItem(hDlg, IDC_CHIMEALARM, enabled); // Lazy, I know...
-		EnableDlgItem(hDlg, IDC_REPEATIMES, enabled); // Lazy, I know...
-		EnableDlgItem(hDlg, IDC_SPINTIMES, enabled);  // Lazy, I know...
-		EnableDlgItem(hDlg, IDC_MSG_ALARM, enabled);
+		cstart = IDC_LABTIMEALARM; cend = IDC_MSG_ALARM;
 		if(enabled) {
-			OnMsgAlarm(hDlg, IDC_MSG_ALARM);
+			int repeat=IsDlgButtonChecked(hDlg,IDC_REPEATALARM);
+			OnMsgAlarm(hDlg,IDC_MSG_ALARM);
+			EnableDlgItem(hDlg,IDC_REPEATIMES,repeat);
+			EnableDlgItem(hDlg,IDC_SPINTIMES,repeat);
 		} else {
 			ShowWindow(GetDlgItem(hDlg, IDC_BMPJACK), SW_HIDE);
 			EnableDlgItem(hDlg, IDCB_MSG_ALARM, FALSE);

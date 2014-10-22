@@ -78,23 +78,28 @@ BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char*
 
 typedef struct{
 	char name[TNY_BUFF];
-	char message[MAX_BUFF];
+	char message[512];
 	char settings[TNY_BUFF];
 } dlgmsg_t;
 // alarm.c
+enum{
+	ALRM_ENABLED=0x01,
+	ALRM_ONESHOT=0x02,
+	ALRM_12H	=0x04,
+	ALRM_PM		=0x08,
+	ALRM_CHIMEHR=0x10,
+	ALRM_REPEAT	=0x20,
+	ALRM_BLINK	=0x40,
+	ALRM_DIALOG	=0x80,
+};
+#define ALRM_12HPM (ALRM_12H|ALRM_PM)
 typedef struct{
 	int days;
 	int hour;
 	int minute;
 	int iTimes;
-	char bAlarm;
-	char bHour12;
-	char bChimeHr;
-	char bRepeat;
-	char bBlink;
-	char bPM;
-	char fname[MAX_BUFF];
-	char bDlg;
+	unsigned char uFlags;
+	char fname[MAX_PATH];
 	dlgmsg_t dlgmsg;
 } alarm_t;
 BOOL GetHourlyChime();

@@ -290,7 +290,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 			ReadAlarmFromReg(&pAS,idx);
 			wsprintf(buf,"    %s	(%i",pAS.dlgmsg.name,idx+1);
 			InsertMenu(hMenu, IDM_PROP_ALARM, MF_BYCOMMAND|MF_STRING, IDM_I_ALARM+idx, buf);
-			if(pAS.bAlarm)
+			if(pAS.uFlags&ALRM_ENABLED)
 				CheckMenuItem(hMenu,IDM_I_ALARM+idx,MF_BYCOMMAND|MF_CHECKED);
 		}
 		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);

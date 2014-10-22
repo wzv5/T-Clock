@@ -43,14 +43,15 @@ void SetHourlyChime(BOOL bEnabled){
 char GetAlarmEnabled(int idx){
 	if(idx<0||idx>=m_maxAlarm)
 		return 0;
-	return m_pAS[idx].bAlarm;
+	return m_pAS[idx].uFlags&ALRM_ENABLED;
 }
 void SetAlarmEnabled(int idx,char bEnabled){
 	if(idx<0||idx>=m_maxAlarm)
 		return;
-	m_pAS[idx].bAlarm=bEnabled;
+	if(bEnabled) m_pAS[idx].uFlags|=ALRM_ENABLED;
+	else m_pAS[idx].uFlags&=~ALRM_ENABLED;
 	wsprintf(g_alarmkey+5,"%d",idx+1);
-	SetMyRegLong(g_alarmkey,"Alarm",m_pAS[idx].bAlarm);
+	SetMyRegLong(g_alarmkey,"Alarm",m_pAS[idx].uFlags&ALRM_ENABLED);
 }
 void ReadAlarmFromReg(alarm_t* pAS, int num)
 {
@@ -61,16 +62,18 @@ void ReadAlarmFromReg(alarm_t* pAS, int num)
 	pAS->days = GetMyRegLong(g_alarmkey, "Days", 0x7f);
 	pAS->iTimes = GetMyRegLong(g_alarmkey, "Times", 1);
 	
-	pAS->bAlarm = (char)GetMyRegLong(g_alarmkey, "Alarm", 0);
-	pAS->bHour12 = (char)GetMyRegLong(g_alarmkey, "Hour12", 1);
-	pAS->bChimeHr = (char)GetMyRegLong(g_alarmkey, "ChimeHr", 0);
-	pAS->bRepeat = (char)GetMyRegLong(g_alarmkey, "Repeat", 0);
-	pAS->bBlink = (char)GetMyRegLong(g_alarmkey, "Blink", 0);
-	pAS->bPM = (char)GetMyRegLong(g_alarmkey, "PM", 0);
+	pAS->uFlags=0;
+	if(GetMyRegLong(g_alarmkey,"Alarm",0)) pAS->uFlags|=ALRM_ENABLED;
+	if(GetMyRegLong(g_alarmkey,"Once",0)) pAS->uFlags|=ALRM_ONESHOT;
+	if(GetMyRegLong(g_alarmkey,"Hour12",0)) pAS->uFlags|=ALRM_12H;
+	if(GetMyRegLong(g_alarmkey,"PM",0)) pAS->uFlags|=ALRM_PM;
+	if(GetMyRegLong(g_alarmkey,"ChimeHr",0)) pAS->uFlags|=ALRM_CHIMEHR;
+	if(GetMyRegLong(g_alarmkey,"Repeat",0)) pAS->uFlags|=ALRM_REPEAT;
+	if(GetMyRegLong(g_alarmkey,"Blink",0)) pAS->uFlags|=ALRM_BLINK;
+	if(GetMyRegLong(g_alarmkey,"jrMsgUsed",0)) pAS->uFlags|=ALRM_DIALOG;
 	
 	GetMyRegStr(g_alarmkey, "File", pAS->fname, sizeof(pAS->fname), "");
 	
-	pAS->bDlg = (char)GetMyRegLong(g_alarmkey, "jrMsgUsed", 0);
 	GetMyRegStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message), "");
 	GetMyRegStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings), "");
 	
@@ -81,22 +84,24 @@ void SaveAlarmToReg(alarm_t* pAS, int num)
 {
 	wsprintf(g_alarmkey+5,"%d",num+1);
 	SetMyRegStr(g_alarmkey, "Name", pAS->dlgmsg.name);
-	SetMyRegLong(g_alarmkey, "Alarm", pAS->bAlarm);
 	SetMyRegLong(g_alarmkey, "Hour", pAS->hour);
 	SetMyRegLong(g_alarmkey, "Minute", pAS->minute);
 	SetMyRegStr(g_alarmkey, "File", pAS->fname);
 	
-	SetMyRegLong(g_alarmkey, "jrMsgUsed", pAS->bDlg);
 	SetMyRegStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message);
 	SetMyRegStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings);
 	
-	SetMyRegLong(g_alarmkey, "Hour12", pAS->bHour12);
-	SetMyRegLong(g_alarmkey, "ChimeHr", pAS->bChimeHr);
-	SetMyRegLong(g_alarmkey, "Repeat", pAS->bRepeat);
-	SetMyRegLong(g_alarmkey, "Times", pAS->iTimes);
-	SetMyRegLong(g_alarmkey, "Blink", pAS->bBlink);
 	SetMyRegLong(g_alarmkey, "Days", pAS->days);
-	SetMyRegLong(g_alarmkey, "PM", pAS->bPM);
+	SetMyRegLong(g_alarmkey, "Times", pAS->iTimes);
+	
+	SetMyRegLong(g_alarmkey,"Alarm",pAS->uFlags&ALRM_ENABLED);
+	SetMyRegLong(g_alarmkey,"Once",pAS->uFlags&ALRM_ONESHOT);
+	SetMyRegLong(g_alarmkey,"Hour12",pAS->uFlags&ALRM_12H);
+	SetMyRegLong(g_alarmkey,"PM",pAS->uFlags&ALRM_PM);
+	SetMyRegLong(g_alarmkey,"ChimeHr",pAS->uFlags&ALRM_CHIMEHR);
+	SetMyRegLong(g_alarmkey,"Repeat",pAS->uFlags&ALRM_REPEAT);
+	SetMyRegLong(g_alarmkey,"Blink",pAS->uFlags&ALRM_BLINK);
+	SetMyRegLong(g_alarmkey,"jrMsgUsed",pAS->uFlags&ALRM_DIALOG);
 }
 
 //================================================================================================
@@ -136,23 +141,25 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 	if(st->wDayOfWeek > 0) fday = 1 << (st->wDayOfWeek - 1);
 	else fday = 1 << 6;
 	
-	for(i = 0; i < m_maxAlarm; i++) {
-		if(!m_pAS[i].bAlarm) continue;
+	for(i = 0; i < m_maxAlarm; ++i) {
+		if(!m_pAS[i].uFlags&ALRM_ENABLED) continue;
 		h = st->wHour;
 		
-		if(m_pAS[i].bHour12 && m_pAS[i].bPM) {
+		if((m_pAS[i].uFlags&ALRM_12HPM) == ALRM_12HPM) {
 			if(h != 12) h -= 12;
 		}
 		
 		if(m_pAS[i].hour == h && m_pAS[i].minute == st->wMinute && (m_pAS[i].days & fday)) {
-			if(m_pAS[i].bBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, FALSE, 0);
-			if(m_pAS[i].bDlg) { // From BounceWindow.c
+			if(m_pAS[i].uFlags&ALRM_ONESHOT)
+				SetAlarmEnabled(i,0);
+			if(m_pAS[i].uFlags&ALRM_BLINK)
+				PostMessage(g_hwndClock,CLOCKM_BLINK,FALSE,0);
+			if(m_pAS[i].uFlags&ALRM_DIALOG) // From BounceWindow.c
 				ReleaseTheHound(hwnd,m_pAS[i].dlgmsg.name,m_pAS[i].dlgmsg.message,m_pAS[i].dlgmsg.settings);
-			}
 			if(m_pAS[i].fname[0]) {
-				if(m_pAS[i].bRepeat && m_pAS[i].iTimes > 1) rep = m_pAS[i].iTimes; //-+> Ring X Times
-				else if(m_pAS[i].bRepeat) rep = -1; //-+> Ring To Infinity > ∞ < Or Until Stopped
-				else if(m_pAS[i].bChimeHr) rep = h; //-+> Ring the Hour
+				if(m_pAS[i].uFlags&ALRM_REPEAT && m_pAS[i].iTimes > 1) rep = m_pAS[i].iTimes; //-+> Ring X Times
+				else if(m_pAS[i].uFlags&ALRM_REPEAT) rep = -1; //-+> Ring To Infinity > ∞ < Or Until Stopped
+				else if(m_pAS[i].uFlags&ALRM_CHIMEHR) rep = h; //-+> Ring the Hour
 				else rep = 0;
 				
 				m_bKillPCBeep = 0;
@@ -167,12 +174,12 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 	}
 	
 	if(m_bJihou && st->wMinute == 0) {
-		char fname[MAX_BUFF];
+		char fname[MAX_PATH];
 		h = st->wHour;
 		if(m_bJihouBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, TRUE, 0);
 		if(h == 0) h = 12;
 		else if(h >= 13) h -= 12;
-		GetMyRegStr("", "JihouFile", fname, GEN_BUFF, "");
+		GetMyRegStr("", "JihouFile", fname, sizeof(fname), "");
 		if(fname[0]) {
 			if(m_bJihouRepeat) {
 				rep = h; // Chime the Hour as Requested (If Requested)
