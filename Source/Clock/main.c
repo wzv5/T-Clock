@@ -203,12 +203,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	HWND hwnd;
 	MSG msg;
 	int updated;
+	typedef DWORD (WINAPI* GetLongPathName_t)(char* lpszShortPath,char* lpszLongPath,DWORD cchBuffer);
+	GetLongPathName_t pGetLongPathName=(GetLongPathName_t)GetProcAddress(GetModuleHandle("kernel32"),"GetLongPathNameA");
 	
 	(void)hPrevInstance;
 	(void)nCmdShow;
 	
 	// get the path where .exe is positioned
-	GetModuleFileName(hInstance, g_mydir, sizeof(g_mydir));
+	if(pGetLongPathName)
+		GetLongPathName(_pgmptr,g_mydir,MAX_PATH);
+	else
+		strcpy(g_mydir,_pgmptr);
+	#ifdef _DEBUG
+	OutputDebugString(g_mydir); OutputDebugString("\n");
+	#endif
 	del_title(g_mydir);
 	
 	// Make sure we're running Windows 2000 and above

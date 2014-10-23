@@ -437,7 +437,7 @@ void OnSansho(HWND hDlg, WORD id)
 		}
 	}
 	
-	*filter='\0';
+	filter[0]=filter[1]='\0';
 	if(id==IDC_DROPFILESAPPSANSHO) {
 		str0cat(filter,MyString(IDS_PROGRAMFILE));
 		str0cat(filter,"*.exe;*.cmd");

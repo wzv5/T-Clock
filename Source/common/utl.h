@@ -40,7 +40,7 @@ LONG GetMyRegLong(const char* section, const char* entry, LONG defval);
 BOOL SetMyRegLong(const char* section, const char* entry, LONG val);
 BOOL SetMyRegStr(const char* section, const char* entry, const char* val);
 BOOL DelMyReg(const char* section, const char* entry);
-void str0cat(char* dst, const char* src);
+void str0cat(char* list, const char* str);
 BOOL DelMyRegKey(const char* section);
 char* MyString(UINT id);
 //void Pause(HWND hWnd, LPCTSTR pszArgs);

@@ -299,13 +299,14 @@ void parsechar(char* dst, char* src, char ch, int n)
 	}
 }// */
 
-void str0cat(char* dst, const char* src)
+void str0cat(char* list, const char* str)
 {
-	char* p;
-	p = dst;
-	while(*p) { while(*p) p++; p++; }
-	strcpy(p, src);
-	while(*p) p++; p++; *p = 0;
+	if(list[0]||list[1]){ // find last string pair
+		for(; list[0]||list[1]; ++list);
+		++list;
+	}
+	for(; *str; *list++=*str++); // append new string
+	list[0]=list[1]='\0'; // end string & pair
 }
 
 /*---------------------------------------------

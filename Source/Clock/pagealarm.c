@@ -188,6 +188,21 @@ void OnInit(HWND hDlg)
 	int i, count;
 	/// add "new" entry
 	CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM)), 0);
+	/// add default sound files to sound file dropdown
+	if(g_tos>TOS_2000) {
+		HANDLE hFind;
+		WIN32_FIND_DATA FindFileData;
+		strcpy(tmp,g_mydir); add_title(tmp,"waves/*");
+		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
+			do{
+				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
+					CBAddString(hDlg,IDC_FILEALARM,FindFileData.cFileName);
+					CBAddString(hDlg,IDC_FILEJIHOU,FindFileData.cFileName);
+				}
+			}while(FindNextFile(hFind,&FindFileData));
+			FindClose(hFind);
+		}
+	}
 	/// add alarms
 	count = GetMyRegLong("", "AlarmNum", 0);
 	if(count < 1) count = 0;

@@ -29,7 +29,7 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 	ZeroMemory(&ofn, sizeof(ofn)); // Initialize OPENFILENAME
 	ofn.lStructSize = sizeof(ofn);
 	
-	filter[0] = filter[1] = '\0';
+	filter[0]=filter[1]='\0';
 	str0cat(filter, MyString(IDS_MMFILE));
 	GetMMFileExts(mmfileexts);
 	str0cat(filter, mmfileexts);
@@ -63,7 +63,16 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 	ofn.lpstrInitialDir = initdir;
 	ofn.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|OFN_FILEMUSTEXIST;
 	
-	return GetOpenFileName(&ofn);
+	if(GetOpenFileName(&ofn)) {
+		size_t tlen=strlen(g_mydir);
+		if(!strncmp(fname,g_mydir,tlen)) { // make relative to waves/ if possible
+			if(!strncmp(fname+tlen,"\\waves\\",7)) {
+				memmove(fname,fname+tlen+7,strlen(fname)-tlen-6);
+			}
+		}
+		return 1;
+	}
+	return 0;
 }
 
 BOOL IsMMFile(const char* fname)
