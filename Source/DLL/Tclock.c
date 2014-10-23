@@ -716,7 +716,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			m_BlinkState|=BLINK_HOUR;
 		else
 			m_BlinkState|=BLINK_ON;;
-		InvalidateRect(hwnd, NULL, 0);
+		InvalidateRect(hwnd, NULL, 1);
+		return 0;
+	case CLOCKM_BLINKOFF: // stop blinking
+		if(m_BlinkState){
+			m_BlinkState&=~BLINK_ON;
+			InvalidateRect(hwnd,NULL,1);
+			PostMessage(g_hwndTClockMain,MAINM_BLINKOFF,0,0);
+		}
 		return 0;
 	case CLOCKM_COPY: // copy format to clipboard
 		OnCopy(hwnd, lParam);

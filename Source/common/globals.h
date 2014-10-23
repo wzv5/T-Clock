@@ -75,6 +75,7 @@ enum{ // Drop&File enum / registry settings
 //#define CLOCKM_REFRESHCLEARTASKBAR			(WM_USER+6)
 #define CLOCKM_REFRESHCLOCKPREVIEW			(WM_USER+7)
 #define CLOCKM_REFRESHCLOCKPREVIEWFORMAT	(WM_USER+8)
+#define CLOCKM_BLINKOFF						(WM_USER+9)
 
 // Global Buffer Size Labels
 #define TNY_BUFF	32

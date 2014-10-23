@@ -4,8 +4,8 @@
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
 //-----------------//-------------------------------------------------------+++-->
 #include <time.h> // Required for Randomizing the Bounce Height -----------+++-->
+#include <process.h> // _beginthread
 
-static RECT m_rcMsg;
 static int m_iDelta, m_iSpeed, m_iPause, m_iShort, m_iSkew, m_iPaws, m_iBounce;
 static int m_iScreenW, m_iScreenH, m_iBallX, m_iBallY, m_iDeltaX, m_iDeltaY;
 
@@ -18,10 +18,11 @@ static unsigned char m_flags;
 
 static void OnOK(HWND hDlg);
 static void OnInit(HWND hDlg, dlgmsg_t* dlg);
-static void BounceWindow(HWND hWndBoing);
 static INT_PTR CALLBACK AlarmMsgProc(HWND, UINT, WPARAM, LPARAM);
+
+static void BounceWindow(HWND hwnd,const RECT* rc);
+static void CenterDoggie(HWND hwnd,const RECT* rc);
 static void ParseSettings(char* data);
-static void CenterDoggie(HWND hWnd);
 
 #define ID_DOGGIE 2419
 
@@ -127,14 +128,14 @@ void OnInit(HWND hDlg, dlgmsg_t* dlg)   //--------------------------------------
 }
 //-----------------------------//--------------------------------------------+++-->
 //------------------+++--> ...And Here be the Part What Goes Boing, Boing, Boing!!!:
-void BounceWindow(HWND hWnd)  //---------------------------------------------+++-->
+void BounceWindow(HWND hwnd,const RECT* rc)  //---------------------------------------------+++-->
 {
 	int iSizeW, iSizeH;
 	
 	m_iBallX += (m_iDeltaX / m_iSkew);
 	m_iBallY += m_iDeltaY;
-	iSizeW = m_rcMsg.right - m_rcMsg.left;
-	iSizeH = m_rcMsg.bottom - m_rcMsg.top;
+	iSizeW = rc->right - rc->left;
+	iSizeH = rc->bottom - rc->top;
 	
 	if(m_iBallX < 0) {
 		m_iBallX = 0;
@@ -160,20 +161,20 @@ void BounceWindow(HWND hWnd)  //---------------------------------------------+++
 		m_iBallY = m_iScreenH - iSizeH;
 		m_iDeltaY = -m_iDelta;
 	}
-	SetWindowPos(hWnd, HWND_TOP, m_iBallX, m_iBallY, 0, 0, SWP_NOSIZE);
+	SetWindowPos(hwnd, HWND_TOP, m_iBallX, m_iBallY, 0, 0, SWP_NOSIZE);
 }
 //------------------------------//-------------------------------------------+++-->
 //------------+++--> Snap Dialoggie Window to Center Screen and Wait for User Input:
-void CenterDoggie(HWND hWnd)   //--------------------------------------------+++-->
+void CenterDoggie(HWND hwnd,const RECT* rc)   //--------------------------------------------+++-->
 {
 	int iSizeW, iSizeH;
 	int x, y;
 	
-	iSizeW = m_rcMsg.right - m_rcMsg.left;
-	iSizeH = m_rcMsg.bottom - m_rcMsg.top;
+	iSizeW = rc->right - rc->left;
+	iSizeH = rc->bottom - rc->top;
 	x = (m_iScreenW / 2) - (iSizeW / 2);
 	y = (m_iScreenH / 2) - (iSizeH / 2);
-	SetWindowPos(hWnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
+	SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
 }
 //----------------------//---------------------------------------------------+++-->
 // ---------------------//------------------------------+++--> Initialize Dialoggie:
@@ -242,27 +243,54 @@ static char* m_caption=NULL;
 //------------------------------------------+++--> Ricochet Doggie Window Procedure:
 VOID CALLBACK DoggieProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)   //
 {
-	static HWND hWndBoing=0;
+	static RECT m_rcMsg;
+	static HWND m_hWndBoing=NULL;
 	(void)hWnd; (void)uMsg; (void)idEvent; (void)dwTime;
 	m_iPause += m_iSpeed;
 	
 	if(m_iPause >= (m_iBounce * 1000)) { // Check for Sit! Command.
-		if(m_iPause < ((m_iBounce * 1000) + 101)) CenterDoggie(hWndBoing);
+		if(m_iPause < ((m_iBounce * 1000) + 101)) CenterDoggie(m_hWndBoing,&m_rcMsg);
 		m_iPause += m_iSpeed;
 		if(m_iPause >= ((m_iBounce * 1000)+(m_iPaws * 1000))) { // Give User X Seconds to Read
 			m_iPause = 0; //---------------------------+++--> and Respond to Alarm Message.
 		}
 	} else if(m_caption) { // Bounce Wildly for X Seconds!
-		hWndBoing = FindWindow(NULL, m_caption);
-		GetWindowRect(hWndBoing, &m_rcMsg);
-		BounceWindow(hWndBoing);
+		m_hWndBoing = FindWindow(NULL, m_caption);
+		if(m_hWndBoing){
+			GetWindowRect(m_hWndBoing,&m_rcMsg);
+			BounceWindow(m_hWndBoing,&m_rcMsg);
+		}
 	}
+}
+
+
+typedef struct{
+	char* title;
+	char* msg;
+	HWND hwnd;
+} bounce_t;
+static void __cdecl MessageThread(void* param){
+	bounce_t* data=(bounce_t*)param;
+	if(!*data->msg){
+		time_t tt; time(&tt);
+		free(data->msg);
+		data->msg=malloc(128);
+		if(data->msg)
+			strftime(data->msg,128,"Your alarm expired on\n%A %H:%M",localtime(&tt));
+	}
+	MyMessageBox(NULL, data->msg, data->title, MB_OK|(m_flags&BFLAG_TOPMOST?MB_SYSTEMMODAL:0),MB_OK);
+	KillTimer(data->hwnd, ID_DOGGIE);
+	m_caption=NULL;
+	free(data->msg);
+	free(data->title);
+	free(data);
+	PostMessage(g_hwndClock,CLOCKM_BLINKOFF,0,0);
 }
 //---------------------------------------------------------------------------+++-->
 //-------------------------------------------+++--> The Alarm Just Let the Dogz Out:
 void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* settings)
 {
-	char* caption=strdup(title);
+	bounce_t* data;
 	m_iScreenW = GetSystemMetrics(SM_CXSCREEN);
 	m_iScreenH = GetSystemMetrics(SM_CYSCREEN);
 	m_iShort = 100;
@@ -282,12 +310,16 @@ void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* setti
 		m_iSpeed = 100 - m_iSpeed;
 	} //-//-++-> Now Set the Converted Short Time Slice.
 	
+	if(m_caption){
+		return;
+	}
 	SetTimer(hwnd, ID_DOGGIE, m_iSpeed, (TIMERPROC)DoggieProc);
 	if(m_iSpeed < 10) m_iSpeed = 10; // Required to Ensure Paws.
 	// our notify
-	m_caption=caption;
-	MyMessageBox(NULL, text, caption, MB_OK|(m_flags&BFLAG_TOPMOST?MB_SYSTEMMODAL:0),MB_OK);
-	KillTimer(hwnd, ID_DOGGIE);
-	m_caption=NULL;
-	free(caption); // we use a copy since it's possible to have more then one dialog... (ugly but somewhat works)
+	data=(bounce_t*)malloc(sizeof(bounce_t));
+	data->title=strdup(title);
+	data->msg=strdup(text);
+	data->hwnd=hwnd;
+	m_caption=data->title;
+	_beginthread(MessageThread,0,data); // frees data
 }

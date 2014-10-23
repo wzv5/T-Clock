@@ -5,22 +5,25 @@
 ---------------------------------------------*/
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 #include "tclock.h"
-
+/// dialog events
 static void OnInit(HWND hDlg);
 static void OnDeinit(HWND hDlg);
 static void OnApply(HWND hDlg);
-static void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS);
-static void SetAlarmToDlg(HWND hDlg, alarm_t* pAS);
 static void OnChangeAlarm(HWND hDlg);
 static void OnDropDownAlarm(HWND hDlg);
 static void OnDay(HWND hDlg);
 static void OnAlarmJihou(HWND hDlg, WORD id);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
-static void On12Hour(HWND hDlg);
+static void On12Hour(HWND hDlg, int bOnChange);
 static void OnDelAlarm(HWND hDlg);
 static void OnFileChange(HWND hDlg, WORD id);
 static void OnTest(HWND hDlg, WORD id);
 static void OnMsgAlarm(HWND hDlg, WORD id);
+/// helpers
+static void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS);
+static void SetAlarmToDlg(HWND hDlg, alarm_t* pAS);
+static void SetDefaultAlarmToDlg(HWND hDlg);
+
 static void FormatTimeText(HWND hDlg, WORD id);
 static void UpdateAMPMDisplay(HWND hDlg);
 
@@ -120,7 +123,7 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;}
 		// checked "12 hour"
 		case IDC_12HOURALARM:
-			On12Hour(hDlg);
+			On12Hour(hDlg,1);
 			SendPSChanged(hDlg);
 			break;
 		// checked PM - Toggle Display of AM or PM
@@ -181,11 +184,11 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 --------------------------------------------------*/
 void OnInit(HWND hDlg)
 {
-	char s[1024] = "";
+	char tmp[MAX_PATH];
 	int i, count;
-	
+	/// add "new" entry
 	CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM)), 0);
-	
+	/// add alarms
 	count = GetMyRegLong("", "AlarmNum", 0);
 	if(count < 1) count = 0;
 	for(i=0; i<count; ++i) {
@@ -194,24 +197,20 @@ void OnInit(HWND hDlg)
 		CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name), pAS);
 		if(!i) SetAlarmToDlg(hDlg, pAS);
 	}
+	/// other
 	if(count > 0) {
 		CBSetCurSel(hDlg, IDC_COMBOALARM, 1);
 		m_curAlarm = 1;
 	} else {
-		alarm_t as;
+		SetDefaultAlarmToDlg(hDlg);
 		CBSetCurSel(hDlg, IDC_COMBOALARM, 0);
-		m_curAlarm = -1;
-		memset(&as, 0, sizeof(as));
-		as.hour = 12;
-		as.days = 0x7f;
-		SetAlarmToDlg(hDlg, &as);
 	}
 	
 	CheckDlgButton(hDlg, IDC_JIHOU,
 				   GetMyRegLong("", "Jihou", FALSE));
 				   
-	GetMyRegStr("", "JihouFile", s, 1024, "");
-	SetDlgItemText(hDlg, IDC_FILEJIHOU, s);
+	GetMyRegStr("", "JihouFile", tmp, sizeof(tmp), "");
+	SetDlgItemText(hDlg, IDC_FILEJIHOU, tmp);
 	
 	CheckDlgButton(hDlg, IDC_REPEATJIHOU,
 				   GetMyRegLong("", "JihouRepeat", FALSE));
@@ -359,7 +358,7 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETPOS32, 0, pAS->hour);
 	SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_SETRANGE32, 0,59);
 	SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_SETPOS32, 0, pAS->minute);
-	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETRANGE32, 1,42);
+	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETRANGE32, (WPARAM)-1,42);
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETPOS32, 0, pAS->iTimes);
 	SetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname);
 	
@@ -374,14 +373,27 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	CheckDlgButton(hDlg,IDC_REPEATALARM,pAS->uFlags&ALRM_REPEAT);
 	CheckDlgButton(hDlg,IDC_BLINKALARM,pAS->uFlags&ALRM_BLINK);
 	CheckDlgButton(hDlg,IDC_MSG_ALARM,pAS->uFlags&ALRM_DIALOG);
-	
 	m_days=pAS->days;
 	
-	On12Hour(hDlg);
+	FormatTimeText(hDlg,IDC_MINUTEALARM); // correctly format minutes (00, 09)
+	On12Hour(hDlg,0); // enable/disable AM/PM, format hour (09 for 24h, 9 for 12h)
 	OnFileChange(hDlg, IDC_FILEALARM);
 	OnMsgAlarm(hDlg, IDC_MSG_ALARM);
 	OnAlarmJihou(hDlg, IDC_ALARM);
-	UpdateAMPMDisplay(hDlg);
+}
+//=========================================================================================
+//-------------------------------------------------+++--> load dialog with default settings:
+void SetDefaultAlarmToDlg(HWND hDlg)   //--------------------------------------------+++-->
+{
+	alarm_t as={0};
+	as.days=0x7f; // daily
+	as.hour=12;
+	as.iTimes=-1;
+	if(GetMyRegLong("Format","Hour12",1))
+		as.uFlags|=ALRM_12HPM|ALRM_ONESHOT|ALRM_DIALOG|ALRM_BLINK|ALRM_REPEAT;
+	strcpy(as.fname,"Alarm.wav");
+	SetAlarmToDlg(hDlg,&as);
+	m_curAlarm=-1;
 }
 /*------------------------------------------------
    selected an alarm name by combobox
@@ -419,13 +431,8 @@ void OnChangeAlarm(HWND hDlg)
 		EnableDlgItem(hDlg, IDC_DELALARM, TRUE);
 		m_curAlarm = index;
 	} else {
-		alarm_t as;
-		memset(&as, 0, sizeof(as));
-		as.hour = 12;
-		as.days = 0x7f;
-		SetAlarmToDlg(hDlg, &as);
+		SetDefaultAlarmToDlg(hDlg);
 		EnableDlgItem(hDlg, IDC_DELALARM, FALSE);
-		m_curAlarm = -1;
 	}
 	
 	m_bTransition=0; // end transition
@@ -536,7 +543,7 @@ void OnSanshoAlarm(HWND hDlg, WORD id)
 /*------------------------------------------------
   checked "12 hour"
 --------------------------------------------------*/
-void On12Hour(HWND hDlg)
+void On12Hour(HWND hDlg, int bOnChange)
 {
 	int b12h = IsDlgButtonChecked(hDlg, IDC_12HOURALARM);
 	int h, u, l;
@@ -545,27 +552,38 @@ void On12Hour(HWND hDlg)
 	h=atoi(hour);
 	if(h>24) h=24;
 	
-	u = 23; l = 0;
-	if(b12h){ // convert to 12h
-		u=12; l=1;
-		if(h>=12 && h<24){
-			h-=12;
-			if(!h) h=12;
-		}else{
-			if(!h || h==24) h=12;
+	if(b12h){
+//		if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)){
+			u=12; l=1; // PM
+//		}else{
+//			u=11; l=0; // AM
+//		}
+	}else{
+		u=23; l=0; // 24h
+	}
+	if(bOnChange){
+		if(b12h){ // convert to 12h
+			if(h>=12 && h<24){
+				h-=12;
+				if(!h) h=12; // 12am / 12pm?
+			}else{
+				if(!h || h==24) h=12; // 12pm
+			}
+		}else{ // convert to 24h
+			if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)){
+				h+=12;
+				if(h>=24) h=12; // 12am
+//				if(h>=24) h=0; // 0am
+			}else if(h>=12)
+				h=0;
 		}
-	}else{ // convert to 24h
-		if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)){
-			h+=12;
-			if(h>=24) h=12;
-		}else if(h>=12)
-			h=0;
 	}
 	EnableDlgItem(hDlg,IDC_AMPM_CHECK,b12h);
 	
 	// set limits to spin controls
 	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETRANGE32, l,u);
 	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETPOS32, 0, h);
+	FormatTimeText(hDlg,IDC_HOURALARM);
 }
 /*------------------------------------------------
   delete an alarm
@@ -586,13 +604,8 @@ void OnDelAlarm(HWND hDlg)
 		pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
 		if(pAS) SetAlarmToDlg(hDlg, pAS);
 		else {
-			alarm_t as;
-			memset(&as, 0, sizeof(as));
-			as.hour = 14;
-			as.days = 0x7f;
-			SetAlarmToDlg(hDlg, &as);
+			SetDefaultAlarmToDlg(hDlg);
 			EnableDlgItem(hDlg, IDC_DELALARM, FALSE);
-			m_curAlarm = -1;
 		}
 	}
 }
@@ -668,7 +681,8 @@ void FormatTimeText(HWND hDlg, WORD idc)
 		Edit_GetText(edit,txt,5);
 		iTxt=atoi(txt);
 		if(b12h){
-			if(iTxt>12) iTxt=0;
+			if(iTxt>12) iTxt=0; // 12am
+//			if(iTxt>11 && !IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)) iTxt=0; // 0am
 			wsprintf(txt2, "%d", iTxt);
 		}else{
 			if(iTxt>23) iTxt=0;
@@ -705,7 +719,7 @@ void UpdateAMPMDisplay(HWND hDlg)
 			else
 				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "PM");
 		}else{
-			if(!min && hour==12)
+			if(!min && (!hour || hour==12))
 				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "Midnight");
 			else
 				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "AM");
