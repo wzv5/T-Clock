@@ -516,10 +516,9 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		if(!g_bPlayingNonstop) StopFile();
 		return 0;
 		
-	case MM_MCINOTIFY:
+	case MM_MCINOTIFY: // stop playing or repeat mci file (all but .wav, .pcb)
 		OnMCINotify(hwnd);
 		return 0;
-		
 	case MM_WOM_DONE: // stop playing wave
 	case MAINM_STOPSOUND:
 		StopFile();

@@ -17,7 +17,7 @@ static void OnSanshoAlarm(HWND hDlg, WORD id);
 static void On12Hour(HWND hDlg, int bOnChange);
 static void OnDelAlarm(HWND hDlg);
 static void OnFileChange(HWND hDlg, WORD id);
-static void OnTest(HWND hDlg, WORD id);
+static void OnTest(HWND hDlg, WORD id, DWORD loops);
 static void OnMsgAlarm(HWND hDlg, WORD id);
 /// helpers
 static void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS);
@@ -27,7 +27,6 @@ static void SetDefaultAlarmToDlg(HWND hDlg);
 static void FormatTimeText(HWND hDlg, WORD id);
 static void UpdateAMPMDisplay(HWND hDlg);
 
-static char m_bPlaying = 0;
 static char m_bTransition=0;
 static int m_curAlarm;
 static unsigned m_days;
@@ -80,9 +79,16 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 		// test sound
 		case IDC_TESTALARM:
-		case IDC_TESTJIHOU:
-			OnTest(hDlg,id);
-			break;
+		case IDC_TESTJIHOU:{
+			int loops=0;
+			if(id==IDC_TESTALARM){
+				if(IsDlgButtonChecked(hDlg,IDC_REPEATALARM)){
+					loops=GetDlgItemInt(hDlg,IDC_REPEATIMES,NULL,1);
+					if(!loops) loops=-1;
+				}
+			}
+			OnTest(hDlg,id,loops);
+			break;}
 		/// alarm chooser
 		case IDC_COMBOALARM:
 			if(code==CBN_SELCHANGE){
@@ -168,9 +174,13 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		} return TRUE; //--+++--> End Of Case WM_NOTIFY:
 		
 		// playing sound ended
-	case MM_MCINOTIFY:
 	case MM_WOM_DONE:
-		StopFile(); m_bPlaying = FALSE;
+		StopFile();
+	case MM_MCINOTIFY:
+		if(message==MM_MCINOTIFY){
+			if(OnMCINotify(hDlg))
+				return TRUE;
+		}
 		SendDlgItemMessage(hDlg, IDC_TESTALARM, BM_SETIMAGE, IMAGE_ICON,
 						   (LPARAM)g_hIconPlay);
 		SendDlgItemMessage(hDlg, IDC_TESTJIHOU, BM_SETIMAGE, IMAGE_ICON,
@@ -244,8 +254,6 @@ void OnInit(HWND hDlg)
 	
 	SendDlgItemMessage(hDlg, IDC_DELALARM, BM_SETIMAGE, IMAGE_ICON,
 					   (LPARAM)g_hIconDel);
-					   
-	m_bPlaying = 0;
 }
 /*------------------------------------------------
   deinitialize
@@ -254,9 +262,7 @@ void OnDeinit(HWND hDlg)
 {
 	HWND combo=GetDlgItem(hDlg,IDC_COMBOALARM);
 	int count=ComboBox_GetCount(hDlg);
-	if(m_bPlaying)
-		StopFile();
-	m_bPlaying=0;
+	StopFile();
 	for(; count>0; ){ // free memory
 		free((void*)ComboBox_GetItemData(combo,--count));
 		ComboBox_DeleteString(combo,count);
@@ -346,7 +352,7 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 	pAS->minute = (int)SendDlgItemMessage(hDlg,IDC_SPINMINUTE,UDM_GETPOS32,0,0);
 	pAS->days = m_days;
 	
-	pAS->iTimes = GetDlgItemInt(hDlg, IDC_REPEATIMES, NULL, FALSE);
+	pAS->iTimes = GetDlgItemInt(hDlg,IDC_REPEATIMES,NULL,1);
 	
 	pAS->uFlags=0;
 	if(IsDlgButtonChecked(hDlg,IDC_ALARM)) pAS->uFlags|=ALRM_ENABLED;
@@ -649,23 +655,20 @@ void OnFileChange(HWND hDlg, WORD id)
 /*------------------------------------------------
   test sound
 --------------------------------------------------*/
-void OnTest(HWND hDlg, WORD id)
+void OnTest(HWND hDlg, WORD id, DWORD loops)
 {
 	char fname[MAX_PATH];
 	
 	GetDlgItemText(hDlg, id - 3, fname, MAX_PATH);
-	if(fname[0] == 0) return;
+	if(!*fname) return;
 	
-	if((HICON)SendDlgItemMessage(hDlg, id, BM_GETIMAGE, IMAGE_ICON, 0)
-	   == g_hIconPlay) {
-		if(PlayFile(hDlg, fname, 0)) {
-			SendDlgItemMessage(hDlg, id, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconStop);
-			InvalidateRect(GetDlgItem(hDlg, id), NULL, FALSE);
-			m_bPlaying = 1;
+	if((HICON)SendDlgItemMessage(hDlg,id,BM_GETIMAGE,IMAGE_ICON,0) == g_hIconPlay) {
+		if(PlayFile(hDlg,fname,loops)) {
+			SendDlgItemMessage(hDlg,id,BM_SETIMAGE,IMAGE_ICON,(LPARAM)g_hIconStop);
+			InvalidateRect(GetDlgItem(hDlg,id),NULL,FALSE);
 		}
 	} else {
 		StopFile();
-		m_bPlaying = 0;
 	}
 }
 //======================================*

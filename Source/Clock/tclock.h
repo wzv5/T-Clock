@@ -111,7 +111,7 @@ void SaveAlarmToReg(alarm_t* pAS, int num);
 void StopFile();
 void EndAlarm();
 void InitAlarm();
-void OnMCINotify(HWND hwnd);
+int OnMCINotify(HWND hwnd);
 void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
 BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
 

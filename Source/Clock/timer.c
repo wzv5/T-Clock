@@ -331,12 +331,27 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
 	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
-	
+	// init dialog items
 	SendDlgItemMessage(hDlg, IDC_TIMERSECSPIN, UDM_SETRANGE32, 0,59); // 60 Seconds Max
 	SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETRANGE32, 0,59); // 60 Minutes Max
 	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
 	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
-	
+	/// add default sound files to file dropdown
+	if(g_tos>TOS_2000) {
+		char tmp[MAX_PATH];
+		HANDLE hFind;
+		WIN32_FIND_DATA FindFileData;
+		strcpy(tmp,g_mydir); add_title(tmp,"waves/*");
+		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
+			do{
+				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
+					CBAddString(hDlg,IDC_TIMERFILE,FindFileData.cFileName);
+				}
+			}while(FindNextFile(hFind,&FindFileData));
+			FindClose(hFind);
+		}
+	}
+	// add timer to combobox
 	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
 	count=GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
 	for(idx=0; idx<count; ++idx) {
@@ -519,7 +534,7 @@ void OnTest(HWND hDlg, WORD id)   //--------------------------------------------
 	char fname[MAX_PATH];
 	
 	GetDlgItemText(hDlg, id - 2, fname, MAX_PATH);
-	if(fname[0] == 0) return;
+	if(!*fname) return;
 	
 	if((HICON)SendDlgItemMessage(hDlg, id, BM_GETIMAGE, IMAGE_ICON, 0) == g_hIconPlay) {
 		if(PlayFile(hDlg, fname, 0)) {

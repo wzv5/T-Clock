@@ -10,7 +10,7 @@ static HPSTR m_pData = NULL;
 static HWAVEOUT m_hWaveOut = NULL;
 static WAVEFORMATEX* m_pFormat = NULL;
 
-static int m_countPlay = 0, m_countPlayNum = 0;
+static DWORD m_countPlay=0;
 static BOOL m_bMCIPlaying = FALSE;
 char g_bPlayingNonstop = 0;
 static BOOL m_bTrack;
@@ -239,8 +239,7 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 			if(iLoops > 0) { //-> IF We're Looping, Go Back to
 				fseek(file, 0, SEEK_SET); // Beginning of File
 				--iLoops;
-			}
-			if(iLoops == 0) { // Or Die, Exit, Quit, Close, End
+			}else{ // Or Die, Exit, Quit, Close, End
 				m_bKillPCBeep = 1;
 				fclose(file);
 				return TRUE;
@@ -332,7 +331,7 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 			
 			if(PlayMCI(hwnd, m_nTrack) == 0) {
 				m_bMCIPlaying = TRUE;
-				m_countPlay = 1; m_countPlayNum = dwLoops;
+				m_countPlay = dwLoops;
 			} else mciSendString("close myfile", NULL, 0, NULL);
 		} return m_bMCIPlaying;
 	} else ExecFile(hwnd, fname);
@@ -373,23 +372,26 @@ void StopFile(void)
 		mciSendString("stop myfile", NULL, 0, NULL);
 		mciSendString("close myfile", NULL, 0, NULL);
 		m_bMCIPlaying = FALSE;
-		m_countPlay = 0; m_countPlayNum = 0;
+		m_countPlay = 0;
 	}
 	g_bPlayingNonstop = 0;
 }
 //=================================================*
 // ----------------------------- Loop Play as Needed
 //===================================================*
-void OnMCINotify(HWND hwnd)
+int OnMCINotify(HWND hwnd)
 {
 	if(m_bMCIPlaying) {
-		if(m_countPlay < m_countPlayNum || m_countPlayNum < 0) {
+		if(m_countPlay) {
 			mciSendString("seek myfile to start wait", NULL, 0, NULL);
 			if(PlayMCI(hwnd, m_nTrack) == 0) {
-				m_countPlay++;
-			} else StopFile();
-		} else StopFile();
+				--m_countPlay;
+				return 1;
+			}
+		}
+		StopFile();
 	}
+	return 0;
 }
 //================================================================================================
 //------------------------------------------------------//----+++--> Load & Play a Wave Audio File:
@@ -483,6 +485,7 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 	m_wh.dwBufferLength = lDataSize;
 	m_wh.lpData = m_pData;
 	if(dwLoops != 0) {
+		if(dwLoops!=0xFFFFFFFF) ++dwLoops;
 		m_wh.dwFlags = WHDR_BEGINLOOP|WHDR_ENDLOOP;
 		m_wh.dwLoops = dwLoops;
 	}
@@ -507,7 +510,7 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 //---------------------//---------------------------------------+++--> End Play of Wave Audio File:
 void StopWave(void)   //--------------------------------------------------------------------+++-->
 {
-	if(m_hWaveOut == NULL) return;
+	if(!m_hWaveOut) return;
 	waveOutReset(m_hWaveOut);
 	waveOutUnprepareHeader(m_hWaveOut, &m_wh, sizeof(WAVEHDR));
 	waveOutClose(m_hWaveOut);
