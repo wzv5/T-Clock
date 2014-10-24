@@ -18,6 +18,7 @@ static void On12Hour(HWND hDlg, int bOnChange);
 static void OnDelAlarm(HWND hDlg);
 static void OnFileChange(HWND hDlg, WORD id);
 static void OnTest(HWND hDlg, WORD id, DWORD loops);
+static void StopTest(HWND hDlg);
 static void OnMsgAlarm(HWND hDlg, WORD id);
 /// helpers
 static void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS);
@@ -106,10 +107,11 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		// file name changed
 		case IDC_FILEALARM:
 		case IDC_FILEJIHOU:
-			if(code==EN_CHANGE){
-				OnFileChange(hDlg, id);
+			if(code==CBN_EDITCHANGE){
+				OnFileChange(hDlg,id);
 				SendPSChanged(hDlg);
-			}
+			}else if(code==CBN_SELCHANGE)
+				PostMessage(hDlg,WM_COMMAND,MAKELONG(id,CBN_EDITCHANGE),0);
 			break;
 		// day selector
 		case IDC_ALARMDAY:
@@ -199,6 +201,8 @@ void OnInit(HWND hDlg)
 	/// add "new" entry
 	CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM)), 0);
 	/// add default sound files to sound file dropdown
+	CBAddString(hDlg,IDC_FILEALARM,"<  no sound  >");
+	CBAddString(hDlg,IDC_FILEJIHOU,"<  no sound  >");
 	if(g_tos>TOS_2000) {
 		HANDLE hFind;
 		WIN32_FIND_DATA FindFileData;
@@ -428,6 +432,8 @@ void OnChangeAlarm(HWND hDlg)
 	if(m_curAlarm >= 0 && index == m_curAlarm) return;
 	m_bTransition=1; // start transition
 	
+	StopTest(hDlg);
+	
 	if(m_curAlarm < 0) {
 		char name[sizeof(pAS->dlgmsg.name)];
 		GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->dlgmsg.name));
@@ -551,8 +557,9 @@ void OnMsgAlarm(HWND hDlg, WORD id)   //-------------------------------------+++
 void OnSanshoAlarm(HWND hDlg, WORD id)
 {
 	char deffile[MAX_PATH], fname[MAX_PATH];
-	
 	GetDlgItemText(hDlg, id - 1, deffile, MAX_PATH);
+	
+	StopTest(hDlg);
 	
 	if(!BrowseSoundFile(hDlg, deffile, fname)) // soundselect.c
 		return;
@@ -615,6 +622,8 @@ void OnDelAlarm(HWND hDlg)
 	
 	if(m_curAlarm < 0) return;
 	
+	StopTest(hDlg);
+	
 	pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
 	if(pAS) {
 		PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
@@ -637,19 +646,24 @@ void OnDelAlarm(HWND hDlg)
 void OnFileChange(HWND hDlg, WORD id)
 {
 	char fname[MAX_PATH];
-	BOOL b = FALSE;
-	
-	GetDlgItemText(hDlg, id, fname, MAX_PATH);
-	if(IsWindowEnabled(GetDlgItem(hDlg, id)))
-		b = TRUE;
-	EnableDlgItem(hDlg, id + 3, b);
-	
-	EnableDlgItem(hDlg,
-				  (id==IDC_FILEALARM)?IDC_REPEATALARM:IDC_REPEATJIHOU,
-				  b?IsMMFile(fname):FALSE);
-				  
-	if(id == IDC_FILEALARM)
-		EnableDlgItem(hDlg, IDC_CHIMEALARM, b?IsMMFile(fname):FALSE);
+	int enable=0;
+	int control;
+	GetDlgItemText(hDlg,id,fname,MAX_PATH);
+	if(IsWindowEnabled(GetDlgItem(hDlg,id)) && *fname!='<' && *fname){
+		enable=1;
+	}
+	for(control=id+4; control>id+1; --control) // IDC_FILEALARM+2 -> IDC_REPEATALARM, IDC_FILEJIHOU+2 -> IDC_REPEATJIHOU
+		EnableDlgItem(hDlg,control,enable);
+	if(enable){
+		enable=IsMMFile(fname);
+		EnableDlgItem(hDlg,id+4,enable); // IDC_REPEATALARM, IDC_REPEATJIHOU
+	}
+	if(id==IDC_FILEALARM){
+		EnableDlgItem(hDlg,IDC_CHIMEALARM,enable);
+		enable=enable&&IsDlgButtonChecked(hDlg,IDC_REPEATALARM); // IsMMFile(fname)
+		for(control=IDC_REPEATIMES; control<=IDC_SPINTIMES; ++control) // IDC_FILEALARM+2 -> IDC_REPEATALARM, IDC_FILEJIHOU+2 -> IDC_REPEATJIHOU
+			EnableDlgItem(hDlg,control,enable);
+	}
 }
 
 /*------------------------------------------------
@@ -668,6 +682,12 @@ void OnTest(HWND hDlg, WORD id, DWORD loops)
 			InvalidateRect(GetDlgItem(hDlg,id),NULL,FALSE);
 		}
 	} else {
+		StopFile();
+	}
+}
+void StopTest(HWND hDlg)
+{
+	if((HICON)SendDlgItemMessage(hDlg,IDC_TESTALARM,BM_GETIMAGE,IMAGE_ICON,0) == g_hIconStop) {
 		StopFile();
 	}
 }

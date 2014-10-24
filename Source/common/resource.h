@@ -255,28 +255,28 @@
 #define IDC_SPINMINUTE                  1307
 #define IDC_ALARMDAY                    1308
 #define IDC_LABSOUNDALARM               1309
-#define IDC_FILEALARM                   1310
+#define IDC_FILEALARM                   1310 /* groupB */
 #define IDC_SANSHOALARM                 1311
 #define IDC_LABTESTALARM                1312
 #define IDC_TESTALARM                   1313
-#define IDC_12HOURALARM                 1314
-#define IDC_REPEATALARM                 1315
+#define IDC_REPEATALARM                 1314 /* end groupB */
+#define IDC_12HOURALARM                 1315
 #define IDC_AMPM_DISPLAY                1316
 #define IDC_AMPM_CHECK                  1317
 #define IDC_BLINKALARM                  1318
-#define IDC_REPEATIMES                  1319
-#define IDC_SPINTIMES                   1320
-#define IDC_ALRM_ONCE                   1321
-#define IDC_MSG_ALARM                   1322 /* end group */
-#define IDC_BMPJACK                     1325
-#define IDC_CHIMEALARM                  1026
+#define IDC_CHIMEALARM                  1319
+#define IDC_REPEATIMES                  1320 /* groupC */
+#define IDC_SPINTIMES                   1321 /* end groupC */
+#define IDC_ALRM_ONCE                   1322
+#define IDC_MSG_ALARM                   1323 /* end group */
+#define IDC_BMPJACK                     1326
 #define IDC_JIHOU                       1330
 #define IDC_LABSOUNDJIHOU               1331 /* group */
-#define IDC_FILEJIHOU                   1332
+#define IDC_FILEJIHOU                   1332 /* groupB */
 #define IDC_SANSHOJIHOU                 1333
 #define IDC_LABTESTJIHOU                1334
 #define IDC_TESTJIHOU                   1335
-#define IDC_REPEATJIHOU                 1336
+#define IDC_REPEATJIHOU                 1336 /* end groupB */
 #define IDC_BLINKJIHOU                  1337 /* end group */
 #define IDC_ALARMDAY0                   1350
 #define IDC_ALARMDAY1                   1351

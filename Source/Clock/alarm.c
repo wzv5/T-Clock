@@ -142,7 +142,7 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 	else fday = 1 << 6;
 	
 	for(i = 0; i < m_maxAlarm; ++i) {
-		if(!m_pAS[i].uFlags&ALRM_ENABLED) continue;
+		if(!(m_pAS[i].uFlags&ALRM_ENABLED)) continue;
 		h = st->wHour;
 		
 		if((m_pAS[i].uFlags&ALRM_12HPM) == ALRM_12HPM) {
