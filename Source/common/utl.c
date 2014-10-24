@@ -64,8 +64,16 @@ BOOL CheckSystemVersion()   //--------------------------------------------------
 			return FALSE;
 		g_tos=TOS_NEWER;
 	}
+	if(g_tos>=TOS_VISTA){
+		GetTickCount64_t ptr=(GetTickCount64_t)GetProcAddress(GetModuleHandle("kernel32"),"GetTickCount64");
+		if(ptr) pGetTickCount64=ptr;
+	}
 	return TRUE;
 }
+ULONGLONG WINAPI GetTickCount64_Wrapper(){
+	return GetTickCount();
+}
+GetTickCount64_t pGetTickCount64=GetTickCount64_Wrapper;
 //==================================================================================
 //--------------------------------------------------+++--> finds the tray clock hwnd:
 HWND FindClock()   //---------------------------------------------------------+++-->

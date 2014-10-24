@@ -15,8 +15,13 @@ enum{
 };
 extern unsigned short g_tos; // holds current OS version flags
 BOOL CheckSystemVersion();
+typedef ULONGLONG (WINAPI* GetTickCount64_t)();
+extern GetTickCount64_t pGetTickCount64;
+/// clock related
 HWND FindClock();
 void RefreshUs();
+int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT uBeep);
+/// unsorted
 char PathExists(const char* path);
 void GetFileAndOption(const char* command, char* fname, char* opt);
 BOOL ExecFile(HWND hwnd, const char* command);
@@ -29,7 +34,8 @@ void add_title(char* path, const char* title);
 void get_title(char* dst, const char* path);
 int ext_cmp(const char* fname, const char* ext);
 void parsechar(char* dst, const char* src, char ch, int n);
-int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT uBeep);
+void str0cat(char* list, const char* str);
+/// Settings
 int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval);
 int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, const char* defval);
 int GetRegStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval);
@@ -40,7 +46,6 @@ LONG GetMyRegLong(const char* section, const char* entry, LONG defval);
 BOOL SetMyRegLong(const char* section, const char* entry, LONG val);
 BOOL SetMyRegStr(const char* section, const char* entry, const char* val);
 BOOL DelMyReg(const char* section, const char* entry);
-void str0cat(char* list, const char* str);
 BOOL DelMyRegKey(const char* section);
 char* MyString(UINT id);
 //void Pause(HWND hWnd, LPCTSTR pszArgs);

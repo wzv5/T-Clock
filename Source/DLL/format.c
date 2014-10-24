@@ -121,7 +121,7 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 {
 	const char* pos;
 	char* out = buf;
-	DWORD TickCount = 0;
+	ULONGLONG TickCount = 0;
 	
 	while(*fmt) {
 		if(*fmt == '\"') {
@@ -345,34 +345,33 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 			int len, slen, st;
 			fmt++;
 			if(GetNumFormat(&fmt, 'd', &len, &slen) == TRUE) {//days
-				if(!TickCount) TickCount = GetTickCount();
-				st = TickCount/86400000;
+				if(!TickCount) TickCount = pGetTickCount64();
+				st = (int)(TickCount/86400000);
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 'a', &len, &slen) == TRUE) {//hours total
-				if(!TickCount) TickCount = GetTickCount();
-				st = TickCount/3600000;
+				if(!TickCount) TickCount = pGetTickCount64();
+				st = (int)(TickCount/3600000);
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 'h', &len, &slen) == TRUE) {//hours (max 24)
-				if(!TickCount) TickCount = GetTickCount();
+				if(!TickCount) TickCount = pGetTickCount64();
 				st = (TickCount/3600000)%24;
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 'n', &len, &slen) == TRUE) {//minutes
-				if(!TickCount) TickCount = GetTickCount();
+				if(!TickCount) TickCount = pGetTickCount64();
 				st = (TickCount/60000)%60;
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 's', &len, &slen) == TRUE) {//seconds
-				if(!TickCount) TickCount = GetTickCount();
+				if(!TickCount) TickCount = pGetTickCount64();
 				st = (TickCount/1000)%60;
 				SetNumFormat(&out, st, len, slen);
 			} else if(*fmt == 'T') { // ST, uptime as h:mm:ss
-				DWORD dw;
+				ULONGLONG past;
 				int sth, stm, sts;
-				if(!TickCount) TickCount = GetTickCount();
-				dw = TickCount;
-				dw /= 1000;
-				sts = dw%60; dw /= 60;
-				stm = dw%60; dw /= 60;
-				sth = dw;
+				if(!TickCount) TickCount = pGetTickCount64();
+				past = TickCount/1000;
+				sts = past%60; past /= 60;
+				stm = past%60; past /= 60;
+				sth = (int)past;
 				
 				SetNumFormat(&out, sth, 1, 0);
 				*out++ = ':';
