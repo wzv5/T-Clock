@@ -770,16 +770,16 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 	case WM_TIMER:
 		if(!OnWatchTimer(hDlg)) { // When the Last Monitored Timer
 			KillTimer(hDlg, 3);			 // Expires, Close the Now UnNeeded
-			EndDialog(hDlg, TRUE);		 // Timer Watch/View Dialog Window.
 			g_hDlgTimerWatch = NULL;
+			DestroyWindow(hDlg);		 // Timer Watch/View Dialog Window.
 		} return TRUE; //--------------------------------+++--> END of Case WM_TIMER
 //====================//============================================================
 	case WM_COMMAND:
 		switch(LOWORD(wParam)) {
 		case IDCANCEL:
 			KillTimer(hDlg, 3);
-			EndDialog(hDlg, TRUE);
 			g_hDlgTimerWatch = NULL;
+			DestroyWindow(hDlg);
 			return TRUE;
 		} return FALSE;//------------------------------+++--> END of Case WM_COMMAND
 //===//=============================================================================

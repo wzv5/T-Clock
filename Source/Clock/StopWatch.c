@@ -189,6 +189,10 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	GetWindowRect(hList,&rc);
 	m_rezCYlist=rc.bottom-rc.top;
 	m_rezCXlist=rc.right-rc.left;
+	rc.bottom=GetMyRegLong("Timers","SwSize",0);
+	if(rc.bottom){
+		SetWindowPos(hDlg,HWND_TOP,0,0,m_rezCX,rc.bottom,SWP_NOMOVE|SWP_NOZORDER);
+	}
 	/// init list view
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
 	SetXPWindowTheme(hList,L"Explorer",NULL);
@@ -260,15 +264,23 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 		SetMyDialgPos(hDlg,21);
 		return TRUE;
 	case WM_DESTROY:{
+		// save pos & size
+		RECT rc; GetWindowRect(hDlg,&rc);
+		rc.bottom=rc.bottom-rc.top;
+		if(rc.bottom!=m_rezCY){
+			SetMyRegLong("Timers","SwSize",rc.bottom);
+		}else{
+			DelMyReg("Timers","SwSize");
+		}
 		// cleaup elapsed font
-		HFONT hfont=(HFONT)SendDlgItemMessage(hDlg,IDC_SW_ELAPSED,WM_GETFONT,0,0);
+		{HFONT hfont=(HFONT)SendDlgItemMessage(hDlg,IDC_SW_ELAPSED,WM_GETFONT,0,0);
 		SendDlgItemMessage(hDlg,IDC_SW_ELAPSED,WM_SETFONT,0,0);
 		DeleteObject(hfont);
 		// cleanup button font
 		hfont=(HFONT)SendDlgItemMessage(hDlg,IDC_SW_START,WM_GETFONT,0,0);
 		SendDlgItemMessage(hDlg,IDC_SW_START,WM_SETFONT,0,0);
 		SendDlgItemMessage(hDlg,IDC_SW_RESET,WM_SETFONT,0,0);
-		DeleteObject(hfont);
+		DeleteObject(hfont);}
 		break;}
 	/// handling
 	case WM_ACTIVATE:
@@ -340,7 +352,7 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 			case IDCANCEL:
 				KillTimer(hDlg, 1);
 				g_hDlgStopWatch = NULL;
-				EndDialog(hDlg, TRUE);
+				DestroyWindow(hDlg);
 			}
 			return TRUE;
 		}
