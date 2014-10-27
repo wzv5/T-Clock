@@ -415,7 +415,8 @@ void SetDefaultAlarmToDlg(HWND hDlg)   //---------------------------------------
 	as.hour=12;
 	as.iTimes=-1;
 	if(GetMyRegLong("Format","Hour12",1))
-		as.uFlags|=ALRM_12HPM|ALRM_ONESHOT|ALRM_DIALOG|ALRM_BLINK|ALRM_REPEAT;
+		as.uFlags|=ALRM_12HPM;
+	as.uFlags|=ALRM_ONESHOT|ALRM_DIALOG|ALRM_BLINK|ALRM_REPEAT;
 	strcpy(as.fname,"Alarm.wav");
 	SetAlarmToDlg(hDlg,&as);
 	m_curAlarm=-1;

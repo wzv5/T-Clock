@@ -19,7 +19,6 @@ static void CreateFormat(char* s, char* checks);
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg,BOOL preview);
 static void OnLocale(HWND hDlg);
-static void On12Hour(HWND hDlg);
 static void OnCustom(HWND hDlg, BOOL bmouse);
 static void OnFormatCheck(HWND hDlg, WORD id);
 
@@ -71,9 +70,6 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		case IDC_CUSTOM:
 			OnCustom(hDlg, TRUE);
 			break;
-		case IDC_12HOUR:
-			On12Hour(hDlg);
-			break;
 		case IDC_AMSYMBOL:
 		case IDC_PMSYMBOL:
 			if(HIWORD(wParam)==CBN_EDITCHANGE || HIWORD(wParam)==CBN_SELCHANGE)
@@ -84,7 +80,7 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			SendPSChanged(hDlg);
 			break;
 		default: // "year" -- "Internet Time"
-			if(id>=IDC_YEAR4 && id<=IDC_KAIGYO)
+			if(id>=IDC_YEAR4 && id<=IDC_12HOUR)
 				OnFormatCheck(hDlg, id);
 		}
 		return TRUE;}
@@ -261,7 +257,6 @@ void OnInit(HWND hDlg)
 	}
 	CBSetCurSel(hDlg, IDC_PMSYMBOL, 0);
 	
-	On12Hour(hDlg);
 	OnCustom(hDlg, FALSE);
 	m_transition=0; // end transition lock, ready to go
 }
@@ -330,7 +325,7 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 	b = IsDlgButtonChecked(hDlg, IDC_CUSTOM);
 	EnableDlgItem(hDlg, IDC_FORMAT, b);
 	
-	for(i = IDC_YEAR4; i <= IDC_KAIGYO; i++)
+	for(i = IDC_YEAR4; i <= IDC_12HOUR; i++)
 		EnableDlgItem(hDlg, i, !b);
 	
 	if(m_pCustomFormat && bmouse) {
@@ -345,19 +340,6 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 	if(!b) OnFormatCheck(hDlg, 0);
 	SendPSChanged(hDlg);
 }
-//================================================================================================
-//-----------------------------------------+++--> Toggle Display Between 12 & 24 Hour Time Formats:
-void On12Hour(HWND hDlg)   //---------------------------------------------------------------+++-->
-{
-	BOOL b;
-	
-	b = IsDlgButtonChecked(hDlg, IDC_12HOUR);
-	if(!b) {
-		CheckDlgButton(hDlg, IDC_AMPM, 0);
-		if(!IsDlgButtonChecked(hDlg, IDC_CUSTOM)) OnFormatCheck(hDlg, 0);
-	}
-	SendPSChanged(hDlg);
-}
 /*------------------------------------------------
   When clicked "year" -- "am/pm"
 --------------------------------------------------*/
@@ -370,7 +352,7 @@ void OnFormatCheck(HWND hDlg, WORD id)
 	char oldtransition=m_transition;
 	m_transition=-1; // start transition lock
 	
-	for(i = IDC_YEAR4; i <= IDC_KAIGYO; i++) {
+	for(i = IDC_YEAR4; i <= IDC_12HOUR; ++i) {
 		CHECKS(i) = (char)IsDlgButtonChecked(hDlg, i);
 	}
 	
@@ -385,7 +367,7 @@ void OnFormatCheck(HWND hDlg, WORD id)
 		}
 	}
 	
-	if(id == IDC_MONTH || id == IDC_MONTHS) {
+	else if(id == IDC_MONTH || id == IDC_MONTHS) {
 		if(id == IDC_MONTH && CHECKS(IDC_MONTH)) {
 			CheckRadioButton(hDlg, IDC_MONTH, IDC_MONTHS, IDC_MONTH);
 			CHECKS(IDC_MONTHS) = FALSE;
@@ -396,9 +378,13 @@ void OnFormatCheck(HWND hDlg, WORD id)
 		}
 	}
 	
-	if(id == IDC_AMPM) {
+	else if(id == IDC_AMPM) {
+		CHECKS(IDC_12HOUR) = 1;
 		CheckDlgButton(hDlg, IDC_12HOUR, 1);
-		On12Hour(hDlg);
+	}
+	else if(id == IDC_12HOUR && !IsDlgButtonChecked(hDlg,IDC_12HOUR)) {
+		CHECKS(IDC_AMPM) = 0;
+		CheckDlgButton(hDlg, IDC_AMPM, 0);
 	}
 	
 	CreateFormat(fmt, checks);
@@ -565,7 +551,10 @@ void CreateFormat(char* dst, char* checks)
 	btime=0;
 	
 	if(CHECKS(IDC_HOUR)) {
-		strcat(dst, "hh");
+		if(CHECKS(IDC_12HOUR) && CHECKS(IDC_HOUR)!=BST_INDETERMINATE)
+			strcat(dst, "h");
+		else
+			strcat(dst, "hh");
 		++btime;
 	}
 	if(CHECKS(IDC_MINUTE)) {
