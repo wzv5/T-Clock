@@ -28,7 +28,6 @@ static char* m_pCustomFormat = NULL;
 static char m_sMon[10];  //
 
 static char m_bDayOfWeekIsLast;   // yy/mm/dd ddd
-static char m_bTimeMarker; // use AM/PM (+12h format)
 static char m_bTimeMarkerIsFirst; // AM/PM hh:nn:ss
 
 static char m_sep_date[4]; // date seperator such as / .
@@ -107,16 +106,20 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 }
 
 /*------------------------------------------------
-  Initialize Locale Infomation
+  Initialize Checks with locale settings (2nd used to overwrite values based on locale default instead of users)
 --------------------------------------------------*/
-void InitLocale(int ilang/*=0*/)
+void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
 {
 	char ampm[10];
-	int i;
-	const int aLangDayOfWeekIsLast[]={LANG_JAPANESE,LANG_KOREAN,0};
+	int ival;
+	const int aLangDayOfWeekIsLast[]={LANG_JAPANESE,LANG_KOREAN};
+	char bTimeMarker; // use AM/PM (+12h format)
 	
-	if(!ilang)
-		m_ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID())&0x00ff;
+	if(ilang)
+		m_ilang=ilang;
+	else
+		m_ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
+	/// init language "member" variables
 	// seperator
 	GetLocaleInfo(m_ilang,LOCALE_SDATE,m_sep_date,sizeof(m_sep_date));
 	GetLocaleInfo(m_ilang,LOCALE_STIME,m_sep_time,sizeof(m_sep_time));
@@ -125,18 +128,63 @@ void InitLocale(int ilang/*=0*/)
 	GetLocaleInfo(m_ilang,LOCALE_S1159,ampm,sizeof(ampm));/*!AM*/
 	if(!*ampm)
 		GetLocaleInfo(m_ilang,LOCALE_S2359,ampm,sizeof(ampm));/*!PM*/
-	m_bTimeMarker=*ampm; // use 24h w/o AM/PM or 12h w/ AM/PM based on user locale
-	GetLocaleInfo(m_ilang, LOCALE_ITIMEMARKPOSN|LOCALE_RETURN_NUMBER, (LPSTR)&i, sizeof(i));
-	m_bTimeMarkerIsFirst=(char)i;
+	bTimeMarker=*ampm; // use 24h w/o AM/PM or 12h w/ AM/PM based on user locale
+	GetLocaleInfo(m_ilang, LOCALE_ITIMEMARKPOSN|LOCALE_RETURN_NUMBER, (LPSTR)&ival, sizeof(ival));
+	m_bTimeMarkerIsFirst=(char)ival;
 	// date
 	GetLocaleInfo(m_ilang, LOCALE_IDATE|LOCALE_RETURN_NUMBER, (LPSTR)&m_idate, sizeof(m_idate));
 	GetLocaleInfo(m_ilang, LOCALE_SABBREVDAYNAME1, m_sMon, sizeof(m_sMon));
 	
 	m_bDayOfWeekIsLast = 0;
-	for(i=0; aLangDayOfWeekIsLast[i]; ++i) {
-		if((m_ilang&0x00ff) == aLangDayOfWeekIsLast[i]) {
+	for(ival=0; ival<(sizeof(aLangDayOfWeekIsLast)/sizeof(aLangDayOfWeekIsLast[0])); ++ival) {
+		if((m_ilang&0x00ff) == aLangDayOfWeekIsLast[ival]) {
 			m_bDayOfWeekIsLast = 1; break;
 		}
+	}
+	/// init checks
+	for(ival=IDC_YEAR4; ival<=IDC_SECOND; ++ival) {
+		CHECKS(ival) = (char)GetMyRegLong("Format", ENTRY(ival), 1);
+	}
+	
+	if(CHECKS(IDC_YEAR)) CHECKS(IDC_YEAR4) = 0;
+	else if(CHECKS(IDC_YEAR4)) CHECKS(IDC_YEAR) = 0;
+	
+	if(CHECKS(IDC_MONTH)) CHECKS(IDC_MONTHS) = 0;
+	else if(CHECKS(IDC_MONTHS)) CHECKS(IDC_MONTH) = 0;
+	
+	for(ival=IDC_AMPM; ival<=IDC_CUSTOM; ++ival) {
+		CHECKS(ival) = (char)GetMyRegLong("Format", ENTRY(ival), 0);
+	}
+	/// init locale based checks
+	// use AM/PM and 12h format from new selected locale
+	CHECKS(IDC_AMPM)=(char)bTimeMarker;
+	CHECKS(IDC_12HOUR)=(char)bTimeMarker;
+	// leading zero for 12h format // 05 vs 5 am
+	GetLocaleInfo(m_ilang, LOCALE_ITLZERO|LOCALE_RETURN_NUMBER, (LPSTR)&ival, sizeof(ival));
+	CHECKS(IDC_HOUR)=(ival?2:1);
+	if(!ilang){
+		CHECKS(IDC_AMPM)=(char)GetMyRegLongEx("Format",ENTRY(IDC_AMPM),CHECKS(IDC_AMPM));
+		CHECKS(IDC_12HOUR)=(char)GetMyRegLongEx("Format",ENTRY(IDC_12HOUR),CHECKS(IDC_12HOUR));
+		CHECKS(IDC_HOUR)=(char)GetMyRegLongEx("Format",ENTRY(IDC_HOUR),CHECKS(IDC_HOUR));
+	}
+}
+
+/*------------------------------------------------
+  Initialize Locale Infomation (2nd to 3rd param used to overwrite values based on locale default)
+--------------------------------------------------*/
+void Checks2Dialog(char checks[FORMAT_NUM], HWND hDlg, int bLocaleOnly/*=0*/)
+{
+	if(!bLocaleOnly){
+		int i;
+		for(i=FORMAT_BEGIN; i<=FORMAT_END; ++i) {
+			CheckDlgButton(hDlg,i,CHECKS(i));
+		}
+	}else{
+		// use AM/PM and 12h format from new selected locale
+		CheckDlgButton(hDlg,IDC_AMPM,CHECKS(IDC_AMPM));
+		CheckDlgButton(hDlg,IDC_12HOUR,CHECKS(IDC_12HOUR));
+		// leading zero for 12h format
+		CheckDlgButton(hDlg,IDC_HOUR,CHECKS(IDC_HOUR));
 	}
 }
 
@@ -169,9 +217,9 @@ void OnInit(HWND hDlg)
 	HFONT hfont;
 	char fmt[MAX_FORMAT];
 	int i, count;
-	int ilang;
 	char ampm_user[TNY_BUFF];
 	char ampm_locale[TNY_BUFF];
+	char checks[FORMAT_NUM];
 	
 	m_transition=-1; // start transition lock
 	m_hwndPage = hDlg;
@@ -185,41 +233,17 @@ void OnInit(HWND hDlg)
 	// Fill and select the "Locale" combobox
 	EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);
 	CBSetCurSel(hDlg, IDC_LOCALE, 0);
-	ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
+	
+	ChecksLocaleInit(checks,0);
+	Checks2Dialog(checks,hDlg,0);
 	count = (int)CBGetCount(hDlg, IDC_LOCALE);
-	for(i = 0; i < count; i++) {
+	for(i=0; i < count; ++i) {
 		int x;
 		x = (int)CBGetItemData(hDlg, IDC_LOCALE, i);
-		if(x == ilang) {
+		if(x == m_ilang) {
 			CBSetCurSel(hDlg, IDC_LOCALE, i); break;
 		}
 	}
-	
-	InitLocale(ilang);
-	
-	// "year" -- "second"
-	for(i=IDC_YEAR4; i<=IDC_SECOND; ++i) {
-		CheckDlgButton(hDlg, i, GetMyRegLong("Format", ENTRY(i), 1));
-	}
-	
-	if(IsDlgButtonChecked(hDlg, IDC_YEAR))
-		CheckRadioButton(hDlg, IDC_YEAR4, IDC_YEAR, IDC_YEAR);
-	if(IsDlgButtonChecked(hDlg, IDC_YEAR4))
-		CheckRadioButton(hDlg, IDC_YEAR4, IDC_YEAR, IDC_YEAR4);
-		
-	if(IsDlgButtonChecked(hDlg, IDC_MONTH))
-		CheckRadioButton(hDlg, IDC_MONTH, IDC_MONTHS, IDC_MONTH);
-	if(IsDlgButtonChecked(hDlg, IDC_MONTHS))
-		CheckRadioButton(hDlg, IDC_MONTH, IDC_MONTHS, IDC_MONTHS);
-	
-	// "AM/PM" -- "Customize format"
-	for(i=IDC_AMPM; i<=IDC_CUSTOM; ++i) {
-		CheckDlgButton(hDlg, i, GetMyRegLong("Format", ENTRY(i), 0));
-	}
-	
-	// AM/PM, 12h: always overwrite above defaults with new ones based on user locale
-	CheckDlgButton(hDlg,IDC_AMPM,GetMyRegLong("Format",ENTRY(IDC_AMPM),m_bTimeMarker));
-	CheckDlgButton(hDlg,IDC_12HOUR,GetMyRegLong("Format",ENTRY(IDC_12HOUR),m_bTimeMarker));
 	
 	GetMyRegStr("Format", "Format", fmt, MAX_FORMAT, "");
 	SetDlgItemText(hDlg, IDC_FORMAT, fmt);
@@ -233,7 +257,7 @@ void OnInit(HWND hDlg)
 	GetMyRegStr("Format", "AMsymbol", ampm_user, sizeof(ampm_user), "");
 	if(*ampm_user)
 		CBAddString(hDlg, IDC_AMSYMBOL, ampm_user);
-	if(GetLocaleInfo(ilang, LOCALE_S1159, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
+	if(GetLocaleInfo(m_ilang, LOCALE_S1159, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
 		CBAddString(hDlg,IDC_AMSYMBOL,ampm_locale);
 	else
 		*ampm_locale='\0';
@@ -247,7 +271,7 @@ void OnInit(HWND hDlg)
 	GetMyRegStr("Format", "PMsymbol", ampm_user, sizeof(ampm_user), "");
 	if(*ampm_user)
 		CBAddString(hDlg, IDC_PMSYMBOL, ampm_user);
-	if(GetLocaleInfo(ilang, LOCALE_S2359, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
+	if(GetLocaleInfo(m_ilang, LOCALE_S2359, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
 		CBAddString(hDlg,IDC_PMSYMBOL,ampm_locale);
 	else
 		*ampm_locale='\0';
@@ -308,12 +332,15 @@ void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------
 //-------------------------------------------+++--> When User's Location (Locale ComboBox) Changes:
 void OnLocale(HWND hDlg)   //---------------------------------------------------------------+++-->
 {
+	char checks[FORMAT_NUM];
+	char fmt[MAX_FORMAT];
 	int ilang=(int)CBGetItemData(hDlg,IDC_LOCALE,CBGetCurSel(hDlg,IDC_LOCALE));
-	InitLocale(ilang);
-	// use AM/PM and 12h format from new selected locale
-	CheckDlgButton(hDlg,IDC_AMPM,m_bTimeMarker);
-	CheckDlgButton(hDlg,IDC_12HOUR,m_bTimeMarker);
-	OnCustom(hDlg, FALSE);
+	// change locale
+	ChecksLocaleInit(checks,ilang);
+	Checks2Dialog(checks,hDlg,1);
+	// update format
+	CreateFormat(fmt,checks);
+	SetDlgItemText(hDlg,IDC_FORMAT,fmt);
 }
 //================================================================================================
 //-----------------------------------+++--> Handler for Enable/Disable "Customize format" CheckBox:
@@ -398,33 +425,12 @@ void OnFormatCheck(HWND hDlg, WORD id)
 --------------------------------------------------*/
 void InitFormat()
 {
-	int iter;
 	char format[LRG_BUFF];
 	char checks[FORMAT_NUM];
 	
 	if(GetMyRegLong("Format", ENTRY(IDC_CUSTOM), FALSE))
 		return;
-	InitLocale(0);
-	
-	for(iter=IDC_YEAR4; iter<=IDC_SECOND; ++iter) {
-		CHECKS(iter) = (char)GetMyRegLong("Format", ENTRY(iter), 1);
-	}
-	
-	if(CHECKS(IDC_YEAR))  CHECKS(IDC_YEAR4) = FALSE;
-	if(CHECKS(IDC_YEAR4)) CHECKS(IDC_YEAR) = FALSE;
-	
-	if(CHECKS(IDC_MONTH))  CHECKS(IDC_MONTHS) = FALSE;
-	if(CHECKS(IDC_MONTHS)) CHECKS(IDC_MONTH) = FALSE;
-	
-	for(iter=IDC_AMPM; iter<=IDC_CUSTOM; ++iter) {
-		CHECKS(iter) = (char)GetMyRegLong("Format", ENTRY(iter), 0);
-	}
-	
-	// always overwrite above defaults with new ones based on user locale
-	CHECKS(IDC_AMPM)=(char)GetMyRegLong("Format",ENTRY(IDC_AMPM),m_bTimeMarker);
-	CHECKS(IDC_12HOUR)=(char)GetMyRegLong("Format",ENTRY(IDC_12HOUR),m_bTimeMarker);
-	SetMyRegLong("Format",ENTRY(IDC_12HOUR),CHECKS(IDC_12HOUR));
-	
+	ChecksLocaleInit(checks,0);	
 	CreateFormat(format, checks);
 	SetMyRegStr("Format", "Format", format);
 }
@@ -457,7 +463,7 @@ void CreateFormat(char* dst, char* checks)
 		strcat(dst, "ddd");
 		for(control=IDC_YEAR4; control<=IDC_DAY; ++control) {
 			if(CHECKS(control)) {
-				if((m_ilang & 0x00ff) == LANG_CHINESE) strcat(dst," ");
+				if((m_ilang&0x00ff) == LANG_CHINESE) strcat(dst," ");
 				else if(m_sMon[0] && m_sMon[ strlen(m_sMon) - 1 ] == '.')
 					strcat(dst," ");
 				else strcat(dst, ", ");
