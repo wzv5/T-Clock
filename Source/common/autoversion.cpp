@@ -23,6 +23,7 @@
 #	define unlink _unlink
 #	define putenv _putenv
 #	define getcwd _getcwd
+#	define sscanf sscanf_s
 #	define chdir _chdir
 #	define fopen fopenMShit
 	FILE* fopenMShit(const char* filename, const char* mode){
@@ -73,7 +74,11 @@ enum Status{
 const char* STATUS_S[STATUS_NUM_]={"Alpha","Beta","Release Candidate","Release","Release Maintenance"};
 const char* STATUS_SS[STATUS_NUM_]={"a","b","rc","r","rm"};
 const char* STATUS_SS2[STATUS_NUM_]={"α","β","гc","г","гm"};
+enum VersionFlags{
+	VER_DIRTY=0x01,
+};
 struct Version{
+	unsigned char flags_;
 	unsigned char major;
 	unsigned short minor;
 	unsigned short build;
@@ -198,8 +203,11 @@ int main(int argc, char** argv)
 //	}
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	if(rev!=ver.revision){
-		WriteHeader(headerPath,ver,url,date,revhash);
+		ver.flags_|=VER_DIRTY;
 		puts("	- increased revision");
+	}
+	if(WriteHeader(headerPath,ver,url,date,revhash)){
+		puts("	- header updated");
 	}
 
 	return 0;
@@ -316,6 +324,7 @@ bool ReadHeader(const char* filepath,Version &ver)
 		printf("Error: Couldn't read version file '%s', creating\n",filepath);
 		return false;
 	}
+	unsigned cmajor=0,cminor=0,cbuild=0,cstatus=0;
 	char buf[2048]={};
 	fread(buf,2048,sizeof(char),fheader);
 	fclose(fheader);
@@ -365,6 +374,8 @@ bool ReadHeader(const char* filepath,Version &ver)
 					if(tmp>STATUS_NUM_-1)tmp=STATUS_NUM_-1;
 					else if(tmp<0)tmp=0;
 					ver.status=tmp;
+				} else if(!strcmp(attrib,"VER_RC_STATUS")) {
+					sscanf(value,"%u, %u, %u, %u",&cmajor,&cminor,&cbuild,&cstatus);
 				}
 			}
 		default:
@@ -377,11 +388,19 @@ bool ReadHeader(const char* filepath,Version &ver)
 		if(!*c) break;
 		goto nextloop;
 	}
+	ver.flags_=0;
+	if(cmajor!=ver.major || cminor!=ver.minor || cbuild!=ver.build || cstatus!=ver.status) {
+		ver.flags_|=VER_DIRTY;
+	}
 	return true;
 }
 bool WriteHeader(const char* filepath,const Version &ver,const string &url,const string &date,const string &revhash)
 {
-	FILE* fheader = fopen(filepath,"wb");
+	FILE* fheader;
+	if(!(ver.flags_&VER_DIRTY)){
+		return false;
+	}
+	fheader = fopen(filepath,"wb");
 	if(!fheader) {
 		puts("Error: Couldn't open output file.");
 		return false;
@@ -410,7 +429,7 @@ bool WriteHeader(const char* filepath,const Version &ver,const string &url,const
 	fprintf(fheader,"#	define VER_SHORT_DOTS \"%hu.%hu.%hu\"\n",ver.major,ver.minor,ver.build);
 	fprintf(fheader,"#	define VER_SHORT_GREEK \"%hu.%hu%s%hu\"\n",ver.major,ver.minor,STATUS_SS2[ver.status],ver.build);
 	fprintf(fheader,"#	define VER_RC_REVISION %hu, %u, %u, %u\n",ver.major,ver.minor,ver.build,ver.revision);
-	fprintf(fheader,"#	define VER_RC_STATUS %hu, %u, %u, %u\n",ver.major,ver.minor,ver.status,ver.build);
+	fprintf(fheader,"#	define VER_RC_STATUS %hu, %u, %u, %u\n",ver.major,ver.minor,ver.build,ver.status);
 	if(g_repo) {
 		fputs("/** Subversion Information **/\n",fheader);
 		fprintf(fheader, "#	define VER_REVISION_URL \"%s\"\n",url.c_str());
