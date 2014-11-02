@@ -163,12 +163,10 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 				else rep = 0;
 				
 				m_bKillPCBeep = 0;
-				if(PlayFile(hwnd, m_pAS[i].fname, rep)) {
-					#ifndef _DEBUG
-					EmptyWorkingSet(GetCurrentProcess());
-					#endif
-					return; // ^^Return^^ Memory Used by File Play.
-				}
+				PlayFile(hwnd, m_pAS[i].fname, rep);
+				#ifndef _DEBUG
+				EmptyWorkingSet(GetCurrentProcess());
+				#endif
 			}
 		}
 	}
@@ -190,7 +188,7 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 			#ifndef _DEBUG
 			EmptyWorkingSet(GetCurrentProcess());
 			#endif
-		} // ^^Return^^ Memory Used by File Play.
+		}
 	}
 }
 #include <stdio.h> //--------------------------+++--> Required Here Only for the Open File Stuff:
