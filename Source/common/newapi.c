@@ -69,7 +69,7 @@ void InitLayeredWindow(void)
 {
 	if(bInitLayeredWindow) return;
 	
-	hmodUSER32 = LoadLibrary("user32.dll");
+	hmodUSER32 = LoadLibrary("user32");
 	if(hmodUSER32) {
 		pSetLayeredWindowAttributes = (pSetLayeredWindowAttributes_t)GetProcAddress(hmodUSER32, "SetLayeredWindowAttributes");
 		if(!pSetLayeredWindowAttributes) {
@@ -98,7 +98,7 @@ void EndNewAPI(HWND hwndClock)
 	if(hmodUSER32) FreeLibrary(hmodUSER32);
 	hmodUSER32 = NULL;
 	pSetLayeredWindowAttributes = NULL;
-	
+	/// DrawTheme
 	THEME_FUNC_RELEASE(DrawThemeParentBackground);
 	THEME_FUNC_RELEASE(DrawThemeBackground);
 	THEME_FUNC_RELEASE(GetThemeColor);
@@ -196,13 +196,14 @@ void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int 
 	else StretchBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, SRCCOPY);
 }
 
-void InitDrawTheme(void)
+/// DrawTheme
+
+void InitDrawTheme()
 {
 	if(bInitDrawTheme) return;
-	bInitDrawTheme = TRUE;
-	
-	hmodUxTheme = LoadLibrary("UxTheme.dll");
-	if(hmodUxTheme) {
+	bInitDrawTheme=1;
+	hmodUxTheme=LoadLibrary("uxtheme");
+	if(hmodUxTheme){
 		THEME_FUNC_RETRIEVE(CloseThemeData);
 		THEME_FUNC_RETRIEVE(OpenThemeData);
 		THEME_FUNC_RETRIEVE(IsThemeActive);

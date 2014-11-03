@@ -1,3 +1,4 @@
+#pragma once
 #ifndef TCLOCK_NEWAPI_H
 #define TCLOCK_NEWAPI_H
 
@@ -8,6 +9,7 @@ int IsWow64();
 void SetLayeredTaskbar(HWND hwndClock,BOOL refresh);
 void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans);
 
+/// DrawTheme
 COLORREF GetXPClockColor();
 COLORREF GetXPClockColorBG();
 

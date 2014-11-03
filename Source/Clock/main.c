@@ -84,7 +84,7 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
 void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 2000 }--------+++-->
 {
-	HINSTANCE handle = LoadLibrary("Wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
+	HINSTANCE handle = LoadLibrary("wtsapi32"); // Windows 2000 Does Not Have This .dll
 	// ...Or Support This Feature.
 	if(handle){
 		typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
@@ -100,7 +100,7 @@ void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 20
 //--------------------------------+++--> Register the Clock For Login Session Change Notifications:
 void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 2000 }---------+++-->
 {
-	HINSTANCE handle = LoadLibrary("Wtsapi32.dll"); // Windows 2000 Does Not Have This .dll
+	HINSTANCE handle = LoadLibrary("wtsapi32"); // Windows 2000 Does Not Have This .dll
 	// ...Or Support This Feature.
 	if(handle){
 		typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);

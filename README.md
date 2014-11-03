@@ -1,4 +1,4 @@
-T-Clock Redux
+T-Clock Redux <sub><sub><sub><sub>(click picture for full size)</sub></sub></sub></sub>
 ==============
 ![clockshowcase](https://cloud.githubusercontent.com/assets/1467733/4608572/71b48156-5283-11e4-960f-b0415b5b7cec.png)
 **T-Clock Redux** in an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/) <br>
@@ -31,6 +31,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] + simplified mouse click preferences page
 - [x] + default configuration with Windows like behavior and clock with line-break on Vista+ *(easier for first-time users)*
 - [x] + more mouse commands / customization
+- [x] + overall improved settings dialog *(so many changes.. can't name them all)*
 - [x] * improved Stopwatch *(hotkeys, export, stats)*
 - [x] * improved drag&drop support
 - [x] ! some bugfixes
@@ -49,12 +50,13 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [ ] + switching clock text, eg. every 2 seconds another one *tbd*
 - [ ] + multiple clock text presets? eg. switch between them on mouse click *tbd*
 - [ ] + maybe current sun state picture as clock background (plugin) *tbd*
+- [ ] + improved hotkey support *tbd*
 
 ### Requirements
 * Windows 2000+ (up to Windows 10 as of 2014)
-* Microsoft Visual C++ 2010 Redistributables
+* Microsoft Visual C++ 2010 Redistributable
 ([32bit](http://microsoft.com/en-us/download/details.aspx?id=8328) |
-[64bit](http://microsoft.com/en-us/download/details.aspx?id=13523)) *(might add static builds on request)*
+[64bit](http://microsoft.com/en-us/download/details.aspx?id=13523)) *(or use static builds)*
 
 ### Support
 * [Forum Topic](http://donationcoder.com/forum/index.php?topic=21944.0)
