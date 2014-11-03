@@ -365,8 +365,8 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED
 CAPTION "Miscellaneous"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Calendar Options", IDC_STATIC, 7, 3, 295, 102
-    AUTOCHECKBOX    "Use custom calendar", IDCB_USECALENDAR, 83, 3, 78, 8, 0, WS_EX_TRANSPARENT
+    GROUPBOX        "", IDC_STATIC, 7, 3, 295, 102
+    AUTOCHECKBOX    "T-Clock Calendar", IDCB_USECALENDAR, 3, 3, 66, 8, 0, WS_EX_TRANSPARENT
     AUTOCHECKBOX    "Show day of year", IDCB_SHOW_DOY, 23, 17, 73, 10
     AUTOCHECKBOX    "Show week numbers", IDCB_SHOWWEEKNUMS, 23, 33, 83, 10
     AUTOCHECKBOX    "Close calendar on lose focus", IDCB_CLOSECAL, 23, 50, 111, 10

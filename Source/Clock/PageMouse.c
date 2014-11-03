@@ -340,8 +340,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		CheckDlgButton(hDlg,IDCB_TOOLTIP, GetMyRegLongEx("Tooltip","bCustom",0));
 		EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	}
-	GetMyRegStr("Tooltip","Tooltip",buf,LRG_BUFF,"");
-	if(!*buf) memcpy(buf,"\"T-Clock\" LDATE",16);
+	GetMyRegStr("Tooltip","Tooltip",buf,sizeof(buf),"");
+	if(!*buf) memcpy(buf,TC_TOOLTIP,sizeof(TC_TOOLTIP));
 	SetDlgItemText(hDlg,IDC_TOOLTIP,buf);
 	/// setup list view
 	ListView_SetExtendedListViewStyle(hList,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);

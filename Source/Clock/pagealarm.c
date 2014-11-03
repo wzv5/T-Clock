@@ -238,7 +238,7 @@ void OnInit(HWND hDlg)
 	CheckDlgButton(hDlg, IDC_JIHOU,
 				   GetMyRegLong("", "Jihou", FALSE));
 				   
-	GetMyRegStr("", "JihouFile", tmp, sizeof(tmp), "");
+	GetMyRegStr("", "JihouFile", tmp, sizeof(tmp), "Clock.wav");
 	SetDlgItemText(hDlg, IDC_FILEJIHOU, tmp);
 	
 	CheckDlgButton(hDlg, IDC_REPEATJIHOU,

@@ -9,8 +9,6 @@
 #include <Shlobj.h>//CFSTR_SHELLIDLIST
 #include <process.h>//_beginthread
 
-#define CLOCK_BORDER_MARGIN 2
-
 void OnTimer(HWND hwnd);
 void ReadStyleData(HWND hwnd, int preview);
 void ReadFormatData(HWND hwnd, int preview);
@@ -70,6 +68,7 @@ static RGBQUAD* m_colorBG_start=NULL,* m_colorBG_end;
 static HGDIOBJ m_oldfnt=NULL;
 static HGDIOBJ m_oldbmp=NULL,m_oldbmpB=NULL;
 /// text offsets
+static int m_BORDER_MARGIN;
 static double m_radian;
 static int m_textheight,m_textwidth,m_textpadding;
 static int m_leading;
@@ -486,6 +485,14 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	m_hself=LoadLibrary("T-Clock" ARCH_SUFFIX);
 	CheckSystemVersion();
 	GetClientRect(hwnd,&m_rcClock); // use original clock size until we've loaded our settings
+	{//"top" margin detection // 2px Win8 default (Vista+)
+		RECT rcBar; GetClientRect(GetParent(GetParent(hwnd)),&rcBar);
+		if(rcBar.right>rcBar.bottom){//horizontal
+			m_BORDER_MARGIN=rcBar.bottom-m_rcClock.bottom;
+		}else{//vertical
+			m_BORDER_MARGIN=rcBar.right-m_rcClock.right;
+		}
+	}
 	
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
@@ -850,9 +857,9 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 				cy=m_rcClock.bottom;
 				if(m_multiClock[i].workerRECT.right > m_multiClock[i].workerRECT.bottom){ // horizontal
 					x=m_multiClock[i].workerRECT.left+m_multiClock[i].workerRECT.right-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
-					y=m_multiClock[i].workerRECT.top+CLOCK_BORDER_MARGIN;
+					y=m_multiClock[i].workerRECT.top+m_BORDER_MARGIN;
 				}else{
-					x=m_multiClock[i].workerRECT.left+CLOCK_BORDER_MARGIN;
+					x=m_multiClock[i].workerRECT.left+m_BORDER_MARGIN;
 					y=m_multiClock[i].workerRECT.top+m_multiClock[i].workerRECT.bottom-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
 				}
 				SetWindowPos(m_multiClock[i].clock,0,x,y,cx,cy,0);}
@@ -1057,18 +1064,18 @@ void CalculateClockTextPosition(){
 	GetClientRect(GetParent(GetParent(g_hwndClock)),&m_rcClock);
 	m_bHorizontalTaskbar=m_rcClock.right>m_rcClock.bottom;
 	if(m_bHorizontalTaskbar){
-		m_rcClock.bottom-=CLOCK_BORDER_MARGIN;//2px top
+		m_rcClock.bottom-=m_BORDER_MARGIN;//2px top
 		if(m_height){//user-defined height
 			m_rcClock.bottom=m_textheight;
 		}else
-			textheight+=CLOCK_BORDER_MARGIN; // ignore top margin on center calculation
+			textheight+=m_BORDER_MARGIN; // ignore vertical margin on center calculation
 		m_rcClock.right=abs((int)(cos_*m_textwidth))+abs((int)(sin_*m_textheight)) + m_textpadding;
 	}else{
-		m_rcClock.right-=CLOCK_BORDER_MARGIN;//2px top
+		m_rcClock.right-=m_BORDER_MARGIN;//2px top
 		if(m_width){//user-defined height
 			m_rcClock.right=m_textwidth;
 		}else
-			textwidth+=CLOCK_BORDER_MARGIN; // ignore left margin on center calculation
+			textwidth+=m_BORDER_MARGIN; // ignore horizontal margin on center calculation
 		m_rcClock.bottom=abs((int)(cos_*m_textheight))+abs((int)(sin_*m_textwidth)) + m_textpadding;
 	}
 	m_rcClock.right+=m_width;
@@ -1263,17 +1270,17 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 {
 	SYSTEMTIME t;
 	int beat100;
-	char fmt[1024], s[1024];
+	char fmt[256], str[1024];
 	
-	GetMyRegStr("Tooltip", "Tooltip", fmt, 1024, "");
-	if(!*fmt) strcpy(fmt, "\"TClock\" LDATE");
+	GetMyRegStr("Tooltip", "Tooltip", fmt, sizeof(fmt), "");
+	if(!*fmt) memcpy(fmt,TC_TOOLTIP,sizeof(TC_TOOLTIP));
 	
 	GetDisplayTime(&t, &beat100);
-	MakeFormat(s, fmt, &t, beat100);
+	MakeFormat(str, fmt, &t, beat100);
 	
-	if(code == TTN_NEEDTEXT) strcpy(((LPTOOLTIPTEXT)lParam)->szText, s);
+	if(code == TTN_NEEDTEXT) strcpy(((LPTOOLTIPTEXT)lParam)->szText, str);
 	else {
-		MultiByteToWideChar(CP_ACP, 0, s, -1, ((LPTOOLTIPTEXTW)lParam)->szText, 80);
+		MultiByteToWideChar(CP_ACP, 0, str, -1, ((LPTOOLTIPTEXTW)lParam)->szText, 80);
 	}
 }
 

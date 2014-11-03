@@ -40,6 +40,8 @@
 #define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
 #define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
 
+#define TC_TOOLTIP "\"T-Clock\"\\nLDATE"
+
 #include "resource.h"
 
 /*------------------------------------------------
