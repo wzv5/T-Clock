@@ -402,24 +402,19 @@ void DestroyTip()
 	SendMessage(m_TipHwnd,TTM_DELTOOL,0,(LPARAM)&m_TipInfo);
 	DestroyWindow(m_TipHwnd); m_TipHwnd=NULL;
 }
-/// @todo (White-Tiger#1#09/06/14): use taskbar type detection here
 void ShowTip(HWND clock){
-	RECT rc; GetClientRect(clock,&rc);
-	ClientToScreen(clock,(POINT*)&rc.left);
-	ClientToScreen(clock,(POINT*)&rc.right);
-	if(rc.left<128){//is left
-//		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0,0x7FFF));
-		PostMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.top,rc.right+3));
-	}else{
-//		PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));//it's some magic vodoo.. will always be over the clock and right^^ (died in multimonitor support! :/ RIP)
-		if(rc.top<128){//is top
-			PostMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.left,rc.bottom+3));
-//		}else if(rc.top<128){//is right
-//			PostMessage(g_Tip,TTM_TRACKPOSITION,0,MAKELPARAM(rc.left,rc.top-3));
-		}else
-			PostMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.right,rc.top-3));
+	MONITORINFO taskbarMoni={sizeof(MONITORINFO)};
+	RECT rc; GetWindowRect(clock,&rc);
+	GetMonitorInfo(MonitorFromWindow(clock,MONITOR_DEFAULTTONEAREST),&taskbarMoni);
+	if(rc.left-taskbarMoni.rcMonitor.left<128){//is left
+		SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.right,rc.top));
+	}else{//right
+		if(rc.top-taskbarMoni.rcMonitor.top<128){//is top
+			SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.left,rc.bottom+3));
+		}else//bottom
+			SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.right,rc.top-3));
 	}
-	PostMessage(m_TipHwnd,TTM_TRACKACTIVATE,TRUE,(LPARAM)&m_TipInfo);
+	SendMessage(m_TipHwnd,TTM_TRACKACTIVATE,TRUE,(LPARAM)&m_TipInfo);
 }
 
 void SubsDestroy(){
