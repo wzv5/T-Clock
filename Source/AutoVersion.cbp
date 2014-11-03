@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="AutoVersion" />
+		<Option pch_mode="2" />
+		<Option default_target="app-64" />
+		<Option compiler="msvc10" />
+		<Build>
+			<Target title="AutoVersion">
+				<Option output="common/AutoVersion" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".objs/autoversion" />
+				<Option type="1" />
+				<Option compiler="msvc10" />
+				<Option parameters="--git . _testver.h" />
+				<Option projectCompilerOptionsRelation="1" />
+				<Option projectLinkerOptionsRelation="1" />
+				<Compiler>
+					<Add option="/MT" />
+					<Add option="/EHc" />
+					<Add option="/EHs" />
+					<Add option="/O1" />
+					<Add option="/W3" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="/W4" />
+			<Add option="/wd4306" />
+		</Compiler>
+		<Linker>
+			<Add option="/pdb:$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).pdb" />
+			<Add library="Advapi32" />
+			<Add library="user32" />
+			<Add library="gdi32" />
+			<Add library="shell32" />
+			<Add library="Ole32" />
+		</Linker>
+		<Unit filename="common/autoversion.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
