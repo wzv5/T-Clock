@@ -419,6 +419,10 @@ bool WriteHeader(const char* filepath,const Version &ver,const string &url,const
 	fprintf(fheader,"#	define VER_MAJOR %hu\n"
 					"#	define VER_MINOR %hu\n"
 					"#	define VER_BUILD %hu\n",ver.major,ver.minor,ver.build);
+	fprintf(fheader,"	/* status values: 0=%s",STATUS_S[0]);
+	for(int i=1; i<STATUS_NUM_; ++i)
+		fprintf(fheader,", %i=%s",i,STATUS_S[i]);
+	fputs(" */\n",fheader);
 	fprintf(fheader,"#	define VER_STATUS %hu\n"
 					"#	define VER_STATUS_FULL \"%s\"\n"
 					"#	define VER_STATUS_SHORT \"%s\"\n"
@@ -435,6 +439,14 @@ bool WriteHeader(const char* filepath,const Version &ver,const string &url,const
 		fprintf(fheader, "#	define VER_REVISION_URL \"%s\"\n",url.c_str());
 		fprintf(fheader, "#	define VER_REVISION_DATE \"%s\"\n",date.c_str());
 		fprintf(fheader, "#	define VER_REVISION_HASH \"%s\"\n",revhash.c_str());
+		// revision tag
+		fprintf(fheader, "#	define VER_REVISION_TAG \"v%hu.%hu.%hu#%hu",ver.major,ver.minor,ver.build,ver.revision);
+		if(ver.status!=STATUS_Release){
+			fputc('-',fheader);
+			for(const char* c=STATUS_S[ver.status]; *c; ++c)
+				fputc(tolower(*c),fheader);
+		}
+		fputs("\"\n",fheader);
 	}
 	fputs("/** Date/Time **/\n",fheader);
 	fprintf(fheader,"#	define VER_TIMESTAMP %lu\n",tt);
