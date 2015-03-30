@@ -120,7 +120,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			rc.right+=CALBORDER;
 			rc.bottom-=CALTODAYTEXTHEIGHT;
 			switch(iMonths){
-			case 1: case 2: case 3:
+			/*case 1:*/ case 2: case 3:
 			case 4: case 5:
 				rc.right*=iMonths;
 				break;
@@ -152,7 +152,8 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		SetWindowPos(hCal,HWND_TOP,0,0,rc.right,rc.bottom,SWP_NOZORDER|SWP_NOACTIVATE);
 		if(iMonthsPast){
 			SYSTEMTIME st,stnew; MonthCal_GetCurSel(hCal,&st); stnew=st;
-			if(stnew.wMonth<iMonthsPast){ --stnew.wYear; stnew.wMonth+=12; }
+			stnew.wDay=1;
+			if(iMonthsPast>=stnew.wMonth){ --stnew.wYear; stnew.wMonth+=12; }
 			stnew.wMonth-=(short)iMonthsPast;
 			if(stnew.wMonth>12){ ++stnew.wYear; stnew.wMonth-=12; }  // in case iMonthsPast is negative
 			MonthCal_SetCurSel(hCal,&stnew);
