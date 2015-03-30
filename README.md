@@ -1,7 +1,7 @@
 T-Clock Redux <sub><sub><sub><sub>(click picture for full size)</sub></sub></sub></sub>
 ==============
-![clockshowcase](https://cloud.githubusercontent.com/assets/1467733/4608572/71b48156-5283-11e4-960f-b0415b5b7cec.png)
-**T-Clock Redux** in an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/) <br>
+![clockshowcase](//cloud.githubusercontent.com/assets/1467733/4608572/71b48156-5283-11e4-960f-b0415b5b7cec.png)
+**T-Clock Redux** in an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/)  
 with ISO week number support, bug fixes and the ability to use Windows default calendar and ToolTip.
 
 The Original T-Clock written by Kazubon in the early 90's was a popular classic that was on the edge of extinction when Windows started going 64bit. ... Stoic Joker simply chose not to let that happen. And now it's up to us to continue his tale.
@@ -10,7 +10,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 
 
 ### Download (binaries)
-* [**view all available**](https://github.com/White-Tiger/T-Clock/releases)
+* [**view all available**](//github.com/White-Tiger/T-Clock/releases)
 
 #### Differences to Stoic Joker's T-Clock 2010 [Build 95/98](http://www.donationcoder.com/forum/index.php?topic=21944.0)
 - [x] * improved file structure
@@ -26,7 +26,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [x] * improved taskbar support such as horizontal vs vertical and size
 - [x] + calendar hides on 2nd click if opened before *(autohide must be enabled, Windows default behavior)*
 - [x] + custom calendar can now show X past months, additional improvements
-- [x] + extended right-click menu with more Windows like behavior <br>
+- [x] + extended right-click menu with more Windows like behavior  
 *(hold down CTRL or SHIFT to get "Run ..." and "Exit Explorer" items)*
 - [x] + simplified mouse click preferences page
 - [x] + default configuration with Windows like behavior and clock with line-break on Vista+ *(easier for first-time users)*
@@ -54,11 +54,10 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 
 ### Requirements
 * Windows 2000+ (up to Windows 10 as of 2014)
-* Microsoft Visual C++ 2010 Redistributable
-([32bit](http://microsoft.com/en-us/download/details.aspx?id=8328) |
-[64bit](http://microsoft.com/en-us/download/details.aspx?id=13523)) *(or use static builds)*
+* [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) *(install both vcredist_x86 + vcredist_x64 on 64bit OS. Alternatively just use our static builds)*
 
 ### Support
+* [Issue Tracker](//github.com/White-Tiger/T-Clock/issues)
 * [Forum Topic](http://donationcoder.com/forum/index.php?topic=21944.0)
 * or click on the email in T-Clock's about screen
 
