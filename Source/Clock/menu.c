@@ -69,7 +69,7 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	
 	/// http://support.microsoft.com/kb/135788
 	SetForegroundWindow(hWnd);
-	TrackPopupMenu(hPopupMenu, TPM_NONOTIFY|TPM_LEFTBUTTON, xPos, yPos, 0, hWnd, NULL);
+	TrackPopupMenu(hPopupMenu, TPM_LEFTBUTTON, xPos, yPos, 0, hWnd, NULL);
 	PostMessage(hWnd,WM_NULL,0,0);
 	DestroyMenu(hMenu); // Starting Over is Simpler & Recommended
 }
@@ -123,7 +123,10 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		break;
 		
 	case IDM_DISPLAYPROP: //------------------------------+++--> Display Properties
-		WinExec(("control.exe desk.cpl, display,1"),SW_SHOW);
+		if(g_tos>=TOS_VISTA)
+			ExecFile(NULL,"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\1\\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}");
+		else
+			WinExec(("control.exe desk.cpl, display,1"),SW_SHOW);
 		break;
 	case IDM_VOLUMECONTROL: //-------------------------------+++--> Volume Controls
 		#ifndef __x86_64__
