@@ -395,71 +395,34 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			} else if(*fmt == 'm') { // Week-Of-Year Starts Monday
 				out += strftime(out, bufend-out, "%W", &tmnow);
 				++fmt;
-			} else if(*fmt == 'i') { // Week ISO-8601 (by henriko.se)
-				int ISOWeek;
-				struct tm tmCurrentTime;
-				struct tm tmStartOfCurrentYear;
-				localtime_s(&tmCurrentTime,&tnow);
-				mktime(&tmCurrentTime);
-				if(tmCurrentTime.tm_wday == 0) {
-					tmCurrentTime.tm_wday = 7;
-				}
-				tmStartOfCurrentYear.tm_year = tmCurrentTime.tm_year;
-				tmStartOfCurrentYear.tm_mon = 1 - 1;
-				tmStartOfCurrentYear.tm_mday = 1;
-				tmStartOfCurrentYear.tm_hour = 0;
-				tmStartOfCurrentYear.tm_min = 0;
-				tmStartOfCurrentYear.tm_sec = 0;
-				tmStartOfCurrentYear.tm_isdst = 0;
-				mktime(&tmStartOfCurrentYear);
-				if(tmStartOfCurrentYear.tm_wday == 0) {
-					tmStartOfCurrentYear.tm_wday = 7;
-				}
-				ISOWeek = (tmCurrentTime.tm_yday + (tmStartOfCurrentYear.tm_wday - 1)) / 7 + (tmStartOfCurrentYear.tm_wday <= 4 ? 1 : 0);
-				if(ISOWeek == 0) {
-					struct tm tmStartOfLastYear;
-					struct tm tmEndOfLastYear;
-					tmStartOfLastYear.tm_year = tmCurrentTime.tm_year - 1;
-					tmStartOfLastYear.tm_mon = 1 - 1;
-					tmStartOfLastYear.tm_mday = 1;
-					tmStartOfLastYear.tm_hour = 0;
-					tmStartOfLastYear.tm_min = 0;
-					tmStartOfLastYear.tm_sec = 0;
-					tmStartOfLastYear.tm_isdst = 0;
-					mktime(&tmStartOfLastYear);
-					if(tmStartOfLastYear.tm_wday == 0) {
-						tmStartOfLastYear.tm_wday = 7;
-					}
-					tmEndOfLastYear.tm_year = tmCurrentTime.tm_year - 1;
-					tmEndOfLastYear.tm_mon = 12 - 1;
-					tmEndOfLastYear.tm_mday = 31;
-					tmEndOfLastYear.tm_hour = 0;
-					tmEndOfLastYear.tm_min = 0;
-					tmEndOfLastYear.tm_sec = 0;
-					tmEndOfLastYear.tm_isdst = 0;
-					mktime(&tmEndOfLastYear);
-					ISOWeek = (tmEndOfLastYear.tm_yday + (tmStartOfLastYear.tm_wday - 1)) / 7 + (tmStartOfLastYear.tm_wday <= 4 ? 1 : 0);
-				}
-				if(tmCurrentTime.tm_mon == 12 - 1 && tmCurrentTime.tm_mday >= 29) {
-					if(tmCurrentTime.tm_wday <= 3) {
-						struct tm tmStartOfNextYear;
-						tmStartOfNextYear.tm_year = tmCurrentTime.tm_year + 1;
-						tmStartOfNextYear.tm_mon = 1 - 1;
-						tmStartOfNextYear.tm_mday = 1;
-						tmStartOfNextYear.tm_hour = 0;
-						tmStartOfNextYear.tm_min = 0;
-						tmStartOfNextYear.tm_sec = 0;
-						tmStartOfNextYear.tm_isdst = 0;
-						mktime(&tmStartOfNextYear);
-						if(tmStartOfNextYear.tm_wday == 0) {
-							tmStartOfNextYear.tm_wday = 7;
+			} else if(*fmt == 'i') { // ISO-8601 week (1st version by henriko.se, 2nd by White-Tiger)
+				int wday,borderdays,week;
+				for(;;){
+					wday = (!tmnow.tm_wday?6:tmnow.tm_wday-1); // convert from Sun-Sat to Mon-Sun (0-5)
+					borderdays = (tmnow.tm_yday + 7 - wday) % 7; // +7 to prevent it from going negative
+					week = (tmnow.tm_yday + 6 - wday) / 7;
+					if(borderdays >= 4){ // year starts with at least 4 days
+						++week;
+					} else if(!week){ // we're still in last year's week
+						--tmnow.tm_year;
+						tmnow.tm_mon = 11;
+						tmnow.tm_mday = 31;
+						tmnow.tm_isdst = -1;
+						if(mktime(&tmnow)==-1){ // mktime magically updates tm_yday, tm_wday
+							week = 1;
+							break; // fail safe
 						}
-						if(tmStartOfNextYear.tm_wday <= 4) {
-							ISOWeek = 1;
-						}
+						tmnow.tm_mon = 0; // just to speed up the "if" below, since we know that it can't be week 1
+						continue; // repeat (once)
 					}
+					if(tmnow.tm_mon==11 && tmnow.tm_mday>=29){ // end of year, could be week 1
+						borderdays = 31 - tmnow.tm_mday + wday;
+						if(borderdays < 3)
+							week = 1;
+					}
+					break;
 				}
-				out += wsprintf(out,"%d",ISOWeek);
+				out += wsprintf(out,"%d",week);
 				++fmt;
 			} else if(*fmt == 'w') { // SWN (Simple Week Number)
 				out += wsprintf(out,"%d",1 + tmnow.tm_yday / 7);
