@@ -117,8 +117,9 @@ void SetNumFormat(char** dp, int n, int len, int slen)
 }
 //================================================================================================
 //-------------+++--> Format T-Clock's OutPut String From Current Date, Time, & System Information:
-unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   //------------------+++-->
+unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, int beat100)   //------------------+++-->
 {
+	const char* bufend = buf+FORMAT_MAX_SIZE;
 	const char* pos;
 	char* out = buf;
 	ULONGLONG TickCount = 0;
@@ -382,28 +383,23 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 				fmt++;
 			} else
 				*out++ = 'S';
-		} else if(*fmt == 'W') { //----//--+++--> 3/21/2010 is 80th day of year
-			char szWkNum[8] = {0}; //-----+++--> WEEK NUMBER CODE IS HERE!!!
-			char* Wk;
-			struct tm today;
-			time_t ltime;
-			time(&ltime);
-			localtime_s(&today, &ltime);
-			if(*(fmt + 1) == 's') { // Week-Of-Year Starts Sunday
-				strftime(szWkNum, 8, "%U", &today);
-				Wk = szWkNum;
-				while(*Wk) *out++ = *Wk++;
-				fmt++;
-			} else if(*(fmt + 1) == 'm') { // Week-Of-Year Starts Monday
-				strftime(szWkNum, 8, "%W", &today);
-				Wk = szWkNum;
-				while(*Wk) *out++ = *Wk++;
-				fmt++;
-			} else if(*(fmt + 1) == 'i') { // Week ISO-8601 (by henriko.se)
+		} else if(*fmt == 'W') { // Week-of-Year
+			struct tm tmnow;
+			time_t tnow;
+			time(&tnow);
+			localtime_s(&tmnow, &tnow);
+			++fmt;
+			if(*fmt == 's') { // Week-Of-Year Starts Sunday
+				out += strftime(out, bufend-out, "%U", &tmnow);
+				++fmt;
+			} else if(*fmt == 'm') { // Week-Of-Year Starts Monday
+				out += strftime(out, bufend-out, "%W", &tmnow);
+				++fmt;
+			} else if(*fmt == 'i') { // Week ISO-8601 (by henriko.se)
 				int ISOWeek;
 				struct tm tmCurrentTime;
 				struct tm tmStartOfCurrentYear;
-				localtime_s(&tmCurrentTime,&ltime);
+				localtime_s(&tmCurrentTime,&tnow);
 				mktime(&tmCurrentTime);
 				if(tmCurrentTime.tm_wday == 0) {
 					tmCurrentTime.tm_wday = 7;
@@ -463,23 +459,12 @@ unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100)   /
 						}
 					}
 				}
-				wsprintf(szWkNum, "%d", ISOWeek);
-				Wk = szWkNum;
-				while(*Wk) *out++ = *Wk++;
-				fmt++;
+				out += wsprintf(out,"%d",ISOWeek);
+				++fmt;
+			} else if(*fmt == 'w') { // SWN (Simple Week Number)
+				out += wsprintf(out,"%d",1 + tmnow.tm_yday / 7);
+				++fmt;
 			}
-			// Need DOY + 6 / 7 (as float) DO NOT ROUND - Done!
-			else if(*(fmt + 1) == 'w') { // SWN (Simple Week Number)
-				double dy; int d, s;
-				//------+++--> Stoic Joker's (Pipe Bomb Crude) Simple Week Number Calculation!
-				strftime(szWkNum, 8, "%j", &today);   // Day-Of-Year as Decimal Number (1 - 366)
-				dy = floor((atof(szWkNum) + 6) / 7); // DoY + 6 / 7 with the Fractional Part...
-				//-------------------------+++--> Truncated.
-				Wk = _fcvt(dy, 0, &d, &s); // Make it a String
-				while(*Wk) *out++ = *Wk++; // Done!
-				fmt++;
-			}
-			fmt++; // Might Not be Needed!!!
 		}
 //================================================================================================
 //======================================= JULIAN DATE Code ========================================

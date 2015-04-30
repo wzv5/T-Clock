@@ -1089,7 +1089,7 @@ void CalculateClockTextPosition(){
 void CalculateClockTextSize(){
 	SYSTEMTIME time;
 	int beat100=0;
-	char buf[1024], *pos, *str;
+	char buf[FORMAT_MAX_SIZE], *pos, *str;
 	unsigned len;
 	SIZE sz;
 	TEXTMETRIC tm;
@@ -1215,7 +1215,7 @@ void DrawClock(HDC hdc)
 void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100)
 {
 	RGBQUAD* color,* back;
-	char buf[1024],* pos,* str;
+	char buf[FORMAT_MAX_SIZE],* pos,* str;
 	unsigned len;
 	int vpos,hpos;
 	const unsigned opacity=255-m_col.quad.rgbReserved;
@@ -1270,7 +1270,7 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 {
 	SYSTEMTIME t;
 	int beat100;
-	char fmt[256], str[1024];
+	char fmt[256], str[FORMAT_MAX_SIZE];
 	
 	GetMyRegStr("Tooltip", "Tooltip", fmt, sizeof(fmt), "");
 	if(!*fmt) memcpy(fmt,TC_TOOLTIP,sizeof(TC_TOOLTIP));
@@ -1290,7 +1290,7 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 void OnCopy(HWND hwnd, LPARAM lParam)
 {
 	SYSTEMTIME t;	HGLOBAL hg;
-	char entry[7], fmt[256], s[1024], *pbuf;
+	char entry[7], fmt[256], s[FORMAT_MAX_SIZE], *pbuf;
 	int beat100;
 	
 	GetDisplayTime(&t, &beat100);

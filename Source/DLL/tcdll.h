@@ -36,7 +36,8 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 
 // FORMAT.C
 void InitFormat(const char* section, SYSTEMTIME* lt);
-unsigned MakeFormat(char* buf, const char* fmt, SYSTEMTIME* pt, int beat100);
+#define FORMAT_MAX_SIZE 1024
+unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, int beat100);
 #define FORMAT_SECOND    0x0001
 #define FORMAT_SYSINFO   0x0002
 #define FORMAT_BEAT1     0x0004
