@@ -12,10 +12,13 @@ void InitClock(HWND hwnd);
 --------------------------------------------------*/
 extern HINSTANCE hInstance;
 
-int WINAPI IsCalendarOpen()
+int WINAPI IsCalendarOpen(int focus)
 {
-	if(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL))
+	HWND hwnd = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
+	if(hwnd){
+		if(focus) SetForegroundWindow(hwnd);
 		return 1;
+	}
 	return g_bCalOpen;
 }
 //========================================================================================

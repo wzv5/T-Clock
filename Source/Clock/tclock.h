@@ -15,7 +15,7 @@
 #include "../common/utl.h"
 
 // TCDLL.DLL‚API
-typedef int (WINAPI *IsCalendarOpen_t)();
+typedef int (WINAPI *IsCalendarOpen_t)(int focus);
 typedef void (WINAPI *HookStart_t)(HWND hwnd);
 typedef void (WINAPI *HookEnd_t)();
 typedef void (WINAPI *ClockExit_t)();

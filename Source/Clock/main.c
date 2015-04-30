@@ -68,7 +68,7 @@ BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus)
 //--------------------------+++--> toggle calendar (close or open):
 void ToggleCalendar(int type)   //---------------------------+++-->
 {
-	if(IsCalendarOpen())
+	if(IsCalendarOpen(1))
 		return;
 	if(g_tos>=TOS_VISTA && (!GetMyRegLong("Calendar","bCustom",0) && type!=1)){
 		SendMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close

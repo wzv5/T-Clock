@@ -17,7 +17,7 @@
 #define TZNAME_MAX		  256//10
 
 // main.c
-int WINAPI IsCalendarOpen();
+int WINAPI IsCalendarOpen(int focus);
 void WINAPI HookStart(HWND hwnd);
 void WINAPI HookEnd();
 
