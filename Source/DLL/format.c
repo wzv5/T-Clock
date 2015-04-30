@@ -424,6 +424,10 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 				}
 				out += wsprintf(out,"%d",week);
 				++fmt;
+			} else if(*fmt == 'u') {
+				int week = 1 + (tmnow.tm_yday + 6 - tmnow.tm_wday) / 7;
+				out += wsprintf(out,"%d",week);
+				++fmt;
 			} else if(*fmt == 'w') { // SWN (Simple Week Number)
 				out += wsprintf(out,"%d",1 + tmnow.tm_yday / 7);
 				++fmt;
