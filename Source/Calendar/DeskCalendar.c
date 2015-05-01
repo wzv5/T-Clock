@@ -1,7 +1,3 @@
-/*----------------------------------------------------------------------
-// deskcal.c : Update Desktop Calendar automatically -> KAZUBON 1997-1999
-//---------------------------------------------------------------------*/
-// Last Modified by Stoic Joker: Saturday, 06/05/2010 @ 3:48:15pm
 //#include "../Clock/tclock.h"
 #include <Windows.h>
 #include <CommCtrl.h>

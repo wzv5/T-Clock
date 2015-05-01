@@ -250,7 +250,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	// Do Not Allow the Program to Execute Twice!
 	for(updated=0; updated<25; ++updated){ // up to 5 sec
-		HANDLE processlock=CreateMutex(NULL,FALSE,g_szClassName);
+		HANDLE processlock=CreateMutex(NULL,FALSE,g_szClassName); // we leak handle here, but Windows closes on process exit anyway (so why do it manually?)
 		if(processlock && GetLastError()==ERROR_ALREADY_EXISTS){
 			CloseHandle(processlock);
 			hwnd=FindWindow(g_szClassName, g_szWindowText);

@@ -485,8 +485,8 @@ INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 //------------------------//---------------------------+++--> To-Do List for Dialog Initialization:
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
-	char server[MIN_BUFF] = {0};
-	char szFile[MAX_PATH] = {0};
+	char server[MIN_BUFF];
+	char szFile[MAX_PATH];
 	char subkey[] = "SNTP";
 	FILE* stReport;
 	LVCOLUMN lvCol;
