@@ -223,7 +223,8 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 				}
 				szToken = strtok_s(NULL, seps, &nxToken);
 			} // Get Next Beep Line.
-			
+			if(duration > 3600000) // don't allow a duration longer than 1 hour
+				duration = 3600000;
 			if(m_bKillPCBeep) {  // Just in case It's a Long File...
 				fclose(file); // Check for Kill Code between Beeps.
 				return TRUE;
