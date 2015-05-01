@@ -176,7 +176,7 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 		if(SUCCEEDED(hres)) {
 			WORD wsz[MAX_PATH];
 			char lnkfile[MAX_PATH];
-			strcpy(lnkfile, dstpath);
+			strncpy_s(lnkfile, MAX_PATH, dstpath, _TRUNCATE);
 			add_title(lnkfile, (char*)name);
 			strcat(lnkfile, ".lnk");
 			

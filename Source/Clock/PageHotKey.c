@@ -102,9 +102,9 @@ BOOL ShowHotKey(HWND hWnd, int iCtrlID, char* szKey, BOOL bMod, BOOL bFnKey, BOO
 		bHaveKey = bFnKey; // This Allows the F'n Keys to Work Alone.
 	}
 	if(bHaveKey && bFnKey && bEnd) { //-+> This IS Just an F'n Key...
-		strcpy(tchk[iCtrlID].szText, szKey);
+		strncpy_s(tchk[iCtrlID].szText, sizeof(tchk[iCtrlID].szText), szKey, _TRUNCATE);
 	} else { //--+++--> This is a HotKey Combo...
-		strcpy(tchk[iCtrlID].szText, szHotKey);
+		strncpy_s(tchk[iCtrlID].szText, sizeof(tchk[iCtrlID].szText), szHotKey, _TRUNCATE);
 	}
 	
 	return TRUE;

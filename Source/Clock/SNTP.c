@@ -46,13 +46,14 @@ LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 //---------------------------//----------------------------+++--> Save Request Results in SNTP.log:
 void Log(const char* msg)   //--------------------------------------------------------------+++-->
 {
-	char s[GEN_BUFF] = {0};
+	char logmsg[GEN_BUFF];
+	size_t len;
 	SYSTEMTIME st;
 	
 	GetLocalTime(&st);
-	wsprintf(s, "%d/%02d/%02d %02d:%02d:%02d ", st.wYear,
-			 st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-	strcat(s, msg);
+	len = wsprintf(logmsg, "%d/%02d/%02d %02d:%02d:%02d ", st.wYear,
+					st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
+	strncpy_s(logmsg, sizeof(logmsg)-len, msg, _TRUNCATE);
 	
 	// save to file
 	if(bSaveLog) {
@@ -66,7 +67,7 @@ void Log(const char* msg)   //--------------------------------------------------
 			hf = _lcreat(fname, 0);
 		if(hf == HFILE_ERROR) return;
 		_llseek(hf, 0, 2);
-		_lwrite(hf, s, lstrlen(s));
+		_lwrite(hf, logmsg, lstrlen(logmsg));
 		_lwrite(hf, "\x0d\x0a", 2);
 		_lclose(hf);
 	}
@@ -76,12 +77,12 @@ void Log(const char* msg)   //--------------------------------------------------
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
 		lvItem.iItem = 0; //-----+++--> Which Puts the Most Recent Info on Top.
-		lvItem.pszText = s;
+		lvItem.pszText = logmsg;
 		ListView_InsertItem(GetDlgItem(m_dlg,IDC_LIST), &lvItem);
 	}
 	
 	if(bMessage) {
-		MessageBox(0, s, "T-Clock Time Sync", MB_OK);
+		MessageBox(0, logmsg, "T-Clock Time Sync", MB_OK);
 	}
 }
 //================================================================================================
@@ -304,8 +305,8 @@ void SyncTimeNow()   //=========================================================
 {
 	WORD wVersionRequested = MAKEWORD(2,2);
 	WSADATA wsaData; // Okay...Now We Want WinSock v2.2
-	char szServer[MIN_BUFF] = {0};
-	char szErr[GEN_BUFF] = {0};
+	char szServer[MIN_BUFF];
+	char szErr[GEN_BUFF];
 	DWORD dwTickCount = 0;
 	SOCKET Sntp = 0;
 	KILLSOC ks;
@@ -315,7 +316,7 @@ void SyncTimeNow()   //=========================================================
 		bSaveLog = GetMyRegLongEx("SNTP", "SaveLog", 0);
 		bMessage = GetMyRegLongEx("SNTP", "MessageBox", 0);
 	}
-	GetMyRegStrEx("SNTP", "Server", szServer, MIN_BUFF, "");
+	GetMyRegStrEx("SNTP", "Server", szServer, sizeof(szServer), "");
 	if(!strlen(szServer)) { //-------+++--> If SNTP Server is NOT Configured:
 		wsprintf(szErr, "No SNTP Server Specified!");
 		MessageBox(0, szErr, "Time Sync Failed:", MB_OK|MB_ICONERROR);
@@ -394,9 +395,9 @@ void NetTimeConfigDialog(void)   //---------------------------------------------
 //--------------------------//--+++--> Save Network Time Server Configuration Settings to Registry:
 void OkaySave(HWND hDlg)   //---------------------------------------------------------------+++-->
 {
-	char szServer[MIN_BUFF] = {0};
-	char szSound[MAX_PATH] = {0};
-	char entry[TNY_BUFF] = {0};
+	char szServer[MIN_BUFF];
+	char szSound[MAX_PATH];
+	char entry[TNY_BUFF];
 	char subkey[] = "SNTP";
 	int i, count;
 	
@@ -495,7 +496,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	m_dlg=hDlg;
 	// Get the List of Configured Time Servers:
-	GetMyRegStr(subkey, "Server", server, 80, "");
+	GetMyRegStr(subkey, "Server", server, sizeof(server), "");
 	count = GetMyRegLong(subkey, "ServerNum", 0);
 	for(i = 1; i <= count; i++) {
 		char s[MAX_BUFF], entry[TNY_BUFF];
@@ -522,7 +523,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 					   IMAGE_ICON, (LPARAM)g_hIconDel);
 					   
 	// Get the Sync Sound File:
-	GetMyRegStr(subkey, "Sound", szFile, MAX_BUFF, "");
+	GetMyRegStr(subkey, "Sound", szFile, sizeof(szFile), "");
 	SetDlgItemText(hDlg, IDCE_SYNCSOUND, szFile);
 	
 	// Get the Confirmation Options:

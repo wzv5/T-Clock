@@ -684,7 +684,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return MA_ACTIVATE;
 	case WM_NOTIFY: {
 		UINT code=((LPNMHDR)lParam)->code;
-		if(code==TTN_NEEDTEXT || code==TTN_NEEDTEXTW)
+		if(code==TTN_NEEDTEXTA || code==TTN_NEEDTEXTW)
 			OnTooltipNeedText(code,lParam);
 		return 0;}
 	case WM_COMMAND:
@@ -1277,10 +1277,12 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 	
 	GetDisplayTime(&t, &beat100);
 	MakeFormat(str, fmt, &t, beat100);
-	
-	if(code == TTN_NEEDTEXT) strcpy(((LPTOOLTIPTEXT)lParam)->szText, str);
-	else {
-		MultiByteToWideChar(CP_ACP, 0, str, -1, ((LPTOOLTIPTEXTW)lParam)->szText, 80);
+	if(code == TTN_NEEDTEXTA){
+		NMTTDISPINFOA* tooltip = (NMTTDISPINFOA*)lParam;
+		strncpy_s(tooltip->szText, ARRAYSIZE(tooltip->szText), str, _TRUNCATE);
+	} else {
+		NMTTDISPINFOW* tooltip = (NMTTDISPINFOW*)lParam;
+		MultiByteToWideChar(CP_ACP, 0, str, -1, tooltip->szText, ARRAYSIZE(tooltip->szText));
 	}
 }
 
