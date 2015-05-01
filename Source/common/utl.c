@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 unsigned short g_tos=0;
 static const char m_mykey[] = "Software\\Stoic Joker's\\T-Clock 2010";
+static const size_t m_mykey_size = sizeof(m_mykey);
 
 char g_bIniSetting = 0;
 char g_inifile[MAX_PATH];
@@ -374,33 +375,52 @@ void ForceForegroundWindow(HWND hwnd)
 	BringWindowToTop(hwnd);
 }// */
 //===============================================================================
-//--+++-->
+
+static int PrepareMyRegKey_(char key[80], const char* section)
+{
+	size_t section_len = (section ? strlen(section)+1 : 0);
+	
+	if(m_mykey_size+section_len > 80){
+		#ifdef _DEBUG
+		MessageBox(NULL,"settings key too huge","PrepareMyRegKey",0);
+		#endif
+		return 0;
+	}
+	
+	if(g_bIniSetting){
+		if(section_len > 1)
+			memcpy(key, section, section_len);
+		else
+			memcpy(key, "Main", 5);
+		return 1;
+	}
+
+	memcpy(key, m_mykey, m_mykey_size);
+	if(section_len > 1){
+		key[m_mykey_size-1] = '\\';
+		memcpy(key+m_mykey_size, section, section_len);
+	}
+	return 1;
+}
+
 int GetMyRegStr(const char* section, const char* entry, char* val, int len, const char* defval)
 {
 	HKEY hkey;	char key[80];	DWORD regtype, size;
 	int ret=-1;
 	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		ret = GetPrivateProfileString(key, entry, defval, val,
-									len, g_inifile);
-	} else {
-		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
-			size = len;
-			if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-				ret=size;
-				if(ret) --ret;
+	if(PrepareMyRegKey_(key,section)){
+		if(g_bIniSetting) {
+			ret = GetPrivateProfileString(key, entry, defval, val,
+										len, g_inifile);
+		} else {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
+				size = len;
+				if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
+					ret=size;
+					if(ret) --ret;
+				}
+				RegCloseKey(hkey);
 			}
-			RegCloseKey(hkey);
 		}
 	}
 	if(ret==-1){
@@ -417,29 +437,21 @@ int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, co
 	HKEY hkey;	char key[80];	DWORD regtype, size;
 	int ret=-1;
 	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		ret = GetPrivateProfileString(key, entry, defval, val,
-									len, g_inifile);
-		if(ret == len)
-			SetMyRegStr(section, entry, defval);
-	} else {
-		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
-			size = len;
-			if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
-				ret=size;
-				if(ret) --ret;
+	if(PrepareMyRegKey_(key,section)){
+		if(g_bIniSetting) {
+			ret = GetPrivateProfileString(key, entry, defval, val,
+										len, g_inifile);
+			if(ret == len)
+				SetMyRegStr(section, entry, defval);
+		} else {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
+				size = len;
+				if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
+					ret=size;
+					if(ret) --ret;
+				}
+				RegCloseKey(hkey);
 			}
-			RegCloseKey(hkey);
 		}
 	}
 	if(ret==-1){
@@ -457,25 +469,17 @@ LONG GetMyRegLong(const char* section, const char* entry, LONG defval)
 	char key[80];
 	HKEY hkey;
 	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		return GetPrivateProfileInt(key, entry, defval, g_inifile);
-	} else {
-		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
-			DWORD regtype,size=sizeof(LONG);
-			LONG dw=0;
-			if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
-				defval=dw;
-			RegCloseKey(hkey);
+	if(PrepareMyRegKey_(key,section)){
+		if(g_bIniSetting) {
+			return GetPrivateProfileInt(key, entry, defval, g_inifile);
+		} else {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+				DWORD regtype,size=sizeof(LONG);
+				LONG dw=0;
+				if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
+					defval=dw;
+				RegCloseKey(hkey);
+			}
 		}
 	}
 	return defval;
@@ -486,51 +490,24 @@ LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval)
 	char key[80];
 	HKEY hkey;
 	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		return GetPrivateProfileInt(key,entry,defval,g_inifile);
-	} else {
-		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
-			DWORD regtype,size=sizeof(LONG);
-			LONG dw=0;
-			if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
-				defval=dw;
-			}else{
-				SetMyRegLong(section,entry,defval);
+	if(PrepareMyRegKey_(key,section)){
+		if(g_bIniSetting) {
+			return GetPrivateProfileInt(key,entry,defval,g_inifile);
+		} else {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+				DWORD regtype,size=sizeof(LONG);
+				LONG dw=0;
+				if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
+					defval=dw;
+				}else{
+					SetMyRegLong(section,entry,defval);
+				}
+				RegCloseKey(hkey);
 			}
-			RegCloseKey(hkey);
 		}
 	}
 	return defval;
 }
-
-/*------------------------------------------------
-  get DWORD value from registry
---------------------------------------------------*/
-/*
-LONG GetRegLong(HKEY rootkey, char* section, char* entry, LONG defval)
-{
-	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
-	
-	if(RegOpenKeyEx(rootkey,section,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
-		size = 4;
-		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)&r, &size) == ERROR_SUCCESS) {
-			if(size == 4) b = TRUE;
-		}
-		RegCloseKey(hkey);
-	}
-	if(b == FALSE) r = defval;
-	return r;
-}// */
 
 int GetRegStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval)
 {
@@ -556,21 +533,10 @@ BOOL SetMyRegStr(const char* section, const char* entry, const char* val)
 {
 	HKEY hkey;	char key[80];	BOOL r=FALSE;
 	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		r = FALSE;
-		if(WritePrivateProfileString(key, entry, val, g_inifile))
-			r = TRUE;
-	} else {
+	if(PrepareMyRegKey_(key,section)){
+		if(g_bIniSetting)
+			return WritePrivateProfileString(key, entry, val, g_inifile);
+		
 		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
 			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)(int)strlen(val)) == ERROR_SUCCESS) {
 				r = TRUE;
@@ -580,49 +546,26 @@ BOOL SetMyRegStr(const char* section, const char* entry, const char* val)
 	}
 	return r;
 }
-/*
-BOOL SetRegStr(HKEY rootkey, char* section, char* entry, char* val)
-{
-	HKEY hkey;	BOOL r = FALSE;
-	
-	if(RegCreateKeyEx(rootkey,section,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-		if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)(int)strlen(val)) == ERROR_SUCCESS) {
-			r = TRUE;
-		}
-		RegCloseKey(hkey);
-	}
-	return r;
-}// */
 
 BOOL SetMyRegLong(const char* section, const char* entry, LONG val)
 {
 	HKEY hkey;
-	BOOL r;
+	BOOL r = FALSE;
 	char key[80];
 	
-	if(g_bIniSetting) key[0] = 0;
-	else strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		if(!g_bIniSetting) strcat(key, "\\");
-		strcat(key, section);
-	} else {
-		if(g_bIniSetting) strcpy(key, "Main");
-	}
-	
-	if(g_bIniSetting) {
-		char s[20];
-		wsprintf(s, "%d", val);
-		r = FALSE;
-		if(WritePrivateProfileString(key, entry, s, g_inifile))
-			r = TRUE;
-	} else {
-		r = FALSE;
-		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-			if(RegSetValueEx(hkey,entry,0,REG_DWORD,(CONST BYTE*)&val,4)==ERROR_SUCCESS) {
+	if(PrepareMyRegKey_(key,section)){
+		if(g_bIniSetting) {
+			char s[20];
+			wsprintf(s, "%d", val);
+			if(WritePrivateProfileString(key, entry, s, g_inifile))
 				r = TRUE;
+		} else {
+			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
+				if(RegSetValueEx(hkey,entry,0,REG_DWORD,(CONST BYTE*)&val,4)==ERROR_SUCCESS) {
+					r = TRUE;
+				}
+				RegCloseKey(hkey);
 			}
-			RegCloseKey(hkey);
 		}
 	}
 	return r;
@@ -632,33 +575,27 @@ BOOL DelMyReg(const char* section, const char* entry)
 {
 	HKEY hkey;	char key[80];	BOOL r = FALSE;
 	
-	strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		strcat(key, "\\");
-		strcat(key, section);
-	}
-	
-	if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
-		if(RegDeleteValue(hkey, entry) == ERROR_SUCCESS) r = TRUE;
-		RegCloseKey(hkey);
+	if(PrepareMyRegKey_(key,section)){
+		if(g_bIniSetting)
+			return WritePrivateProfileString(key,entry,NULL,g_inifile);
+		
+		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+			if(RegDeleteValue(hkey, entry) == ERROR_SUCCESS) r = TRUE;
+			RegCloseKey(hkey);
+		}
 	}
 	return r;
 }
 
 BOOL DelMyRegKey(const char* section)
 {
-	char key[80];	BOOL r = FALSE;
+	char key[80];
 	
-	strcpy(key, m_mykey);
-	
-	if(section && *section) {
-		strcat(key, "\\");
-		strcat(key, section);
-	}
-	
-	if(RegDeleteKeyEx(HKEY_CURRENT_USER,key,KEY_WOW64_64KEY,0) == ERROR_SUCCESS) r = TRUE;
-	return r;
+	if(!PrepareMyRegKey_(key,section))
+		return 0;
+	if(g_bIniSetting)
+		return WritePrivateProfileString(key,NULL,NULL,g_inifile);
+	return RegDeleteKeyEx(HKEY_CURRENT_USER,key,KEY_WOW64_64KEY,0) == ERROR_SUCCESS;
 }
 
 /*
