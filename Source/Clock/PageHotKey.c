@@ -347,6 +347,7 @@ void GetHotKeyInfo(HWND hWnd)
 	int i;
 	
 	hotkey_t* hk = (hotkey_t*)malloc(sizeof(hotkey_t) * 6);
+	if(!hk) return;
 	
 	for(i = 0; i <= 5; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
@@ -361,9 +362,5 @@ void GetHotKeyInfo(HWND hWnd)
 	if(hk[3].bValid) RegisterHotKey(hWnd, HOT_PROPR, hk[3].fsMod, hk[3].vk); // T-Clock Properties
 	if(hk[4].bValid) RegisterHotKey(hWnd, HOT_CALEN, hk[4].fsMod, hk[4].vk); // T-Clock Calendar
 	if(hk[5].bValid) RegisterHotKey(hWnd, HOT_TSYNC, hk[5].fsMod, hk[5].vk); // Synchronize Time
-	
-	if(hk) {
-		free(hk);   // Free, and...? (Crash Unless You Include the Next Line)
-		hk = NULL; //<--+++--> Thank You Don Beusee for reminding me to do this.
-	}
+	free(hk);
 }
