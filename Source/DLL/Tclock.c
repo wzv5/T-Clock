@@ -196,6 +196,7 @@ static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 			command[num]=' ';
 			memcpy(command+num+1,buf,(pos-buf)+1);
 			ExecFile(NULL, command);
+			free(command);
 		}
 	}
 	free(buf);
