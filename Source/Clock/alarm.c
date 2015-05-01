@@ -197,55 +197,56 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 BOOL PlayNoSound(char* fname, DWORD iLoops)   //-----------------------------------+++-->
 {
 	static const char seps[] = ", \r\n";
-	FILE* file;
-	
-	if(fopen_s(&file, fname, "r") > 0) {
+	char* szToken,*nxToken;
+	FILE* file = fopen(fname, "r");
+	if(!file) {
 		m_bKillPCBeep = 1;
 		return FALSE;
-	} else {
-		char* szToken,*nxToken;
-		while(!m_bKillPCBeep) {
-			// If We Have a Line, Play Its Beep!
-			char szTmp[TNY_BUFF];
-			while(fgets(szTmp, TNY_BUFF, file)) {
-				int iDur=0, iFeq=0, i = 0;
-				szToken = strtok_s(szTmp, seps, &nxToken);
-				while(szToken != NULL) {
-					switch(i) {
-					case 0: // Length of Beep
-						iDur = atoi(szToken);
-						break;
-					case 1: // Frequency
-						iFeq = atoi(szToken);
-						break;
-					default: break;
-					}
-					szToken = strtok_s(NULL, seps, &nxToken);
-					i++;
-				} // Get Next Beep Line.
-				
-				if(m_bKillPCBeep) {  // Just in case It's a Long File...
-					fclose(file); // Check for Kill Code between Beeps.
-					return TRUE;
-				} else if(iFeq == -1) {
-					Sleep(iDur);
-				} else {
-					Beep(iFeq, iDur);
-				}
-			} // END OF IF LINE
-			
-			if(iLoops > 0) { //-> IF We're Looping, Go Back to
-				fseek(file, 0, SEEK_SET); // Beginning of File
-				--iLoops;
-			}else{ // Or Die, Exit, Quit, Close, End
-				m_bKillPCBeep = 1;
-				fclose(file);
-				return TRUE;
-			}
-		} // END OF WHILE NOT KILL BEEP
-		fclose(file); // Make Sure File Gets Closed on Early Exit.
-		return TRUE;
 	}
+	while(!m_bKillPCBeep) {
+		// If We Have a Line, Play Its Beep!
+		char szTmp[TNY_BUFF];
+		while(fgets(szTmp, sizeof(szTmp), file)) {
+			unsigned duration=10, freq=0, i;
+			szToken = strtok_s(szTmp, seps, &nxToken);
+			for(i=0; szToken; ++i) {
+				int num = atoi(szToken);
+				switch(i) {
+				case 0: // Length of Beep
+					if(num < 10) duration = 10;
+					else duration = num;
+					break;
+				case 1: // Frequency
+					if(num < 0) freq = 0;
+					else freq = num;
+					break;
+				}
+				szToken = strtok_s(NULL, seps, &nxToken);
+			} // Get Next Beep Line.
+			
+			if(m_bKillPCBeep) {  // Just in case It's a Long File...
+				fclose(file); // Check for Kill Code between Beeps.
+				return TRUE;
+			} else if(!freq) {
+				Sleep(duration);
+			} else {
+				Beep(freq, duration);
+			}
+		} // END OF IF LINE
+		
+		if(iLoops > 0) { //-> IF We're Looping, Go Back to
+			if(ftell(file) <= 0) // empty file, don't do an "idle loop" (high CPU usage)
+				Sleep(100);
+			fseek(file, 0, SEEK_SET); // Beginning of File
+			--iLoops;
+		}else{ // Or Die, Exit, Quit, Close, End
+			m_bKillPCBeep = 1;
+			fclose(file);
+			return TRUE;
+		}
+	} // END OF WHILE NOT KILL BEEP
+	fclose(file); // Make Sure File Gets Closed on Early Exit.
+	return TRUE;
 }
 #include <process.h> // Required for Worker Thread Creation - So Clock Can Send Alarm Kill Code.
 //===============================================================================================
