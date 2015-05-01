@@ -8,7 +8,6 @@ static BOOL bHaveKey;
 static BOOL bFirstTime;
 static UINT uLastKey;
 char szHotKeySubKey[] = "HotKeys";
-static char szHotKey[TNY_BUFF] = {0};
 WNDPROC OldEditClassProc; // Default Procedure for Edit Controls
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 //================================================================================================
@@ -87,13 +86,14 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 //-------------------------------------------+++--> Display the HotKey Combination Pressed by User:
 BOOL ShowHotKey(HWND hWnd, int iCtrlID, char* szKey, BOOL bMod, BOOL bFnKey, BOOL bEnd)
 {
-	char szTmp[TNY_BUFF] = {0};
+	static char szHotKey[TNY_BUFF] = {0};
+	char szTmp[TNY_BUFF];
 	
 	(void)bMod;
 	
 	Edit_GetText(hWnd, szTmp, TNY_BUFF);
 	if(_stricmp("None", szTmp)) { // None = Zero Input - Clear Display.
-		wsprintf(szHotKey, "%s + %s", szTmp, szKey); // HotKey = X + Y
+		wnsprintf(szHotKey,sizeof(szHotKey)-1, "%s + %s", szTmp, szKey); // HotKey = X + Y
 		Edit_SetText(hWnd, szHotKey); //-+> Display the Key(s) Pressed.
 		bHaveKey = bEnd; // Beginning & End Confirmed, Combo Save-able
 		bFnKey = FALSE; //---------+++--> This IS NOT Just an F'n Key!
@@ -113,7 +113,7 @@ BOOL ShowHotKey(HWND hWnd, int iCtrlID, char* szKey, BOOL bMod, BOOL bFnKey, BOO
 //--------------------------+++--> Edit Control Subclass Procedure to Catch/Record HotKey Strokes:
 LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)   //-+++-->
 {
-	char szKeyTmp[32] = {0};
+	char szKeyTmp[TNY_BUFF];
 	int iCtrlID;
 	
 	switch(uMsg) {
@@ -158,19 +158,22 @@ LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 					tchk[iCtrlID].fsMod = MOD_ALT;
 			}
 			
-			GetKeyNameText((LONG)lParam, szKeyTmp, TNY_BUFF);
+			if(!GetKeyNameText((LONG)lParam, szKeyTmp, sizeof(szKeyTmp)))
+				szKeyTmp[0] = '\0';
 			ShowHotKey(hWnd, iCtrlID, szKeyTmp, TRUE, FALSE, FALSE);
 		}
 		//-++-> VK_F1 = 0x70 (112) - VK_F24 = 0x87 (135)
 		else if((wParam >= VK_F1) && (wParam <= VK_F24)) {
 			tchk[iCtrlID].vk = (UINT)wParam;
-			GetKeyNameText((LONG)lParam, szKeyTmp, TNY_BUFF);
+			if(!GetKeyNameText((LONG)lParam, szKeyTmp, sizeof(szKeyTmp)))
+				szKeyTmp[0] = '\0';
 			ShowHotKey(hWnd, iCtrlID, szKeyTmp, FALSE, TRUE, TRUE);
 		}
 		
 		else { //-+> Oh Shit! ...Sombody Hit the AnyKey!!!
 			tchk[iCtrlID].vk = (UINT)wParam;
-			GetKeyNameText((LONG)lParam, szKeyTmp, TNY_BUFF);
+			if(!GetKeyNameText((LONG)lParam, szKeyTmp, sizeof(szKeyTmp)))
+				szKeyTmp[0] = '\0';
 			ShowHotKey(hWnd, iCtrlID, szKeyTmp, FALSE, FALSE, TRUE);
 		}
 		uLastKey = (UINT)wParam; //-+> Check for This on Next Loop, To Break Loop!

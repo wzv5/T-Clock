@@ -168,7 +168,7 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 		
 		psl->lpVtbl->SetPath(psl, fname);
 		psl->lpVtbl->SetDescription(psl, name);
-		strcpy(path, fname);
+		strncpy_s(path,MAX_PATH,fname,_TRUNCATE);
 		del_title(path);
 		psl->lpVtbl->SetWorkingDirectory(psl, path);
 		
@@ -213,7 +213,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if(pGetLongPathName)
 		GetLongPathName(_pgmptr,g_mydir,MAX_PATH);
 	else
-		strcpy(g_mydir,_pgmptr);
+		strncpy_s(g_mydir,MAX_PATH,_pgmptr,_TRUNCATE);
 	#ifdef _DEBUG
 	OutputDebugString(g_mydir); OutputDebugString("\n");
 	#endif

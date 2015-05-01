@@ -210,8 +210,8 @@ static void MyDragDrop__SetDropTip_(MyDragDrop_t* self,int effect,const wchar_t*
 			medium.hGlobal=hDesc;
 			desc->type=self->lasteffect=effect;
 			if(msg){
-				wcscpy(desc->szMessage,msg);
-				wcscpy(desc->szInsert,self->szTarget);
+				wcsncpy_s(desc->szMessage,MAX_PATH,msg,_TRUNCATE);
+				wcsncpy_s(desc->szInsert,MAX_PATH,self->szTarget,_TRUNCATE);
 			}else{
 				desc->szMessage[0]='\0';
 				desc->szInsert[0]='\0';

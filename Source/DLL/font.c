@@ -81,7 +81,7 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 	lf.lfQuality = quality;
 	
 	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-	strcpy(lf.lfFaceName, fontname);
+	strncpy_s(lf.lfFaceName,sizeof(lf.lfFaceName),fontname,_TRUNCATE);
 	
 	return CreateFontIndirect(&lf);
 }

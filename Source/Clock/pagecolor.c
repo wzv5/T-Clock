@@ -412,9 +412,9 @@ void InitComboFont(HWND hDlg)
 void SetComboFontSize(HWND hDlg, BOOL bInit)
 {
 	HDC hdc;
-	char str[160];
+	char str[LF_FACESIZE];
 	DWORD size;
-	LOGFONT lf;
+	LOGFONT lf = {0};
 	
 	//以前のsizeを保存
 	if(bInit) { // WM_INITDIALOGのとき
@@ -433,7 +433,6 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	
 	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), str);
 	
-	memset(&lf, 0, sizeof(LOGFONT));
 	strcpy(lf.lfFaceName, str);
 	lf.lfCharSet = (BYTE)CBGetItemData(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT));
 	EnumFontFamiliesEx(hdc, &lf, EnumSizeProcEx,

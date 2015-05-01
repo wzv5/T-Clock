@@ -304,7 +304,7 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 	}
 	
 	else if(IsMMFile(fname)) {
-		char command[GEN_BUFF];
+		char command[MIN_BUFF+MAX_PATH];
 		if(m_bMCIPlaying) return FALSE;
 		strcpy(command, "open \"");
 		strcat(command, fname);

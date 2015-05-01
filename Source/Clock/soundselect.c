@@ -46,7 +46,7 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 		hfind = FindFirstFile(deffile, &fd);
 		if(hfind != INVALID_HANDLE_VALUE) {
 			FindClose(hfind);
-			strcpy(initdir, deffile);
+			strncpy_s(initdir,sizeof(initdir),deffile,_TRUNCATE);
 			del_title(initdir);
 		}
 	}
