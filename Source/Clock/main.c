@@ -291,7 +291,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wndclass.hInstance     = hInstance;
 	wndclass.hIcon         = g_hIconTClock;
 	wndclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
-	wndclass.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
+	wndclass.hbrBackground = (HBRUSH)(intptr_t)(COLOR_WINDOW+1);
 	wndclass.lpszMenuName  = NULL;
 	wndclass.lpszClassName = g_szClassName;
 	RegisterClass(&wndclass);
@@ -555,7 +555,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		switch(wParam) {
 		case WTS_SESSION_LOCK:
 			Sleep(500); // Eliminate user's interaction for 500 ms
-			SendMessage(HWND_BROADCAST, WM_SYSCOMMAND,SC_MONITORPOWER, (LPARAM)2);
+			SendMessage(HWND_BROADCAST_nowarn, WM_SYSCOMMAND,SC_MONITORPOWER, (LPARAM)2);
 			return 0;
 		}
 		break;
@@ -657,7 +657,7 @@ int LoadTClockDLL(void)   //----------------------------------------------------
 	char fname[MAX_PATH];
 	strcpy(fname, g_mydir); add_title(fname, "misc\\T-Clock" ARCH_SUFFIX ".dll");
 	if(CheckDLL(fname)){
-		HMODULE dll=LoadLibrary(fname);
+		HMODULE dll=LoadLibrary(fname); // leak / auto-free on process exit
 		IsCalendarOpen=(IsCalendarOpen_t)GetProcAddress(dll,"IsCalendarOpen");
 		HookStart=(HookStart_t)GetProcAddress(dll,"HookStart");
 		HookEnd=(HookEnd_t)GetProcAddress(dll,"HookEnd");

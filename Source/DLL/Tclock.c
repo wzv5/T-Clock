@@ -97,7 +97,7 @@ union{
 	m_colBG.ref=GetTColor(m_basecolorBG,1);\
 	if(m_colBG.ref!=oldbg)\
 		FillClockBG();\
-	}while(0)
+	} __pragma(warning(suppress:4127)) while(0)
 /// misc variables
 int m_TipState=0;
 HWND m_TipHwnd = NULL;
@@ -395,7 +395,7 @@ void CreateTip(HWND hwnd)   //--------------------------------------------------
 	m_TipInfo.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_TRANSPARENT;
 	m_TipInfo.hwnd = hwnd;
 	m_TipInfo.uId = (UINT_PTR)hwnd;
-	m_TipInfo.lpszText = LPSTR_TEXTCALLBACK;
+	m_TipInfo.lpszText = LPSTR_TEXTCALLBACK_nowarn;
 	
 	SendMessage(m_TipHwnd,TTM_ADDTOOL,0,(LPARAM)&m_TipInfo);
 	SendMessage(m_TipHwnd,TTM_SETMAXTIPWIDTH,0,300);
@@ -463,7 +463,7 @@ void SubsCreate(){
 						wndclass.hInstance=hInstance;
 						m_multiClockClass=RegisterClassEx(&wndclass);
 					}
-					m_multiClock[i].clock=CreateWindowEx(0,(LPCSTR)m_multiClockClass,NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
+					m_multiClock[i].clock=CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
 					if(!m_multiClock[i].clock)
 						break;
 					if(!i) m_multiClockDC=GetDC(m_multiClock[0].clock);
@@ -533,7 +533,7 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 {
 	SubsDestroy();
 	if(m_multiClockClass){
-		UnregisterClass((LPCSTR)m_multiClockClass,0);
+		UnregisterClass(MAKEINTATOM(m_multiClockClass),0);
 		m_multiClockClass=0;
 	}
 	RevokeDragDrop(hwnd); // frees m_droptarget

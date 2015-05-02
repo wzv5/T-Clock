@@ -95,4 +95,10 @@ enum{ // Drop&File enum / registry settings
 #define CLEARTYPE_QUALITY			5
 #define CLEARTYPE_NATURAL_QUALITY	6
 
+// own defines to suppress warning C4306 in Windows' API
+#define LPSTR_TEXTCALLBACK_nowarn ((LPSTR)(intptr_t)-1L)
+#define HWND_BROADCAST_nowarn ((HWND)(intptr_t)0xffff)
+#define HWND_TOPMOST_nowarn ((HWND)(intptr_t)-1)
+#define HWND_NOTOPMOST_nowarn ((HWND)(intptr_t)-2)
+
 #endif // TCLOCK_GLOBAL_H
