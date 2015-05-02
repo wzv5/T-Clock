@@ -70,16 +70,15 @@ int CheckSettings(){
 	case 0: /// v2.2.0#84(a507ca5) we no longer use the "FontRotateDirection" as it's replaced by "Angle", timers also work differently
 		updateflags|=SFORMAT_EFFICIENT|SFORMAT_LESSMEM|SFORMAT_FEATURE;
 		compatibilityflags|=SCOMPAT_FORMAT|SCOMPAT_TIMERS;
-		
+		/* fall through */
 		
 	case 1: /// v2.3.0#127(dff0300,63ba670#106) T-Clock file structure changed, startup link must be updated.
 		updateflags|=SFORMAT_SILENT;
-		
+		/* fall through */
 		
 	case CURRENT_VER: /// current version
 		CheckMouseMenu(); // adds right mouse button click to handle context menu if missing
 		break;
-		
 		
 	default:{
 		int ans=MessageBox(NULL,"This version of T-Clock looks older than what you've used before.\nSome settings might not be readable and you might lose some stuff.\n\nDo you want to run this old version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);
@@ -141,14 +140,14 @@ void ConvertSettings(){
 			wsprintf(buf+len,"%d",++idx);
 			DelMyReg(buf,"ID");
 		}
-		
+		/* fall through */
 		
 	case 1:
 		if(GetStartupFile(NULL,buf)){
 			DeleteFile(buf);
 			AddStartup(NULL);
 		}
-		
+		/* fall through */
 		
 	case CURRENT_VER:
 		;

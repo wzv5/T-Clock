@@ -122,6 +122,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 				break;
 			case 6:
 				rc.bottom*=3;
+				/* fall through */
 			case 7: case 8:
 				rc.right*=2;
 				if(iMonths!=6) rc.bottom*=4;

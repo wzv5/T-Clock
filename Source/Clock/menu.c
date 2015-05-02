@@ -185,6 +185,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		
 	case IDM_FWD_CASCADE: case IDM_FWD_SIDEBYSIDE: case IDM_FWD_STACKED: case IDM_FWD_SHOWDESKTOP: case IDM_FWD_MINALL: case IDM_FWD_UNDO:
 		g_undo=(wID!=IDM_FWD_UNDO);
+		/* fall through */
 	case IDM_FWD_DATETIME: case IDM_FWD_CUSTOMNOTIFYICONS:
 	case IDM_FWD_TASKMAN:
 	case IDM_FWD_LOCKTASKBAR: case IDM_FWD_LOCKALLTASKBAR:

@@ -194,8 +194,10 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				
 			case IDOK:
 				OnOK(hDlg);
+				/* fall through */
 			case IDCANCEL:
 				DestroyWindow(hDlg);
+				break;
 				
 			case IDC_TIMERNAME:
 				if(code==CBN_EDITCHANGE) OnTimerName(hDlg);

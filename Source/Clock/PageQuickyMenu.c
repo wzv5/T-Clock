@@ -58,6 +58,7 @@ INT_PTR CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 			break;
 		case IDC_MID_DELETE:
 			DeleteMenuItem(hDlg);
+			/* fall through */
 		case IDC_MID_CANCEL:
 			EndQuickyEdit(hDlg);
 		}

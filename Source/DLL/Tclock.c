@@ -179,9 +179,10 @@ static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 		switch(self->type){
 		case DF_COPY:
 			shfos.wFunc=FO_COPY;
+			shfos.pTo=app;
+			break;
 		case DF_MOVE:
-			if(self->type==DF_MOVE)
-				shfos.wFunc=FO_MOVE;
+			shfos.wFunc=FO_MOVE;
 			shfos.pTo=app;
 			break;
 		default: // DF_RECYCLE:
@@ -239,13 +240,17 @@ static void MyDragDrop__SetEffect_(MyDragDrop_t* self, DWORD grfKeyState, POINTL
 		switch(self->type){
 		case DF_OPEN:
 			msg=L"Open with %1";
+			*pdwEffect=DROPEFFECT_COPY;
+			break;
 		case DF_COPY:
-			if(!msg) msg=L"Copy to %1";
-			*pdwEffect=DROPEFFECT_COPY; break;
+			msg=L"Copy to %1";
+			*pdwEffect=DROPEFFECT_COPY;
+			break;
 		case DF_RECYCLE:
 		case DF_MOVE:
 			msg=L"Move to %1";
-			*pdwEffect=DROPEFFECT_MOVE; break;
+			*pdwEffect=DROPEFFECT_MOVE;
+			break;
 		default:
 			*pdwEffect=DROPEFFECT_MOVE;
 			return;
@@ -589,9 +594,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;}
 	case WM_DWMCOLORIZATIONCOLORCHANGED://forwarded by T-Clock itself
 		OnTColor_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
+		/* fall through */
 	case WM_THEMECHANGED:
 		if(message==WM_THEMECHANGED)
 			ReloadXPClockTheme(hwnd);
+		/* fall through */
 	case WM_SYSCOLORCHANGE:
 		g_col_update(m_basecolorFont,m_basecolorBG);
 		break;

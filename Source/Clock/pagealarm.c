@@ -149,6 +149,7 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			CheckDlgButton(hDlg, IDC_REPEATALARM, FALSE);
 			EnableDlgItem(hDlg, IDC_REPEATIMES, FALSE);
 			EnableDlgItem(hDlg, IDC_SPINTIMES, FALSE);
+			/* fall through */
 		case IDC_REPEATALARM:
 			if(id==IDC_REPEATALARM) {
 				int checked=IsDlgButtonChecked(hDlg,IDC_REPEATALARM);
@@ -156,6 +157,7 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				EnableDlgItem(hDlg, IDC_REPEATIMES, checked);
 				EnableDlgItem(hDlg, IDC_SPINTIMES, checked);
 			}
+			/* fall through */
 		// checked other checkboxes
 		case IDC_REPEATJIHOU:
 		case IDC_BLINKALARM:
@@ -178,6 +180,7 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		// playing sound ended
 	case MM_WOM_DONE:
 		StopFile();
+		/* fall through */
 	case MM_MCINOTIFY:
 		if(message==MM_MCINOTIFY){
 			if(OnMCINotify(hDlg))
