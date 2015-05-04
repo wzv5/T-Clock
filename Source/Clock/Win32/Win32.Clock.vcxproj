@@ -59,6 +59,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <GenerateManifest>false</GenerateManifest>
     <OutDir>..\..\..\$(Configuration)\</OutDir>
     <TargetName Condition="'$(Platform)'=='Win32'">Clock</TargetName>
     <TargetName Condition="'$(Platform)'=='x64'">Clock64</TargetName>
@@ -211,6 +212,9 @@
     <ResourceCompile Include="..\tClock.rc" />
     <ResourceCompile Condition="'$(Platform)'=='Win32'" Include="..\version.rc" />
     <ResourceCompile Condition="'$(Platform)'=='x64'" Include="..\version64.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\..\common\manifest.xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\DLL\Win32\Win32.DLL.vcxproj">

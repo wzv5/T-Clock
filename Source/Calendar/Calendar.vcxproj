@@ -36,6 +36,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <GenerateManifest>false</GenerateManifest>
     <OutDir>..\..\$(Configuration)\misc\</OutDir>
     <TargetName>XPCalendar</TargetName>
     <TargetExt>.exe</TargetExt>
@@ -99,6 +100,9 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="..\common\manifest.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
