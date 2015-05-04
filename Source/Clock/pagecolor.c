@@ -6,6 +6,10 @@
 // Modified by Stoic Joker: Monday, March 8 2010 - 7:52:55
 #include "tclock.h"
 
+static int m_logpixelsy;
+static int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam);
+static int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam);
+
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg,BOOL preview);
 static void InitColor(HWND hDlg);
@@ -57,6 +61,10 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				if(id==IDC_FONT) SetComboFontSize(hDlg, FALSE);
 				SendPSChanged(hDlg);
 			} break;
+		case CBN_EDITCHANGE:
+			if(id==IDC_FONTSIZE)
+				SendPSChanged(hDlg);
+			break;
 		case EN_CHANGE:
 			if(id==IDC_CLOCKHEIGHT || id==IDC_CLOCKWIDTH || id==IDC_ALPHATB || id==IDC_VERTPOS || id==IDC_LINEHEIGHT || id==IDC_HORIZPOS || id==IDC_ANGLE){
 				SendPSChanged(hDlg);
@@ -167,7 +175,9 @@ void OnInit(HWND hDlg)
 void OnApply(HWND hDlg,BOOL preview)
 {
 	const char* section=preview?"Preview":"Clock";
-	char tmp[80];
+	char tmp[LF_FACESIZE];
+	HWND hwndSize = GetDlgItem(hDlg, IDC_FONTSIZE);
+	int sel;
 	
 	SetMyRegLong(section, "ForeColor", (int)CBGetItemData(hDlg,IDC_COLFORE,CBGetCurSel(hDlg,IDC_COLFORE)));
 	SetMyRegLong(section, "BackColor", (int)CBGetItemData(hDlg,IDC_COLBACK,CBGetCurSel(hDlg,IDC_COLBACK)));
@@ -175,10 +185,12 @@ void OnApply(HWND hDlg,BOOL preview)
 	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), tmp);
 	SetMyRegStr(section, "Font", tmp);
 	
-	if(CBGetCount(hDlg, IDC_FONTSIZE) > 0) {
-		CBGetLBText(hDlg, IDC_FONTSIZE, CBGetCurSel(hDlg, IDC_FONTSIZE), tmp);
+	sel = ComboBox_GetCurSel(hwndSize);
+	if(sel == -1)
+		ComboBox_GetText(hwndSize, tmp, LF_FACESIZE);
+	else
+		ComboBox_GetLBText(hwndSize, sel, tmp);
 	SetMyRegLong(section, "FontSize", atoi(tmp));
-	} else SetMyRegLong(section, "FontSize", 9);
 	
 	SetMyRegLong(section, "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
 	SetMyRegLong(section, "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
@@ -368,16 +380,13 @@ void OnChooseColor(HWND hDlg, WORD id)
 	SendPSChanged(hDlg);
 }
 
-int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam);
-int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam);
-int logpixelsy;
 /*------------------------------------------------
    Initialization of "Font" combo box
 --------------------------------------------------*/
 void InitComboFont(HWND hDlg)
 {
 	HDC hdc;
-	LOGFONT lf;
+	LOGFONT lf = {0};
 	HWND hcombo;
 	char s[80];
 	int i;
@@ -385,26 +394,19 @@ void InitComboFont(HWND hDlg)
 	hdc = GetDC(NULL);
 	
 	// Enumerate fonts and set in the combo box
-	memset(&lf, 0, sizeof(LOGFONT));
 	hcombo = GetDlgItem(hDlg, IDC_FONT);
 	
-	lf.lfCharSet = (BYTE)GetTextCharset(hdc);  // MS UI Gothic, ...
+	lf.lfCharSet = DEFAULT_CHARSET;  // fonts from any charset
 	EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)hcombo, 0);
 	
-	lf.lfCharSet = OEM_CHARSET;   // Small Fonts, Terminal...
-	EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)hcombo, 0);
-	
-	lf.lfCharSet = DEFAULT_CHARSET;  // Arial, Courier, Times New Roman, ...
-	EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)hcombo, 0);
-	
-	
+
 	ReleaseDC(NULL, hdc);
 	
 	GetMyRegStrEx("Clock", "Font", s, 80, "Arial");
 	
-	i = (int)CBFindStringExact(hDlg, IDC_FONT, s);
+	i = ComboBox_FindStringExact(hcombo, -1, s);
 	if(i == LB_ERR) i = 0;
-	CBSetCurSel(hDlg, IDC_FONT, i);
+	ComboBox_SetCurSel(hcombo, i);
 }
 
 /*------------------------------------------------
@@ -415,40 +417,39 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	char str[LF_FACESIZE];
 	DWORD size;
 	LOGFONT lf = {0};
+	HWND hwndSize = GetDlgItem(hDlg, IDC_FONTSIZE);
+	int pos;
 	
-	//以前のsizeを保存
-	if(bInit) { // WM_INITDIALOGのとき
+	// remember old size
+	if(bInit) { // on WM_INITDIALOG
 		size = GetMyRegLong("Clock", "FontSize", 9);
 		if(!size || size>100) size = 9;
-	} else { // IDC_FONTが変更されたとき
-		CBGetLBText(hDlg, IDC_FONTSIZE,
-					CBGetCurSel(hDlg, IDC_FONTSIZE), &str);
+	} else { // when IDC_FONT has been changed
+		ComboBox_GetText(hwndSize, str, LF_FACESIZE);
 		size = atoi(str);
 	}
 	
-	CBResetContent(hDlg, IDC_FONTSIZE);
+	ComboBox_ResetContent(hwndSize);
 	
 	hdc = GetDC(NULL);
-	logpixelsy = GetDeviceCaps(hdc, LOGPIXELSY);
+	m_logpixelsy = GetDeviceCaps(hdc, LOGPIXELSY);
 	
 	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), str);
 	
 	strcpy(lf.lfFaceName, str);
-	lf.lfCharSet = (BYTE)CBGetItemData(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT));
+	lf.lfCharSet = DEFAULT_CHARSET;
 	EnumFontFamiliesEx(hdc, &lf, EnumSizeProcEx,
-					   (LPARAM)GetDlgItem(hDlg, IDC_FONTSIZE), 0);
+					   (LPARAM)hwndSize, 0);
 					   
 	ReleaseDC(NULL, hdc);
 	
-	for(; size; --size) {
-		int pos;
-		wsprintf(str, "%d", size);
-		pos = (int)CBFindStringExact(hDlg, IDC_FONTSIZE, str);
-		if(pos != LB_ERR) {
-			CBSetCurSel(hDlg, IDC_FONTSIZE, pos); return;
-		}
+	wsprintf(str, "%d", size);
+	pos = ComboBox_FindStringExact(hwndSize, -1, str);
+	if(pos != LB_ERR) {
+		ComboBox_SetCurSel(hwndSize, pos);
+		return;
 	}
-	CBSetCurSel(hDlg, IDC_FONTSIZE, 0);
+	ComboBox_SetText(hwndSize, str);
 }
 
 /*------------------------------------------------
@@ -457,11 +458,10 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 --------------------------------------------------*/
 int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
+	HWND hwndSize = (HWND)lParam;
 	(void)lpntme; (void)FontType;
-	if(lpelfe->lfFaceName[0]!='@' && SendMessage((HWND)lParam, CB_FINDSTRINGEXACT, 0, (LPARAM)lpelfe->lfFaceName)==LB_ERR) {
-		int index = (int)SendMessage((HWND)lParam, CB_ADDSTRING, 0, (LPARAM)lpelfe->lfFaceName);
-		if(index >= 0)
-			SendMessage((HWND)lParam, CB_SETITEMDATA, index, lpelfe->lfCharSet);
+	if(lpelfe->lfFaceName[0]!='@' && ComboBox_FindStringExact(hwndSize, -1, lpelfe->lfFaceName)==LB_ERR) {
+		ComboBox_AddString(hwndSize, lpelfe->lfFaceName);
 	}
 	return 1;
 }
@@ -470,33 +470,35 @@ int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, 
 --------------------------------------------------*/
 int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
-	const unsigned char nFontSizes[] = {4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,36,48,72};
+	HWND hwndSize = (HWND)lParam;
+	const unsigned char nFontSizes[] = {4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,48,72};
 	char str[8];
-	int i;
-	
+	int i, size, count;
 	(void)lpelfe;
 	
-	if((FontType & TRUETYPE_FONTTYPE) ||
-	   !((FontType & TRUETYPE_FONTTYPE) || (FontType & RASTER_FONTTYPE))) {
+	// is modern font which supports any size?
+	if((FontType&TRUETYPE_FONTTYPE) || !(FontType&RASTER_FONTTYPE)) {
 		for(i=0; i<sizeof(nFontSizes); ++i) {
 			wsprintf(str,"%hu",nFontSizes[i]);
-			SendMessage((HWND)lParam,CB_ADDSTRING,0,(LPARAM)str);
+			ComboBox_AddString(hwndSize,str);
 		}
-		return FALSE;
-	}else{
-		int num = (lpntme->tmHeight - lpntme->tmInternalLeading) * 72 / logpixelsy;
-		int count = (int)SendMessage((HWND)lParam, CB_GETCOUNT, 0, 0);
-		for(i = 0; i < count; ++i) {
-			SendMessage((HWND)lParam, CB_GETLBTEXT, i, (LPARAM)str);
-			if(num == atoi(str)) return TRUE;
-			else if(num < atoi(str)) {
-				wsprintf(str, "%d", num);
-				SendMessage((HWND)lParam, CB_INSERTSTRING, i, (LPARAM)str);
-				return TRUE;
-			}
-		}
-		wsprintf(str, "%d", num);
-		SendMessage((HWND)lParam, CB_ADDSTRING, 0, (LPARAM)str);
-		return TRUE;
+		return 0;
 	}
+	
+	// only add supported sizes for raster type fonts
+	size = (lpntme->tmHeight - lpntme->tmInternalLeading) * 72 / m_logpixelsy;
+	count = ComboBox_GetCount(hwndSize);
+	for(i=0; i<count; ++i) { // dupes check + sorting
+		ComboBox_GetLBText(hwndSize, i, str);
+		if(size == atoi(str))
+			return 1;
+		else if(size < atoi(str)) {
+			wsprintf(str, "%d", size);
+			ComboBox_InsertString(hwndSize, i, str);
+			return 1;
+		}
+	}
+	wsprintf(str, "%d", size);
+	ComboBox_AddString(hwndSize, str);
+	return 1;
 }
