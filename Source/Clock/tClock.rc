@@ -371,7 +371,7 @@ BEGIN
     AUTOCHECKBOX    "Show day of year", IDCB_SHOW_DOY, 23, 17, 73, 10
     AUTOCHECKBOX    "Show week numbers", IDCB_SHOWWEEKNUMS, 23, 33, 83, 10
     AUTOCHECKBOX    "Close calendar on lose focus", IDCB_CLOSECAL, 23, 50, 111, 10
-    AUTOCHECKBOX    "Keep calendar on top of other windows", IDCB_CALTOPMOST, 23, 65, 157, 10
+    AUTOCHECKBOX    "Keep calendar always on top of other windows", IDCB_CALTOPMOST, 23, 65, 166, 10
     LTEXT           "Calendar, first week of year:", IDC_CALSTATIC1, 23, 84, 96, 8
     COMBOBOX        IDC_FIRSTWEEK, 120, 82, 23, 125, WS_TABSTOP | WS_VSCROLL | CBS_DROPDOWNLIST | CBS_SORT
     LTEXT           "(Note: This is a Windows system setting)", IDC_CALSTATIC2, 146, 84, 132, 8

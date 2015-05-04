@@ -7,6 +7,7 @@
 #include "../common/utl.h"
 //other
 BOOL m_bAutoClose;
+BOOL m_bTopMost;
 //================================================================================================
 //------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
 void SetMyDialgPos(HWND hwnd)   //----------------------------------------------------------+++-->
@@ -158,17 +159,26 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		}
 		SetFocus(hCal);
 		AdjustWindowRectEx(&rc,WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,FALSE,0);
-		SetWindowPos(hwnd,HWND_TOPMOST,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
-		if(!m_bAutoClose && !GetMyRegLong("Calendar","CalendarTopMost",0))
-			SetWindowPos(hwnd,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+		SetWindowPos(hwnd,HWND_TOP,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
+		if(m_bTopMost)
+			SetWindowPos(hwnd,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
 		SetMyDialgPos(hwnd);
 		if(m_bAutoClose && GetForegroundWindow()!=hwnd)
 			PostMessage(hwnd,WM_CLOSE,0,0);
 		return 0;}
 	case WM_ACTIVATE:
-		if(!m_bAutoClose) break;
-		if(LOWORD(wParam)!=WA_ACTIVE && LOWORD(wParam)!=WA_CLICKACTIVE){
-			PostMessage(hwnd,WM_CLOSE,0,0);//adds a little more delay which is good
+		if(!m_bTopMost){
+			if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
+				SetWindowPos(hwnd,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+			}else{
+				SetWindowPos(hwnd,HWND_NOTOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+				SetWindowPos((HWND)wParam,hwnd,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
+			}
+		}
+		if(m_bAutoClose){
+			if(LOWORD(wParam)!=WA_ACTIVE && LOWORD(wParam)!=WA_CLICKACTIVE){
+				PostMessage(hwnd,WM_CLOSE,0,0);//adds a little more delay which is good
+			}
 		}
 		break;
 	case WM_DESTROY:
@@ -186,6 +196,7 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	WNDCLASSEX wcx;
 	ATOM calclass;
 	m_bAutoClose = GetMyRegLong("Calendar", "CloseCalendar", 1);
+	m_bTopMost = GetMyRegLong("Calendar", "CalendarTopMost", 0);
 	icex.dwSize=sizeof(icex);
 	icex.dwICC=ICC_DATE_CLASSES;
 	InitCommonControlsEx(&icex);
