@@ -72,6 +72,38 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		default:
 			if(id==IDC_CHOOSECOLFORE || id==IDC_CHOOSECOLBACK){
 				OnChooseColor(hDlg, id);
+			}else if(id==IDC_CHOOSEFONT){
+				HWND hwndCombo;
+				HDC hdc;
+				char size[8];
+				LOGFONT lf = {0};
+				CHOOSEFONT chosenfont = {sizeof(CHOOSEFONT)};
+				chosenfont.hwndOwner = hDlg;
+				chosenfont.Flags = CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT;
+				chosenfont.lpLogFont = &lf;
+				hwndCombo = GetDlgItem(hDlg,IDC_FONTSIZE);
+				ComboBox_GetText(hwndCombo, size, sizeof(size));
+				hdc = GetDC(NULL);
+				lf.lfWeight = IsDlgButtonChecked(hDlg, IDC_BOLD) ? FW_BOLD : FW_REGULAR;
+				lf.lfItalic = (BYTE)IsDlgButtonChecked(hDlg, IDC_ITALIC);
+				lf.lfHeight = -MulDiv(atoi(size), GetDeviceCaps(hdc,LOGPIXELSY), 72);
+				ReleaseDC(NULL, hdc);
+				hwndCombo = GetDlgItem(hDlg,IDC_FONT);
+				ComboBox_GetText(hwndCombo, lf.lfFaceName, sizeof(lf.lfFaceName));
+				if(ChooseFont(&chosenfont)){
+					int sel;
+					CheckDlgButton(hDlg, IDC_BOLD, (chosenfont.lpLogFont->lfWeight >= FW_SEMIBOLD));
+					CheckDlgButton(hDlg, IDC_ITALIC, chosenfont.lpLogFont->lfItalic);
+					ComboBox_SelectString(hwndCombo, -1, chosenfont.lpLogFont->lfFaceName);
+					hwndCombo = GetDlgItem(hDlg,IDC_FONTSIZE);
+					wsprintf(size,"%d",chosenfont.iPointSize/10);
+					sel = ComboBox_FindStringExact(hwndCombo, -1, size);
+					if(sel != CB_ERR)
+						ComboBox_SetCurSel(hwndCombo, sel);
+					else
+						ComboBox_SetText(hwndCombo, size);
+					SendPSChanged(hDlg);
+				}
 			}else if(id==IDC_BOLD || id==IDC_ITALIC)
 				SendPSChanged(hDlg);
 		}

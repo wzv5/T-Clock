@@ -200,7 +200,8 @@
 #define IDC_CHOOSECOLFORE               1101
 #define IDC_COLBACK                     1102
 #define IDC_CHOOSECOLBACK               1103 /* end group */
-#define IDC_FONT                        1108
+#define IDC_FONT                        1107
+#define IDC_CHOOSEFONT                  1108
 #define IDC_FONTSIZE                    1109
 #define IDC_BOLD                        1110
 #define IDC_ITALIC                      1111
