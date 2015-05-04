@@ -25,6 +25,7 @@
 #	define getcwd _getcwd
 #	define sscanf sscanf_s
 #	define chdir _chdir
+#	define stricmp _stricmp
 #	define fopen fopenMShit
 	FILE* fopenMShit(const char* filename, const char* mode){
 		FILE* ret; fopen_s(&ret,filename,mode);
@@ -84,17 +85,23 @@ struct Version{
 	unsigned short build;
 	unsigned char status;
 	unsigned int revision;
+	time_t timestamp;
+	string url;
+	string date;
+	string revhash;
 };
 bool ReadHeader(const char* filepath,Version &ver);
-bool QueryGit(const char* path,Version* ver,string* url,string* date,string* revhash);
-bool QuerySVN(const char* path,Version* ver,string* url,string* date);
-bool WriteHeader(const char* filepath,const Version &ver,const string &url,const string &date,const string &revhash);
+bool QueryGit(const char* path,Version* ver);
+bool QuerySVN(const char* path,Version* ver);
+void PrintDefine(FILE* fp,const char* define,const Version &ver);
+bool WriteHeader(const char* filepath,Version &ver);
 int main(int argc, char** argv)
 {
 //	+svn +noincrement +noinc --minor=99
 	const char* headerPath=NULL;
 	char* Gitpath=NULL;
-	char* SVNpath=NULL;
+	char* SVNpath=NULL;;
+	char* get_define = NULL;
 	for(int i=1; i<argc; ++i) {
 		if(!strcmp("-v",argv[i])) {
 			g_verbose=true;
@@ -120,7 +127,15 @@ int main(int argc, char** argv)
 			g_repo&=~REPO_AUTOINC;
 		} else if(!strcmp("+nopost-build",argv[i]) || !strcmp("+nopost",argv[i])) {
 			g_do_postbuild=false;
-		} else if((argv[i][0]!='-'||argv[i][0]!='+') && !headerPath) {
+		} else if(!strcmp("--get",argv[i])) {
+			get_define = "";
+			if(i+1<argc){
+				get_define = argv[++i];
+				continue;
+			}
+			puts("missing parameter argument\n");
+			return 2;
+		} else if((argv[i][0]!='-'&&argv[i][0]!='+') && !headerPath) {
 			headerPath=argv[i];
 		} else {
 			printf("Unknown Option: %s\n\n",argv[i]);
@@ -134,66 +149,73 @@ int main(int argc, char** argv)
 			"   --post-build, --post     do post-build stuff (clean lockfile to re-enable auto increment)\n"
 			"   +noincrement, +noinc     do not auto increment revision\n"
 			"   +nopost-build, +nopost   do not do post-build stuff (create lockfile to disable auto increment)\n"
+			"   --get <DEFINE>           display <DEFINE> and exit\n"
 			"   -v                       be verbose");
 		return 1;
 	}
 	if(!headerPath)
 		headerPath="version.h";
 	size_t hlen=strlen(headerPath);
+	if(!get_define) {
 /// @todo (White-Tiger#1#): aren't both files doin' "nearly" the same?
-	char lockPath[PATH_MAX];
-		memcpy(lockPath,headerPath,sizeof(char)*hlen);
-		memcpy(lockPath+hlen,".lock",sizeof(char)*6);
-	//char incPath[hlen+6];
-	//	memcpy(incPath,headerPath,sizeof(char)*hlen);
-	//	memcpy(incPath+hlen,".inc",sizeof(char)*5);
-	if(g_only_postbuild) {
-		FILE* flock = fopen(lockPath,"rb");
-		if(flock){
-			fclose(flock);
-			unlink(lockPath);
-		}
-		//flock = fopen(incPath,"wb");
-		//if(flock)
-		//	fclose(flock);
-		return 0;
-	} else if(g_do_postbuild && g_repo<=REPO_AUTOINC) {
-		FILE* flock = fopen(lockPath,"rb");
-		if(flock){
-			fclose(flock);
+		char lockPath[PATH_MAX];
+			memcpy(lockPath,headerPath,sizeof(char)*hlen);
+			memcpy(lockPath+hlen,".lock",sizeof(char)*6);
+		//char incPath[hlen+6];
+		//	memcpy(incPath,headerPath,sizeof(char)*hlen);
+		//	memcpy(incPath+hlen,".inc",sizeof(char)*5);
+		if(g_only_postbuild) {
+			FILE* flock = fopen(lockPath,"rb");
+			if(flock){
+				fclose(flock);
+				unlink(lockPath);
+			}
+			//flock = fopen(incPath,"wb");
+			//if(flock)
+			//	fclose(flock);
 			return 0;
+		} else if(g_do_postbuild && g_repo<=REPO_AUTOINC) {
+			FILE* flock = fopen(lockPath,"rb");
+			if(flock){
+				fclose(flock);
+				return 0;
+			}
+			flock = fopen(lockPath,"wb");
+			if(flock)
+				fclose(flock);
+			//flock = fopen(incPath,"rb");
+			//if(flock){
+			//	fclose(flock);
+				//unlink(incPath);
+			//}else
+			//	do_autoinc=false;
 		}
-		flock = fopen(lockPath,"wb");
-		if(flock)
-			fclose(flock);
-		//flock = fopen(incPath,"rb");
-		//if(flock){
-		//	fclose(flock);
-			//unlink(incPath);
-		//}else
-		//	do_autoinc=false;
 	}
 	Version ver={0};
-	string url="";
-	string date="unknown date";
-	string revhash="";
+	ver.date="unknown date";
 
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	ReadHeader(headerPath,ver);
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	unsigned int rev=ver.revision;
 	if(g_repo&REPO_GIT){
-		if(QueryGit(Gitpath,&ver,&url,&date,&revhash))
+		if(QueryGit(Gitpath,&ver))
 			g_repo=REPO_GIT;
 		else
 			g_repo&=~REPO_GIT;
 	}
 	if(g_repo&REPO_SVN){
-		if(QuerySVN(SVNpath,&ver,&url,&date))
+		if(QuerySVN(SVNpath,&ver))
 			g_repo=REPO_SVN;
 		else
 			g_repo&=~REPO_SVN;
 	}
+	
+	if(get_define) {
+		PrintDefine(stdout,get_define,ver);
+		return 0;
+	}
+	
 	if(g_repo&REPO_AUTOINC){
 		g_repo=REPO_NONE;
 		++ver.revision;
@@ -206,13 +228,13 @@ int main(int argc, char** argv)
 		ver.flags_|=VER_DIRTY;
 		puts("	- increased revision");
 	}
-	if(WriteHeader(headerPath,ver,url,date,revhash)){
+	if(WriteHeader(headerPath,ver)){
 		puts("	- header updated");
 	}
 
 	return 0;
 }
-bool QueryGit(const char* path,Version* ver,string* url,string* date,string* revhash)
+bool QueryGit(const char* path,Version* ver)
 {
 	bool found=false;
 #	ifdef _WIN32
@@ -236,18 +258,18 @@ bool QueryGit(const char* path,Version* ver,string* url,string* date,string* rev
 				for(data=pos; *data=='\r'||*data=='\n'||*data==' '||*data=='\t'; ++data);
 				for(pos=data; *pos && (*pos!='\r'&&*pos!='\n'&&*pos!=' '&&*pos!='\t'); ++pos);
 				if(!error && *data && pos>data){
-					url->append(data,pos-data);
+					ver->url.assign(data,pos-data);
 //					git=popen("git log -1 --pretty=%h%n%an%n%at","r"); // short hash, author, timestamp
 					git=popen("git log -1 --pretty=%h%n%at","r"); // short hash, timestamp
 					if(git){ /// shorthash,author,timestamp		SVN date example: 2014-07-01 21:31:24 +0200 (Tue, 01 Jul 2014)
 						read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
 						for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'); ++pos);
 						if(!error && *pos){
-							revhash->assign(buf,pos-buf); ++pos;
+							ver->revhash.assign(buf,pos-buf); ++pos;
 							time_t tt=atoi(pos);
 							tm* ttm=gmtime(&tt);
 							strftime(buf,64,"%Y-%m-%d %H:%M:%S +0000 (%a, %b %d %Y)",ttm);
-							date->assign(buf);
+							ver->date.assign(buf);
 							found=true;
 						}
 					}
@@ -258,7 +280,7 @@ bool QueryGit(const char* path,Version* ver,string* url,string* date,string* rev
 	chdir(cwd);
 	return found;
 }
-bool QuerySVN(const char* path,Version* ver,string* url,string* date)
+bool QuerySVN(const char* path,Version* ver)
 {
 	bool found=false;
 	string svncmd("svn info --non-interactive ");
@@ -293,10 +315,10 @@ bool QuerySVN(const char* path,Version* ver,string* url,string* date)
 							found=true;
 						} else if(!strcmp(attrib,"Last Changed Date")) {
 //							printf("Found: %s @ %s\n",attrib,value);
-							date->assign(value);
+							ver->date.assign(value);
 						} else if(!strcmp(attrib,"URL")) {
 //							printf("Found: %s @ %s\n",attrib,value);
-							url->assign(value);
+							ver->url.assign(value);
 						}
 					}
 					value_len=0; *value='\0';
@@ -376,6 +398,20 @@ bool ReadHeader(const char* filepath,Version &ver)
 					ver.status=tmp;
 				} else if(!strcmp(attrib,"VER_RC_STATUS")) {
 					sscanf(value,"%u, %u, %u, %u",&cmajor,&cminor,&cbuild,&cstatus);
+				} else if(!strcmp(attrib,"VER_REVISION_URL")) {
+					ver.url=value;
+					if(ver.url.length() >=2)
+						ver.url=ver.url.substr(1,ver.url.length()-2);
+				} else if(!strcmp(attrib,"VER_REVISION_DATE")) {
+					ver.date=value;
+					if(ver.date.length() >=2)
+						ver.date=ver.date.substr(1,ver.date.length()-2);
+				} else if(!strcmp(attrib,"VER_REVISION_HASH")) {
+					ver.revhash=value;
+					if(ver.revhash.length() >=2)
+						ver.revhash=ver.revhash.substr(1,ver.revhash.length()-2);
+				} else if(!strcmp(attrib,"VER_TIMESTAMP")) {
+					ver.timestamp=atoi(value);
 				}
 			}
 		default:
@@ -394,7 +430,76 @@ bool ReadHeader(const char* filepath,Version &ver)
 	}
 	return true;
 }
-bool WriteHeader(const char* filepath,const Version &ver,const string &url,const string &date,const string &revhash)
+void PrintDefine(FILE* fp,const char* define,const Version &ver)
+{
+	if(!stricmp("MAJOR",define)) {
+		fprintf(fp,"%hu",ver.major);
+	}else if(!stricmp("MINOR",define)) {
+		fprintf(fp,"%hu",ver.minor);
+	}else if(!stricmp("BUILD",define)) {
+		fprintf(fp,"%hu",ver.build);
+	}else if(!stricmp("STATUS",define)) {
+		fprintf(fp,"%hu",ver.status);
+	}else if(!stricmp("STATUS_FULL",define)) {
+		fprintf(fp,"%s",STATUS_S[ver.status]);
+	}else if(!stricmp("STATUS_SHORT",define)) {
+		fprintf(fp,"%s",STATUS_SS[ver.status]);
+	}else if(!stricmp("STATUS_GREEK",define)) {
+		fprintf(fp,"%s",STATUS_SS2[ver.status]);
+	}else if(!stricmp("REVISION",define)) {
+		fprintf(fp,"%u",ver.revision);
+	
+	// version strings
+	}else if(!stricmp("FULL",define)) {
+		fprintf(fp,"%hu.%hu.%hu %s",ver.major,ver.minor,ver.build,STATUS_S[ver.status]);
+	}else if(!stricmp("SHORT",define)) {
+		fprintf(fp,"%hu.%hu%s%hu",ver.major,ver.minor,STATUS_SS[ver.status],ver.build);
+	}else if(!stricmp("SHORT_DOTS",define)) {
+		fprintf(fp,"%hu.%hu.%hu",ver.major,ver.minor,ver.build);
+	}else if(!stricmp("SHORT_GREEK",define)) {
+		fprintf(fp,"%hu.%hu%s%hu",ver.major,ver.minor,STATUS_SS2[ver.status],ver.build);
+	}else if(!stricmp("RC_REVISION",define)) {
+		fprintf(fp,"%hu, %u, %u, %u",ver.major,ver.minor,ver.build,ver.revision);
+	}else if(!stricmp("RC_STATUS",define)) {
+		fprintf(fp,"%hu, %u, %u, %u",ver.major,ver.minor,ver.build,ver.status);
+	
+	// repository
+	}else if(!stricmp("REVISION_URL",define)) {
+		fprintf(fp,"%s",ver.url.c_str());
+	}else if(!stricmp("REVISION_DATE",define)) {
+		fprintf(fp,"%s",ver.date.c_str());
+	}else if(!stricmp("REVISION_HASH",define)) {
+		fprintf(fp,"%s",ver.revhash.c_str());
+	}else if(!stricmp("REVISION_TAG",define)) {
+		fprintf(fp,"v%hu.%hu.%hu#%hu",ver.major,ver.minor,ver.build,ver.revision);
+		if(ver.status!=STATUS_Release){
+			fputc('-',fp);
+			for(const char* c=STATUS_S[ver.status]; *c; ++c)
+				fputc(tolower(*c),fp);
+		}
+	
+	// date / time
+	}else if(!stricmp("TIMESTAMP",define)) {
+		fprintf(fp,"%lu",ver.timestamp);
+	
+	
+	}else{
+		fprintf(fp,"unknown define: %s",define);
+	}
+}
+void WriteDefine(FILE* fp,const char* define,const Version &ver)
+{
+	fprintf(fp,"#	define VER_%s ",define);
+	PrintDefine(fp,define,ver);
+	putc('\n',fp);
+}
+void WriteDefineString(FILE* fp,const char* define,const Version &ver)
+{
+	fprintf(fp,"#	define VER_%s \"",define);
+	PrintDefine(fp,define,ver);
+	fputs("\"\n",fp);
+}
+bool WriteHeader(const char* filepath,Version &ver)
 {
 	FILE* fheader;
 	if(!(ver.flags_&VER_DIRTY)){
@@ -412,44 +517,39 @@ bool WriteHeader(const char* filepath,const Version &ver,const string &url,const
 	fputs("#	define XSTR(x) #x\n",fheader);
 	fputs("#	define STR(x) XSTR(x)\n",fheader);
 //	fputs("namespace Version{\n",fheader);
-	char tmp[64];
-	time_t tt=time(NULL);
-	tm* ttm=gmtime(&tt);
 	fputs("/** Version **/\n",fheader);
-	fprintf(fheader,"#	define VER_MAJOR %hu\n"
-					"#	define VER_MINOR %hu\n"
-					"#	define VER_BUILD %hu\n",ver.major,ver.minor,ver.build);
+	WriteDefine(fheader,"MAJOR",ver);
+	WriteDefine(fheader,"MINOR",ver);
+	WriteDefine(fheader,"BUILD",ver);
 	fprintf(fheader,"	/* status values: 0=%s",STATUS_S[0]);
 	for(int i=1; i<STATUS_NUM_; ++i)
 		fprintf(fheader,", %i=%s",i,STATUS_S[i]);
 	fputs(" */\n",fheader);
-	fprintf(fheader,"#	define VER_STATUS %hu\n"
-					"#	define VER_STATUS_FULL \"%s\"\n"
-					"#	define VER_STATUS_SHORT \"%s\"\n"
-					"#	define VER_STATUS_GREEK \"%s\"\n",ver.status,STATUS_S[ver.status],STATUS_SS[ver.status],STATUS_SS2[ver.status]);
-	fprintf(fheader,"#	define VER_REVISION %u\n",ver.revision);
-	fprintf(fheader,"#	define VER_FULL \"%hu.%hu.%hu %s\"\n",ver.major,ver.minor,ver.build,STATUS_S[ver.status]);
-	fprintf(fheader,"#	define VER_SHORT \"%hu.%hu%s%hu\"\n",ver.major,ver.minor,STATUS_SS[ver.status],ver.build);
-	fprintf(fheader,"#	define VER_SHORT_DOTS \"%hu.%hu.%hu\"\n",ver.major,ver.minor,ver.build);
-	fprintf(fheader,"#	define VER_SHORT_GREEK \"%hu.%hu%s%hu\"\n",ver.major,ver.minor,STATUS_SS2[ver.status],ver.build);
-	fprintf(fheader,"#	define VER_RC_REVISION %hu, %u, %u, %u\n",ver.major,ver.minor,ver.build,ver.revision);
-	fprintf(fheader,"#	define VER_RC_STATUS %hu, %u, %u, %u\n",ver.major,ver.minor,ver.build,ver.status);
+	WriteDefine(fheader,"STATUS",ver);
+	WriteDefineString(fheader,"STATUS_FULL",ver);
+	WriteDefineString(fheader,"STATUS_SHORT",ver);
+	WriteDefineString(fheader,"STATUS_GREEK",ver);
+	WriteDefine(fheader,"REVISION",ver);
+	
+	WriteDefineString(fheader,"FULL",ver);
+	WriteDefineString(fheader,"SHORT",ver);
+	WriteDefineString(fheader,"SHORT_DOTS",ver);
+	WriteDefineString(fheader,"SHORT_GREEK",ver);
+	WriteDefine(fheader,"RC_REVISION",ver);
+	WriteDefine(fheader,"RC_STATUS",ver);
 	if(g_repo) {
 		fputs("/** Subversion Information **/\n",fheader);
-		fprintf(fheader, "#	define VER_REVISION_URL \"%s\"\n",url.c_str());
-		fprintf(fheader, "#	define VER_REVISION_DATE \"%s\"\n",date.c_str());
-		fprintf(fheader, "#	define VER_REVISION_HASH \"%s\"\n",revhash.c_str());
+		WriteDefineString(fheader,"REVISION_URL",ver);
+		WriteDefineString(fheader,"REVISION_DATE",ver);
+		WriteDefineString(fheader,"REVISION_HASH",ver);
 		// revision tag
-		fprintf(fheader, "#	define VER_REVISION_TAG \"v%hu.%hu.%hu#%hu",ver.major,ver.minor,ver.build,ver.revision);
-		if(ver.status!=STATUS_Release){
-			fputc('-',fheader);
-			for(const char* c=STATUS_S[ver.status]; *c; ++c)
-				fputc(tolower(*c),fheader);
-		}
-		fputs("\"\n",fheader);
+		WriteDefineString(fheader,"REVISION_TAG",ver);
 	}
+	char tmp[64];
+	time(&ver.timestamp);
+	tm* ttm=gmtime(&ver.timestamp);
 	fputs("/** Date/Time **/\n",fheader);
-	fprintf(fheader,"#	define VER_TIMESTAMP %lu\n",tt);
+	WriteDefine(fheader,"TIMESTAMP",ver);
 	fprintf(fheader,"#	define VER_TIME_SEC %i\n",ttm->tm_sec);
 	fprintf(fheader,"#	define VER_TIME_MIN %i\n",ttm->tm_min);
 	fprintf(fheader,"#	define VER_TIME_HOUR %i\n",ttm->tm_hour);
