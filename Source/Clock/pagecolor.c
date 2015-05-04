@@ -177,7 +177,7 @@ void OnApply(HWND hDlg,BOOL preview)
 	
 	if(CBGetCount(hDlg, IDC_FONTSIZE) > 0) {
 		CBGetLBText(hDlg, IDC_FONTSIZE, CBGetCurSel(hDlg, IDC_FONTSIZE), tmp);
-		SetMyRegLong(section, "FontSize", atoi(tmp));
+	SetMyRegLong(section, "FontSize", atoi(tmp));
 	} else SetMyRegLong(section, "FontSize", 9);
 	
 	SetMyRegLong(section, "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
@@ -389,13 +389,13 @@ void InitComboFont(HWND hDlg)
 	hcombo = GetDlgItem(hDlg, IDC_FONT);
 	
 	lf.lfCharSet = (BYTE)GetTextCharset(hdc);  // MS UI Gothic, ...
-	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
+	EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)hcombo, 0);
 	
 	lf.lfCharSet = OEM_CHARSET;   // Small Fonts, Terminal...
-	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
+	EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)hcombo, 0);
 	
 	lf.lfCharSet = DEFAULT_CHARSET;  // Arial, Courier, Times New Roman, ...
-	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)hcombo, 0);
+	EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)hcombo, 0);
 	
 	
 	ReleaseDC(NULL, hdc);

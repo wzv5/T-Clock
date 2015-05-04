@@ -54,11 +54,11 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 	// find a font named "fontname"
 	if(!charset) charset = (BYTE)GetTextCharset(hdc);
 	lf.lfCharSet = charset;
-	if(EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)fontname, 0)) {
+	if(EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)fontname, 0)) {
 		lf.lfCharSet = OEM_CHARSET;
-		if(EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)fontname, 0)) {
+		if(EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)fontname, 0)) {
 			lf.lfCharSet = ANSI_CHARSET;
-			EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontFamExProc, (LPARAM)fontname, 0);
+			EnumFontFamiliesEx(hdc, &lf, EnumFontFamExProc, (LPARAM)fontname, 0);
 		}
 	}
 	
