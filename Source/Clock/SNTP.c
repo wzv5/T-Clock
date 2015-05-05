@@ -467,7 +467,7 @@ INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 			
 		case IDOK:
 			OkaySave(hDlg);
-			//--+++--+++--//--+++--> Fall Through IS Intentional.
+			/* fall through */
 		case IDCANCEL:
 			if(tchk) {
 				free(tchk);   // Free, and...? (Crash Unless You Include the Next Line)

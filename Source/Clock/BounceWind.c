@@ -71,9 +71,9 @@ INT_PTR CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				ReleaseTheHound(hDlg,dlg->name,dlg->message,NULL);
 				break;}
 				
-			case IDOK: // Fall Through IS Intentional.
+			case IDOK:
 				OnOK(hDlg);
-				
+				/* fall through */
 			case IDCANCEL:
 				EndDialog(hDlg, id);
 				break;
