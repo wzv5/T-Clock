@@ -224,7 +224,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	SetDlgItemText(hDlg, IDCE_HK_CALN, tchk[4].szText);
 	
 	// Subclass the Edit Controls
-	OldEditClassProc  = (WNDPROC)(LONG_PTR)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_ADD), GWLP_WNDPROC);
+	OldEditClassProc  = (WNDPROC)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_ADD), GWLP_WNDPROC);
 	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_ADD),  GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
 	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_STOP), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
 	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_TIME), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);

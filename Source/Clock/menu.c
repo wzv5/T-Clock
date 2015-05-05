@@ -86,7 +86,7 @@ void ToggleDesk()   //----------------------------------------------------------
 	
 	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
 	
-	hres = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, &IID_IShellDispatch4, (LPVOID*)&pDisp);
+	hres = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, &IID_IShellDispatch4, &pDisp);
 	
 	if(SUCCEEDED(hres)) {
 		pDisp->lpVtbl->ToggleDesktop(pDisp);
@@ -191,7 +191,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case IDM_FWD_LOCKTASKBAR: case IDM_FWD_LOCKALLTASKBAR:
 	case IDM_FWD_TASKBARPROP: case IDM_FWD_RUNAPP: case IDM_FWD_EXITEXPLORER:{
 		HWND hwndTray = FindWindow("Shell_TrayWnd", NULL);
-		if(hwndTray) PostMessage(hwndTray, WM_COMMAND, (WPARAM)wID, 0);
+		if(hwndTray) PostMessage(hwndTray, WM_COMMAND, wID, 0);
 		break;}
 	case IDM_DATETIME_EX:{
 		HWND hwnd1=FindWindow("Shell_TrayWnd",NULL);

@@ -151,7 +151,7 @@ void BounceWindow(HWND hwnd,const RECT* rc)  //---------------------------------
 	} else if((m_iBallY + iSizeH) > m_iScreenH) {
 		if(m_flags&BFLAG_RAND) {
 			double dTmp;
-			srand((UINT)time(0));
+			srand((unsigned)time(0));
 			dTmp = rand() % 42 + 0;
 			dTmp *= .01;
 			m_iShort = (int)(m_iScreenH * dTmp); // Make Shorter Random Height Hops
@@ -313,7 +313,7 @@ void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* setti
 	if(m_caption){
 		return;
 	}
-	SetTimer(hwnd, ID_DOGGIE, m_iSpeed, (TIMERPROC)DoggieProc);
+	SetTimer(hwnd, ID_DOGGIE, m_iSpeed, DoggieProc);
 	if(m_iSpeed < 10) m_iSpeed = 10; // Required to Ensure Paws.
 	// our notify
 	data=(bounce_t*)malloc(sizeof(bounce_t));

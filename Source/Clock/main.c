@@ -161,7 +161,7 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 	
 	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
 	
-	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (LPVOID*)&psl);
+	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, &psl);
 	if(SUCCEEDED(hres)) {
 		IPersistFile* ppf;
 		char path[MAX_PATH];
@@ -172,7 +172,7 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 		del_title(path);
 		psl->lpVtbl->SetWorkingDirectory(psl, path);
 		
-		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (LPVOID*)&ppf);
+		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, &ppf);
 		if(SUCCEEDED(hres)) {
 			WORD wsz[MAX_PATH];
 			char lnkfile[MAX_PATH];
@@ -354,7 +354,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	EndNewAPI(NULL);
 	
-	ExitProcess((UINT)msg.wParam);
+	ExitProcess((unsigned)msg.wParam);
 }
 //========================================================================================
 //   /exit	: Exit T-Clock 2010
@@ -555,7 +555,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		switch(wParam) {
 		case WTS_SESSION_LOCK:
 			Sleep(500); // Eliminate user's interaction for 500 ms
-			SendMessage(HWND_BROADCAST_nowarn, WM_SYSCOMMAND,SC_MONITORPOWER, (LPARAM)2);
+			SendMessage(HWND_BROADCAST_nowarn, WM_SYSCOMMAND,SC_MONITORPOWER, 2);
 			return 0;
 		}
 		break;
@@ -622,7 +622,7 @@ int CheckDLL(char* fname)   //--------------------------------------------------
 		if(GetFileVersionInfo(fname, 0, size, pBlock)) {
 			VS_FIXEDFILEINFO* pffi;
 			UINT uLen;
-			if(VerQueryValue(pBlock, "\\\0", (LPVOID*)&pffi, &uLen)) {
+			if(VerQueryValue(pBlock, "\\\0", &pffi, &uLen)) {
 				if(pffi->dwFileVersionMS == MAKELONG(VER_MINOR,VER_MAJOR)  &&
 				   pffi->dwFileVersionLS == MAKELONG(VER_REVISION,VER_BUILD)){
 					ret = 1; //--+++--> Correct T-Clock.dll File Version Found!

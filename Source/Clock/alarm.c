@@ -409,7 +409,7 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 		return FALSE;
 		
 	mmckinfoParent.fccType = mmioFOURCC('W', 'A', 'V', 'E');
-	if(mmioDescend(hmmio, (LPMMCKINFO) &mmckinfoParent, NULL, MMIO_FINDRIFF)) {
+	if(mmioDescend(hmmio, &mmckinfoParent, NULL, MMIO_FINDRIFF)) {
 		mmioClose(hmmio, 0);
 		return FALSE;
 	}
@@ -434,8 +434,8 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 		return FALSE;
 	}
 	
-	if(waveOutOpen(&m_hWaveOut, (UINT)WAVE_MAPPER, (LPWAVEFORMATEX)m_pFormat,
-				   0, 0, (DWORD)WAVE_FORMAT_QUERY)) {
+	if(waveOutOpen(&m_hWaveOut, WAVE_MAPPER, m_pFormat,
+				   0, 0, WAVE_FORMAT_QUERY)) {
 		free(m_pFormat); m_pFormat = NULL;
 		mmioClose(hmmio, 0);
 		return FALSE;
@@ -473,9 +473,9 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 	}
 	mmioClose(hmmio, 0);
 	
-	if(waveOutOpen((LPHWAVEOUT)&m_hWaveOut, (UINT)WAVE_MAPPER,
-				   (LPWAVEFORMATEX)m_pFormat, (DWORD_PTR)(HWND)hwnd, 0,
-				   (DWORD)CALLBACK_WINDOW)) {
+	if(waveOutOpen(&m_hWaveOut, WAVE_MAPPER,
+				   m_pFormat, (DWORD_PTR)hwnd, 0,
+				   CALLBACK_WINDOW)) {
 		free(m_pFormat); m_pFormat = NULL;
 		free(m_pData); m_pData = NULL;
 		return FALSE;

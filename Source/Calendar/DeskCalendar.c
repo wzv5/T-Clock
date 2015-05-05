@@ -215,7 +215,7 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	wcx.lpszClassName = "ClockFlyoutWindow";
 	wcx.hIconSm=NULL;
 	calclass=RegisterClassEx(&wcx);
-	hwnd=CreateWindowEx(0,(LPCSTR)MAKELPARAM(calclass,0),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,hInstance,NULL);
+	hwnd=CreateWindowEx(0,MAKEINTATOM(calclass),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,hInstance,NULL);
 	return hwnd;
 }
 

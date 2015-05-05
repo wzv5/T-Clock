@@ -32,8 +32,8 @@ static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,char* lpSubKey,REGSAM samDesired,D
 //---------------------------//-----+++--> Find Out If it's Older Then Windows 2000 If it is, Die!:
 BOOL CheckSystemVersion()   //--------------------------------------------------------------+++-->
 {
-	OSVERSIONINFOEX osvi={sizeof(OSVERSIONINFOEX)};
-	if(!GetVersionEx((OSVERSIONINFO*) &osvi))
+	OSVERSIONINFO osvi={sizeof(OSVERSIONINFO)};
+	if(!GetVersionEx(&osvi))
 		return FALSE;
 	switch(osvi.dwMajorVersion){
 	case 5: // 2000-Vista
@@ -345,18 +345,17 @@ int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT
 }
 //================================================================================================
 //----------------------------------------//--------------------------+++--> 32bit x 32bit = 64bit:
-DWORDLONG M32x32to64(DWORD a, DWORD b)   //-------------------------------------------------+++-->
+ULONGLONG M32x32to64(DWORD a, DWORD b)   //-------------------------------------------------+++-->
 {
-	ULARGE_INTEGER r;
+	ULARGE_INTEGER ret = {0};
 	DWORD* p1, *p2, *p3;
-	memset(&r, 0, 8);
-	p1 = &r.LowPart;
-	p2 = (DWORD*)((BYTE*)p1 + 2);
-	p3 = (DWORD*)((BYTE*)p2 + 2);
+	p1 = &ret.LowPart;
+	p2 = (DWORD*)((char*)p1 + 2);
+	p3 = (DWORD*)((char*)p2 + 2);
 	*p1 = LOWORD(a) * LOWORD(b);
 	*p2 += LOWORD(a) * HIWORD(b) + HIWORD(a) * LOWORD(b);
 	*p3 += HIWORD(a) * HIWORD(b);
-	return *(DWORDLONG*)(&r);
+	return ret.QuadPart;
 }
 /*
 #include <stddef.h>
@@ -415,7 +414,7 @@ int GetMyRegStr(const char* section, const char* entry, char* val, int len, cons
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
 				size = len;
-				if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
+				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 					ret=size;
 					if(ret) --ret;
 				}
@@ -446,7 +445,7 @@ int GetMyRegStrEx(const char* section, const char* entry, char* val, int len, co
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
 				size = len;
-				if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
+				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 					ret=size;
 					if(ret) --ret;
 				}
@@ -476,7 +475,7 @@ LONG GetMyRegLong(const char* section, const char* entry, LONG defval)
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
 				DWORD regtype,size=sizeof(LONG);
 				LONG dw=0;
-				if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
+				if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
 					defval=dw;
 				RegCloseKey(hkey);
 			}
@@ -497,7 +496,7 @@ LONG GetMyRegLongEx(const char* section, const char* entry, LONG defval)
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
 				DWORD regtype,size=sizeof(LONG);
 				LONG dw=0;
-				if(RegQueryValueEx(hkey,entry,0,&regtype,(LPBYTE)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
+				if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
 					defval=dw;
 				}else{
 					SetMyRegLong(section,entry,defval);
@@ -515,7 +514,7 @@ int GetRegStr(HKEY rootkey, const char* section, const char* entry, char* val, i
 	
 	if(RegOpenKeyEx(rootkey,section,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
 		size = len;
-		if(RegQueryValueEx(hkey, entry, 0, &regtype, (LPBYTE)val, &size) == ERROR_SUCCESS) {
+		if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 			if(size == 0) *val = 0;
 			b = TRUE;
 		}
@@ -538,7 +537,7 @@ BOOL SetMyRegStr(const char* section, const char* entry, const char* val)
 			return WritePrivateProfileString(key, entry, val, g_inifile);
 		
 		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)(int)strlen(val)) == ERROR_SUCCESS) {
+			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)strlen(val)) == ERROR_SUCCESS) {
 				r = TRUE;
 			}
 			RegCloseKey(hkey);

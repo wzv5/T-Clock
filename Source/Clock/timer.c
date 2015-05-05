@@ -221,11 +221,11 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 		//--------------------------------------------------------------------------+++-->
 	case WM_NOTIFY: { //========================================== BEGIN WM_NOTIFY:
 //----------------------------------------------------------------------------+++-->
-			if(((LPNMHDR)lParam)->code == UDN_DELTAPOS) {
-				LPNMUPDOWN lpnmud;
+			if(((NMHDR*)lParam)->code == UDN_DELTAPOS) {
+				NMUPDOWN* lpnmud;
 				int i;
 				
-				lpnmud = (LPNMUPDOWN)lParam;
+				lpnmud = (NMUPDOWN*)lParam;
 				if(lpnmud->iDelta > 0) { // User Selected the Up Arrow
 					switch(LOWORD(wParam)) { //--+++--> on One of the Timer Controls.
 					case IDC_TIMERSECSPIN:
@@ -787,8 +787,8 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 //===//=============================================================================
 	case WM_NOTIFY:
 		//--------------------------------------------------------------------+++-->
-		if(((LPNMHDR)lParam)->code == LVN_KEYDOWN) { //-+> Capture Key Strokes Here.
-			LPNMLVKEYDOWN nmkey = (LPNMLVKEYDOWN)lParam;
+		if(((NMHDR*)lParam)->code == LVN_KEYDOWN) { //-+> Capture Key Strokes Here.
+			LPNMLVKEYDOWN nmkey = (NMLVKEYDOWN*)lParam;
 			HWND hList=GetDlgItem(hDlg,IDC_LIST);
 			switch(nmkey->wVKey) {
 			case VK_DELETE:{

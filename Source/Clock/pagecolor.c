@@ -310,8 +310,8 @@ void InitColor(HWND hDlg)
 --------------------------------------------------*/
 void OnMeasureItemColorCombo(LPARAM lParam)
 {
-	LPMEASUREITEMSTRUCT pmis;
-	pmis = (LPMEASUREITEMSTRUCT)lParam;
+	MEASUREITEMSTRUCT* pmis;
+	pmis = (MEASUREITEMSTRUCT*)lParam;
 	pmis->itemHeight = 7 * HIWORD(GetDialogBaseUnits()) / 8;
 }
 
@@ -319,12 +319,12 @@ void OnMeasureItemColorCombo(LPARAM lParam)
 --------------------------------------------------*/
 void OnDrawItemColorCombo(LPARAM lParam)
 {
-	LPDRAWITEMSTRUCT pdis;
+	DRAWITEMSTRUCT* pdis;
 	HBRUSH hbr;
 	COLORREF col;
 	TEXTMETRIC tm;
 	
-	pdis = (LPDRAWITEMSTRUCT)lParam;
+	pdis = (DRAWITEMSTRUCT*)lParam;
 	
 	if(IsWindowEnabled(pdis->hwndItem)) {
 		col = GetTColor((COLORREF)pdis->itemData,2);
@@ -375,7 +375,7 @@ void OnDrawItemColorCombo(LPARAM lParam)
 --------------------------------------------------*/
 void OnChooseColor(HWND hDlg, WORD id)
 {
-	CHOOSECOLOR cc;
+	CHOOSECOLOR cc = {sizeof(CHOOSECOLOR)};
 	COLORREF col, colarray[16];
 	WORD idCombo;
 	unsigned icol;
@@ -386,10 +386,7 @@ void OnChooseColor(HWND hDlg, WORD id)
 	
 	for(icol = 0; icol < 16; ++icol) colarray[icol] = 0x00FFFFFF;
 	
-	memset(&cc, 0, sizeof(CHOOSECOLOR));
-	cc.lStructSize = sizeof(CHOOSECOLOR);
 	cc.hwndOwner = hDlg;
-	cc.hInstance = (HWND)(HINSTANCE)GetModuleHandle(NULL);
 	cc.rgbResult = col;
 	cc.lpCustColors = colarray;
 	cc.Flags = CC_FULLOPEN | CC_RGBINIT;

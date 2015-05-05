@@ -82,7 +82,7 @@ void SetMySysWeek(char* val)   //-----------------------------------------------
 	HKEY hkey;
 	
 	if(RegCreateKey(HKEY_CURRENT_USER, "Control Panel\\International", &hkey) == ERROR_SUCCESS) {
-		RegSetValueEx(hkey, "iFirstWeekOfYear", 0, REG_SZ, (CONST BYTE*)val, (DWORD)(int)strlen(val));
+		RegSetValueEx(hkey, "iFirstWeekOfYear", 0, REG_SZ, (CONST BYTE*)val, (unsigned)strlen(val));
 		RegCloseKey(hkey);
 	}
 }
@@ -135,7 +135,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
 	char szWeek[8];
-	char bRefresh=GetMyRegLong("Desktop","Multimon",1) != (LONG)IsDlgButtonChecked(hDlg,IDCB_MULTIMON);
+	char bRefresh=((unsigned)GetMyRegLong("Desktop","Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
 	SetMyRegLong("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
 	SetMyRegLong("Calendar","CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));

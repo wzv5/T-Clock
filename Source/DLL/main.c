@@ -67,7 +67,7 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 	}
 	
 	// install an hook to thread of taskbar
-	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)CallWndProc, hInstance, dwThreadId);
+	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, CallWndProc, hInstance, dwThreadId);
 	if(!m_hhook) {
 		SendMessage(hwnd, MAINM_ERROR, 0, 3);
 		return;
@@ -93,7 +93,7 @@ void WINAPI HookEnd(void)   //--------------------------------------------------
 //---------------------------------------------+++--> SystemTray Clock ShellHook Procedure:
 LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)   //----------+++-->
 {/// @todo : rewrite hooking code (use wrapper exe to hook it)
-	LPCWPSTRUCT pcwps = (LPCWPSTRUCT)lParam;
+	CWPSTRUCT* pcwps = (CWPSTRUCT*)lParam;
 	if(nCode >= 0 && pcwps && pcwps->hwnd) { // if this message is sent to the clock
 		char classname[80];
 		if(!g_hwndClock && GetClassName(pcwps->hwnd, classname, 80) && !lstrcmpi(classname, "TrayClockWClass")) {

@@ -93,15 +93,15 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	SYSTEMTIME st, st_dif;
 	union{
 		FILETIME ft;
-		DWORDLONG ftqw;
+		ULONGLONG ftqw;
 	} tnew;
 	union{
 		FILETIME ft;
-		DWORDLONG ftqw;
+		ULONGLONG ftqw;
 	} told;
 	char s[GEN_BUFF];
 	DWORD sr_time;
-	DWORDLONG dif;
+	ULONGLONG dif;
 	BOOL b;
 	
 	// timeout ?
@@ -119,9 +119,9 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	/*
 		// difference
 		if(nMinuteDif > 0)
-			*(DWORDLONG*)&ft += M32x32to64(nMinuteDif * 60, 10000000);
+			*(ULONGLONG*)&ft += M32x32to64(nMinuteDif * 60, 10000000);
 		else if(nMinuteDif < 0)
-			*(DWORDLONG*)&ft -= M32x32to64(-nMinuteDif * 60, 10000000);
+			*(ULONGLONG*)&ft -= M32x32to64(-nMinuteDif * 60, 10000000);
 	*/
 	// set system time
 	b = FileTimeToSystemTime(&tnew.ft, &st);
@@ -238,7 +238,7 @@ int SNTPSend(SOCKET Sntp, LPSOCKADDR_IN lpstToAddr)
 	
 	// send a packet
 	nRet = sendto(Sntp, (const char*)&NTP_Send, sizeof(NTP_Send),
-				  0, (LPSOCKADDR)lpstToAddr, sizeof(SOCKADDR_IN));
+				  0, (SOCKADDR*)lpstToAddr, sizeof(SOCKADDR_IN));
 				  
 	if(nRet == SOCKET_ERROR) { // Tell Us if "We" Failed!
 		char szErr[MIN_BUFF];
@@ -354,10 +354,10 @@ void SyncTimeNow()   //=========================================================
 //---------------------------------------+++--> SNTP/UDP Socket Operation TimeOut Thread Procedure:
 unsigned __stdcall KillSocketProc(void* param)    //----------------------------------------+++-->
 {
-	LPKILLSOC ks;
+	KILLSOC* ks;
 	DWORD dwNow = 0;
 	DWORD dwKillTime;
-	ks = (LPKILLSOC)param;
+	ks = (KILLSOC*)param;
 	
 	dwKillTime = ks->dwSent + 1000;
 	while(dwNow < dwKillTime) {
@@ -514,7 +514,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		CBSetCurSel(hDlg, IDCBX_NTPSERVER, i);
 	}
 	if(!g_hIconDel) {
-		g_hIconDel = LoadImage((HANDLE)GetModuleHandle(NULL),
+		g_hIconDel = LoadImage(GetModuleHandle(NULL),
 							   MAKEINTRESOURCE(IDI_DEL),
 							   IMAGE_ICON, 16, 16,
 							   LR_DEFAULTCOLOR);
@@ -542,7 +542,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SetDlgItemText(hDlg, IDCE_SYNCHOTKEY, tchk[0].szText);
 	
 	// Subclass the Edit Controls
-	OldEditClassProc  = (WNDPROC)(LONG_PTR)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC);
+	OldEditClassProc  = (WNDPROC)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC);
 	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
 	
 	// init listview
