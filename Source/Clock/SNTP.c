@@ -53,7 +53,7 @@ void Log(const char* msg)   //--------------------------------------------------
 	GetLocalTime(&st);
 	len = wsprintf(logmsg, "%d/%02d/%02d %02d:%02d:%02d ", st.wYear,
 					st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-	strncpy_s(logmsg, sizeof(logmsg)-len, msg, _TRUNCATE);
+	strncpy_s(logmsg+len, sizeof(logmsg)-len, msg, _TRUNCATE);
 	
 	// save to file
 	if(bSaveLog) {
