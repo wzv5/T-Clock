@@ -26,22 +26,24 @@ typedef struct { // Close Socket on Request TimeOut Structure
 	SOCKET soc;
 } KILLSOC, *LPKILLSOC;
 
+// PageHotKey.c
 extern hotkey_t* tchk;
+extern WNDPROC OldEditClassProc;
+LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-static HWND m_dlg;
-static BOOL bSaveLog;
-static BOOL bMessage;
-static BOOL bGUI = FALSE;
-static int nTimeout = 1000;
-static DWORD dwTickCountOnSend = 0;
+static const char m_subkey[] = "SNTP";
+static const DWORD m_nTimeout = 1000;
+static HWND m_dlg = NULL;
+static BOOL m_bSaveLog;
+static BOOL m_bMessage;
+static DWORD m_dwTickCountOnSend = 0;
+
+BOOL GetSetTimePermissions(void);
 
 static void OnInit(HWND);
-BOOL GetSetTimePermissions(void);
-unsigned __stdcall KillSocketProc(void*);
+static unsigned __stdcall KillSocketProc(void*);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
-extern WNDPROC OldEditClassProc; // Default Procedure for Edit Controls
-INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 //================================================================================================
 //---------------------------//----------------------------+++--> Save Request Results in SNTP.log:
 void Log(const char* msg)   //--------------------------------------------------------------+++-->
@@ -56,7 +58,7 @@ void Log(const char* msg)   //--------------------------------------------------
 	strncpy_s(logmsg+len, sizeof(logmsg)-len, msg, _TRUNCATE);
 	
 	// save to file
-	if(bSaveLog) {
+	if(m_bSaveLog) {
 		char fname[MAX_PATH];
 		HFILE hf;
 		
@@ -68,11 +70,11 @@ void Log(const char* msg)   //--------------------------------------------------
 		if(hf == HFILE_ERROR) return;
 		_llseek(hf, 0, 2);
 		_lwrite(hf, logmsg, lstrlen(logmsg));
-		_lwrite(hf, "\x0d\x0a", 2);
+		_lwrite(hf, "\r\n", 2);
 		_lclose(hf);
 	}
 	
-	if(bGUI) { // IF Configure NTP Server is Open, Display Results in Sync History.
+	if(m_dlg) { // IF Configure NTP Server is Open, Display Results in Sync History.
 		LVITEM lvItem; //-----+++--> Even if Activity is Not Saved to the Log File.
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
@@ -81,7 +83,7 @@ void Log(const char* msg)   //--------------------------------------------------
 		ListView_InsertItem(GetDlgItem(m_dlg,IDC_LIST), &lvItem);
 	}
 	
-	if(bMessage) {
+	if(m_bMessage) {
 		MessageBox(0, logmsg, "T-Clock Time Sync", MB_OK);
 	}
 }
@@ -105,8 +107,8 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	BOOL b;
 	
 	// timeout ?
-	sr_time = GetTickCount() - dwTickCountOnSend;
-	if(sr_time >= (DWORD)nTimeout) {
+	sr_time = GetTickCount() - m_dwTickCountOnSend;
+	if(sr_time >= m_nTimeout) {
 		wsprintf(s, "timeout (%04d)", sr_time);
 		Log(s); return;
 	}
@@ -136,7 +138,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	/*
 		GetLocalTime(&lt);
 		nLastDay = lt.wDay;
-		SetMyRegLong("SNTP", "LastDay", nLastDay);
+		SetMyRegLong(m_subkey, "LastDay", nLastDay);
 	*/
 	SystemTimeToFileTime(&st, &tnew.ft);
 	// delayed or advanced
@@ -154,7 +156,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 		wsprintf(s + strlen(s), "%02d:%02d.%03d ",
 				 st_dif.wMinute, st_dif.wSecond, st_dif.wMilliseconds);
 	}
-	GetMyRegStr("SNTP", "Sound", szWave, MAX_BUFF, "");
+	GetMyRegStr(m_subkey, "Sound", szWave, MAX_BUFF, "");
 	PlayFile(g_hwndTClockMain, szWave, 0);
 	if(strlen(szWave)) // IF There IS a Sound File Selected
 	
@@ -247,7 +249,7 @@ int SNTPSend(SOCKET Sntp, LPSOCKADDR_IN lpstToAddr)
 		SocketClose(Sntp, szErr);
 	}
 	// save tickcount
-	dwTickCountOnSend = GetTickCount();
+	m_dwTickCountOnSend = GetTickCount();
 	return(nRet);
 }
 
@@ -312,15 +314,15 @@ void SyncTimeNow()   //=========================================================
 	KILLSOC ks;
 	int nRet;
 	
-	if(!bGUI) {
-		bSaveLog = GetMyRegLongEx("SNTP", "SaveLog", 0);
-		bMessage = GetMyRegLongEx("SNTP", "MessageBox", 0);
+	if(!m_dlg) {
+		m_bSaveLog = GetMyRegLongEx(m_subkey, "SaveLog", 0);
+		m_bMessage = GetMyRegLongEx(m_subkey, "MessageBox", 0);
 	}
-	GetMyRegStrEx("SNTP", "Server", szServer, sizeof(szServer), "");
+	GetMyRegStrEx(m_subkey, "Server", szServer, sizeof(szServer), "");
 	if(!strlen(szServer)) { //-------+++--> If SNTP Server is NOT Configured:
 		wsprintf(szErr, "No SNTP Server Specified!");
 		MessageBox(0, szErr, "Time Sync Failed:", MB_OK|MB_ICONERROR);
-		NetTimeConfigDialog();
+		if(!m_dlg) NetTimeConfigDialog();
 		return;
 	}
 	
@@ -387,9 +389,7 @@ and add your username to "Change the system time"). I don't know of any specific
 //--------------------------------//---------------------+++--> Open the SNTP Configuration Dialog:
 void NetTimeConfigDialog(void)   //---------------------------------------------------------+++-->
 {
-	bGUI = TRUE;    //-----------------------------------+++--> Start in Gooy Mode.
-	DialogBox(0, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, SNTPConfigProc);
-	bGUI = FALSE; //-------------------------------+++--> End of/Disable Gooy Mode.
+	DialogBox(0, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, DlgProcSNTPConfig);
 }
 //================================================================================================
 //--------------------------//--+++--> Save Network Time Server Configuration Settings to Registry:
@@ -398,14 +398,14 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	char szServer[MIN_BUFF];
 	char szSound[MAX_PATH];
 	char entry[TNY_BUFF];
-	char subkey[] = "SNTP";
+	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 	int i, count;
 	
-	SetMyRegLong(subkey, "SaveLog", IsDlgButtonChecked(hDlg, IDCBX_SNTPLOG));
-	SetMyRegLong(subkey, "MessageBox", IsDlgButtonChecked(hDlg, IDCBX_SNTPMESSAGE));
+	SetMyRegLong(m_subkey, "SaveLog", IsDlgButtonChecked(hDlg, IDCBX_SNTPLOG));
+	SetMyRegLong(m_subkey, "MessageBox", IsDlgButtonChecked(hDlg, IDCBX_SNTPMESSAGE));
 	
 	GetDlgItemText(hDlg, IDCE_SYNCSOUND, szSound, MAX_PATH);
-	SetMyRegStr(subkey, "Sound", szSound);
+	SetMyRegStr(m_subkey, "Sound", szSound);
 	
 	if(tchk[0].bValid) { // Synchronize System Clock With Remote Time Server
 		RegisterHotKey(g_hwndTClockMain, HOT_TSYNC, tchk[0].fsMod, tchk[0].vk);
@@ -421,49 +421,66 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	SetMyRegLong("HotKeys\\HK5", "vk",  tchk[0].vk);
 	
 	
-	
-	
-	GetDlgItemText(hDlg, IDCBX_NTPSERVER, szServer, MIN_BUFF);
-	SetMyRegStr(subkey, "Server", szServer);
+	ComboBox_GetText(hServer, szServer, sizeof(szServer));
+	SetMyRegStr(m_subkey, "Server", szServer);
 	
 	if(szServer[0]) {
-		int index = (int)CBFindStringExact(hDlg, IDCBX_NTPSERVER, szServer);
-		if(index != LB_ERR)
-			CBDeleteString(hDlg, IDCBX_NTPSERVER, index);
-		CBInsertString(hDlg, IDCBX_NTPSERVER, 0, szServer);
-		CBSetCurSel(hDlg, IDCBX_NTPSERVER, 0);
+		int index = ComboBox_FindStringExact(hServer, -1, szServer);
+		if(index != CB_ERR)
+			ComboBox_DeleteString(hServer, index);
+		ComboBox_InsertString(hServer, 0, szServer);
+		ComboBox_SetCurSel(hServer, 0);
 	}
-	count = (int)CBGetCount(hDlg, IDCBX_NTPSERVER);
-	for(i = 0; i < count; i++) {
-		CBGetLBText(hDlg, IDCBX_NTPSERVER, i, szServer);
+	count = ComboBox_GetCount(hServer);
+	// removed deleted servers
+	for(i=GetMyRegLong(m_subkey,"ServerNum",0); i>count; --i){
+		wsprintf(entry, "Server%d", i);
+		DelMyReg(m_subkey, entry);
+	}
+	// update server list
+	for(i=0; i < count; ++i) {
+		ComboBox_GetLBText(hServer, i, szServer);
 		wsprintf(entry, "Server%d", i+1);
-		SetMyRegStr(subkey, entry, szServer);
+		SetMyRegStr(m_subkey, entry, szServer);
 	}
-	SetMyRegLong(subkey, "ServerNum", count);
-	
-	
-	
+	SetMyRegLong(m_subkey, "ServerNum", count);
 }
 //================================================================================================
 //------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
-INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	(void)lParam;
+	
 	switch(msg)  {
 	case WM_INITDIALOG:
-		SetMyDialgPos(hDlg,21);
+		m_dlg = hDlg;
 		OnInit(hDlg);
 		return TRUE;
+	case WM_DESTROY:
+		m_dlg = NULL;
+		break;
 		
 	case WM_COMMAND:
 		switch(LOWORD(wParam))  {
-		case IDCB_SYNCNOW:
+		case IDCB_SYNCNOW:{
+			HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
+			char szServer[MIN_BUFF];
+			ComboBox_GetText(hServer, szServer, sizeof(szServer));
+			SetMyRegStr(m_subkey, "Server", szServer);
 			SyncTimeNow();
-			return TRUE;
+			return TRUE;}
 			
 		case IDCB_SYNCSOUNDBROWSE:
 			OnSanshoAlarm(hDlg, IDCE_SYNCSOUND);
 			return TRUE;
+			
+		case IDCB_DELSERVER:{
+			HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
+			int index = ComboBox_GetCurSel(hServer);
+			if(index != CB_ERR){
+				ComboBox_DeleteString(hServer, index);
+			}
+			return TRUE;}
 			
 		case IDOK:
 			OkaySave(hDlg);
@@ -474,7 +491,7 @@ INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 				tchk = NULL; //<--+++--> Thank You Don Beusee for reminding me to do this.
 			}
 			EndDialog(hDlg, /*wParam*/TRUE);
-//				  return TRUE;
+			return TRUE;
 		}
 	}
 	return FALSE;
@@ -485,34 +502,42 @@ INT_PTR CALLBACK SNTPConfigProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPara
 //------------------------//---------------------------+++--> To-Do List for Dialog Initialization:
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
-	char server[MIN_BUFF];
-	char szFile[MAX_PATH];
-	char subkey[] = "SNTP";
+	char str[MAX_PATH];
 	FILE* stReport;
 	LVCOLUMN lvCol;
 	LVITEM lvItem;
 	int i, count;
-	HWND hList=GetDlgItem(hDlg,IDC_LIST);
+	HWND hList = GetDlgItem(hDlg,IDC_LIST);
+	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 	
-	m_dlg=hDlg;
+	SetMyDialgPos(hDlg,21);
+	
 	// Get the List of Configured Time Servers:
-	GetMyRegStr(subkey, "Server", server, sizeof(server), "");
-	count = GetMyRegLong(subkey, "ServerNum", 0);
+	GetMyRegStr(m_subkey, "Server", str, sizeof(str), "");
+	count = GetMyRegLong(m_subkey, "ServerNum", 0);
 	for(i = 1; i <= count; i++) {
 		char s[MAX_BUFF], entry[TNY_BUFF];
 		
 		wsprintf(entry, "Server%d", i);
-		GetMyRegStr(subkey, entry, s, 80, "");
-		if(s[0]) CBAddString(hDlg, IDCBX_NTPSERVER, s);
+		GetMyRegStr(m_subkey, entry, s, 80, "");
+		if(s[0]) ComboBox_AddString(hServer, s);
 	}
-	if(server[0]) {
-		i = (int)CBFindStringExact(hDlg, IDCBX_NTPSERVER, server);
-		if(i == LB_ERR) {
-			CBInsertString(hDlg, IDCBX_NTPSERVER, 0, server);
-			i = 0;
-		}
-		CBSetCurSel(hDlg, IDCBX_NTPSERVER, i);
+	if(!ComboBox_GetCount(hServer)){
+		ComboBox_AddString(hServer,"europe.pool.ntp.org");
+		ComboBox_AddString(hServer,"north-america.pool.ntp.org");
+		ComboBox_AddString(hServer,"asia.pool.ntp.org");
+		ComboBox_AddString(hServer,"oceania.pool.ntp.org");
+		ComboBox_AddString(hServer,"south-america.pool.ntp.org");
+		ComboBox_AddString(hServer,"africa.pool.ntp.org");
 	}
+	if(!str[0])
+		strcpy(str,"pool.ntp.org");
+	i = ComboBox_FindStringExact(hServer, -1, str);
+	if(i == CB_ERR) {
+		i = ComboBox_InsertString(hServer, 0, str);
+	}
+	ComboBox_SetCurSel(hServer, i);
+	
 	if(!g_hIconDel) {
 		g_hIconDel = LoadImage(GetModuleHandle(NULL),
 							   MAKEINTRESOURCE(IDI_DEL),
@@ -523,14 +548,14 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 					   IMAGE_ICON, (LPARAM)g_hIconDel);
 					   
 	// Get the Sync Sound File:
-	GetMyRegStr(subkey, "Sound", szFile, sizeof(szFile), "");
-	SetDlgItemText(hDlg, IDCE_SYNCSOUND, szFile);
+	GetMyRegStr(m_subkey, "Sound", str, sizeof(str), "");
+	SetDlgItemText(hDlg, IDCE_SYNCSOUND, str);
 	
 	// Get the Confirmation Options:
-	bSaveLog = GetMyRegLongEx(subkey, "SaveLog", 0);
-	CheckDlgButton(hDlg, IDCBX_SNTPLOG, bSaveLog);
-	bMessage = GetMyRegLongEx(subkey, "MessageBox", 0);
-	CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, bMessage);
+	m_bSaveLog = GetMyRegLongEx(m_subkey, "SaveLog", 0);
+	CheckDlgButton(hDlg, IDCBX_SNTPLOG, m_bSaveLog);
+	m_bMessage = GetMyRegLongEx(m_subkey, "MessageBox", 0);
+	CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, m_bMessage);
 	
 	// Load & Display the Configured Synchronization HotKey:
 	tchk = (hotkey_t*)malloc(sizeof(hotkey_t));
@@ -559,28 +584,24 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	EnableDlgItem(hDlg, IDCB_SYNCNOW, GetSetTimePermissions());
 	
 	// Load the Time Synchronization Log File:
-	strcpy(szFile, g_mydir);
-	add_title(szFile, "SNTP.log");
+	strcpy(str, g_mydir);
+	add_title(str, "SNTP.log");
 	
-	if(fopen_s(&stReport, szFile, "r") > 0) {
-		MessageBox(0, "Open SNTP.log Failed!", "ERROR:", MB_OK|MB_ICONERROR);
-		return;
-	} else {
+	stReport = fopen(str, "r");
+	if(stReport) {
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
 		lvItem.iItem = 0; //-----+++--> Which Puts the Most Recent Info on Top.
 		
-		for(; ;) {   // (for) Ever Basically.
-			char szLine[MAX_BUFF]={0};
-			if(fgets(szLine, MAX_BUFF, stReport)) {
-				szLine[strcspn(szLine, "\n")] = '\0'; // Remove the Newline Character
-				lvItem.pszText = szLine;
+		for(;;) {   // (for) Ever Basically.
+			if(fgets(str, sizeof(str), stReport)) {
+				str[strcspn(str,"\n")] = '\0'; // Remove the Newline Character
+				lvItem.pszText = str;
 				ListView_InsertItem(hList, &lvItem);
-			} else {
-				fclose(stReport);
-				return; // Remember: Any Code Placed Below Here Will FAIL
-			} //--+++--//--------------+++--> ^^^ See Above ^^^
+			}else
+				break;
 		}
+		fclose(stReport);
 	}
 }
 //================================================================================================
