@@ -24,7 +24,31 @@ int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT
 /// unsorted
 char PathExists(const char* path);
 void GetFileAndOption(const char* command, char* fname, char* opt);
-BOOL ExecFile(HWND hwnd, const char* command);
+/**
+ * \brief a wrapper for ShellExecuteEx()
+ * \param method "open", "runas", etc.
+ * \param app path to run
+ * \param params = \c NULL (optional program arguments)
+ * \param parent = \c NULL (parent window)
+ * \param show = \c SW_SHOWNORMAL
+ * \return -1 on failure, 0 on success,1 if user cancled
+ * \sa ShellExecute(), ShellExecuteEx(), Exec() */
+int MyShellExecute(const char* method, const char* app, const char* params, HWND parent, int show);
+/**
+ * \brief starts an application
+ * \param app path to run
+ * \param params = \c NULL (optional program arguments)
+ * \param parent = \c NULL (parent window)
+ * \return -1 on failure, 0 on success, 1 if user cancled
+ * \sa ExecElevated(), ExecFile(), MyShellExecute() */
+int Exec(const char* app, const char* params, HWND parent);
+/**
+ * \brief opens a file or starts an application
+ * \param command full commandline with filename and optional arguments
+ * \param parent = \c NULL (parent window)
+ * \return -1 on failure, 0 on success, 1 if user cancled
+ * \sa Exec(), ExecElevated(), MyShellExecute() */
+int ExecFile(const char* command, HWND parent);
 int atox(const char* p);
 void del_title(char* path);
 void ForceForegroundWindow(HWND hwnd);

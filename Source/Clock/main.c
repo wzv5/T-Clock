@@ -77,7 +77,7 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 	}else{
 		char cal[MAX_PATH];
 		strcpy(cal,g_mydir); add_title(cal,"misc\\XPCalendar.exe");
-		ExecFile(g_hwndTClockMain,cal);
+		Exec(cal,NULL,g_hwndTClockMain);
 	}
 }
 //================================================================================================
@@ -242,7 +242,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}else{ // start new instance
 			char clock64[MAX_PATH];
 			strcpy(clock64,g_mydir); add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
-			ExecFile(NULL,clock64);
+			Exec(clock64,lpCmdLine,NULL);
 		}
 		ExitProcess(0);
 	}

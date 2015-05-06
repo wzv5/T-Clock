@@ -124,7 +124,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		
 	case IDM_DISPLAYPROP: //------------------------------+++--> Display Properties
 		if(g_tos>=TOS_VISTA)
-			ExecFile(NULL,"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\1\\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}");
+			Exec("::{26EE0668-A00A-44D7-9371-BEB064C98683}\\1\\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}",NULL,NULL);
 		else
 			WinExec(("control.exe desk.cpl, display,1"),SW_SHOW);
 		break;

@@ -154,16 +154,35 @@ void GetFileAndOption(const char* command, char* fname, char* opt)
 /*------------------------------------------------
   Open a file
 --------------------------------------------------*/
-BOOL ExecFile(HWND hwnd, const char* command)
+int MyShellExecute(const char* method, const char* app, const char* params, HWND parent, int show)
 {
-	if(*command){
-		char fname[MAX_PATH], opt[MAX_PATH];
-		if(hwnd) SetForegroundWindow(hwnd);
-		GetFileAndOption(command,fname,opt);
-		if((intptr_t)ShellExecute(hwnd,NULL,fname,*opt?opt:NULL,NULL,SW_SHOWNORMAL)>32)
-			return TRUE;
+	if(*app){
+		SHELLEXECUTEINFO sei = {sizeof(sei)};
+		sei.hwnd = parent;
+		sei.lpVerb = method;
+		sei.lpFile = app;
+		sei.lpParameters = params;
+		sei.nShow = show;
+		if(ShellExecuteEx(&sei))
+			return 0;
+		if(GetLastError()==ERROR_CANCELLED){ // UAC dialog user cancled
+			return 1;
+		}
 	}
-	return FALSE;
+	return -1;
+}
+int Exec(const char* app, const char* params, HWND parent)
+{
+	return MyShellExecute(NULL,app,params,parent,SW_SHOWNORMAL);
+}
+int ExecFile(const char* command, HWND parent)
+{
+	char app[MAX_PATH], params[MAX_PATH];
+	if(!command[0])
+		return -1;
+	// if(parent) SetForegroundWindow(parent);
+	GetFileAndOption(command,app,params);
+	return MyShellExecute(NULL,app,(params[0]?params:NULL),parent,SW_SHOWNORMAL);
 }
 
 int atox(const char* p)

@@ -334,7 +334,7 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 				m_countPlay = dwLoops;
 			} else mciSendString("close myfile", NULL, 0, NULL);
 		} return m_bMCIPlaying;
-	} else ExecFile(hwnd, fname);
+	} else ExecFile(fname,hwnd);
 	return FALSE;
 }
 //=================================================*
