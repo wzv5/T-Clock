@@ -228,13 +228,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// Make sure we're running Windows 2000 and above
 	if(!CheckSystemVersion()) {
 		MessageBox(NULL,"T-Clock requires Windows 2000 or newer","old OS",MB_OK|MB_ICONERROR);
-		ExitProcess(1);
+		return 1;
 	}
 	
 	// make sure ObjectBar isn't running -> From Original Code/Unclear if This is Still a Conflict. (test suggested not really.. no crash but no clock either :P)
 	if(FindWindow("ObjectBar Main","ObjectBar")) {
 		MessageBox(NULL,"ObjectBar and T-Clock can't be run together","ObjectBar detected!",MB_OK|MB_ICONERROR);
-		ExitProcess(1);
+		return 1;
 	}
 	
 //	FindTrayServer(hwndMain);
@@ -250,7 +250,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			strcpy(clock64,g_mydir); add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
 			Exec(clock64,lpCmdLine,NULL);
 		}
-		ExitProcess(0);
+		return 0;
 	}
 	#endif // __x86_64__
 	
@@ -263,7 +263,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			hwndMain = FindWindow(g_szClassName, NULL);
 			if(hwndMain) { // This One Sends Commands to the Instance
 				ProcessCommandLine(hwndMain,lpCmdLine); // That is Currently Running.
-				ExitProcess(0);
+				return 0;
 			}
 			Sleep(200);
 			continue;
@@ -273,13 +273,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	// Update settings if required and setup defaults
 	if((updated=CheckSettings())<0){
-		ExitProcess(1);
+		return 1;
 	}
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
 	m_bTrans2kIcons = GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE);
 	CancelAllTimersOnStartUp();
 	if(!LoadTClockDLL())
-		ExitProcess(2);
+		return 2;
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
 	s_uTaskbarRestart = RegisterWindowMessage("TaskbarCreated");
@@ -359,7 +359,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	EndNewAPI(NULL);
 	
-	ExitProcess((unsigned)msg.wParam);
+	return (int)msg.wParam;
 }
 
 LRESULT CALLBACK MsgOnlyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -488,6 +488,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_ENDSESSION:
 		if(!wParam)
 			break;
+		/* fall through */
 	case WM_DESTROY:
 		if(g_hwndSheet && IsWindow(g_hwndSheet))
 			SendMessage(g_hwndSheet, WM_CLOSE, 0, 0);
