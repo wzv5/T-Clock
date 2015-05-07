@@ -81,7 +81,7 @@ int CheckSettings(){
 		break;
 		
 	default:{
-		int ans=MessageBox(NULL,"This version of T-Clock looks older than what you've used before.\nSome settings might not be readable and you might lose some stuff.\n\nDo you want to run this old version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);
+		int ans=MessageBox(NULL,"This version of T-Clock looks older than what you've used before.\nSome settings might not be readable and you might loose some stuff.\n\nDo you want to run this old version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);
 		if(ans==IDOK){
 			ConvertSettings(); // should do nothing, just downgrade our version number
 			return 0;
