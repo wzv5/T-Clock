@@ -91,8 +91,11 @@ void Log(const char* msg)   //--------------------------------------------------
 //-------------------------------------------------------+++--> Set System Time With Received Data:
 void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------------------+++-->
 {
-	char szWave[MAX_BUFF] = {0};
-	SYSTEMTIME st, st_dif;
+	BOOL bOk;
+	char msg[GEN_BUFF];
+	size_t msglen;
+	char szWave[MAX_BUFF];
+	SYSTEMTIME st;
 	union{
 		FILETIME ft;
 		ULONGLONG ftqw;
@@ -101,68 +104,57 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 		FILETIME ft;
 		ULONGLONG ftqw;
 	} told;
-	char s[GEN_BUFF];
 	DWORD sr_time;
-	ULONGLONG dif;
-	BOOL b;
 	
 	// timeout ?
 	sr_time = GetTickCount() - m_dwTickCountOnSend;
 	if(sr_time >= m_nTimeout) {
-		wsprintf(s, "timeout (%04d)", sr_time);
-		Log(s); return;
+		wsprintf(msg, "timeout (%04d)", sr_time);
+		Log(msg);
+		return;
 	}
 	
 	// current time
 	GetSystemTimeAsFileTime(&told.ft);
 	
 	// NTP data -> FILETIME
-	tnew.ftqw=M32x32to64(seconds, 10000000) + 94354848000000000ULL;// seconds from 1900/01/01 ¨ 100 nano-seconds from 1601/01/01
-	/*
-		// difference
-		if(nMinuteDif > 0)
-			*(ULONGLONG*)&ft += M32x32to64(nMinuteDif * 60, 10000000);
-		else if(nMinuteDif < 0)
-			*(ULONGLONG*)&ft -= M32x32to64(-nMinuteDif * 60, 10000000);
-	*/
+	// seconds since 1900/01/01
+	// + 100 nano-seconds from 1601/01/01 (FILETIME) to 1900/01/01 (NTP)
+	tnew.ftqw = M32x32to64(seconds, 10000000) + 94354848000000000ULL;
+	// + fractions ranging from 0 to MAXUINT(0xFFFFFFFF,4294967295) as rounded up milliseconds
+	tnew.ftqw += (fractions / (429496+1) + 5) / 10 * 10000;
+	// we now have our time with 500 nanosecond precession (as windows can only handle milliseconds)
+	
 	// set system time
-	b = FileTimeToSystemTime(&tnew.ft, &st);
-	if(b) {
-		// 200 pico-seconds -> milli-seconds
-		st.wMilliseconds = (WORD)(fractions / 5000000);
-		b = SetSystemTime(&st);
-	}
-	if(!b) {
+	bOk = FileTimeToSystemTime(&tnew.ft, &st);
+	if(bOk)
+		bOk = SetSystemTime(&st);
+	if(!bOk) {
 		Log("failed to set time"); return;
 	}
-	/*
-		GetLocalTime(&lt);
-		nLastDay = lt.wDay;
-		SetMyRegLong(m_subkey, "LastDay", nLastDay);
-	*/
-	SystemTimeToFileTime(&st, &tnew.ft);
 	// delayed or advanced
-	b = (tnew.ftqw > told.ftqw);
+	bOk = (tnew.ftqw > told.ftqw);
 	// get difference
-	if(b) dif = tnew.ftqw - told.ftqw;
-	else  dif = told.ftqw - tnew.ftqw;
-	FileTimeToSystemTime((FILETIME*)&dif, &st_dif);
+	if(bOk) tnew.ftqw = tnew.ftqw - told.ftqw;
+	else  tnew.ftqw = told.ftqw - tnew.ftqw;
+	FileTimeToSystemTime(&tnew.ft, &st);
 	
 	// save log
-	strcpy(s, "synchronized ");
-	if(st_dif.wYear == 1601 && st_dif.wMonth == 1 &&
-	   st_dif.wDay == 1 && st_dif.wHour == 0) {
-		strcat(s, b?"+":"-");
-		wsprintf(s + strlen(s), "%02d:%02d.%03d ",
-				 st_dif.wMinute, st_dif.wSecond, st_dif.wMilliseconds);
+	msglen = 13;
+	memcpy(msg, "synchronized ", msglen+1);
+	if(st.wYear == 1601 && st.wMonth == 1
+	&& st.wDay == 1 && st.wHour == 0) {
+		msg[msglen++] = (bOk?'+':'-');
+		msglen += wsprintf(msg+msglen, "%02d:%02d.%03d ",
+				 st.wMinute, st.wSecond, st.wMilliseconds);
 	}
 	
 	GetMyRegStr(m_subkey, "Sound", szWave, MAX_BUFF, "");
 	if(szWave[0]){
 		PlayFile(g_hwndTClockMain, szWave, 0);
 	}
-	wsprintf(s + strlen(s), " (%04d)", sr_time);
-	Log(s);
+	msglen += wsprintf(msg+msglen, " (%04d)", sr_time);
+	Log(msg);
 }
 //================================================================================================
 //--------------------------------------------------+++--> Close Socket, and the WinSOCK Interface:
@@ -462,10 +454,7 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 	case WM_COMMAND:
 		switch(LOWORD(wParam))  {
 		case IDCB_SYNCNOW:{
-			HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
-			char szServer[MIN_BUFF];
-			ComboBox_GetText(hServer, szServer, sizeof(szServer));
-			SetMyRegStr(m_subkey, "Server", szServer);
+			OkaySave(hDlg);
 			SyncTimeNow();
 			return TRUE;}
 			
