@@ -100,5 +100,6 @@ enum{ // Drop&File enum / registry settings
 #define HWND_BROADCAST_nowarn ((HWND)(intptr_t)0xffff)
 #define HWND_TOPMOST_nowarn ((HWND)(intptr_t)-1)
 #define HWND_NOTOPMOST_nowarn ((HWND)(intptr_t)-2)
+#define HWND_MESSAGE_nowarn ((HWND)(intptr_t)-3)
 
 #endif // TCLOCK_GLOBAL_H

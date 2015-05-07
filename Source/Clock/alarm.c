@@ -27,7 +27,7 @@ typedef struct _stPCBEEP {
 } PCBEEP;
 
 static PCBEEP m_pcb;
-static volatile char m_bKillPCBeep;
+static volatile char m_bKillPCBeep = 1;
 
 BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops);
 int PlayMCI(HWND hwnd, int nt);
@@ -162,7 +162,6 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 				else if(m_pAS[i].uFlags&ALRM_CHIMEHR) rep = h; //-+> Ring the Hour
 				else rep = 0;
 				
-				m_bKillPCBeep = 0;
 				PlayFile(hwnd, m_pAS[i].fname, rep);
 				#ifndef _DEBUG
 				EmptyWorkingSet(GetCurrentProcess());
@@ -375,6 +374,10 @@ void StopFile(void)
 		m_countPlay = 0;
 	}
 	g_bPlayingNonstop = 0;
+}
+int IsPlaying()
+{
+	return m_hWaveOut || m_bMCIPlaying || !m_bKillPCBeep;
 }
 //=================================================*
 // ----------------------------- Loop Play as Needed

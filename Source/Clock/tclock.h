@@ -109,6 +109,7 @@ void SetAlarmEnabled(int idx,char bEnabled);
 void ReadAlarmFromReg(alarm_t* pAS, int num);
 void SaveAlarmToReg(alarm_t* pAS, int num);
 void StopFile();
+int IsPlaying();
 void EndAlarm();
 void InitAlarm();
 int OnMCINotify(HWND hwnd);

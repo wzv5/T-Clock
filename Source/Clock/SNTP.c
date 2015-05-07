@@ -117,7 +117,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	GetSystemTimeAsFileTime(&told.ft);
 	
 	// NTP data -> FILETIME
-	tnew.ftqw=M32x32to64(seconds, 10000000) + 94354848000000000ULL;// seconds from 1900/01/01 ÂÂ¨ 100 nano-seconds from 1601/01/01
+	tnew.ftqw=M32x32to64(seconds, 10000000) + 94354848000000000ULL;// seconds from 1900/01/01 ¨ 100 nano-seconds from 1601/01/01
 	/*
 		// difference
 		if(nMinuteDif > 0)
@@ -156,14 +156,13 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 		wsprintf(s + strlen(s), "%02d:%02d.%03d ",
 				 st_dif.wMinute, st_dif.wSecond, st_dif.wMilliseconds);
 	}
+	
 	GetMyRegStr(m_subkey, "Sound", szWave, MAX_BUFF, "");
-	PlayFile(g_hwndTClockMain, szWave, 0);
-	if(strlen(szWave)) // IF There IS a Sound File Selected
-	
-	
-		wsprintf(s + strlen(s), "(%04d)", sr_time);
+	if(szWave[0]){
+		PlayFile(g_hwndTClockMain, szWave, 0);
+	}
+	wsprintf(s + strlen(s), " (%04d)", sr_time);
 	Log(s);
-	Sleep(3000); //----+++--> Give it Time to Play.
 }
 //================================================================================================
 //--------------------------------------------------+++--> Close Socket, and the WinSOCK Interface:

@@ -16,27 +16,33 @@ HookEnd_t HookEnd;
 HookEnd_t ClockExit;
 
 // Application Global Window Handles
-HWND	g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
-HWND	g_hwndClock;		// Main Clock Window Handle
-HWND	g_hwndSheet;		// property sheet window
-HWND	g_hDlgTimer;		// Timer Dialog Handle
-HWND	g_hDlgStopWatch;	// Stopwatch Dialog Handle
-HWND	g_hDlgTimerWatch;	// Timer Watch Dialog Handle
+HWND	g_hwndTClockMain = NULL; /**< our main window for hotkeys, menus and sounds */
+HWND	g_hwndClock;		/**< the clock hwnd */
+HWND	g_hwndSheet;		/**< property sheet window */
+HWND	g_hDlgTimer;		/**< Timer Dialog Handle */
+HWND	g_hDlgStopWatch;	/**< Stopwatch Dialog Handle */
+HWND	g_hDlgTimerWatch;	/**< Timer Watch Dialog Handle */
 
 // icons to use frequently
 HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
-char	g_mydir[MAX_PATH]; // path to tclock.exe
+char	g_mydir[MAX_PATH]; /**< path to Clock.exe */
 
-// Make Background of Desktop Icon Text Labels Transparent:
-BOOL m_bTrans2kIcons; //-------+++--> (For Windows 2000 Only)
-//-----------------//+++--> UnAvertized EasterEgg Function:
+/** Make Background of Desktop Icon Text Labels Transparent:
+ * (For Windows 2000 Only)
+ * UnAvertized EasterEgg Function */
+static BOOL m_bTrans2kIcons;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
-const char g_szClassName[] = "TClockMainClass"; // window class name
-const char g_szWindowText[] = "TClock";        // caption of the window
+ATOM g_atomTClock = 0; /**< main window class atom */
+const char g_szClassName[] = "TClockMainClass"; /**< our main window class name */
 
-static void CheckCommandLine(HWND hwnd,const char* cmdline,int other);
+/** \brief processes our commandline parameters
+ * \param hwndMain clock hwnd of master instance
+ * \param cmdline commandline parameters
+ * \remarks if hwndMain doesn' match \c g_hwndTClockMain, it'll create a message-only window for sound processing
+ * \sa g_hwndTClockMain, WinMain() */
+static void ProcessCommandLine(HWND hwndMain,const char* cmdline);
 static void OnTimerMain(HWND hwnd);
 //static void FindTrayServer(); // Redux: what ever it was supposed to be..
 static void InitError(int n);
@@ -200,7 +206,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 {
 	BOOL SessionReged = FALSE; // IS Session Registered to Receive Session Change Notifications?
 	WNDCLASS wndclass;
-	HWND hwnd;
+	HWND hwndMain;
 	MSG msg;
 	int updated;
 	typedef DWORD (WINAPI* GetLongPathName_t)(char* lpszShortPath,char* lpszLongPath,DWORD cchBuffer);
@@ -231,14 +237,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ExitProcess(1);
 	}
 	
-//	FindTrayServer(hwnd);
+//	FindTrayServer(hwndMain);
 	
 	// Make sure we're not running 32bit on 64bit OS / start the other one
 	#ifndef __x86_64__
 	if(IsWow64()){
-		hwnd=FindWindow(g_szClassName, g_szWindowText);
-		if(hwnd) { // send commands to existing instance
-			CheckCommandLine(hwnd,lpCmdLine,1);
+		hwndMain = FindWindow(g_szClassName, NULL);
+		if(hwndMain) { // send commands to existing instance
+			ProcessCommandLine(hwndMain,lpCmdLine);
 		}else{ // start new instance
 			char clock64[MAX_PATH];
 			strcpy(clock64,g_mydir); add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
@@ -249,20 +255,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	#endif // __x86_64__
 	
 	// Do Not Allow the Program to Execute Twice!
-	for(updated=0; updated<25; ++updated){ // up to 5 sec
+	updated = 25; /**< wait up to 5 sec in 1/5th seconds for other instance */
+	do{
 		HANDLE processlock=CreateMutex(NULL,FALSE,g_szClassName); // we leak handle here, but Windows closes on process exit anyway (so why do it manually?)
 		if(processlock && GetLastError()==ERROR_ALREADY_EXISTS){
 			CloseHandle(processlock);
-			hwnd=FindWindow(g_szClassName, g_szWindowText);
-			if(hwnd) { // This One Sends Commands to the Instance
-				CheckCommandLine(hwnd,lpCmdLine,1); // That is Currently Running.
+			hwndMain = FindWindow(g_szClassName, NULL);
+			if(hwndMain) { // This One Sends Commands to the Instance
+				ProcessCommandLine(hwndMain,lpCmdLine); // That is Currently Running.
 				ExitProcess(0);
 			}
 			Sleep(200);
 			continue;
 		}
 		break;
-	}
+	}while(updated--);
 	
 	// Update settings if required and setup defaults
 	if((updated=CheckSettings())<0){
@@ -294,7 +301,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wndclass.hbrBackground = (HBRUSH)(intptr_t)(COLOR_WINDOW+1);
 	wndclass.lpszMenuName  = NULL;
 	wndclass.lpszClassName = g_szClassName;
-	RegisterClass(&wndclass);
+	g_atomTClock = RegisterClass(&wndclass);
 	
 	if(g_tos>=TOS_VISTA) { // allow non elevated processes to send control messages (eg, App with admin rights, explorer without)
 		#define MSGFLT_ADD 1
@@ -312,23 +319,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 	// create a hidden window
-	hwnd = CreateWindowEx(WS_EX_NOACTIVATE, g_szClassName, g_szWindowText,
-						  0, 0, 0, 0, 0, NULL, NULL, hInstance, NULL);
+	g_hwndTClockMain = hwndMain = CreateWindowEx(WS_EX_NOACTIVATE, MAKEINTATOM(g_atomTClock),NULL, 0, 0,0,0,0, NULL,NULL,hInstance,NULL);
 	// This Checks for First Instance Startup Options
-	CheckCommandLine(hwnd,lpCmdLine,0); 
-	g_hwndTClockMain = hwnd; // Main Window Anchor for HotKeys Only!
+	ProcessCommandLine(hwndMain,lpCmdLine); 
 	
-	GetHotKeyInfo(hwnd);
+	GetHotKeyInfo(hwndMain);
 	
 	if(g_tos>TOS_2000) {
 		bMonOffOnLock = GetMyRegLongEx("Desktop", "MonOffOnLock", FALSE);
 		if(bMonOffOnLock) {
-			RegisterSession(hwnd);
+			RegisterSession(hwndMain);
 			SessionReged = TRUE;
 		}
 	}
 	if(updated==1){
-		PostMessage(hwnd,WM_COMMAND,IDM_SHOWPROP,0);
+		PostMessage(hwndMain,WM_COMMAND,IDM_SHOWPROP,0);
 	}
 	while(GetMessage(&msg, NULL, 0, 0)) {
 		if(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg)){
@@ -343,75 +348,116 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 	}
 	
-	UnregisterHotKey(hwnd, HOT_TIMER);
-	UnregisterHotKey(hwnd, HOT_WATCH);
-	UnregisterHotKey(hwnd, HOT_STOPW);
-	UnregisterHotKey(hwnd, HOT_PROPR);
-	UnregisterHotKey(hwnd, HOT_CALEN);
-	UnregisterHotKey(hwnd, HOT_TSYNC);
+	UnregisterHotKey(hwndMain, HOT_TIMER);
+	UnregisterHotKey(hwndMain, HOT_WATCH);
+	UnregisterHotKey(hwndMain, HOT_STOPW);
+	UnregisterHotKey(hwndMain, HOT_PROPR);
+	UnregisterHotKey(hwndMain, HOT_CALEN);
+	UnregisterHotKey(hwndMain, HOT_TSYNC);
 	
-	if((SessionReged) || (bMonOffOnLock)) UnregisterSession(hwnd);
+	if((SessionReged) || (bMonOffOnLock)) UnregisterSession(hwndMain);
 	
 	EndNewAPI(NULL);
 	
 	ExitProcess((unsigned)msg.wParam);
 }
+
+LRESULT CALLBACK MsgOnlyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	(void)wParam; (void)lParam;
+	
+	switch(message) {
+	case MM_MCINOTIFY: // stop playing or repeat mci file (all but .wav, .pcb)
+		OnMCINotify(hwnd);
+		return 0;
+	case MM_WOM_DONE: // stop playing wave
+	case MAINM_STOPSOUND:
+		StopFile();
+		return 0;
+	}
+	return 0;
+}
 //========================================================================================
-//   /exit	: Exit T-Clock 2010
-//   /prop	: Show T-Clock 2010 Properties
-//   /Sync    : Synchronize the System Clock With an NTP Server
-//   /start	: Start the Stopwatch Counter (open as needed)
-//   /stop	: Stop (pause really) the Stopwatch Counter
-//   /reset	: Reset Stopwatch to 0 (stop as needed)
-//   /lap		: Record a (the current) Lap Time
+//	/exit		exit T-Clock 2010
+//	/prop		show T-Clock 2010 properties
+//	/SyncOpt	SNTP options
+//	/Sync		synchronize the system clock with an NTP server
+//	/start		start the Stopwatch (open as needed)
+//	/stop		stop (pause really) the Stopwatch
+//	/reset		reset Stopwatch to 0 (stop as needed)
+//	/lap		record a (the current) lap time
 //================================================================================================
 //---------------------------------------------//---------------+++--> T-Clock Command Line Option:
-void CheckCommandLine(HWND hwnd,const char* cmdline,int other)   //--------------------------------------------+++-->
+void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------------------+++-->
 {
-	const char* p=cmdline;
+	const char* p = cmdline;
+	if(g_hwndTClockMain != hwndMain){
+		g_hwndTClockMain = CreateWindow("STATIC",NULL,0,0,0,0,0,HWND_MESSAGE_nowarn,0,0,0);
+		SubclassWindow(g_hwndTClockMain, MsgOnlyProc);
+	}
+	
 	for(; *p; ++p) {
 		if(*p == '/') {
 			++p;
 			if(_strnicmp(p, "prop", 4) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDM_SHOWPROP, 0);
+				SendMessage(hwndMain, WM_COMMAND, IDM_SHOWPROP, 0);
 				p += 4;
 			} else if(_strnicmp(p, "exit", 4) == 0) {
-				SendMessage(hwnd, MAINM_EXIT, 0, 0);
+				SendMessage(hwndMain, MAINM_EXIT, 0, 0);
 				p += 4;
 			} else if(_strnicmp(p, "start", 5) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_START, 0);
+				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_START, 0);
 				p += 5;
 			} else if(_strnicmp(p, "stop", 4) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_STOP, 0);
+				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_STOP, 0);
 				p += 4;
 			} else if(_strnicmp(p, "reset", 5) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_RESET, 0);
+				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESET, 0);
 				p += 5;
 			} else if(_strnicmp(p, "pause", 5) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_PAUSE, 0);
+				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_PAUSE, 0);
 				p += 5;
 			} else if(_strnicmp(p, "resume", 6) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_RESUME, 0);
+				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESUME, 0);
 				p += 6;
 			} else if(_strnicmp(p, "lap", 3) == 0) {
-				SendMessage(hwnd, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
+				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
 				p += 3;
 			} else if(_strnicmp(p, "SyncOpt", 7) == 0) {
 				NetTimeConfigDialog();
 				p += 7;
 			} else if(_strnicmp(p, "Sync", 4) == 0) {
-				if(!other) {
+				if(g_hwndTClockMain == hwndMain) {
 					MessageBox(0,
 							   TEXT("T-Clock Must be Running for Time Synchronization to Succeed\n"
 									"T-Clock Can Not be Started With the /Sync Switch"),
 							   "ERROR: Time Sync Failure", MB_OK|MB_ICONERROR);
-					SendMessage(hwnd, WM_COMMAND, IDM_EXIT, 0);
+					SendMessage(hwndMain, WM_COMMAND, IDM_EXIT, 0);
 				} else {
 					SyncTimeNow();
 					p += 4;
 				}
 			}
 		}
+	}
+	
+	if(g_hwndTClockMain != hwndMain){
+		int timeout = 100; /**< timeout in 1/10th seconds to allow sounds up to 10 seconds before terminating */
+		MSG msg;
+		msg.message = 0;
+		while(IsPlaying() && --timeout){
+			while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
+				if(msg.message==WM_QUIT)
+					break;
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
+			if(msg.message==WM_QUIT)
+				break;
+			Sleep(100);
+		}
+		DestroyWindow(g_hwndTClockMain);
+		g_hwndTClockMain = NULL;
 	}
 }
 //================================================================================================
