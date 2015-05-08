@@ -15,6 +15,8 @@
 #define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
 #endif
 
+#include <Ws2tcpip.h> // getaddrinfo, Winsock2.h
+#include <Wspiapi.h> // for Windows 2000 mainly
 #include <Windows.h>  // Required by the fact it runs on Windows.
 
 #ifdef __GNUC__
@@ -101,5 +103,19 @@ enum{ // Drop&File enum / registry settings
 #define HWND_TOPMOST_nowarn ((HWND)(intptr_t)-1)
 #define HWND_NOTOPMOST_nowarn ((HWND)(intptr_t)-2)
 #define HWND_MESSAGE_nowarn ((HWND)(intptr_t)-3)
+
+// suppress warning C4127 about const expression in do{}while(0);
+#define FD_SET_nowarn __pragma(warning(suppress:4127)) FD_SET(sock, &fds);
+
+// socket defines currently missing in Windows
+#define s6_addr16 u.Word
+#define EAI_AGAIN		WSATRY_AGAIN			/**< A temporary failure in name resolution occurred */
+#define EAI_BADFLAGS	WSAEINVAL				/**< An invalid value was provided for the ai_flags member of the pHints parameter */
+#define EAI_FAIL		WSANO_RECOVERY			/**< A nonrecoverable failure in name resolution occurred */
+#define EAI_FAMILY		WSAEAFNOSUPPORT			/**< The ai_family member of the pHints parameter is not supported */
+#define EAI_MEMORY		WSA_NOT_ENOUGH_MEMORY	/**< A memory allocation failure occurred */
+#define EAI_NONAME		WSAHOST_NOT_FOUND		/**< The name does not resolve for the supplied parameters or the pNodeName and pServiceName parameters were not provided */
+#define EAI_SERVICE		WSATYPE_NOT_FOUND		/**< The pServiceName parameter is not supported for the specified ai_socktype member of the pHints parameter */
+#define EAI_SOCKTYPE	WSAESOCKTNOSUPPORT		/**< The ai_socktype member of the pHints parameter is not supported */
 
 #endif // TCLOCK_GLOBAL_H
