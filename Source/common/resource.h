@@ -149,6 +149,7 @@
 #define IDCBX_SNTPLOG                   1042
 #define IDCBX_SNTPMESSAGE               1043
 #define IDCB_HK_SNTP                    1045
+#define IDCB_CLEAR                      1046
 
 #define IDCB_MSG_ALARM                  1051
 #define IDC_ALRMMSG_SETTINGS            1052

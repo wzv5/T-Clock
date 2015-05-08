@@ -25,7 +25,6 @@ extern WNDPROC OldEditClassProc;
 LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static const char m_subkey[] = "SNTP";
-static const DWORD m_nTimeout = 1000;
 static HWND m_dlg = NULL;
 static BOOL m_bSaveLog;
 static BOOL m_bMessage;
@@ -33,7 +32,7 @@ static DWORD m_dwTickCountOnSend = 0;
 
 BOOL GetSetTimePermissions(void);
 
-static void OnInit(HWND);
+static void OnInit(HWND hDlg);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
 static INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 //================================================================================================
@@ -96,15 +95,6 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 		FILETIME ft;
 		ULONGLONG ftqw;
 	} told;
-	DWORD sr_time;
-	
-	// timeout ?
-	sr_time = GetTickCount() - m_dwTickCountOnSend;
-	if(sr_time >= m_nTimeout) {
-		wsprintf(msg, "timeout (%04d)", sr_time);
-		Log(msg);
-		return;
-	}
 	
 	// current time
 	GetSystemTimeAsFileTime(&told.ft);
@@ -145,7 +135,6 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	if(szWave[0]){
 		PlayFile(g_hwndTClockMain, szWave, 0);
 	}
-	msglen += wsprintf(msg+msglen, " (%04d)", sr_time);
 	Log(msg);
 }
 //================================================================================================
@@ -153,12 +142,11 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 void SocketClose(SOCKET sock, const char* msgbuf)   //--------------------------------------+++-->
 {
 
-	if(sock != -1) {
+	if(sock != -1)
 		closesocket(sock);
-	}
 	
-	WSACleanup();
 	if(msgbuf) Log(msgbuf);
+	WSACleanup();
 }
 
 const char* GetServerPort(const char* server, char* host)
@@ -398,10 +386,12 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	
 	if(szServer[0]) {
 		int index = ComboBox_FindStringExact(hServer, -1, szServer);
-		if(index != CB_ERR)
-			ComboBox_DeleteString(hServer, index);
-		ComboBox_InsertString(hServer, 0, szServer);
-		ComboBox_SetCurSel(hServer, 0);
+		if(index){
+			if(index != CB_ERR)
+				ComboBox_DeleteString(hServer, index);
+			ComboBox_InsertString(hServer, 0, szServer);
+			ComboBox_SetCurSel(hServer, 0);
+		}
 	}
 	count = ComboBox_GetCount(hServer);
 	// removed deleted servers
@@ -443,12 +433,25 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 			OnSanshoAlarm(hDlg, IDCE_SYNCSOUND);
 			return TRUE;
 			
+		case IDCB_CLEAR:{
+			char logfile[MAX_PATH];
+			FILE* fp;
+			HWND hList = GetDlgItem(hDlg,IDC_LIST);
+			ListView_DeleteAllItems(hList);
+			
+			strcpy(logfile, g_mydir);
+			add_title(logfile, "SNTP.log");
+			fp = fopen(logfile, "w");
+			if(fp) fclose(fp);
+			return TRUE;}
+		
 		case IDCB_DELSERVER:{
 			HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 			int index = ComboBox_GetCurSel(hServer);
 			if(index != CB_ERR){
 				ComboBox_DeleteString(hServer, index);
 			}
+			ComboBox_SetCurSel(hServer, 0);
 			return TRUE;}
 			
 		case IDOK:
@@ -459,7 +462,7 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 				free(tchk);   // Free, and...? (Crash Unless You Include the Next Line)
 				tchk = NULL; //<--+++--> Thank You Don Beusee for reminding me to do this.
 			}
-			EndDialog(hDlg, /*wParam*/TRUE);
+			EndDialog(hDlg, 1);
 			return TRUE;
 		}
 	}
