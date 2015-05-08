@@ -34,6 +34,8 @@ enum{
 	SNTPF_MESSAGE	=0x02, /**< display info message on sync */
 };
 
+BOOL GetSetTimePermissions();
+
 static void OnInit(HWND hDlg);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
 static INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
