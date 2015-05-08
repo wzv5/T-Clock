@@ -26,11 +26,13 @@ LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lP
 
 static const char m_subkey[] = "SNTP";
 static HWND m_dlg = NULL;
-static BOOL m_bSaveLog;
-static BOOL m_bMessage;
+static char m_flags;
 static DWORD m_dwTickCountOnSend = 0;
 
-BOOL GetSetTimePermissions(void);
+enum{
+	SNTPF_LOG		=0x01, /**< write to log file */
+	SNTPF_MESSAGE	=0x02, /**< display info message on sync */
+};
 
 static void OnInit(HWND hDlg);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
@@ -49,7 +51,7 @@ void Log(const char* msg)   //--------------------------------------------------
 	strncpy_s(logmsg+len, sizeof(logmsg)-len, msg, _TRUNCATE);
 	
 	// save to file
-	if(m_bSaveLog) {
+	if(m_flags&SNTPF_LOG) {
 		char fname[MAX_PATH];
 		HFILE hf;
 		
@@ -74,7 +76,7 @@ void Log(const char* msg)   //--------------------------------------------------
 		ListView_InsertItem(GetDlgItem(m_dlg,IDC_LIST), &lvItem);
 	}
 	
-	if(m_bMessage) {
+	if(m_flags&SNTPF_MESSAGE) {
 		MessageBox(0, logmsg, "T-Clock Time Sync", MB_OK);
 	}
 }
@@ -306,8 +308,11 @@ void SyncTimeNow()   //=========================================================
 	int retval;
 	
 	if(!m_dlg) {
-		m_bSaveLog = GetMyRegLongEx(m_subkey, "SaveLog", 0);
-		m_bMessage = GetMyRegLongEx(m_subkey, "MessageBox", 0);
+		m_flags = 0;
+		if(GetMyRegLongEx(m_subkey, "SaveLog", 0))
+			m_flags |= SNTPF_LOG;
+		if(GetMyRegLongEx(m_subkey, "MessageBox", 0))
+			m_flags |= SNTPF_MESSAGE;
 	}
 	GetMyRegStrEx(m_subkey, "Server", server, sizeof(server), "");
 	if(!server[0]) {
@@ -524,10 +529,15 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SetDlgItemText(hDlg, IDCE_SYNCSOUND, str);
 	
 	// Get the Confirmation Options:
-	m_bSaveLog = GetMyRegLongEx(m_subkey, "SaveLog", 0);
-	CheckDlgButton(hDlg, IDCBX_SNTPLOG, m_bSaveLog);
-	m_bMessage = GetMyRegLongEx(m_subkey, "MessageBox", 0);
-	CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, m_bMessage);
+	m_flags = 0;
+	if(GetMyRegLongEx(m_subkey, "SaveLog", 0)){
+		CheckDlgButton(hDlg, IDCBX_SNTPLOG, 1);
+		m_flags |= SNTPF_LOG;
+	}
+	if(GetMyRegLongEx(m_subkey, "MessageBox", 0)){
+		CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, 1);
+		m_flags |= SNTPF_MESSAGE;
+	}
 	
 	// Load & Display the Configured Synchronization HotKey:
 	tchk = (hotkey_t*)malloc(sizeof(hotkey_t));
