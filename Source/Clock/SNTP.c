@@ -368,8 +368,14 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 	int i, count;
 	
-	SetMyRegLong(m_subkey, "SaveLog", IsDlgButtonChecked(hDlg, IDCBX_SNTPLOG));
-	SetMyRegLong(m_subkey, "MessageBox", IsDlgButtonChecked(hDlg, IDCBX_SNTPMESSAGE));
+/// @todo (White-Tiger#1#05/11/15): properly handle "local" settings and keep them sync
+	m_flags = 0;
+	if(IsDlgButtonChecked(hDlg, IDCBX_SNTPLOG))
+		m_flags |= SNTPF_LOG;
+	if(IsDlgButtonChecked(hDlg, IDCBX_SNTPMESSAGE))
+		m_flags |= SNTPF_MESSAGE;
+	SetMyRegLong(m_subkey, "SaveLog", m_flags&SNTPF_LOG);
+	SetMyRegLong(m_subkey, "MessageBox", m_flags&SNTPF_MESSAGE);
 	
 	GetDlgItemText(hDlg, IDCE_SYNCSOUND, szSound, MAX_PATH);
 	SetMyRegStr(m_subkey, "Sound", szSound);
