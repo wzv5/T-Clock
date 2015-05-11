@@ -190,11 +190,11 @@ void RefreshRebar(HWND hwndBar)
 	}
 }
 
-void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans)
-{
-	if(useTrans) GdiTransparentBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, RGB(255, 0, 255));
-	else StretchBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, SRCCOPY);
-}
+//void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans)
+//{
+//	if(useTrans) GdiTransparentBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, RGB(255, 0, 255));
+//	else StretchBlt(dhdc, dx, dy, dw, dh, shdc, sx, sy, sw, sh, SRCCOPY);
+//}
 
 /// DrawTheme
 
@@ -246,7 +246,7 @@ COLORREF GetXPClockColor()
 	pGetThemeColor(hClockTheme,CLP_TIME,CLS_NORMAL,TMT_TEXTCOLOR,&ret);
 	return ret;
 }
-COLORREF GetXPClockColorBG() /// doesn't quite work
+COLORREF GetXPClockColorBG()
 {
 	COLORREF ret;
 	THEME_FUNC_CHECK_THEME(GetThemeColor,g_hwndClock,0x00000000)
