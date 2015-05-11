@@ -25,6 +25,7 @@
 #else
 #	define strdup _strdup
 #	define wcsdup _wcsdup
+#	define inline __inline
 #endif // __GNUC__
 
 #define ARCH_SUFFIX_32 ""

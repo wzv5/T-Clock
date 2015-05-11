@@ -218,9 +218,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	// get the path where .exe is positioned
 	if(pGetLongPathName)
-		GetLongPathName(_pgmptr,g_mydir,MAX_PATH);
+		GetLongPathName(GetClockExe(),g_mydir,MAX_PATH);
 	else
-		strncpy_s(g_mydir,MAX_PATH,_pgmptr,_TRUNCATE);
+		strncpy_s(g_mydir,MAX_PATH,GetClockExe(),_TRUNCATE);
 	#ifdef _DEBUG
 	OutputDebugString(g_mydir); OutputDebugString("\n");
 	#endif

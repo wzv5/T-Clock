@@ -58,6 +58,14 @@ extern HWND		g_hwndSheet;		/**< property sheet window */
 extern HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 extern BOOL bMonOffOnLock; /**< locking workstation turns off monitor(s) */
 
+/**
+ * \brief returns full path to currently started Clock[64].exe
+ * \return path to Clock.exe incl. filename
+ * \remark currently just a wrapper for \c _pgmptr */
+inline const char* GetClockExe(){
+	return _pgmptr;
+}
+
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
 void ToggleCalendar(int type);
