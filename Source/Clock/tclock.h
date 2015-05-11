@@ -49,14 +49,14 @@ extern ClockExit_t ClockExit;
 #define HOT_TSYNC	250
 
 //--+++--> main.c - Application Global Values:
-extern char		g_mydir[];			// Path to Clock.exe
-extern HWND		g_hDlgTimer;		// Timer Dialog Window Handle
-extern HWND		g_hDlgStopWatch;	// Stopwatch Dialog Window Handle
-extern HWND		g_hDlgTimerWatch;	// Timwe Watch Dialog Window Handle
-extern HWND		g_hwndSheet;		// (TCM Property Sheet Window Handle
-extern HICON	g_hIconTClock, g_hIconPlay, // Frequently Used Icon Handles
-				g_hIconStop, g_hIconDel; // Frequently Used Icon Handles
-extern BOOL bMonOffOnLock; //-+> Locking Workstation Turns Off Monitor(s).
+extern char		g_mydir[MAX_PATH];	/**< path to Clock[64].exe */
+extern HWND		g_hDlgTimer;		/**< timer dialog handle */
+extern HWND		g_hDlgStopWatch;	/**< stopwatch dialog handle */
+extern HWND		g_hDlgTimerWatch;	/**< timer watch dialog handle */
+extern HWND		g_hwndSheet;		/**< property sheet window */
+/** frequently used icon handles */
+extern HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
+extern BOOL bMonOffOnLock; /**< locking workstation turns off monitor(s) */
 
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);

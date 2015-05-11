@@ -49,9 +49,9 @@
 /*------------------------------------------------
   shared data among processes
 --------------------------------------------------*/
-extern HWND		g_hwndTClockMain;	// Main Window Anchor for HotKeys Only!
-extern HWND		g_hwndClock;		// Main Clock Window Handle
-extern char		g_bCalOpen;
+extern HWND		g_hwndTClockMain;	/**< our main window for hotkeys, menus and sounds \b [shared] */
+extern HWND		g_hwndClock;		/**< the clock hwnd \b [shared] */
+extern char		g_bCalOpen;			/**< last known state of calendar \b [shared] */
 
 #define REG_MOUSE "Mouse"
 enum{ // Drop&File enum / registry settings

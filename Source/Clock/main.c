@@ -15,17 +15,17 @@ HookStart_t HookStart;
 HookEnd_t HookEnd;
 HookEnd_t ClockExit;
 
-// Application Global Window Handles
-HWND	g_hwndTClockMain = NULL; /**< our main window for hotkeys, menus and sounds */
-HWND	g_hwndClock;		/**< the clock hwnd */
-HWND	g_hwndSheet;		/**< property sheet window */
-HWND	g_hDlgTimer;		/**< Timer Dialog Handle */
-HWND	g_hDlgStopWatch;	/**< Stopwatch Dialog Handle */
-HWND	g_hDlgTimerWatch;	/**< Timer Watch Dialog Handle */
+char	g_mydir[MAX_PATH];
 
-// icons to use frequently
+// Application Global Window Handles
+HWND	g_hwndTClockMain = NULL;
+HWND	g_hwndClock;
+HWND	g_hwndSheet;
+HWND	g_hDlgTimer;
+HWND	g_hDlgStopWatch;
+HWND	g_hDlgTimerWatch;
+
 HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
-char	g_mydir[MAX_PATH]; /**< path to Clock.exe */
 
 /** Make Background of Desktop Icon Text Labels Transparent:
  * (For Windows 2000 Only)
@@ -55,6 +55,7 @@ BOOL bMonOffOnLock = FALSE;
 
 // alarm.c
 extern char g_bPlayingNonstop;
+
 
 //=================================================================
 //---------------------------+++--> fixes lost-keyboard-control bug:
@@ -321,7 +322,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// create a hidden window
 	g_hwndTClockMain = hwndMain = CreateWindowEx(WS_EX_NOACTIVATE, MAKEINTATOM(g_atomTClock),NULL, 0, 0,0,0,0, NULL,NULL,hInstance,NULL);
 	// This Checks for First Instance Startup Options
-	ProcessCommandLine(hwndMain,lpCmdLine); 
+	ProcessCommandLine(hwndMain,lpCmdLine);
 	
 	GetHotKeyInfo(hwndMain);
 	
