@@ -18,6 +18,7 @@
 #include <Ws2tcpip.h> // getaddrinfo, Winsock2.h
 #include <Wspiapi.h> // for Windows 2000 mainly
 #include <Windows.h>  // Required by the fact it runs on Windows.
+#include <WindowsX.h>// usability macros: Edit_*, ComboBox_*, SubclassWindow, etc.
 
 #ifdef __GNUC__
 #	define localtime_s _localtime64_s

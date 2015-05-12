@@ -224,12 +224,11 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	SetDlgItemText(hDlg, IDCE_HK_CALN, tchk[4].szText);
 	
 	// Subclass the Edit Controls
-	OldEditClassProc  = (WNDPROC)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_ADD), GWLP_WNDPROC);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_ADD),  GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_STOP), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_TIME), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_PROP), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_HK_CALN), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
+	OldEditClassProc  = SubclassWindow(GetDlgItem(hDlg,IDCE_HK_ADD), SubClassEditProc);
+	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_STOP), SubClassEditProc);
+	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_TIME), SubClassEditProc);
+	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_PROP), SubClassEditProc);
+	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_CALN), SubClassEditProc);
 //==================================================================================
 }
 //================================================================================================

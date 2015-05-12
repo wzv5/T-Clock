@@ -82,9 +82,8 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	SendDlgItemMessage(hDlg,IDC_STARTUP,WM_SETFONT,(WPARAM)hftStartup,0);
 	if(!m_hCurHand) m_hCurHand = LoadCursor(NULL, IDC_HAND);
 	
-	m_oldLabProc = (WNDPROC)GetWindowLongPtr(GetDlgItem(hDlg, IDC_ABT_MAILuri), GWLP_WNDPROC);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDC_ABT_WEBuri), GWLP_WNDPROC, (LONG_PTR)LabLinkProc);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDC_ABT_MAILuri), GWLP_WNDPROC, (LONG_PTR)LabLinkProc);
+	m_oldLabProc = SubclassWindow(GetDlgItem(hDlg,IDC_ABT_WEBuri), LabLinkProc);
+	SubclassWindow(GetDlgItem(hDlg,IDC_ABT_MAILuri), LabLinkProc);
 //==================================================================================
 
 	CheckDlgButton(hDlg,IDC_STARTUP,GetStartupFile(hDlg,path));

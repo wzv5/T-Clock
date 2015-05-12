@@ -8,7 +8,6 @@
 
 #include <stdio.h>//sprintf
 #include <Uxtheme.h>//SetWindowTheme
-#include <WindowsX.h>//Edit_SetText
 #include <Shlwapi.h>//PathFileExists
 #include <Psapi.h>//EmptyWorkingSet
 #include "../common/newapi.h"

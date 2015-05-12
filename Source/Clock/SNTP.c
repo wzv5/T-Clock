@@ -557,8 +557,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SetDlgItemText(hDlg, IDCE_SYNCHOTKEY, tchk[0].szText);
 	
 	// Subclass the Edit Controls
-	OldEditClassProc  = (WNDPROC)GetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC);
-	SetWindowLongPtr(GetDlgItem(hDlg, IDCE_SYNCHOTKEY), GWLP_WNDPROC, (LONG_PTR)SubClassEditProc);
+	OldEditClassProc  = SubclassWindow(GetDlgItem(hDlg,IDCE_SYNCHOTKEY), SubClassEditProc);
 	
 	// init listview
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);

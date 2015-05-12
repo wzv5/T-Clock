@@ -425,7 +425,7 @@ void ShowTip(HWND clock){
 void SubsDestroy(){
 	for(; m_multiClocks; ){
 		if(IsWindow(m_multiClock[--m_multiClocks].worker)){
-			SetWindowLongPtr(m_multiClock[m_multiClocks].worker,GWLP_WNDPROC,(LONG_PTR)m_oldWorkerProc);
+			SubclassWindow(m_multiClock[m_multiClocks].worker, m_oldWorkerProc);
 			SendMessage(m_multiClock[m_multiClocks].clock,WM_CLOSE,0,0);
 			SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0,0,
 						m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
@@ -470,8 +470,7 @@ void SubsCreate(){
 					GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
 					m_multiClock[i].worker=hwndChild;
 					if(!i){ // all subs should use same worker proc (untested), so only get it once (otherwise we might get ourselves...)
-						m_oldWorkerProc=(WNDPROC)GetWindowLongPtr(hwndChild,GWLP_WNDPROC);
-						SetWindowLongPtr(hwndChild,GWLP_WNDPROC,(LONG_PTR)WndProcMultiClockWorker);
+						m_oldWorkerProc = SubclassWindow(hwndChild, WndProcMultiClockWorker);
 					}
 					++m_multiClocks;
 				}
@@ -502,8 +501,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
-	m_oldClockProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_WNDPROC);
-	SetWindowLongPtr(hwnd, GWLP_WNDPROC, (LONG_PTR)WndProc);
+	m_oldClockProc = SubclassWindow(hwnd, WndProc);
 	SetClassLong(hwnd, GCL_STYLE, GetClassLong(hwnd, GCL_STYLE) & ~CS_DBLCLKS);
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
@@ -542,7 +540,7 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 	DestroyTip();
 	EndNewAPI(hwnd);
 	if(m_bTimer) KillTimer(hwnd,1); m_bTimer=0;
-	SetWindowLongPtr(hwnd,GWLP_WNDPROC,(LONG_PTR)m_oldClockProc);
+	SubclassWindow(hwnd, m_oldClockProc);
 	m_oldClockProc=NULL;
 	
 //  bClockUseTrans = 0;
