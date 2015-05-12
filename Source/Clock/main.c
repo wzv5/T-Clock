@@ -337,13 +337,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		PostMessage(hwndMain,WM_COMMAND,IDM_SHOWPROP,0);
 	}
 	while(GetMessage(&msg, NULL, 0, 0)) {
-		if(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg)){
-			if(g_hwndSheet && !PropSheet_GetCurrentPageHwnd(g_hwndSheet))
-				DestroyWindow(g_hwndSheet);
-		}else if(!(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg)) &&
-			!(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg)) &&
-			!(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,&msg))
-			){
+		if(!(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg))
+		&& !(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg))
+		&& !(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg))
+		&& !(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,&msg))){
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}

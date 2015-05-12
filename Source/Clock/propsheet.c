@@ -120,9 +120,10 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 		}
 		break;
 	case WM_COMMAND:{
-		/// apply settings if applicable
-		if(LOWORD(wParam)==ID_APPLY_NOW){
-			LRESULT ret=CallWindowProc(m_oldWndProc, hwnd, message, wParam, lParam);
+		LRESULT ret=CallWindowProc(m_oldWndProc, hwnd, message, wParam, lParam);
+		switch(LOWORD(wParam)){
+		case ID_APPLY_NOW:
+			/// apply settings if applicable
 			if(!IsWindowEnabled((HWND)lParam)){ // ID_APPLY_NOW disabled, settings applied
 				if(g_bApplyClock) {
 					g_bApplyClock = 0;
@@ -137,12 +138,17 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 					PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
 				}
 			}
-			return ret;
+			break;
+		case IDOK:
+		case IDCANCEL:
+			/// close property sheet (normally we'll have to check for !PropSheet_GetCurrentPageHwnd() and do DestroyWindow() for modeless sheets
+			DestroyWindow(hwnd);
+			break;
 		}
-		break;}
+		return ret;}
 	case WM_SYSCOMMAND:// close by "x" button
 		if((wParam & 0xfff0) == SC_CLOSE)
-			PostMessage(hwnd, WM_COMMAND, IDCANCEL, 0);
+			PostMessage(hwnd, WM_COMMAND, IDCANCEL, 0); // WM_CLOSE also cancels
 		break;
 	}
 	return CallWindowProc(m_oldWndProc, hwnd, message, wParam, lParam);
