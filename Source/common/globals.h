@@ -107,7 +107,7 @@ enum{ // Drop&File enum / registry settings
 #define HWND_MESSAGE_nowarn ((HWND)(intptr_t)-3)
 
 // suppress warning C4127 about const expression in do{}while(0);
-#define FD_SET_nowarn __pragma(warning(suppress:4127)) FD_SET(sock, &fds);
+#define FD_SET_nowarn(fd, set) __pragma(warning(suppress:4127)) FD_SET(fd, set);
 
 // socket defines currently missing in Windows
 #define s6_addr16 u.Word

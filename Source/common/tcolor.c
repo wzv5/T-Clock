@@ -48,9 +48,9 @@ unsigned GetTColor(unsigned ogbr,int useraw)
 		HKEY hkey;
 		if(!themecolor && RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\DWM", &hkey) == 0) {
 			DWORD regtype,size=sizeof(sub);
-			RegQueryValueEx(hkey,"ColorizationColor",0,&regtype,(LPBYTE)&sub,&size);
+			if(RegQueryValueEx(hkey,"ColorizationColor",0,&regtype,(LPBYTE)&sub,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
+				OnTColor_DWMCOLORIZATIONCOLORCHANGED(sub);
 			RegCloseKey(hkey);
-			OnTColor_DWMCOLORIZATIONCOLORCHANGED(sub);
 			return themecolor;
 		}
 		return themecolor;}
