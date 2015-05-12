@@ -66,13 +66,8 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 //--------------------//----------+++--> This is to Access the System Level iFirstWeekOfYear Value:
 int GetMySysWeek()   //---------------------------------------------------------------------+++-->
 {
-	HKEY hkey;  DWORD size;  char val[8]= {0};
-	
-	if(RegOpenKey(HKEY_CURRENT_USER, "Control Panel\\International", &hkey) == ERROR_SUCCESS) {
-		size=8; // Thank you Pascal Aloy - For noticing I screwed this up. :-)
-		RegQueryValueEx(hkey, "iFirstWeekOfYear", 0, NULL, (LPBYTE)val, &size);
-		RegCloseKey(hkey);
-	}
+	char val[8];
+	GetRegStr(HKEY_CURRENT_USER,"Control Panel\\International","iFirstWeekOfYear",val,sizeof(val),"");
 	return atoi(val);
 }
 //================================================================================================
