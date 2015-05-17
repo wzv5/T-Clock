@@ -1,8 +1,6 @@
 #pragma once
 #ifndef TCLOCK_UTL_H
 #define TCLOCK_UTL_H
-//extern char g_bIniSetting;
-//extern char g_inifile[];
 enum{
 	TOS_2000	=0x0001, /**< does anyone still use it? \sa g_tos */
 	TOS_XP		=0x0002, /**< the king is dead, long live the king! \sa g_tos */

@@ -60,7 +60,6 @@ DLL_EXPORT void WINAPI HookStart(HWND hwnd)   //--------------------------------
 	
 	// get thread ID of taskbar (explorer) - Specal thanks to T.Iwata.
 	dwThreadId = GetWindowThreadProcessId(hwndBar, NULL);
-	
 	if(!dwThreadId) {
 		SendMessage(hwnd, MAINM_ERROR, 0, 2);
 		return;
@@ -76,6 +75,7 @@ DLL_EXPORT void WINAPI HookStart(HWND hwnd)   //--------------------------------
 	// refresh the taskbar
 	PostMessage(hwndBar, WM_SIZE, SIZE_RESTORED, 0);
 	
+	// send message to trigger our hook
 	hwndClock=FindClock();
 	SendMessage(hwndClock, WM_NULL, 0, 0);
 }

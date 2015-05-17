@@ -216,6 +216,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	(void)hPrevInstance;
 	(void)nCmdShow;
 	
+	#if defined(__GNUC__) && defined(_DEBUG)
+	LoadLibraryA("exchndl.dll");
+	#endif
+	
 	// get the path where .exe is positioned
 	if(pGetLongPathName)
 		GetLongPathName(GetClockExe(),g_mydir,MAX_PATH);

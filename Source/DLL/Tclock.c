@@ -707,9 +707,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;}
 	case CLOCKM_REFRESHCLOCKPREVIEW: // refresh the clock
 		ReadStyleData(hwnd,1); // also creates/updates clock
+		/* fall through */
 	case CLOCKM_REFRESHCLOCKPREVIEWFORMAT: // refresh the clock
 		if(message==CLOCKM_REFRESHCLOCKPREVIEWFORMAT)
 			ReadFormatData(hwnd,1); // also creates/updates clock because of preview
+		/* fall through */
 	case CLOCKM_REFRESHTASKBAR:{ // refresh other elements than clock (somehow required to actually change the clock's size)
 		HWND taskbar=GetParent(GetParent(hwnd));
 		SetLayeredTaskbar(hwnd,0);
