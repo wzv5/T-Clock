@@ -157,16 +157,16 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 //------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
 void SetMyDialgPos(HWND hwnd,int padding)   //-----------------------------------------------+++-->
 {
-	MONITORINFO moni;
+	POINT cursor_pos;
+	MONITORINFO moni = {sizeof(moni)};
 	int wProp, hProp;
 	
 	GetWindowRect(hwnd,&moni.rcWork); // Properties Dialog Dimensions
 	wProp = moni.rcWork.right-moni.rcWork.left;  //----------+++--> Width
 	hProp = moni.rcWork.bottom-moni.rcWork.top; //----------+++--> Height
 	
-	GetCursorPos((POINT*)&moni.rcWork);
-	moni.cbSize=sizeof(moni);
-	GetMonitorInfo(MonitorFromPoint(*(POINT*)&moni.rcWork,MONITOR_DEFAULTTONEAREST),&moni);
+	GetCursorPos(&cursor_pos);
+	GetMonitorInfo(MonitorFromPoint(cursor_pos,MONITOR_DEFAULTTONEAREST),&moni);
 	
 	if(moni.rcWork.top!=moni.rcMonitor.top || moni.rcWork.bottom!=moni.rcMonitor.bottom) { // taskbar is horizontal
 		moni.rcMonitor.left=moni.rcWork.right-wProp-padding;

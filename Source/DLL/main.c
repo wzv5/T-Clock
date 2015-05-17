@@ -12,7 +12,7 @@ void InitClock(HWND hwnd);
 --------------------------------------------------*/
 extern HINSTANCE hInstance;
 
-int WINAPI IsCalendarOpen(int focus)
+DLL_EXPORT int WINAPI IsCalendarOpen(int focus)
 {
 	HWND hwnd = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
 	if(hwnd){
@@ -39,7 +39,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   /
 HHOOK m_hhook = NULL;
 //========================================================================================
 //-----------------------------------------------+++--> Install SystemTray Clock ShellHook:
-void WINAPI HookStart(HWND hwnd)   //-----------------------------------------------+++-->
+DLL_EXPORT void WINAPI HookStart(HWND hwnd)   //-------------------------------------------+++-->
 {
 	HWND hwndBar, hwndClock;
 	DWORD dwThreadId;
@@ -81,7 +81,7 @@ void WINAPI HookStart(HWND hwnd)   //-------------------------------------------
 }
 //========================================================================================
 //------------------------------------------------+++--> Remove SystemTray Clock ShellHook:
-void WINAPI HookEnd(void)   //------------------------------------------------------+++-->
+DLL_EXPORT void WINAPI HookEnd(void)   //--------------------------------------------------+++-->
 {
 	// uninstall my hook
 	if(m_hhook){
@@ -105,7 +105,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)   //------
 }
 //========================================================================================
 //-----------------------------------------------------------+++--> Remove Clock injection:
-void WINAPI ClockExit(void)   //----------------------------------------------------+++-->
+DLL_EXPORT void WINAPI ClockExit()   //----------------------------------------------------+++-->
 {
 	HookEnd(); // uninstall hook helper if any
 	if(g_hwndClock && IsWindow(g_hwndClock)){

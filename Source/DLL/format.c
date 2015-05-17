@@ -529,6 +529,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		}
 		//==========================================================================
 		else if(*fmt == 'T' && strncmp(fmt, "TZN", 3) == 0) { //--++-> TimeZone Name:
+			#ifndef __GNUC__ /* forces us to link with msvcr100 */
 			char szTZName[TZNAME_MAX] = {0};
 			size_t lRet;
 			char* tzn;
@@ -543,6 +544,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			
 			tzn = szTZName;
 			while(*tzn) *out++ = *tzn++;
+			#endif
 			fmt +=3;
 		}
 //=================================================================================================

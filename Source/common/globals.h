@@ -23,6 +23,13 @@
 #ifdef __GNUC__
 #	define localtime_s _localtime64_s
 #	define gmtime_s _gmtime64_s
+#	define __pragma(x) // MSVC pragmas, safe to ignore since we use them only to fix MSVC bugs...
+	static const GUID CLSID_Shell = {0x13709620,0xc279,0x11ce,{0xa4,0x9e,0x44,0x45,0x53,0x54,0,1}};
+	static const GUID IID_IShellDispatch4 = {0xefd84b2d,0x4bcf,0x4298,{0xbe,0x25,0xeb,0x54,0x2a,0x59,0xfb,0xda}};
+	static const GUID CLSID_DragDropHelper = {0x4657278a,0x411b,0x11d2,{0x83,0x9a,0,0xc0,0x4f,0xd9,0x18,0xd0}};
+	static const GUID IID_IDropTargetHelper = {0x4657278b,0x411b,0x11d2,{0x83,0x9a,0,0xc0,0x4f,0xd9,0x18,0xd0}};
+//#	define MCM_SIZERECTTOMIN (MCM_FIRST+29)
+//#	define MonthCal_SizeRectToMin(hmc, prc) SNDMSG (hmc, MCM_SIZERECTTOMIN, 0,(LPARAM) (prc))
 #else
 #	define strdup _strdup
 #	define wcsdup _wcsdup
@@ -119,5 +126,16 @@ enum{ // Drop&File enum / registry settings
 #define EAI_NONAME		WSAHOST_NOT_FOUND		/**< The name does not resolve for the supplied parameters or the pNodeName and pServiceName parameters were not provided */
 #define EAI_SERVICE		WSATYPE_NOT_FOUND		/**< The pServiceName parameter is not supported for the specified ai_socktype member of the pHints parameter */
 #define EAI_SOCKTYPE	WSAESOCKTNOSUPPORT		/**< The ai_socktype member of the pHints parameter is not supported */
+#ifndef AI_ADDRCONFIG /* since we didn't define _WIN32_WINNT >= 0x0600 */
+#	define AI_ADDRCONFIG	0x00000400
+#	define AI_V4MAPPED		0x00000800
+#endif
+
+#ifdef __GNUC__
+//#	define DLL_EXPORT __attribute__((visibility("default")))
+#	define DLL_EXPORT __attribute__((dllexport))
+#else
+#	define DLL_EXPORT __declspec(dllexport)
+#endif
 
 #endif // TCLOCK_GLOBAL_H

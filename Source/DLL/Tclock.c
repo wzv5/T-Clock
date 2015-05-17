@@ -332,7 +332,7 @@ static void MyDragDrop_Init(){   ///--------------------------------------------
 	m_mydroptextfmt.cfFormat=(CLIPFORMAT)RegisterClipboardFormat(CFSTR_DROPDESCRIPTION);
 //	m_mydropfmt.cfFormat=(CLIPFORMAT)RegisterClipboardFormat(CFSTR_SHELLIDLIST);
 	m_mydropfmt.cfFormat=CF_HDROP;
-	CoCreateInstance(&CLSID_DragDropHelper,NULL,CLSCTX_INPROC_SERVER,&IID_IDropTargetHelper,&m_drophelper);
+	CoCreateInstance(&CLSID_DragDropHelper,NULL,CLSCTX_INPROC_SERVER,&IID_IDropTargetHelper,(void**)&m_drophelper);
 }
 static void MyDragDrop_DeInit(){
 	m_drophelper->lpVtbl->Release(m_drophelper);
@@ -1188,13 +1188,13 @@ int UpdateClockSize(HWND hwnd)
 	bmi.bmiHeader.biWidth=m_rcClock.right;
 	bmi.bmiHeader.biHeight=m_rcClock.bottom;
 	/// create/select text bitmap
-	hbm=CreateDIBSection(m_hdcClock,&bmi,DIB_RGB_COLORS,&m_color_start,NULL,0);
+	hbm=CreateDIBSection(m_hdcClock,&bmi,DIB_RGB_COLORS,(void**)&m_color_start,NULL,0);
 	if(!hbm) return DestroyClock();
 	m_color_end=m_color_start+(m_rcClock.right*m_rcClock.bottom);
 	if(!m_oldbmp) m_oldbmp=SelectObject(m_hdcClock,hbm);
 	else DeleteObject(SelectObject(m_hdcClock,hbm));
 	/// create/select background bitmap
-	hbm=CreateDIBSection(m_hdcClockBG,&bmi,DIB_RGB_COLORS,&m_colorBG_start,NULL,0);
+	hbm=CreateDIBSection(m_hdcClockBG,&bmi,DIB_RGB_COLORS,(void**)&m_colorBG_start,NULL,0);
 	if(!hbm) return DestroyClock();
 	m_colorBG_end=m_colorBG_start+(m_rcClock.right*m_rcClock.bottom);
 	if(!m_oldbmpB) m_oldbmpB=SelectObject(m_hdcClockBG,hbm);

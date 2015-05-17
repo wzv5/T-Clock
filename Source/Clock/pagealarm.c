@@ -483,7 +483,7 @@ void OnDropDownAlarm(HWND hDlg)
 	if(strcmp(name, pAS->dlgmsg.name)) {
 		strcpy(pAS->dlgmsg.name, name);
 		CBDeleteString(hDlg, IDC_COMBOALARM, m_curAlarm);
-		(int)CBInsertString(hDlg, IDC_COMBOALARM, m_curAlarm, name);
+		CBInsertString(hDlg, IDC_COMBOALARM, m_curAlarm, name);
 		CBSetItemData(hDlg, IDC_COMBOALARM, m_curAlarm, pAS);
 		CBSetCurSel(hDlg, IDC_COMBOALARM, m_curAlarm);
 	}

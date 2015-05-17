@@ -366,7 +366,7 @@ int MyMessageBox(HWND hwnd, const char* msg, const char* title, UINT uType, UINT
 //----------------------------------------//--------------------------+++--> 32bit x 32bit = 64bit:
 ULONGLONG M32x32to64(DWORD a, DWORD b)   //-------------------------------------------------+++-->
 {
-	ULARGE_INTEGER ret = {0};
+	ULARGE_INTEGER ret = {{0}};
 	DWORD* p1, *p2, *p3;
 	p1 = &ret.LowPart;
 	p2 = (DWORD*)((char*)p1 + 2);

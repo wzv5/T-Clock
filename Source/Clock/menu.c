@@ -73,10 +73,6 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	PostMessage(hWnd,WM_NULL,0,0);
 	DestroyMenu(hMenu); // Starting Over is Simpler & Recommended
 }
-#ifdef __GNUC__
-const GUID CLSID_Shell={0x13709620,0xc279,0x11ce,{0xa4,0x9e,0x44,0x45,0x53,0x54,0,1}};
-const GUID IID_IShellDispatch4={0xefd84b2d,0x4bcf,0x4298,{0xbe,0x25,0xeb,0x54,0x2a,0x59,0xfb,0xda}};
-#endif
 //================================================================================================
 //--------------------------------------+++--> Show/Hide Desktop (e.g. Show/Hide all Open Windows):
 void ToggleDesk()   //----------------------------------------------------------------------+++-->
@@ -86,7 +82,7 @@ void ToggleDesk()   //----------------------------------------------------------
 	
 	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
 	
-	hres = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, &IID_IShellDispatch4, &pDisp);
+	hres = CoCreateInstance(&CLSID_Shell, NULL, CLSCTX_INPROC_SERVER, &IID_IShellDispatch4, (void**)&pDisp);
 	
 	if(SUCCEEDED(hres)) {
 		pDisp->lpVtbl->ToggleDesktop(pDisp);

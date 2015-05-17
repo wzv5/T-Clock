@@ -168,7 +168,7 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 	
 	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
 	
-	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, &psl);
+	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (void**)&psl);
 	if(SUCCEEDED(hres)) {
 		IPersistFile* ppf;
 		char path[MAX_PATH];
@@ -179,7 +179,7 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 		del_title(path);
 		psl->lpVtbl->SetWorkingDirectory(psl, path);
 		
-		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, &ppf);
+		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (void**)&ppf);
 		if(SUCCEEDED(hres)) {
 			WORD wsz[MAX_PATH];
 			char lnkfile[MAX_PATH];
@@ -667,7 +667,7 @@ int CheckDLL(char* fname)   //--------------------------------------------------
 		if(GetFileVersionInfo(fname, 0, size, pBlock)) {
 			VS_FIXEDFILEINFO* pffi;
 			UINT uLen;
-			if(VerQueryValue(pBlock, "\\\0", &pffi, &uLen)) {
+			if(VerQueryValue(pBlock, "\\\0", (void**)&pffi, &uLen)) {
 				if(pffi->dwFileVersionMS == MAKELONG(VER_MINOR,VER_MAJOR)  &&
 				   pffi->dwFileVersionLS == MAKELONG(VER_REVISION,VER_BUILD)){
 					ret = 1; //--+++--> Correct T-Clock.dll File Version Found!

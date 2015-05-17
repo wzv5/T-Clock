@@ -10,16 +10,16 @@
 #include <time.h>     // Required by time functions in Format.c
 #include <math.h>     // Required by use of floor() in Format.c
 
-#include "../common/resource.h" // common resource defines
 #include "../common/newapi.h" // UxTheme stuff
 #include "../common/utl.h" // utility functions
 
 #define TZNAME_MAX		  256//10
 
 // main.c
-int WINAPI IsCalendarOpen(int focus);
-void WINAPI HookStart(HWND hwnd);
-void WINAPI HookEnd();
+DLL_EXPORT int WINAPI IsCalendarOpen(int focus);
+DLL_EXPORT void WINAPI HookStart(HWND hwnd);
+DLL_EXPORT void WINAPI HookEnd();
+DLL_EXPORT void WINAPI ClockExit();
 
 
 // tclock.c
