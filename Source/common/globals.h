@@ -138,4 +138,12 @@ enum{ // Drop&File enum / registry settings
 #	define DLL_EXPORT __declspec(dllexport)
 #endif
 
+#ifdef _DEBUG
+#	define DBGMSG(fmt,...) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); MessageBox(0,_dbgbuf,"Debug",0);}while(0)
+#	define DBGOUT(fmt,...) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); OutputDebugString(_dbgbuf);}while(0)
+#else
+#	define DBGMSG(fmt,...)
+#	define DBGOUT(fmt,...)
+#endif // _DEBUG
+
 #endif // TCLOCK_GLOBAL_H
