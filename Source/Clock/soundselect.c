@@ -36,11 +36,11 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 	str0cat(filter, MyString(IDS_ALLFILE));
 	str0cat(filter, "*.*");
 	
-	if(!*deffile || IsMMFile(deffile)) ofn.nFilterIndex = 1;
+	if(!deffile[0] || IsMMFile(deffile)) ofn.nFilterIndex = 1;
 	else ofn.nFilterIndex = 2;
 	
-	strcpy(initdir, api.root);
-	if(*deffile) {
+	memcpy(initdir, api.root, api.root_len+1);
+	if(deffile[0]) {
 		WIN32_FIND_DATA fd;
 		HANDLE hfind;
 		hfind = FindFirstFile(deffile, &fd);

@@ -343,7 +343,9 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		char tmp[MAX_PATH];
 		HANDLE hFind;
 		WIN32_FIND_DATA FindFileData;
-		strcpy(tmp,api.root); add_title(tmp,"waves/*");
+		
+		memcpy(tmp, api.root, api.root_len+1);
+		add_title(tmp,"waves/*");
 		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
 			do{
 				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)

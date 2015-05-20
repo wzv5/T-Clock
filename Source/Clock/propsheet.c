@@ -159,12 +159,10 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile)
 {
 	char fname[MAX_PATH], ftitle[MAX_PATH], initdir[MAX_PATH];
-	OPENFILENAME ofn;
+	OPENFILENAME ofn = {sizeof(OPENFILENAME)};
 	BOOL r;
 	
-	memset(&ofn, 0, sizeof(OPENFILENAME));
-	
-	strcpy(initdir, api.root);
+	memcpy(initdir, api.root, api.root_len+1);
 	if(deffile[0]) {
 		WIN32_FIND_DATA fd;
 		HANDLE hfind;
@@ -177,7 +175,6 @@ BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char*
 	}
 	
 	fname[0] = '\0';
-	ofn.lStructSize = sizeof(OPENFILENAME);
 	ofn.hwndOwner = hDlg;
 	ofn.hInstance = GetModuleHandle(NULL);
 	ofn.lpstrFilter = filter;

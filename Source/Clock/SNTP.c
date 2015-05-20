@@ -57,7 +57,7 @@ void Log(const char* msg)   //--------------------------------------------------
 		char fname[MAX_PATH];
 		HFILE hf;
 		
-		strcpy(fname, api.root);
+		memcpy(fname, api.root, api.root_len+1);
 		add_title(fname, "SNTP.log");
 		hf = _lopen(fname, OF_WRITE);
 		if(hf == HFILE_ERROR)
@@ -452,7 +452,7 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 			HWND hList = GetDlgItem(hDlg,IDC_LIST);
 			ListView_DeleteAllItems(hList);
 			
-			strcpy(logfile, api.root);
+			memcpy(logfile, api.root, api.root_len+1);
 			add_title(logfile, "SNTP.log");
 			fp = fopen(logfile, "w");
 			if(fp) fclose(fp);

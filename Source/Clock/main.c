@@ -73,7 +73,8 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 		api.PositionWindow(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL),11);
 	}else{
 		char cal[MAX_PATH];
-		strcpy(cal,api.root); add_title(cal,"misc\\XPCalendar.exe");
+		memcpy(cal, api.root, api.root_len+1);
+		add_title(cal,"misc\\XPCalendar.exe");
 		api.Exec(cal,NULL,g_hwndTClockMain);
 	}
 }
