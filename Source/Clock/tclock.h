@@ -5,6 +5,7 @@
 #pragma once
 
 #include "../common/globals.h"
+#include "../common/resource.h"
 
 #include <stdio.h>//sprintf
 #include <Uxtheme.h>//SetWindowTheme
@@ -12,16 +13,6 @@
 #include <Psapi.h>//EmptyWorkingSet
 #include "../common/newapi.h"
 #include "../common/utl.h"
-
-// TCDLL.DLL‚API
-typedef int (WINAPI *IsCalendarOpen_t)(int focus);
-typedef void (WINAPI *HookStart_t)(HWND hwnd);
-typedef void (WINAPI *HookEnd_t)();
-typedef void (WINAPI *ClockExit_t)();
-extern IsCalendarOpen_t IsCalendarOpen;
-extern HookStart_t HookStart;
-extern HookEnd_t HookEnd;
-extern ClockExit_t ClockExit;
 
 // IDs for timer
 #define IDTIMER_START				2
@@ -48,13 +39,14 @@ extern ClockExit_t ClockExit;
 #define HOT_TSYNC	250
 
 //--+++--> main.c - Application Global Values:
-extern char		g_mydir[MAX_PATH];	/**< path to Clock[64].exe */
-extern HWND		g_hDlgTimer;		/**< timer dialog handle */
-extern HWND		g_hDlgStopWatch;	/**< stopwatch dialog handle */
-extern HWND		g_hDlgTimerWatch;	/**< timer watch dialog handle */
-extern HWND		g_hwndSheet;		/**< property sheet window */
+extern HWND g_hwndTClockMain; /**< our main window for hotkeys, menus and sounds */
+extern HWND g_hwndClock;      /**< the clock hwnd */
+extern HWND g_hDlgTimer;      /**< timer dialog handle */
+extern HWND g_hDlgStopWatch;  /**< stopwatch dialog handle */
+extern HWND g_hDlgTimerWatch; /**< timer watch dialog handle */
+extern HWND g_hwndSheet;      /**< property sheet window */
 /** frequently used icon handles */
-extern HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
+extern HICON g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 extern BOOL bMonOffOnLock; /**< locking workstation turns off monitor(s) */
 
 /**
@@ -80,7 +72,6 @@ int CheckSettings();
 extern char g_bApplyClock;
 extern char g_bApplyTaskbar;
 void MyPropertySheet(int page);
-void SetMyDialgPos(HWND hwnd,int padding);
 BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
 
 typedef struct{

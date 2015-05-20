@@ -38,7 +38,7 @@ BOOL GetHourlyChime(){
 }
 void SetHourlyChime(BOOL bEnabled){
 	m_bJihou=bEnabled;
-	SetMyRegLong("","Jihou",m_bJihou);
+	api.SetInt("","Jihou",m_bJihou);
 }
 char GetAlarmEnabled(int idx){
 	if(idx<0||idx>=m_maxAlarm)
@@ -51,31 +51,31 @@ void SetAlarmEnabled(int idx,char bEnabled){
 	if(bEnabled) m_pAS[idx].uFlags|=ALRM_ENABLED;
 	else m_pAS[idx].uFlags&=~ALRM_ENABLED;
 	wsprintf(g_alarmkey+5,"%d",idx+1);
-	SetMyRegLong(g_alarmkey,"Alarm",m_pAS[idx].uFlags&ALRM_ENABLED);
+	api.SetInt(g_alarmkey,"Alarm",m_pAS[idx].uFlags&ALRM_ENABLED);
 }
 void ReadAlarmFromReg(alarm_t* pAS, int num)
 {
 	wsprintf(g_alarmkey+5,"%d",num+1);
-	GetMyRegStr(g_alarmkey, "Name", pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name), "");
-	pAS->hour = GetMyRegLong(g_alarmkey, "Hour", 12);
-	pAS->minute = GetMyRegLong(g_alarmkey, "Minute", 0);
-	pAS->days = GetMyRegLong(g_alarmkey, "Days", 0x7f);
-	pAS->iTimes = GetMyRegLong(g_alarmkey, "Times", 1);
+	api.GetStr(g_alarmkey, "Name", pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name), "");
+	pAS->hour = api.GetInt(g_alarmkey, "Hour", 12);
+	pAS->minute = api.GetInt(g_alarmkey, "Minute", 0);
+	pAS->days = api.GetInt(g_alarmkey, "Days", 0x7f);
+	pAS->iTimes = api.GetInt(g_alarmkey, "Times", 1);
 	
 	pAS->uFlags=0;
-	if(GetMyRegLong(g_alarmkey,"Alarm",0)) pAS->uFlags|=ALRM_ENABLED;
-	if(GetMyRegLong(g_alarmkey,"Once",0)) pAS->uFlags|=ALRM_ONESHOT;
-	if(GetMyRegLong(g_alarmkey,"Hour12",0)) pAS->uFlags|=ALRM_12H;
-	if(GetMyRegLong(g_alarmkey,"PM",0)) pAS->uFlags|=ALRM_PM;
-	if(GetMyRegLong(g_alarmkey,"ChimeHr",0)) pAS->uFlags|=ALRM_CHIMEHR;
-	if(GetMyRegLong(g_alarmkey,"Repeat",0)) pAS->uFlags|=ALRM_REPEAT;
-	if(GetMyRegLong(g_alarmkey,"Blink",0)) pAS->uFlags|=ALRM_BLINK;
-	if(GetMyRegLong(g_alarmkey,"jrMsgUsed",0)) pAS->uFlags|=ALRM_DIALOG;
+	if(api.GetInt(g_alarmkey,"Alarm",0)) pAS->uFlags|=ALRM_ENABLED;
+	if(api.GetInt(g_alarmkey,"Once",0)) pAS->uFlags|=ALRM_ONESHOT;
+	if(api.GetInt(g_alarmkey,"Hour12",0)) pAS->uFlags|=ALRM_12H;
+	if(api.GetInt(g_alarmkey,"PM",0)) pAS->uFlags|=ALRM_PM;
+	if(api.GetInt(g_alarmkey,"ChimeHr",0)) pAS->uFlags|=ALRM_CHIMEHR;
+	if(api.GetInt(g_alarmkey,"Repeat",0)) pAS->uFlags|=ALRM_REPEAT;
+	if(api.GetInt(g_alarmkey,"Blink",0)) pAS->uFlags|=ALRM_BLINK;
+	if(api.GetInt(g_alarmkey,"jrMsgUsed",0)) pAS->uFlags|=ALRM_DIALOG;
 	
-	GetMyRegStr(g_alarmkey, "File", pAS->fname, sizeof(pAS->fname), "");
+	api.GetStr(g_alarmkey, "File", pAS->fname, sizeof(pAS->fname), "");
 	
-	GetMyRegStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message), "");
-	GetMyRegStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings), "");
+	api.GetStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message), "");
+	api.GetStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings), "");
 	
 	if(!*pAS->dlgmsg.name)
 		wsprintf(pAS->dlgmsg.name, "%02d:%02d", pAS->hour, pAS->minute);
@@ -83,32 +83,32 @@ void ReadAlarmFromReg(alarm_t* pAS, int num)
 void SaveAlarmToReg(alarm_t* pAS, int num)
 {
 	wsprintf(g_alarmkey+5,"%d",num+1);
-	SetMyRegStr(g_alarmkey, "Name", pAS->dlgmsg.name);
-	SetMyRegLong(g_alarmkey, "Hour", pAS->hour);
-	SetMyRegLong(g_alarmkey, "Minute", pAS->minute);
-	SetMyRegStr(g_alarmkey, "File", pAS->fname);
+	api.SetStr(g_alarmkey, "Name", pAS->dlgmsg.name);
+	api.SetInt(g_alarmkey, "Hour", pAS->hour);
+	api.SetInt(g_alarmkey, "Minute", pAS->minute);
+	api.SetStr(g_alarmkey, "File", pAS->fname);
 	
-	SetMyRegStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message);
-	SetMyRegStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings);
+	api.SetStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message);
+	api.SetStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings);
 	
-	SetMyRegLong(g_alarmkey, "Days", pAS->days);
-	SetMyRegLong(g_alarmkey, "Times", pAS->iTimes);
+	api.SetInt(g_alarmkey, "Days", pAS->days);
+	api.SetInt(g_alarmkey, "Times", pAS->iTimes);
 	
-	SetMyRegLong(g_alarmkey,"Alarm",pAS->uFlags&ALRM_ENABLED);
-	SetMyRegLong(g_alarmkey,"Once",pAS->uFlags&ALRM_ONESHOT);
-	SetMyRegLong(g_alarmkey,"Hour12",pAS->uFlags&ALRM_12H);
-	SetMyRegLong(g_alarmkey,"PM",pAS->uFlags&ALRM_PM);
-	SetMyRegLong(g_alarmkey,"ChimeHr",pAS->uFlags&ALRM_CHIMEHR);
-	SetMyRegLong(g_alarmkey,"Repeat",pAS->uFlags&ALRM_REPEAT);
-	SetMyRegLong(g_alarmkey,"Blink",pAS->uFlags&ALRM_BLINK);
-	SetMyRegLong(g_alarmkey,"jrMsgUsed",pAS->uFlags&ALRM_DIALOG);
+	api.SetInt(g_alarmkey,"Alarm",pAS->uFlags&ALRM_ENABLED);
+	api.SetInt(g_alarmkey,"Once",pAS->uFlags&ALRM_ONESHOT);
+	api.SetInt(g_alarmkey,"Hour12",pAS->uFlags&ALRM_12H);
+	api.SetInt(g_alarmkey,"PM",pAS->uFlags&ALRM_PM);
+	api.SetInt(g_alarmkey,"ChimeHr",pAS->uFlags&ALRM_CHIMEHR);
+	api.SetInt(g_alarmkey,"Repeat",pAS->uFlags&ALRM_REPEAT);
+	api.SetInt(g_alarmkey,"Blink",pAS->uFlags&ALRM_BLINK);
+	api.SetInt(g_alarmkey,"jrMsgUsed",pAS->uFlags&ALRM_DIALOG);
 }
 
 //================================================================================================
 //-------------------------------------------------+++--> Load Configured Alarm Data From Registry:
 void InitAlarm(void)   //-------------------------------------------------------------------+++-->
 {
-	m_maxAlarm = GetMyRegLong("", "AlarmNum", 0);
+	m_maxAlarm = api.GetInt("", "AlarmNum", 0);
 	if(m_maxAlarm < 1) m_maxAlarm = 0;
 	if(m_pAS) free(m_pAS); m_pAS = NULL;
 	if(m_maxAlarm > 0) {
@@ -119,10 +119,10 @@ void InitAlarm(void)   //-------------------------------------------------------
 		}
 	}
 	
-	m_bJihou = GetMyRegLong("", "Jihou", FALSE);
+	m_bJihou = api.GetInt("", "Jihou", FALSE);
 	if(m_bJihou) {
-		m_bJihouRepeat = GetMyRegLong("", "JihouRepeat", FALSE);
-		m_bJihouBlink = GetMyRegLong("", "JihouBlink", FALSE);
+		m_bJihouRepeat = api.GetInt("", "JihouRepeat", FALSE);
+		m_bJihouBlink = api.GetInt("", "JihouBlink", FALSE);
 	}
 }
 //================================================================================================
@@ -176,7 +176,7 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 		if(m_bJihouBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, TRUE, 0);
 		if(h == 0) h = 12;
 		else if(h >= 13) h -= 12;
-		GetMyRegStr("", "JihouFile", fname, sizeof(fname), "");
+		api.GetStr("", "JihouFile", fname, sizeof(fname), "");
 		if(fname[0]) {
 			if(m_bJihouRepeat) {
 				rep = h; // Chime the Hour as Requested (If Requested)
@@ -283,11 +283,11 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 	if(*fname!='/' && *fname!='\\' && fname[1]!=':' // no abs path
 	&&(*fname!='.' || (fname[1]!='/' && fname[1]!='\\' && (fname[1]!='.' ||  (fname[2]!='/' && fname[2]!='\\'))))) // no relative path (strict relative)
 	{ // do it relative to "waves/"
-		const size_t tlen=strlen(g_mydir);
+		const size_t tlen=api.root_len;
 		const size_t len=strlen(fname)+1; // incl. terminating null
 		if(len<MAX_PATH-tlen-7){
 			memmove(fname+tlen+7/* <mydir>/waves/ */,fname,len);
-			memcpy(fname,g_mydir,tlen); /// absolute path is at least required by .pcb / PlayNoSoundThread (not for .wav)
+			memcpy(fname,api.root,tlen); /// absolute path is at least required by .pcb / PlayNoSoundThread (not for .wav)
 			memcpy(fname+tlen,"\\waves\\",7);
 		}
 	}
@@ -333,7 +333,7 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 				m_countPlay = dwLoops;
 			} else mciSendString("close myfile", NULL, 0, NULL);
 		} return m_bMCIPlaying;
-	} else ExecFile(fname,hwnd);
+	} else api.ExecFile(fname,hwnd);
 	return FALSE;
 }
 //=================================================*

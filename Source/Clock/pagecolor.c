@@ -120,7 +120,7 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			if(m_transition==1){
 				SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
 				SendMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
-				DelMyRegKey("Preview");
+				api.DelKey("Preview");
 			}
 			m_transition=-1;
 			break;
@@ -155,8 +155,8 @@ void OnInit(HWND hDlg)
 	SetComboFontSize(hDlg, TRUE);
 	
 	
-	CheckDlgButton(hDlg, IDC_BOLD, GetMyRegLong("Clock", "Bold", 0));
-	CheckDlgButton(hDlg, IDC_ITALIC, GetMyRegLong("Clock", "Italic", 0));
+	CheckDlgButton(hDlg, IDC_BOLD, api.GetInt("Clock", "Bold", 0));
+	CheckDlgButton(hDlg, IDC_ITALIC, api.GetInt("Clock", "Italic", 0));
 	
 	hfont = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
 	GetObject(hfont, sizeof(LOGFONT), &logfont);
@@ -170,25 +170,25 @@ void OnInit(HWND hDlg)
 	SendDlgItemMessage(hDlg, IDC_ITALIC, WM_SETFONT, (WPARAM)hfont, 0);
 	
 	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETRANGE32, (WPARAM)-999,999);
-	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETPOS32, 0, GetMyRegLong("Clock", "ClockHeight", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINCHEIGHT, UDM_SETPOS32, 0, api.GetInt("Clock", "ClockHeight", 0));
 	
 	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETRANGE32, (WPARAM)-999,999);
-	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETPOS32, 0, GetMyRegLong("Clock", "ClockWidth", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINCWIDTH, UDM_SETPOS32, 0, api.GetInt("Clock", "ClockWidth", 0));
 	
 	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETRANGE32, (WPARAM)-64,64);
-	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETPOS32, 0, GetMyRegLong("Clock", "LineHeight", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINLHEIGHT, UDM_SETPOS32, 0, api.GetInt("Clock", "LineHeight", 0));
 	
 	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETRANGE32, (WPARAM)-200,200);
-	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETPOS32, 0, GetMyRegLong("Clock", "VertPos", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINVPOS, UDM_SETPOS32, 0, api.GetInt("Clock", "VertPos", 0));
 	
 	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETRANGE32, (WPARAM)-200,200);
-	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETPOS32, 0, GetMyRegLong("Clock", "HorizPos", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINHPOS, UDM_SETPOS32, 0, api.GetInt("Clock", "HorizPos", 0));
 	
 	SendDlgItemMessage(hDlg, IDC_SPINANGLE, UDM_SETRANGE32, (WPARAM)-360,360);
-	SendDlgItemMessage(hDlg, IDC_SPINANGLE, UDM_SETPOS32, 0, GetMyRegLong("Clock", "Angle", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINANGLE, UDM_SETPOS32, 0, api.GetInt("Clock", "Angle", 0));
 	
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE32, 0,100);
-	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS32, 0, GetMyRegLong("Taskbar", "AlphaTaskbar", 0));
+	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS32, 0, api.GetInt("Taskbar", "AlphaTaskbar", 0));
 	
 	CBAddString(hDlg,IDC_FONTQUAL,"Default");				// DEFAULT_QUALITY			 = 0
 	CBAddString(hDlg,IDC_FONTQUAL,"Draft");					// DRAFT_QUALITY			 = 1
@@ -197,7 +197,7 @@ void OnInit(HWND hDlg)
 	CBAddString(hDlg,IDC_FONTQUAL,"AntiAliased (Win7)");	// ANTIALIASED_QUALITY		 = 4
 	CBAddString(hDlg,IDC_FONTQUAL,"ClearType (WinXP+)");	// CLEARTYPE_QUALITY		 = 5
 	CBAddString(hDlg,IDC_FONTQUAL,"ClearType Natural");		// CLEARTYPE_NATURAL_QUALITY = 6
-	CBSetCurSel(hDlg,IDC_FONTQUAL,GetMyRegLong("Clock","FontQuality",CLEARTYPE_QUALITY));
+	CBSetCurSel(hDlg,IDC_FONTQUAL,api.GetInt("Clock","FontQuality",CLEARTYPE_QUALITY));
 	m_transition=0; // end transition lock, ready to go
 }
 
@@ -211,34 +211,34 @@ void OnApply(HWND hDlg,BOOL preview)
 	HWND hwndSize = GetDlgItem(hDlg, IDC_FONTSIZE);
 	int sel;
 	
-	SetMyRegLong(section, "ForeColor", (int)CBGetItemData(hDlg,IDC_COLFORE,CBGetCurSel(hDlg,IDC_COLFORE)));
-	SetMyRegLong(section, "BackColor", (int)CBGetItemData(hDlg,IDC_COLBACK,CBGetCurSel(hDlg,IDC_COLBACK)));
+	api.SetInt(section, "ForeColor", (int)CBGetItemData(hDlg,IDC_COLFORE,CBGetCurSel(hDlg,IDC_COLFORE)));
+	api.SetInt(section, "BackColor", (int)CBGetItemData(hDlg,IDC_COLBACK,CBGetCurSel(hDlg,IDC_COLBACK)));
 	
 	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), tmp);
-	SetMyRegStr(section, "Font", tmp);
+	api.SetStr(section, "Font", tmp);
 	
 	sel = ComboBox_GetCurSel(hwndSize);
 	if(sel == -1)
 		ComboBox_GetText(hwndSize, tmp, LF_FACESIZE);
 	else
 		ComboBox_GetLBText(hwndSize, sel, tmp);
-	SetMyRegLong(section, "FontSize", atoi(tmp));
+	api.SetInt(section, "FontSize", atoi(tmp));
 	
-	SetMyRegLong(section, "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
-	SetMyRegLong(section, "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
+	api.SetInt(section, "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
+	api.SetInt(section, "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
 	
-	SetMyRegLong(section, "FontQuality", (int)CBGetCurSel(hDlg, IDC_FONTQUAL));
+	api.SetInt(section, "FontQuality", (int)CBGetCurSel(hDlg, IDC_FONTQUAL));
 	
-	SetMyRegLong(section, "ClockHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINCHEIGHT,UDM_GETPOS32,0,0));
-	SetMyRegLong(section, "ClockWidth", (int)SendDlgItemMessage(hDlg,IDC_SPINCWIDTH,UDM_GETPOS32,0,0));
-	SetMyRegLong(section, "LineHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINLHEIGHT,UDM_GETPOS32,0,0));
-	SetMyRegLong(section, "VertPos", (int)SendDlgItemMessage(hDlg,IDC_SPINVPOS,UDM_GETPOS32,0,0));
-	SetMyRegLong(section, "HorizPos", (int)SendDlgItemMessage(hDlg,IDC_SPINHPOS,UDM_GETPOS32,0,0));
-	SetMyRegLong(section, "Angle", (int)SendDlgItemMessage(hDlg,IDC_SPINANGLE,UDM_GETPOS32,0,0));
+	api.SetInt(section, "ClockHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINCHEIGHT,UDM_GETPOS32,0,0));
+	api.SetInt(section, "ClockWidth", (int)SendDlgItemMessage(hDlg,IDC_SPINCWIDTH,UDM_GETPOS32,0,0));
+	api.SetInt(section, "LineHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINLHEIGHT,UDM_GETPOS32,0,0));
+	api.SetInt(section, "VertPos", (int)SendDlgItemMessage(hDlg,IDC_SPINVPOS,UDM_GETPOS32,0,0));
+	api.SetInt(section, "HorizPos", (int)SendDlgItemMessage(hDlg,IDC_SPINHPOS,UDM_GETPOS32,0,0));
+	api.SetInt(section, "Angle", (int)SendDlgItemMessage(hDlg,IDC_SPINANGLE,UDM_GETPOS32,0,0));
 	
 	if(!preview){
-		SetMyRegLong("Taskbar","AlphaTaskbar",(int)SendDlgItemMessage(hDlg,IDC_SPINALPHA,UDM_GETPOS32,0,0));
-		DelMyRegKey("Preview");
+		api.SetInt("Taskbar","AlphaTaskbar",(int)SendDlgItemMessage(hDlg,IDC_SPINALPHA,UDM_GETPOS32,0,0));
+		api.DelKey("Preview");
 		m_transition=0;
 	}else
 		m_transition=1;
@@ -250,7 +250,6 @@ typedef struct {
 	COLORREF col;
 	const char* name;
 } syscolor_t;
-#include "../common/tcolor.h"
 const syscolor_t syscolor[]={
 	{TCOLOR_DEFAULT,"<default>"},
 	{TCOLOR_TRANSPARENT,"<transparent>"},
@@ -293,9 +292,9 @@ void InitColor(HWND hDlg)
 			CBAddString(hDlg, id, basecolor[icol]);
 		/// select last used color
 		if(id==IDC_COLFORE)
-			col=GetMyRegLong("Clock","ForeColor",TCOLOR(TCOLOR_DEFAULT));
+			col=api.GetInt("Clock","ForeColor",TCOLOR(TCOLOR_DEFAULT));
 		else
-			col=GetMyRegLong("Clock","BackColor",TCOLOR(TCOLOR_DEFAULT));
+			col=api.GetInt("Clock","BackColor",TCOLOR(TCOLOR_DEFAULT));
 		for(icol=0; icol<colorstotal; ++icol) {
 			if(col==(COLORREF)CBGetItemData(hDlg,id,icol))
 				break;
@@ -327,7 +326,7 @@ void OnDrawItemColorCombo(LPARAM lParam)
 	pdis = (DRAWITEMSTRUCT*)lParam;
 	
 	if(IsWindowEnabled(pdis->hwndItem)) {
-		col = GetTColor((COLORREF)pdis->itemData,2);
+		col = api.GetColor((COLORREF)pdis->itemData,2);
 	} else col = GetSysColor(COLOR_3DFACE);
 	
 	switch(pdis->itemAction) {
@@ -382,7 +381,7 @@ void OnChooseColor(HWND hDlg, WORD id)
 	
 	idCombo = id - 1;
 	
-	col = GetTColor((COLORREF)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo)),2);
+	col = api.GetColor((COLORREF)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo)),2);
 	
 	for(icol = 0; icol < 16; ++icol) colarray[icol] = 0x00FFFFFF;
 	
@@ -431,7 +430,7 @@ void InitComboFont(HWND hDlg)
 
 	ReleaseDC(NULL, hdc);
 	
-	GetMyRegStrEx("Clock", "Font", s, 80, "Arial");
+	api.GetStrEx("Clock", "Font", s, 80, "Arial");
 	
 	i = ComboBox_FindStringExact(hcombo, -1, s);
 	if(i == LB_ERR) i = 0;
@@ -451,7 +450,7 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	
 	// remember old size
 	if(bInit) { // on WM_INITDIALOG
-		size = GetMyRegLong("Clock", "FontSize", 9);
+		size = api.GetInt("Clock", "FontSize", 9);
 		if(!size || size>100) size = 9;
 	} else { // when IDC_FONT has been changed
 		ComboBox_GetText(hwndSize, str, LF_FACESIZE);

@@ -1,73 +1,11 @@
-//#include "../Clock/tclock.h"
-#include <Windows.h>
+#include "../common/globals.h"
 #include <CommCtrl.h>
-#include "resource.h"
-//#include <WinUser.h>
 #include <time.h>
-#include "../common/utl.h"
+#include "resource.h"
 //other
+TClockAPI api;
 BOOL m_bAutoClose;
 BOOL m_bTopMost;
-//================================================================================================
-//------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
-void SetMyDialgPos(HWND hwnd)   //----------------------------------------------------------+++-->
-{
-	#define padding 11 // 11 is Win8 default
-	MONITORINFO moni;
-	int wProp, hProp;
-	
-	GetWindowRect(hwnd,&moni.rcWork); // Properties Dialog Dimensions
-	wProp = moni.rcWork.right-moni.rcWork.left;  //----------+++--> Width
-	hProp = moni.rcWork.bottom-moni.rcWork.top; //----------+++--> Height
-	
-	GetCursorPos((POINT*)&moni.rcWork);
-	moni.cbSize=sizeof(moni);
-	GetMonitorInfo(MonitorFromPoint(*(POINT*)&moni.rcWork,MONITOR_DEFAULTTONEAREST),&moni);
-	
-	if(moni.rcWork.top!=moni.rcMonitor.top || moni.rcWork.bottom!=moni.rcMonitor.bottom) { // taskbar is horizontal
-		moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
-		if(moni.rcWork.top!=moni.rcMonitor.top) // top
-			moni.rcMonitor.top=moni.rcWork.top+padding;
-		else // bottom
-			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
-	}else if(moni.rcWork.left!=moni.rcMonitor.left || moni.rcWork.right!=moni.rcMonitor.right){ // vertical
-		moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
-		if(moni.rcWork.left!=moni.rcMonitor.left) // left
-			moni.rcMonitor.left=moni.rcWork.left+padding;
-		else // right
-			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
-	}else{ // autohide taskbar
-		MONITORINFO taskbarMoni;
-		HWND taskbar=FindWindow("Shell_TrayWnd",NULL);
-		RECT taskbarRC;
-		int tbW,tbH;
-		if(!taskbar)
-			return;
-		taskbarMoni.cbSize=sizeof(moni);
-		GetMonitorInfo(MonitorFromWindow(taskbar,MONITOR_DEFAULTTONEAREST),&taskbarMoni); // correct monitor for single monitor setup, probably wrong for multimon
-		GetWindowRect(taskbar,&taskbarRC);
-		tbW=taskbarRC.right-taskbarRC.left;
-		tbH=taskbarRC.bottom-taskbarRC.top;
-		if(tbW > tbH){ // horizontal
-			int diff=taskbarMoni.rcMonitor.top-taskbarRC.top;
-			int visiblesize=taskbarMoni.rcMonitor.bottom-taskbarMoni.rcMonitor.top+diff;
-			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
-			if((diff>0 && diff>tbH/10) || !diff || (diff<0 && (visiblesize!=tbH && visiblesize>tbH/10))) // top
-				moni.rcMonitor.top=moni.rcWork.top+padding+tbH;
-			else // bottom
-				moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding-tbH;
-		}else{
-			int diff=taskbarMoni.rcMonitor.left-taskbarRC.left;
-			int visiblesize=taskbarMoni.rcMonitor.right-taskbarMoni.rcMonitor.left+diff;
-			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
-			if((diff>0 && diff>tbW/10) || !diff || (diff<0 && (visiblesize!=tbW && visiblesize>tbW/10))) // left
-				moni.rcMonitor.left=moni.rcWork.left+padding+tbW;
-			else // right
-				moni.rcMonitor.left=moni.rcWork.right-wProp-padding-tbW;
-		}
-	}
-	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
-}
 //===========================================================================================
 //----------------------------------------------------+++--> Get the Current Day of the Year:
 void GetDayOfYearTitle(char* szTitle, int ivMonths)   //-------------------------------+++-->
@@ -81,7 +19,7 @@ void GetDayOfYearTitle(char* szTitle, int ivMonths)   //------------------------
 //  strftime(szDoY, 8, "%#j", &today); // <--{OutPut}--> Day 95
 	strftime(szDoY, 8, "%j", &today);   // <--{OutPut}--> Day 095
 	
-	if(g_tos<TOS_VISTA && ivMonths==1) {
+	if(api.OS < TOS_VISTA && ivMonths==1) {
 		wsprintf(szTitle, "Calendar:  Day: %s", szDoY);
 	} else {
 		wsprintf(szTitle, "T-Clock: Calendar  Day: %s", szDoY);
@@ -94,17 +32,17 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		int iMonths,iMonthsPast;
 		DWORD dwCalStyle;
 		RECT rc; HWND hCal;
-		iMonths=GetMyRegLongEx("Calendar","ViewMonths",3);
-		iMonthsPast=GetMyRegLongEx("Calendar","ViewMonthsPast",1);
+		iMonths=api.GetIntEx("Calendar","ViewMonths",3);
+		iMonthsPast=api.GetIntEx("Calendar","ViewMonthsPast",1);
 		
-		if(GetMyRegLong("Calendar", "ShowDayOfYear", 1)) {
+		if(api.GetInt("Calendar", "ShowDayOfYear", 1)) {
 			char szTitle[32];
 			GetDayOfYearTitle(szTitle,iMonths);
 			SetWindowText(hwnd,szTitle);
 		}
 		
 		dwCalStyle=WS_BORDER|WS_CHILD|WS_VISIBLE|MCS_NOTODAYCIRCLE;
-		if(GetMyRegLong("Calendar","ShowWeekNums",0))
+		if(api.GetInt("Calendar","ShowWeekNums",0))
 			dwCalStyle|=MCS_WEEKNUMBERS;
 		
 		hCal=CreateWindowEx(0,MONTHCAL_CLASS,"",dwCalStyle,0,0,0,0,hwnd,NULL,NULL,NULL);
@@ -141,7 +79,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			}
 			rc.right-=CALBORDER;
 			rc.bottom+=CALTODAYTEXTHEIGHT;
-			if(g_tos>=TOS_VISTA)
+			if(api.OS >= TOS_VISTA)
 				MonthCal_SizeRectToMin(hCal,&rc);//removes some empty space.. (eg at 4 months)
 		}else{
 			if(rc.right<(LONG)MonthCal_GetMaxTodayWidth(hCal))
@@ -162,7 +100,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		SetWindowPos(hwnd,HWND_TOP,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
 		if(m_bTopMost)
 			SetWindowPos(hwnd,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
-		SetMyDialgPos(hwnd);
+		api.PositionWindow(hwnd, 11);
 		if(m_bAutoClose && GetForegroundWindow()!=hwnd)
 			PostMessage(hwnd,WM_CLOSE,0,0);
 		return 0;}
@@ -195,8 +133,8 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	INITCOMMONCONTROLSEX icex;
 	WNDCLASSEX wcx;
 	ATOM calclass;
-	m_bAutoClose = GetMyRegLong("Calendar", "CloseCalendar", 1);
-	m_bTopMost = GetMyRegLong("Calendar", "CalendarTopMost", 0);
+	m_bAutoClose = api.GetInt("Calendar", "CloseCalendar", 1);
+	m_bTopMost = api.GetInt("Calendar", "CalendarTopMost", 0);
 	icex.dwSize=sizeof(icex);
 	icex.dwICC=ICC_DATE_CLASSES;
 	InitCommonControlsEx(&icex);
@@ -225,8 +163,10 @@ int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine
 	MSG msg;
 	BOOL bRet;
 	(void)hPrevInstance; (void)lpCmdLine; (void)nCmdShow;// don't warn me about they being unused
-	CheckSystemVersion();
-	if(!CreateCalender(hInstance,0)) return 1;
+	if(LoadClockAPI("T-Clock" ARCH_SUFFIX, &api))
+		return 2;
+	if(!CreateCalender(hInstance,0))
+		return 1;
 	while((bRet=GetMessage(&msg,NULL,0,0))!=0){
 		if(bRet==-1){//handle the error and possibly exit
 			break;

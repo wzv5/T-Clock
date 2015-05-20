@@ -72,6 +72,11 @@
 		<Unit filename="Calendar/resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
+		<Unit filename="common/clock.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="common/clock.h" />
+		<Unit filename="common/globals.h" />
 		<Unit filename="common/manifest.xml" />
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />

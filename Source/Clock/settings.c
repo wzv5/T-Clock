@@ -36,8 +36,8 @@ int CheckSettings(){
 	char msg[1024];
 	int updateflags=SFORMAT_NONE;
 	int compatibilityflags=SCOMPAT_NONE;
-//	SetMyRegStr(NULL,"ExePath",g_mydir);
-	GetMyRegStr("Clock","Font",msg,80,"");
+//	api.SetStr(NULL,"ExePath",api.root);
+	api.GetStr("Clock","Font",msg,80,"");
 	/// new installation?
 	if(!*msg){
 		NONCLIENTMETRICS metrics={sizeof(NONCLIENTMETRICS)};
@@ -47,13 +47,13 @@ int CheckSettings(){
 		} u;
 		u.entry[2]='\0';
 		u.entryS='0'|('1'<<8); // left, 1 click
-		SetMyRegLong(REG_MOUSE,u.entry,MOUSEFUNC_SHOWCALENDER);
+		api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_SHOWCALENDER);
 		u.entryS='1'|('1'<<8); // right, 1 click
-		SetMyRegLong(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
+		api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
 		u.entryS='2'|('1'<<8); // middle, 1 click
-		SetMyRegLong(REG_MOUSE,u.entry,IDM_STOPWATCH);
+		api.SetInt(REG_MOUSE,u.entry,IDM_STOPWATCH);
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
-		SetMyRegStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
+		api.SetStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
 		if(!u.entryS){ /// @todo : XP: measure taskbar height to chose font size and or multiline/singleline (small vs "normal" taskbar)
 			HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
 			if(hwnd) {
@@ -61,12 +61,12 @@ int CheckSettings(){
 				if(rc.right > rc.bottom) u.entryS = 1;
 			}
 		}
-		SetMyRegLong("Format", "Kaigyo", u.entryS);
-		SetMyRegLong("","Ver",CURRENT_VER);
+		api.SetInt("Format", "Kaigyo", u.entryS);
+		api.SetInt("","Ver",CURRENT_VER);
 		return 1;
 	}
 	/// old installation, set update flags if any
-	switch(GetMyRegLong("","Ver",0)){
+	switch(api.GetInt("","Ver",0)){
 	case 0: /// v2.2.0#84(a507ca5) we no longer use the "FontRotateDirection" as it's replaced by "Angle", timers also work differently
 		updateflags|=SFORMAT_EFFICIENT|SFORMAT_LESSMEM|SFORMAT_FEATURE;
 		compatibilityflags|=SCOMPAT_FORMAT|SCOMPAT_TIMERS;
@@ -124,21 +124,21 @@ void ConvertSettings(){
 	char buf[MAX_PATH];
 	int idx, idx2;
 	size_t len;
-	switch(GetMyRegLong("","Ver",0)){
+	switch(api.GetInt("","Ver",0)){
 	case 0:
 		// update font rotate (from none,left,right to 0-360 angle)
-		GetMyRegStr("Clock","FontRotateDirection",buf,sizeof(buf),"");
+		api.GetStr("Clock","FontRotateDirection",buf,sizeof(buf),"");
 		switch(*buf){
-		case 'L': SetMyRegLong("Clock","Angle",90); break;
-		case 'R': SetMyRegLong("Clock","Angle",270); break;
+		case 'L': api.SetInt("Clock","Angle",90); break;
+		case 'R': api.SetInt("Clock","Angle",270); break;
 		}
-		DelMyReg("Clock","FontRotateDirection");
+		api.DelValue("Clock","FontRotateDirection");
 		// remove "ID" from "Timers" as no longer used
 		len=wsprintf(buf, "Timers\\Timer");
-		idx2=GetMyRegLong("Timers","NumberOfTimers",0);
+		idx2=api.GetInt("Timers","NumberOfTimers",0);
 		for(idx=0; idx<idx2; ){
 			wsprintf(buf+len,"%d",++idx);
-			DelMyReg(buf,"ID");
+			api.DelValue(buf,"ID");
 		}
 		/* fall through */
 		
@@ -152,5 +152,5 @@ void ConvertSettings(){
 	case CURRENT_VER:
 		;
 	}
-	SetMyRegLong("","Ver",CURRENT_VER);
+	api.SetInt("","Ver",CURRENT_VER);
 }

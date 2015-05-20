@@ -10,7 +10,7 @@ static int GetTimerInfo(char* dst, int num);
 //----------+++--> enumerate & display all times to our context menu:
 void UpdateTimerMenu(HMENU hMenu)   //------------------------+++-->
 {
-	unsigned count=GetMyRegLong(g_szTimersSubKey,"NumberOfTimers",0);
+	unsigned count=api.GetInt(g_szTimersSubKey,"NumberOfTimers",0);
 	if(count){
 		unsigned idx;
 		char buf[GEN_BUFF+16];
@@ -23,10 +23,10 @@ void UpdateTimerMenu(HMENU hMenu)   //------------------------+++-->
 		for(idx=0; idx<count; ++idx){
 			char* pos=buf+4;
 			wsprintf(subkey+offset, "%d", idx+1);
-			pos+=GetMyRegStr(subkey,"Name",pos,GEN_BUFF,"");
+			pos+=api.GetStr(subkey,"Name",pos,GEN_BUFF,"");
 			wsprintf(pos,"	(%i",idx+1);
 			InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_STRING,IDM_I_TIMER+idx,buf);
-			if(GetMyRegLong(subkey,"Active",0))
+			if(api.GetInt(subkey,"Active",0))
 				CheckMenuItem(hMenu,IDM_I_TIMER+idx,MF_BYCOMMAND|MF_CHECKED);
 		}
 		InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
@@ -78,7 +78,7 @@ void StopTimer(int id)   //--------------------------------------------------+++
 			timer_t* told=m_timer;
 			offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
 			wsprintf(subkey+offset, "%d", m_timer[idx].id+1);
-			SetMyRegLong(subkey, "Active", 0);
+			api.SetInt(subkey, "Active", 0);
 			if(--m_timers){
 				int i;
 				timer_t* tnew=(timer_t*)malloc(sizeof(timer_t)*m_timers);
@@ -119,22 +119,22 @@ void StartTimer(int id)   //-------------------------------------------------+++
 	}
 	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
 	wsprintf(subkey+offset, "%d", id+1);
-	GetMyRegStr(subkey,"Name",tnew[m_timers].name,sizeof(tnew[m_timers].name),"");
+	api.GetStr(subkey,"Name",tnew[m_timers].name,sizeof(tnew[m_timers].name),"");
 	if(!*tnew[m_timers].name){
 		free(tnew);
 		return;
 	}
 	tnew[m_timers].id=id;
-	tnew[m_timers].seconds =GetMyRegLong(subkey,"Seconds",0);
-	tnew[m_timers].seconds+=GetMyRegLong(subkey,"Minutes",0)*60;
-	tnew[m_timers].seconds+=GetMyRegLong(subkey,"Hours",0)*3600;
-	tnew[m_timers].seconds+=GetMyRegLong(subkey,"Days",0)*86400;
+	tnew[m_timers].seconds =api.GetInt(subkey,"Seconds",0);
+	tnew[m_timers].seconds+=api.GetInt(subkey,"Minutes",0)*60;
+	tnew[m_timers].seconds+=api.GetInt(subkey,"Hours",0)*3600;
+	tnew[m_timers].seconds+=api.GetInt(subkey,"Days",0)*86400;
 	tnew[m_timers].bHomeless=1;
 	tnew[m_timers].tickonstart=GetTickCount()/1000;
 	m_timer=tnew;
 	++m_timers;
 	free(told);
-	SetMyRegLong(subkey, "Active", 1);
+	api.SetInt(subkey, "Active", 1);
 }
 //=================================================================
 //----------------------------------------------+++--> Toggle timer:
@@ -144,7 +144,7 @@ void ToggleTimer(int id)   //--------------------------------+++-->
 	size_t offset;
 	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
 	wsprintf(subkey+offset, "%d", id+1);
-	if(GetMyRegLong(subkey,"Active",0)){
+	if(api.GetInt(subkey,"Active",0)){
 		StopTimer(id);
 	}else{
 		StartTimer(id);
@@ -339,11 +339,11 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
 	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
 	/// add default sound files to file dropdown
-	if(g_tos>TOS_2000) {
+	if(api.OS > TOS_2000) {
 		char tmp[MAX_PATH];
 		HANDLE hFind;
 		WIN32_FIND_DATA FindFileData;
-		strcpy(tmp,g_mydir); add_title(tmp,"waves/*");
+		strcpy(tmp,api.root); add_title(tmp,"waves/*");
 		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
 			do{
 				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
@@ -355,19 +355,19 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	}
 	// add timer to combobox
 	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
-	count=GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
+	count=api.GetInt(g_szTimersSubKey, "NumberOfTimers", 0);
 	for(idx=0; idx<count; ++idx) {
 		pts = (timeropt_t*)malloc(sizeof(timeropt_t));
 		wsprintf(subkey+offset,"%d",idx+1);
-		pts->second = GetMyRegLong(subkey, "Seconds",  0);
-		pts->minute = GetMyRegLong(subkey, "Minutes", 10);
-		pts->hour   = GetMyRegLong(subkey, "Hours",    0);
-		pts->day    = GetMyRegLong(subkey, "Days",     0);
-		GetMyRegStr(subkey, "Name", pts->name, sizeof(pts->name), "");
-		GetMyRegStr(subkey, "File", pts->fname, sizeof(pts->fname), "");
-		pts->bBlink = (char)GetMyRegLong(subkey, "Blink", FALSE);
-		pts->bRepeat = (char)GetMyRegLong(subkey, "Repeat", FALSE);
-		pts->bActive = (char)GetMyRegLong(subkey, "Active", FALSE);
+		pts->second = api.GetInt(subkey, "Seconds",  0);
+		pts->minute = api.GetInt(subkey, "Minutes", 10);
+		pts->hour   = api.GetInt(subkey, "Hours",    0);
+		pts->day    = api.GetInt(subkey, "Days",     0);
+		api.GetStr(subkey, "Name", pts->name, sizeof(pts->name), "");
+		api.GetStr(subkey, "File", pts->fname, sizeof(pts->fname), "");
+		pts->bBlink = (char)api.GetInt(subkey, "Blink", FALSE);
+		pts->bRepeat = (char)api.GetInt(subkey, "Repeat", FALSE);
+		pts->bActive = (char)api.GetInt(subkey, "Active", FALSE);
 		CBAddString(hDlg, IDC_TIMERNAME, pts->name);
 		CBSetItemData(hDlg, IDC_TIMERNAME, idx, pts);
 	}
@@ -381,7 +381,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SendDlgItemMessage(hDlg, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
 	SendDlgItemMessage(hDlg, IDC_TIMERDEL, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconDel);
 	
-	SetMyDialgPos(hDlg,21);
+	api.PositionWindow(hDlg,21);
 }
 //================================================================================================
 //--{ START TIMER }-----//-----------------+++--> Called When "OK" Button is Clicked (Start Timer):
@@ -408,7 +408,7 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 		}
 	}
 	wsprintf(subkey+offset,"%d",idx+1);
-	SetMyRegStr(subkey, "Name", name);
+	api.SetStr(subkey, "Name", name);
 	seconds = GetDlgItemInt(hDlg, IDC_TIMERSECOND, 0, 0);
 	minutes = GetDlgItemInt(hDlg, IDC_TIMERMINUTE, 0, 0);
 	hours   = GetDlgItemInt(hDlg, IDC_TIMERHOUR,   0, 0);
@@ -417,19 +417,19 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	if(minutes>59) for(; minutes>59; minutes-=60,++hours);
 	if(hours>23) for(; hours>23; hours-=24,++days);
 	if(days>42) days=7;
-	SetMyRegLong(subkey, "Seconds", seconds);
-	SetMyRegLong(subkey, "Minutes", minutes);
-	SetMyRegLong(subkey, "Hours",   hours);
-	SetMyRegLong(subkey, "Days",    days);
+	api.SetInt(subkey, "Seconds", seconds);
+	api.SetInt(subkey, "Minutes", minutes);
+	api.SetInt(subkey, "Hours",   hours);
+	api.SetInt(subkey, "Days",    days);
 	
 	GetDlgItemText(hDlg, IDC_TIMERFILE, fname, sizeof(fname));
-	SetMyRegStr(subkey, "File", fname);
+	api.SetStr(subkey, "File", fname);
 	
-	SetMyRegLong(subkey, "Repeat", IsDlgButtonChecked(hDlg, IDC_TIMERREPEAT));
-	SetMyRegLong(subkey, "Blink",  IsDlgButtonChecked(hDlg, IDC_TIMERBLINK));
-	SetMyRegLong(subkey, "Active",  TRUE);
+	api.SetInt(subkey, "Repeat", IsDlgButtonChecked(hDlg, IDC_TIMERREPEAT));
+	api.SetInt(subkey, "Blink",  IsDlgButtonChecked(hDlg, IDC_TIMERBLINK));
+	api.SetInt(subkey, "Active",  TRUE);
 	if(idx==count)
-		SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", idx+1);
+		api.SetInt(g_szTimersSubKey, "NumberOfTimers", idx+1);
 	
 	StartTimer(idx);
 }
@@ -509,19 +509,19 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 		timeropt_t* pts;
 		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx2);
 		wsprintf(subkey+offset, "%d", idx2); // we're 1 behind, as needed
-		SetMyRegStr(subkey, "Name",		pts->name);
-		SetMyRegLong(subkey, "Seconds",	pts->second);
-		SetMyRegLong(subkey, "Minutes",	pts->minute);
-		SetMyRegLong(subkey, "Hours",	pts->hour);
-		SetMyRegLong(subkey, "Days",	pts->day);
-		SetMyRegStr(subkey, "File",		pts->fname);
-		SetMyRegLong(subkey, "Repeat",	pts->bRepeat);
-		SetMyRegLong(subkey, "Blink",	pts->bBlink);
-		SetMyRegLong(subkey, "Active",	pts->bActive);
+		api.SetStr(subkey, "Name",		pts->name);
+		api.SetInt(subkey, "Seconds",	pts->second);
+		api.SetInt(subkey, "Minutes",	pts->minute);
+		api.SetInt(subkey, "Hours",	pts->hour);
+		api.SetInt(subkey, "Days",	pts->day);
+		api.SetStr(subkey, "File",		pts->fname);
+		api.SetInt(subkey, "Repeat",	pts->bRepeat);
+		api.SetInt(subkey, "Blink",	pts->bBlink);
+		api.SetInt(subkey, "Active",	pts->bActive);
 	}
 	wsprintf(subkey+offset, "%d", count);
-	DelMyRegKey(subkey);
-	SetMyRegLong(g_szTimersSubKey, "NumberOfTimers", --count);
+	api.DelKey(subkey);
+	api.SetInt(g_szTimersSubKey, "NumberOfTimers", --count);
 	free((void*)CBGetItemData(hDlg,IDC_TIMERNAME,idx));
 	CBDeleteString(hDlg,IDC_TIMERNAME,idx);
 	
@@ -573,9 +573,9 @@ void Ring(HWND hwnd, int id)   //-----------------------------------------------
 	char fname[MAX_BUFF];
 	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
 	wsprintf(subkey+offset, "%d", id+1);
-	GetMyRegStr(subkey, "File", fname, sizeof(fname), "");
-	PlayFile(hwnd, fname, GetMyRegLong(subkey, "Repeat", 0)?-1:0);
-	if(GetMyRegLong(subkey, "Blink", 0))
+	api.GetStr(subkey, "File", fname, sizeof(fname), "");
+	PlayFile(hwnd, fname, api.GetInt(subkey, "Repeat", 0)?-1:0);
+	if(api.GetInt(subkey, "Blink", 0))
 		PostMessage(g_hwndClock, CLOCKM_BLINK, 0, 0);
 }
 //================================================================================================
@@ -648,10 +648,10 @@ void CancelAllTimersOnStartUp()   //--------------------------------------------
 	int idx, count;
 	
 	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-	count = GetMyRegLong(g_szTimersSubKey, "NumberOfTimers", 0);
+	count = api.GetInt(g_szTimersSubKey, "NumberOfTimers", 0);
 	for(idx=0; idx<count; ) {
 		wsprintf(subkey+offset, "%d", ++idx);
-		SetMyRegLong(subkey, "Active", FALSE);
+		api.SetInt(subkey, "Active", FALSE);
 	}
 }
 //================================================================================================
@@ -766,7 +766,7 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 	case WM_INITDIALOG:
 		OnInitTimeView(hDlg);
 		SetTimer(hDlg, 3, 285, NULL); // Timer Refresh Times Above 400ms Make
-		SetMyDialgPos(hDlg,21); //-----+++--> Timer Watch Dialog Appear Sluggish.
+		api.PositionWindow(hDlg,21); //-----+++--> Timer Watch Dialog Appear Sluggish.
 		return TRUE; //-------------------------------+++--> END of Case WM_INITDOALOG
 //================//================================================================
 	case WM_TIMER:

@@ -68,7 +68,7 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		// show it !
 		g_hwndSheet = (HWND)PropertySheet(&psh);
 	}
-	SetMyDialgPos(g_hwndSheet,21);
+	api.PositionWindow(g_hwndSheet,21);
 	SetForegroundWindow(g_hwndSheet);
 }
 //================================================================================================
@@ -153,65 +153,6 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 	return CallWindowProc(m_oldWndProc, hwnd, message, wParam, lParam);
 }
 
-//=================================================================================================
-//------------------------------+++--> Adjust the Window Position Based on Taskbar Size & Location:
-void SetMyDialgPos(HWND hwnd,int padding)   //-----------------------------------------------+++-->
-{
-	POINT cursor_pos;
-	MONITORINFO moni = {sizeof(moni)};
-	int wProp, hProp;
-	
-	GetWindowRect(hwnd,&moni.rcWork); // Properties Dialog Dimensions
-	wProp = moni.rcWork.right-moni.rcWork.left;  //----------+++--> Width
-	hProp = moni.rcWork.bottom-moni.rcWork.top; //----------+++--> Height
-	
-	GetCursorPos(&cursor_pos);
-	GetMonitorInfo(MonitorFromPoint(cursor_pos,MONITOR_DEFAULTTONEAREST),&moni);
-	
-	if(moni.rcWork.top!=moni.rcMonitor.top || moni.rcWork.bottom!=moni.rcMonitor.bottom) { // taskbar is horizontal
-		moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
-		if(moni.rcWork.top!=moni.rcMonitor.top) // top
-			moni.rcMonitor.top=moni.rcWork.top+padding;
-		else // bottom
-			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
-	}else if(moni.rcWork.left!=moni.rcMonitor.left || moni.rcWork.right!=moni.rcMonitor.right){ // vertical
-		moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
-		if(moni.rcWork.left!=moni.rcMonitor.left) // left
-			moni.rcMonitor.left=moni.rcWork.left+padding;
-		else // right
-			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
-	}else{ // autohide taskbar
-		MONITORINFO taskbarMoni;
-		HWND taskbar=FindWindow("Shell_TrayWnd",NULL);
-		RECT taskbarRC;
-		int tbW,tbH;
-		if(!taskbar)
-			return;
-		taskbarMoni.cbSize=sizeof(moni);
-		GetMonitorInfo(MonitorFromWindow(taskbar,MONITOR_DEFAULTTONEAREST),&taskbarMoni); // correct monitor for single monitor setup, probably wrong for multimon
-		GetWindowRect(taskbar,&taskbarRC);
-		tbW=taskbarRC.right-taskbarRC.left;
-		tbH=taskbarRC.bottom-taskbarRC.top;
-		if(tbW > tbH){ // horizontal
-			int diff=taskbarMoni.rcMonitor.top-taskbarRC.top;
-			int visiblesize=taskbarMoni.rcMonitor.bottom-taskbarMoni.rcMonitor.top+diff;
-			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
-			if((diff>0 && diff>tbH/10) || !diff || (diff<0 && (visiblesize!=tbH && visiblesize>tbH/10))) // top
-				moni.rcMonitor.top=moni.rcWork.top+padding+tbH;
-			else // bottom
-				moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding-tbH;
-		}else{
-			int diff=taskbarMoni.rcMonitor.left-taskbarRC.left;
-			int visiblesize=taskbarMoni.rcMonitor.right-taskbarMoni.rcMonitor.left+diff;
-			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
-			if((diff>0 && diff>tbW/10) || !diff || (diff<0 && (visiblesize!=tbW && visiblesize>tbW/10))) // left
-				moni.rcMonitor.left=moni.rcWork.left+padding+tbW;
-			else // right
-				moni.rcMonitor.left=moni.rcWork.right-wProp-padding-tbW;
-		}
-	}
-	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
-}
 /*------------------------------------------------
    select file
 --------------------------------------------------*/
@@ -223,7 +164,7 @@ BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char*
 	
 	memset(&ofn, 0, sizeof(OPENFILENAME));
 	
-	strcpy(initdir, g_mydir);
+	strcpy(initdir, api.root);
 	if(deffile[0]) {
 		WIN32_FIND_DATA fd;
 		HANDLE hfind;

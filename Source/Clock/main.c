@@ -7,15 +7,6 @@
 #include <wtsapi32.h>
 #include <ShlObj.h>//SHGetFolderPath
 #include "../common/version.h"
-#include "../common/tcolor.h" // WM_DWMCOLORIZATIONCOLORCHANGED
-
-// TCDLL.DLL‚API
-IsCalendarOpen_t IsCalendarOpen;
-HookStart_t HookStart;
-HookEnd_t HookEnd;
-HookEnd_t ClockExit;
-
-char	g_mydir[MAX_PATH];
 
 // Application Global Window Handles
 HWND	g_hwndTClockMain = NULL;
@@ -46,7 +37,6 @@ static void ProcessCommandLine(HWND hwndMain,const char* cmdline);
 static void OnTimerMain(HWND hwnd);
 //static void FindTrayServer(); // Redux: what ever it was supposed to be..
 static void InitError(int n);
-static int LoadTClockDLL(void);
 static void SetDesktopIconTextBk(void);
 static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;
@@ -75,16 +65,16 @@ BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus)
 //--------------------------+++--> toggle calendar (close or open):
 void ToggleCalendar(int type)   //---------------------------+++-->
 {
-	if(IsCalendarOpen(1))
+	if(api.IsCalendarOpen(1))
 		return;
-	if(g_tos>=TOS_VISTA && (!GetMyRegLong("Calendar","bCustom",0) && type!=1)){
+	if(api.OS >= TOS_VISTA && (!api.GetInt("Calendar","bCustom",0) && type!=1)){
 		SendMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
 		// for multi-monitor support, 11px padding is Win8 default
-		SetMyDialgPos(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL),11);
+		api.PositionWindow(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL),11);
 	}else{
 		char cal[MAX_PATH];
-		strcpy(cal,g_mydir); add_title(cal,"misc\\XPCalendar.exe");
-		Exec(cal,NULL,g_hwndTClockMain);
+		strcpy(cal,api.root); add_title(cal,"misc\\XPCalendar.exe");
+		api.Exec(cal,NULL,g_hwndTClockMain);
 	}
 }
 //================================================================================================
@@ -210,8 +200,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	HWND hwndMain;
 	MSG msg;
 	int updated;
-	typedef DWORD (WINAPI* GetLongPathName_t)(char* lpszShortPath,char* lpszLongPath,DWORD cchBuffer);
-	GetLongPathName_t pGetLongPathName=(GetLongPathName_t)GetProcAddress(GetModuleHandle("kernel32"),"GetLongPathNameA");
 	
 	(void)hPrevInstance;
 	(void)nCmdShow;
@@ -220,18 +208,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	LoadLibraryA("exchndl.dll");
 	#endif
 	
-	// get the path where .exe is positioned
-	if(pGetLongPathName)
-		GetLongPathName(GetClockExe(),g_mydir,MAX_PATH);
-	else
-		strncpy_s(g_mydir,MAX_PATH,GetClockExe(),_TRUNCATE);
-	#ifdef _DEBUG
-	OutputDebugString(g_mydir); OutputDebugString("\n");
-	#endif
-	del_title(g_mydir);
+	if(LoadClockAPI("misc/T-Clock" ARCH_SUFFIX, &api)){
+		MessageBox(NULL, "Error loading: T-Clock" ARCH_SUFFIX ".dll", "API error", MB_OK|MB_ICONERROR);
+		return 2;
+	}
 	
 	// Make sure we're running Windows 2000 and above
-	if(!CheckSystemVersion()) {
+	if(!api.OS) {
 		MessageBox(NULL,"T-Clock requires Windows 2000 or newer","old OS",MB_OK|MB_ICONERROR);
 		return 1;
 	}
@@ -252,8 +235,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			ProcessCommandLine(hwndMain,lpCmdLine);
 		}else{ // start new instance
 			char clock64[MAX_PATH];
-			strcpy(clock64,g_mydir); add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
-			Exec(clock64,lpCmdLine,NULL);
+			strcpy(clock64,api.root); add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
+			api.Exec(clock64,lpCmdLine,NULL);
 		}
 		return 0;
 	}
@@ -281,10 +264,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
-	m_bTrans2kIcons = GetMyRegLongEx("Desktop", "Transparent2kIconText", FALSE);
+	m_bTrans2kIcons = api.GetIntEx("Desktop", "Transparent2kIconText", FALSE);
 	CancelAllTimersOnStartUp();
-	if(!LoadTClockDLL())
-		return 2;
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
 	s_uTaskbarRestart = RegisterWindowMessage("TaskbarCreated");
@@ -308,7 +289,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	wndclass.lpszClassName = g_szClassName;
 	g_atomTClock = RegisterClass(&wndclass);
 	
-	if(g_tos>=TOS_VISTA) { // allow non elevated processes to send control messages (eg, App with admin rights, explorer without)
+	if(api.OS >= TOS_VISTA) { // allow non elevated processes to send control messages (eg, App with admin rights, explorer without)
 		#define MSGFLT_ADD 1
 		#define MSGFLT_REMOVE 2
 		typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message,DWORD dwFlag);
@@ -330,8 +311,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	GetHotKeyInfo(hwndMain);
 	
-	if(g_tos>TOS_2000) {
-		bMonOffOnLock = GetMyRegLongEx("Desktop", "MonOffOnLock", FALSE);
+	if(api.OS > TOS_2000) {
+		bMonOffOnLock = api.GetIntEx("Desktop", "MonOffOnLock", FALSE);
 		if(bMonOffOnLock) {
 			RegisterSession(hwndMain);
 			SessionReged = TRUE;
@@ -478,7 +459,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		if(wParam == IDTIMER_START) {
 			if(bStartTimer) KillTimer(hwnd, wParam);
 			bStartTimer = FALSE;
-			HookStart(hwnd); // install a hook
+			api.Inject(hwnd); // install a hook
 			nCountFindingClock = 0;
 			#ifndef _DEBUG
 			EmptyWorkingSet(GetCurrentProcess());
@@ -506,7 +487,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			KillTimer(hwnd, IDTIMER_START);
 			bStartTimer = FALSE;
 		}
-		ClockExit(); // exit clock, remove injection
+		api.Exit(); // exit clock, remove injection
 		if(message!=WM_ENDSESSION)
 			PostQuitMessage(0);
 		return 0;
@@ -548,7 +529,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case MAINM_CLOCKINIT: // Messages sent/posted from TCDLL.dll
 		nCountFindingClock = -1;
 		g_hwndClock = (HWND)lParam;
-		HookEnd(); // injected, now remove hook
+		api.InjectFinalize(); // injected, now remove hook
 		return 0;
 		
 	case MAINM_ERROR:    // error
@@ -578,7 +559,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		return 0;
 	// inform clock about DWM color change
 	case WM_DWMCOLORIZATIONCOLORCHANGED:
-		OnTColor_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
+		api.On_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
 		PostMessage(g_hwndClock, WM_DWMCOLORIZATIONCOLORCHANGED, wParam, lParam);
 		return 0;
 		
@@ -625,7 +606,7 @@ void InitError(int n)
 	char s[160];
 	
 	wsprintf(s, "%s: %d", MyString(IDS_NOTFOUNDCLOCK), n);
-	MyMessageBox(NULL, s, "Error", MB_OK, MB_ICONEXCLAMATION);
+	api.Message(NULL, s, "Error", MB_OK, MB_ICONEXCLAMATION);
 }
 /*---------------------------------------------------------
 ---- Main Timer -------------------------------------------
@@ -655,65 +636,6 @@ void OnTimerMain(HWND hwnd)   //------------------------------------------------
 	// the clock window exists ?
 	if(0 <= nCountFindingClock && nCountFindingClock < 20) nCountFindingClock++;
 	else if(nCountFindingClock == 20) nCountFindingClock++;
-}
-//=================================================================================================
-//----------------------------//--------+++--> Verify the Correct Version of T-Clock.dll is Present:
-int CheckDLL(char* fname)   //---------------------------------------------------------------+++-->
-{
-	DWORD size;
-	char szVersion[32];
-	int ret = 0;
-	
-	*szVersion='\0';
-	size = GetFileVersionInfoSize(fname, 0);
-	if(size > 0) {
-		char* pBlock = malloc(size);
-		if(GetFileVersionInfo(fname, 0, size, pBlock)) {
-			VS_FIXEDFILEINFO* pffi;
-			UINT uLen;
-			if(VerQueryValue(pBlock, "\\\0", (void**)&pffi, &uLen)) {
-				if(pffi->dwFileVersionMS == MAKELONG(VER_MINOR,VER_MAJOR)  &&
-				   pffi->dwFileVersionLS == MAKELONG(VER_REVISION,VER_BUILD)){
-					ret = 1; //--+++--> Correct T-Clock.dll File Version Found!
-				} else {
-					wsprintf(szVersion, "Version: %hu.%hu.%hu.%hu",
-							 HIWORD(pffi->dwFileVersionMS),
-							 LOWORD(pffi->dwFileVersionMS),
-							 HIWORD(pffi->dwFileVersionLS),
-							 LOWORD(pffi->dwFileVersionLS));
-				}
-			}
-		}
-		free(pBlock);
-	}
-	if(!ret) {
-		char msg[MAX_PATH+30];
-		if(*szVersion){
-			strcpy(msg, "Invalid file version: ");
-		}else{
-			strcpy(msg, "Error loading: ");
-		}
-		get_title(msg + strlen(msg), fname);
-		MyMessageBox(NULL, msg,
-					 szVersion, MB_OK, MB_ICONEXCLAMATION);
-	}
-	return ret;
-}
-//================================================================================================
-//-----------------------//---------------------------+++--> Check the File Version of T-Clock.dll:
-int LoadTClockDLL(void)   //----------------------------------------------------------------+++-->
-{
-	char fname[MAX_PATH];
-	strcpy(fname, g_mydir); add_title(fname, "misc\\T-Clock" ARCH_SUFFIX ".dll");
-	if(CheckDLL(fname)){
-		HMODULE dll=LoadLibrary(fname); // leak / auto-free on process exit
-		IsCalendarOpen=(IsCalendarOpen_t)GetProcAddress(dll,"IsCalendarOpen");
-		HookStart=(HookStart_t)GetProcAddress(dll,"HookStart");
-		HookEnd=(HookEnd_t)GetProcAddress(dll,"HookEnd");
-		ClockExit=(ClockExit_t)GetProcAddress(dll,"ClockExit");
-		return 1;
-	}
-	return 0;
 }
 //================================================================================================
 //----------+++--> Make Background of Desktop Icon Text Labels Transparent (For Windows 2000 Only):

@@ -82,16 +82,16 @@ void SaveNewMenuOptions(HWND hDlg)
 	memcpy(key,"MenuItem-",offset);
 	offset+=wsprintf(key+offset,"%i",GetWindowLong(hDlg,GWLP_USERDATA));
 	if((strlen(szmText)) && (strlen(szmTarget))) {
-		SetMyRegLong("QuickyMenu\\MenuItems", key, 1);
+		api.SetInt("QuickyMenu\\MenuItems", key, 1);
 		
 		memcpy(key+offset,"-Text",6);
-		SetMyRegStr("QuickyMenu\\MenuItems", key, szmText);
+		api.SetStr("QuickyMenu\\MenuItems", key, szmText);
 		
 		memcpy(key+offset,"-Target",8);
-		SetMyRegStr("QuickyMenu\\MenuItems", key, szmTarget);
+		api.SetStr("QuickyMenu\\MenuItems", key, szmTarget);
 		
 		memcpy(key+offset,"-Switches",10);
-		SetMyRegStr("QuickyMenu\\MenuItems", key, szmSwitches);
+		api.SetStr("QuickyMenu\\MenuItems", key, szmSwitches);
 		
 		EndQuickyEdit(hDlg);
 	} else {
@@ -111,16 +111,16 @@ void DeleteMenuItem(HWND hDlg)
 	int offset=9;
 	memcpy(key,"MenuItem-",offset);
 	offset+=wsprintf(key+offset,"%i",GetWindowLong(hDlg,GWLP_USERDATA));
-	DelMyReg("QuickyMenu\\MenuItems", key);
+	api.DelValue("QuickyMenu\\MenuItems", key);
 	
 	memcpy(key+offset,"-Text",6);
-	DelMyReg("QuickyMenu\\MenuItems", key);
+	api.DelValue("QuickyMenu\\MenuItems", key);
 	
 	memcpy(key+offset,"-Target",8);
-	DelMyReg("QuickyMenu\\MenuItems", key);
+	api.DelValue("QuickyMenu\\MenuItems", key);
 	
 	memcpy(key+offset,"-Switches",10);
-	DelMyReg("QuickyMenu\\MenuItems", key);
+	api.DelValue("QuickyMenu\\MenuItems", key);
 }
 //================================================================================================
 //-------------------------------------//------+++--> Browse to the Quicky Menu Item's Target File:
@@ -139,7 +139,7 @@ void BrowseForTargetFile(HWND hBft)   //----------------------------------------
 	ofn.lpstrFilter  = Filters;
 	ofn.lpstrFile	 = szFile;
 	ofn.nMaxFile     = MAX_PATH;
-	ofn.lpstrInitialDir = g_mydir;
+	ofn.lpstrInitialDir = api.root;
 	ofn.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|OFN_FILEMUSTEXIST;
 	
 	if(GetOpenFileName(&ofn)) {

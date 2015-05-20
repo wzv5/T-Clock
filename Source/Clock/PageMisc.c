@@ -67,7 +67,7 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 int GetMySysWeek()   //---------------------------------------------------------------------+++-->
 {
 	char val[8];
-	GetRegStr(HKEY_CURRENT_USER,"Control Panel\\International","iFirstWeekOfYear",val,sizeof(val),"");
+	api.GetSystemStr(HKEY_CURRENT_USER,"Control Panel\\International","iFirstWeekOfYear",val,sizeof(val),"");
 	return atoi(val);
 }
 //================================================================================================
@@ -86,23 +86,23 @@ void SetMySysWeek(char* val)   //-----------------------------------------------
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
 	UINT iter;
-	if(g_tos>=TOS_VISTA && !GetMyRegLongEx("Calendar","bCustom",0)){
+	if(api.OS >= TOS_VISTA && !api.GetIntEx("Calendar","bCustom",0)){
 		for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
 	/// on Calendar defaults change, also update the Calendar itself to stay sync!
-	CheckDlgButton(hDlg, IDCB_SHOW_DOY, GetMyRegLongEx("Calendar","ShowDayOfYear",1));
-	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, GetMyRegLongEx("Calendar","ShowWeekNums",0));
-	CheckDlgButton(hDlg, IDCB_CLOSECAL, GetMyRegLongEx("Calendar","CloseCalendar",1));
-	CheckDlgButton(hDlg, IDCB_CALTOPMOST, GetMyRegLongEx("Calendar","CalendarTopMost",0));
-	CheckDlgButton(hDlg, IDCB_TRANS2KICONS, GetMyRegLong("Desktop","Transparent2kIconText",0));
+	CheckDlgButton(hDlg, IDCB_SHOW_DOY, api.GetIntEx("Calendar","ShowDayOfYear",1));
+	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, api.GetIntEx("Calendar","ShowWeekNums",0));
+	CheckDlgButton(hDlg, IDCB_CLOSECAL, api.GetIntEx("Calendar","CloseCalendar",1));
+	CheckDlgButton(hDlg, IDCB_CALTOPMOST, api.GetIntEx("Calendar","CalendarTopMost",0));
+	CheckDlgButton(hDlg, IDCB_TRANS2KICONS, api.GetInt("Desktop","Transparent2kIconText",0));
 	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, bMonOffOnLock);
-	CheckDlgButton(hDlg, IDCB_MULTIMON, GetMyRegLong("Desktop","Multimon",1));
+	CheckDlgButton(hDlg, IDCB_MULTIMON, api.GetInt("Desktop","Multimon",1));
 	
 	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETRANGE32,1,12);
-	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS32,0,GetMyRegLong("Calendar","ViewMonths",3));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS32,0,api.GetInt("Calendar","ViewMonths",3));
 	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETRANGE32,0,2);
-	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,GetMyRegLong("Calendar","ViewMonthsPast",1));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,api.GetInt("Calendar","ViewMonthsPast",1));
 	
 	CBResetContent(hDlg, IDC_FIRSTWEEK);
 	CBAddString(hDlg, IDC_FIRSTWEEK, "0");
@@ -110,17 +110,17 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	CBAddString(hDlg, IDC_FIRSTWEEK, "2");
 	CBSetCurSel(hDlg, IDC_FIRSTWEEK, GetMySysWeek());
 	
-	if(g_tos>TOS_2000) {
+	if(api.OS > TOS_2000) {
 		for(iter=IDCB_TRANS2KICONS_GRP; iter<=IDCB_TRANS2KICONS; ++iter)
 			EnableDlgItem(hDlg,iter,FALSE);
 	}else{
 		for(iter=IDCB_MONOFF_ONLOCK_GRP; iter<=IDCB_MONOFF_ONLOCK; ++iter)
 			EnableDlgItem(hDlg,iter,FALSE);
 	}
-	if(g_tos<TOS_WIN8){
+	if(api.OS < TOS_WIN8){
 		for(iter=IDCB_MULTIMON_GRP; iter<=IDCB_MULTIMON; ++iter)
 			EnableDlgItem(hDlg,iter,FALSE);
-		if(g_tos<TOS_VISTA){
+		if(api.OS < TOS_VISTA){
 			EnableDlgItem(hDlg, IDCB_USECALENDAR, FALSE);
 		}
 	}
@@ -130,23 +130,23 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
 	char szWeek[8];
-	char bRefresh=((unsigned)GetMyRegLong("Desktop","Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
+	char bRefresh=((unsigned)api.GetInt("Desktop","Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
-	SetMyRegLong("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
-	SetMyRegLong("Calendar","CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));
-	SetMyRegLong("Calendar","ShowWeekNums", IsDlgButtonChecked(hDlg,IDCB_SHOWWEEKNUMS));
-	SetMyRegLong("Calendar","ShowDayOfYear", IsDlgButtonChecked(hDlg,IDCB_SHOW_DOY));
-	SetMyRegLong("Calendar","CalendarTopMost", IsDlgButtonChecked(hDlg,IDCB_CALTOPMOST));
-	SetMyRegLong("Calendar","ViewMonths", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS32,0,0));
-	SetMyRegLong("Calendar","ViewMonthsPast", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS32,0,0));
-	SetMyRegLong("Desktop","Transparent2kIconText", IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS));
-	SetMyRegLong("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
-	SetMyRegLong("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
+	api.SetInt("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
+	api.SetInt("Calendar","CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));
+	api.SetInt("Calendar","ShowWeekNums", IsDlgButtonChecked(hDlg,IDCB_SHOWWEEKNUMS));
+	api.SetInt("Calendar","ShowDayOfYear", IsDlgButtonChecked(hDlg,IDCB_SHOW_DOY));
+	api.SetInt("Calendar","CalendarTopMost", IsDlgButtonChecked(hDlg,IDCB_CALTOPMOST));
+	api.SetInt("Calendar","ViewMonths", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS32,0,0));
+	api.SetInt("Calendar","ViewMonthsPast", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS32,0,0));
+	api.SetInt("Desktop","Transparent2kIconText", IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS));
+	api.SetInt("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
+	api.SetInt("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
 	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);
 	SetMySysWeek(szWeek);
 	
-	if(g_tos>=TOS_XP) { // This feature requires XP+
+	if(api.OS >= TOS_XP) { // This feature requires XP+
 		BOOL enabled=IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK);
 		if(enabled){
 			if(!bMonOffOnLock) {

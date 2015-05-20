@@ -282,6 +282,25 @@
 			<Option target="dll" />
 			<Option target="dll-64" />
 		</Unit>
+		<Unit filename="DLL/clock_api.c">
+			<Option compilerVar="CC" />
+			<Option target="dll" />
+			<Option target="dll-64" />
+		</Unit>
+		<Unit filename="DLL/clock_color.c">
+			<Option compilerVar="CC" />
+			<Option target="dll" />
+			<Option target="dll-64" />
+		</Unit>
+		<Unit filename="DLL/clock_internal.h">
+			<Option target="dll" />
+			<Option target="dll-64" />
+		</Unit>
+		<Unit filename="DLL/clock_utils.c">
+			<Option compilerVar="CC" />
+			<Option target="dll" />
+			<Option target="dll-64" />
+		</Unit>
 		<Unit filename="DLL/font.c">
 			<Option compilerVar="CC" />
 			<Option target="dll" />
@@ -309,12 +328,14 @@
 			<Option compilerVar="WINDRES" />
 			<Option target="dll-64" />
 		</Unit>
-		<Unit filename="common/globals.h">
+		<Unit filename="common/clock.c">
+			<Option compilerVar="CC" />
 			<Option target="app" />
-			<Option target="dll" />
 			<Option target="app-64" />
-			<Option target="dll-64" />
+			<Option target="calendar" />
 		</Unit>
+		<Unit filename="common/clock.h" />
+		<Unit filename="common/globals.h" />
 		<Unit filename="common/manifest.xml" />
 		<Unit filename="common/newapi.c">
 			<Option compilerVar="CC" />
@@ -330,19 +351,6 @@
 			<Option target="dll-64" />
 		</Unit>
 		<Unit filename="common/resource.h">
-			<Option target="app" />
-			<Option target="dll" />
-			<Option target="app-64" />
-			<Option target="dll-64" />
-		</Unit>
-		<Unit filename="common/tcolor.c">
-			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="dll" />
-			<Option target="app-64" />
-			<Option target="dll-64" />
-		</Unit>
-		<Unit filename="common/tcolor.h">
 			<Option target="app" />
 			<Option target="dll" />
 			<Option target="app-64" />

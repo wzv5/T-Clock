@@ -95,7 +95,7 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			if(m_transition==1){
 				SendMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
 				SendMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
-				DelMyRegKey("Preview");
+				api.DelKey("Preview");
 			}
 			m_transition=-1;
 			break;
@@ -118,7 +118,7 @@ void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
 	if(ilang)
 		m_ilang=ilang;
 	else
-		m_ilang = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
+		m_ilang = api.GetInt("Format", "Locale", GetUserDefaultLangID());
 	/// init language "member" variables
 	// seperator
 	GetLocaleInfo(m_ilang,LOCALE_SDATE,m_sep_date,sizeof(m_sep_date));
@@ -143,7 +143,7 @@ void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
 	}
 	/// init checks
 	for(ival=IDC_YEAR4; ival<=IDC_SECOND; ++ival) {
-		CHECKS(ival) = (char)GetMyRegLong("Format", ENTRY(ival), 1);
+		CHECKS(ival) = (char)api.GetInt("Format", ENTRY(ival), 1);
 	}
 	
 	if(CHECKS(IDC_YEAR)) CHECKS(IDC_YEAR4) = 0;
@@ -153,7 +153,7 @@ void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
 	else if(CHECKS(IDC_MONTHS)) CHECKS(IDC_MONTH) = 0;
 	
 	for(ival=IDC_AMPM; ival<=IDC_CUSTOM; ++ival) {
-		CHECKS(ival) = (char)GetMyRegLong("Format", ENTRY(ival), 0);
+		CHECKS(ival) = (char)api.GetInt("Format", ENTRY(ival), 0);
 	}
 	/// init locale based checks
 	// use AM/PM and 12h format from new selected locale
@@ -163,9 +163,9 @@ void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
 	GetLocaleInfo(m_ilang, LOCALE_ITLZERO|LOCALE_RETURN_NUMBER, (LPSTR)&ival, sizeof(ival));
 	CHECKS(IDC_HOUR)=(ival?2:1);
 	if(!ilang){
-		CHECKS(IDC_AMPM)=(char)GetMyRegLongEx("Format",ENTRY(IDC_AMPM),CHECKS(IDC_AMPM));
-		CHECKS(IDC_12HOUR)=(char)GetMyRegLongEx("Format",ENTRY(IDC_12HOUR),CHECKS(IDC_12HOUR));
-		CHECKS(IDC_HOUR)=(char)GetMyRegLongEx("Format",ENTRY(IDC_HOUR),CHECKS(IDC_HOUR));
+		CHECKS(IDC_AMPM)=(char)api.GetIntEx("Format",ENTRY(IDC_AMPM),CHECKS(IDC_AMPM));
+		CHECKS(IDC_12HOUR)=(char)api.GetIntEx("Format",ENTRY(IDC_12HOUR),CHECKS(IDC_12HOUR));
+		CHECKS(IDC_HOUR)=(char)api.GetIntEx("Format",ENTRY(IDC_HOUR),CHECKS(IDC_HOUR));
 	}
 }
 
@@ -245,16 +245,16 @@ void OnInit(HWND hDlg)
 		}
 	}
 	
-	GetMyRegStr("Format", "Format", fmt, MAX_FORMAT, "");
+	api.GetStr("Format", "Format", fmt, MAX_FORMAT, "");
 	SetDlgItemText(hDlg, IDC_FORMAT, fmt);
 	
 	m_pCustomFormat = malloc(MAX_FORMAT);
 	if(m_pCustomFormat)
-		GetMyRegStr("Format", "CustomFormat", m_pCustomFormat, MAX_FORMAT, "");
+		api.GetStr("Format", "CustomFormat", m_pCustomFormat, MAX_FORMAT, "");
 	
 	// "AM Symbol" and "PM Symbol"
 	CBResetContent(hDlg, IDC_AMSYMBOL);
-	GetMyRegStr("Format", "AMsymbol", ampm_user, sizeof(ampm_user), "");
+	api.GetStr("Format", "AMsymbol", ampm_user, sizeof(ampm_user), "");
 	if(*ampm_user)
 		CBAddString(hDlg, IDC_AMSYMBOL, ampm_user);
 	if(GetLocaleInfo(m_ilang, LOCALE_S1159, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
@@ -268,7 +268,7 @@ void OnInit(HWND hDlg)
 	CBSetCurSel(hDlg, IDC_AMSYMBOL, 0);
 	
 	CBResetContent(hDlg, IDC_PMSYMBOL);
-	GetMyRegStr("Format", "PMsymbol", ampm_user, sizeof(ampm_user), "");
+	api.GetStr("Format", "PMsymbol", ampm_user, sizeof(ampm_user), "");
 	if(*ampm_user)
 		CBAddString(hDlg, IDC_PMSYMBOL, ampm_user);
 	if(GetLocaleInfo(m_ilang, LOCALE_S2359, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
@@ -293,11 +293,11 @@ void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------
 	char str[MAX_FORMAT];
 	int i;
 	
-	SetMyRegLong(section, "Locale",
+	api.SetInt(section, "Locale",
 				 (DWORD)CBGetItemData(hDlg, IDC_LOCALE, CBGetCurSel(hDlg, IDC_LOCALE)));
 				 
 	for(i = IDC_YEAR4; i <= IDC_CUSTOM; i++) {
-		SetMyRegLong(section, ENTRY(i), IsDlgButtonChecked(hDlg, i));
+		api.SetInt(section, ENTRY(i), IsDlgButtonChecked(hDlg, i));
 	}
 	
 	i=(int)SendDlgItemMessage(hDlg,IDC_AMSYMBOL,CB_GETCURSEL,0,0);
@@ -305,25 +305,25 @@ void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------
 		SendDlgItemMessage(hDlg,IDC_AMSYMBOL,CB_GETLBTEXT,i,(LPARAM)str);
 	else
 		GetDlgItemText(hDlg, IDC_AMSYMBOL, str, sizeof(str));
-	SetMyRegStr(section, "AMsymbol", str);
+	api.SetStr(section, "AMsymbol", str);
 	i=(int)SendDlgItemMessage(hDlg,IDC_PMSYMBOL,CB_GETCURSEL,0,0);
 	if(i!=CB_ERR)
 		SendDlgItemMessage(hDlg,IDC_PMSYMBOL,CB_GETLBTEXT,i,(LPARAM)str);
 	else
 		GetDlgItemText(hDlg, IDC_PMSYMBOL, str, sizeof(str));
-	SetMyRegStr(section, "PMsymbol", str);
+	api.SetStr(section, "PMsymbol", str);
 	
 	GetDlgItemText(hDlg, IDC_FORMAT, str, sizeof(str));
-	SetMyRegStr(section, "Format", str);
+	api.SetStr(section, "Format", str);
 	
 	if(m_pCustomFormat) {
 		if(IsDlgButtonChecked(hDlg, IDC_CUSTOM)) {
 			strcpy(m_pCustomFormat, str);
-			SetMyRegStr(section, "CustomFormat", m_pCustomFormat);
+			api.SetStr(section, "CustomFormat", m_pCustomFormat);
 		}
 	}
 	if(!preview){
-		DelMyRegKey("Preview");
+		api.DelKey("Preview");
 		m_transition=0;
 	}else
 		m_transition=1;
@@ -428,11 +428,11 @@ void InitFormat()
 	char format[LRG_BUFF];
 	char checks[FORMAT_NUM];
 	
-	if(GetMyRegLong("Format", ENTRY(IDC_CUSTOM), FALSE))
+	if(api.GetInt("Format", ENTRY(IDC_CUSTOM), FALSE))
 		return;
 	ChecksLocaleInit(checks,0);	
 	CreateFormat(format, checks);
-	SetMyRegStr("Format", "Format", format);
+	api.SetStr("Format", "Format", format);
 }
 
 /*--------------------------------------------------

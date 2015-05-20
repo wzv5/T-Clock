@@ -1,0 +1,215 @@
+#ifndef CLOCK_API_H_
+#define CLOCK_API_H_
+#include <windows.h>
+
+#define CLOCK_API 1
+
+#ifndef WM_DWMCOLORIZATIONCOLORCHANGED
+#	define WM_DWMCOLORIZATIONCOLORCHANGED 0x0320
+#endif // WM_DWMCOLORIZATIONCOLORCHANGED
+
+#define TCOLOR_MASK		0xFFFFFFC0
+#define TCOLOR_MAGIC	0xFAFCFEC0
+#define TCOLOR(tcolor) (TCOLOR_MAGIC|tcolor)
+enum TCOLORS {
+	TCOLOR_BEGIN_		=50,
+	TCOLOR_DEFAULT		=50, /**< meta, default color (if passed to \c GetColor() without \c use_raw, returns default clock foreground color) */
+	TCOLOR_TRANSPARENT, /**< meta, fully transparent color */
+	TCOLOR_THEME, /**< meta, current theme window color */
+	TCOLOR_THEME2, /**< meta, current theme's clock background color <b>failed attempt and useless</b> */
+	TCOLOR_END_,
+};
+
+enum TOS {
+	TOS_OLDER	=0x0000, /**< unknown (older) OS or error \sa TClockAPI::OS */
+	TOS_2000	=0x0001, /**< does anyone still use it? \sa TClockAPI::OS */
+	TOS_XP		=0x0002, /**< the king is dead, long live the king! \sa TClockAPI::OS */
+	TOS_VISTA	=0x0004, /**< first one with lots of cool stuff... poorly implemented though \sa TClockAPI::OS */
+	TOS_WIN7	=0x0008, /**< best OS as of 2009-2015 as some might say \sa TClockAPI::OS */
+	TOS_WIN8	=0x0010, /**< first to support multiple taskbars, yet buggy \sa TClockAPI::OS */
+	TOS_WIN8_1	=0x0020, /**< first to require weird/stupid manifest... \sa TClockAPI::OS */
+	TOS_WIN10	=0x0040, /**< latest, didn't add anything new to T-Clock yet \sa TClockAPI::OS */
+	TOS_NEWER	=0x8000, /**< in case we're "outdated" and the curent OS is newer than our known ones \sa TClockAPI::OS */
+};
+
+typedef struct TClockAPI_TAG {
+/**
+ * \brief holds current OS version flags
+ * \sa TOS, TOS_2000, TOS_XP, TOS_VISTA, TOS_WIN7, TOS_WIN8, TOS_WIN8_1, TOS_WIN10, TOS_NEWER, TOS_OLDER */
+	unsigned short OS;
+	const char* root; /**< our root folder path w/o ending slash */
+	size_t root_len; /**< length of our root folder path */
+	
+/**
+ * \brief starts injection into explorer to replace clock
+ * \param hwndMain handle to main/control window */
+	void (*Inject)(HWND hwndMain);
+/**
+ * \brief finalize injection after it's done by removing our temporarily hook on explorer */
+	void (*InjectFinalize)();
+/**
+ * \brief restore original clock and unload dll from explorer */
+	void (*Exit)();
+	
+	// misc
+	
+/**
+ * \brief checks whether the calendar is currently open or not
+ * \param set_focus focus calendar?
+ * \return boolean */
+	int (*IsCalendarOpen)(int set_focus);
+/**
+ * \brief displays a message box with clock icon
+ * \param parent can be NULL
+ * \param msg
+ * \param title
+ * \param uType any of \c MB_OK, \c MB_OKCANCEL, \c MB_RETRYCANCEL, \c MB_YESNO, \c MB_YESNOCANCEL, ...
+ * \param uBeep \c MB_ICON* constant, \c MB_OK (default beep) or \c -1U ( \c 0xFFFFFFFF ) for silence
+ * \return zero on error. Otherwise the button pressed such as \c IDOK, \c IDCANCEL
+ * \sa MessageBox(), MessageBoxEx(), MessageBoxIndirect(), MessageBeep() */
+	int (*Message)(HWND parent, const char* msg, const char* title, UINT uType, UINT uBeep);
+/**
+ * \brief positions a window near the clock
+ * \param padding padding to use. \c 21 is our \e default, \c 11 is used for Win8's calendar */
+	void (*PositionWindow)(HWND hwnd, int padding);
+/**
+ * \brief our GetTickCount64 helper that uses GetTickCount() as a fallback
+ * \return elapsed milliseconds since system start
+ * \sa GetTickCount(), GetTickCount64() */
+	ULONGLONG (WINAPI *GetTickCount64)();
+/**
+ * \brief extracts filename and parameters from command (used by ExecFile()) */
+	void (*GetFileAndOption)(const char* command, char* fname, char* opt);
+/**
+ * \brief parses given color \a ogbr ( \c COLORREF ) and returns a \c agbr value for use by t-clock
+ * \param ogbr color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)
+ * \param use_raw \c 1 if raw color should be returned, eg. "unparsed" for some \c TCOLOR_* values that wouldn't be good to preview
+ * \return \c agbr value
+ * \remark \a use_raw currently only applies to \c TCOLOR_DEFAULT and \c TCOLOR_TRANSPARENT
+ * \remark \b alpha (a) ranges from 0-255, while 255 means fully transparent
+ * \remark \b opacity (o) ranges from 0-255, while 255 means fully opaque
+ * \sa TCOLORS, On_DWMCOLORIZATIONCOLORCHANGED(), COLORREF, GetSysColor() */
+	unsigned (*GetColor)(unsigned ogbr,int use_raw);
+/**
+ * \brief callback for use by \c WM_DWMCOLORIZATIONCOLORCHANGED messages to read current theme's color
+ * \param argb wParam of \c WM_DWMCOLORIZATIONCOLORCHANGED
+ * \sa GetColor(), WM_DWMCOLORIZATIONCOLORCHANGED */
+	void (*On_DWMCOLORIZATIONCOLORCHANGED)(unsigned argb);
+	
+	// registry
+	
+/**
+ * \brief read a int value from our registry
+ * \param section,entry
+ * \param defval default value to return
+ * \return read int or defval */
+	int (*GetInt)(const char* section, const char* entry, LONG defval);
+/**
+ * \brief try to read a int value from our registry or add it if missing
+ * \param section,entry
+ * \param defval default value to write and return
+ * \return read int or defval on failure */
+	int (*GetIntEx)(const char* section, const char* entry, LONG defval);
+/**
+ * \brief read a int value from Windows' registry
+ * \param rootkey,section,entry
+ * \param defval default value to return if entry wasn't found
+ * \return read int or defval on failure */
+	int (*GetSystemInt)(HKEY rootkey, const char* section, const char* entry, LONG defval);
+/**
+ * \brief read a string value from our registry
+ * \param[in] section,entry
+ * \param[out] val output buffer of \a len size
+ * \param[in] len size of \a val
+ * \param[in] defval default value to return if \a entry wasn't found
+ * \return size of returned string excl. zero terminator */
+	int (*GetStr)(const char* section, const char* entry, char* val, int len, const char* defval);
+/**
+ * \brief try to read a string value from our registry or add it if missing
+ * \param[in] section,entry
+ * \param[out] val output buffer of \a len size
+ * \param[in] len size of \a val
+ * \param[in] defval default value to write and return if \a entry wasn't found
+ * \return size of returned string excl. zero terminator */
+	int (*GetStrEx)(const char* section, const char* entry, char* val, int len, const char* defval);
+/**
+ * \brief read a string value from Windows' registry
+ * \param[in] rootkey,section,entry
+ * \param[out] val output buffer of \a len size
+ * \param[in] len size of \a val
+ * \param[in] defval default value to return if \a entry wasn't found
+ * \return size of returned string excl. zero terminator */
+	int (*GetSystemStr)(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval);
+/**
+ * \brief update or add a int value in our registry
+ * \param section,entry
+ * \param val new value
+ * \return boolean */
+	int (*SetInt)(const char* section, const char* entry, LONG val);
+/**
+ * \brief update or add a string value in our registry
+ * \param section,entry
+ * \param val new value
+ * \return boolean */
+	int (*SetStr)(const char* section, const char* entry, const char* val);
+///**
+// * \brief update or add a string value in Windows' registry
+// * \param rootkey,section,entry
+// * \param val new value
+// * \return boolean */
+//	int (*SetSystemStr)(HKEY rootkey, const char* section, const char* entry, const char* val);
+/**
+ * \brief deletes a value from our registry
+ * \param section
+ * \param entry value to delete
+ * \return boolean */
+	int (*DelValue)(const char* section, const char* entry);
+/**
+ * \brief deletes an entire key from our registry
+ * \param section key to delete
+ * \return boolean */
+	int (*DelKey)(const char* section);
+	
+	// exec
+	
+/**
+ * \brief a wrapper for ShellExecuteEx()
+ * \param method "open", "runas", etc.
+ * \param app path to run
+ * \param params = \c NULL (optional program arguments)
+ * \param parent = \c NULL (parent window)
+ * \param show = \c SW_SHOWNORMAL
+ * \return -1 on failure, 0 on success,1 if user cancled
+ * \sa ShellExecute(), ShellExecuteEx(), Exec() */
+	int (*ShellExecute)(const char* method, const char* app, const char* params, HWND parent, int show);
+/**
+ * \brief starts an application
+ * \param app path to run
+ * \param params = \c NULL (optional program arguments)
+ * \param parent = \c NULL (parent window)
+ * \return -1 on failure, 0 on success, 1 if user cancled
+ * \sa ExecElevated(), ExecFile(), ShellExecute() */
+	int (*Exec)(const char* app, const char* params, HWND parent);
+/**
+ * \brief opens a file or starts an application
+ * \param command full commandline with filename and optional arguments
+ * \param parent = \c NULL (parent window)
+ * \return -1 on failure, 0 on success, 1 if user cancled
+ * \sa Exec(), ExecElevated(), ShellExecute() */
+	int (*ExecFile)(const char* command, HWND parent);
+	// translation API
+	const char* (*T)(int hash);
+	const char* (*Translate)(const char* str);
+	const char* (*TranslateWindow)(HWND hwnd);
+} TClockAPI;
+
+/**
+ * \brief load and initialize T-Clock.dll
+ * \param dll_path path to our T-Clock[64].dll
+ * \param api reference to our API struct that receives functions
+ * \return returns non-zero on error. >0 if internal API failure, <0 if external */
+int LoadClockAPI(const char* dll_path, TClockAPI* api);
+
+TClockAPI api;
+
+#endif // CLOCK_API_H_

@@ -57,7 +57,7 @@ void Log(const char* msg)   //--------------------------------------------------
 		char fname[MAX_PATH];
 		HFILE hf;
 		
-		strcpy(fname, g_mydir);
+		strcpy(fname, api.root);
 		add_title(fname, "SNTP.log");
 		hf = _lopen(fname, OF_WRITE);
 		if(hf == HFILE_ERROR)
@@ -135,7 +135,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 				 st.wMinute, st.wSecond, st.wMilliseconds);
 	}
 	
-	GetMyRegStr(m_subkey, "Sound", szWave, MAX_BUFF, "");
+	api.GetStr(m_subkey, "Sound", szWave, MAX_BUFF, "");
 	if(szWave[0]){
 		PlayFile(g_hwndTClockMain, szWave, 0);
 	}
@@ -311,12 +311,12 @@ void SyncTimeNow()   //=========================================================
 	
 	if(!m_dlg) {
 		m_flags = 0;
-		if(GetMyRegLongEx(m_subkey, "SaveLog", 0))
+		if(api.GetIntEx(m_subkey, "SaveLog", 0))
 			m_flags |= SNTPF_LOG;
-		if(GetMyRegLongEx(m_subkey, "MessageBox", 0))
+		if(api.GetIntEx(m_subkey, "MessageBox", 0))
 			m_flags |= SNTPF_MESSAGE;
 	}
-	GetMyRegStrEx(m_subkey, "Server", server, sizeof(server), "");
+	api.GetStrEx(m_subkey, "Server", server, sizeof(server), "");
 	if(!server[0]) {
 		wsprintf(szErr, "No SNTP Server Specified!");
 		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
@@ -374,11 +374,11 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 		m_flags |= SNTPF_LOG;
 	if(IsDlgButtonChecked(hDlg, IDCBX_SNTPMESSAGE))
 		m_flags |= SNTPF_MESSAGE;
-	SetMyRegLong(m_subkey, "SaveLog", m_flags&SNTPF_LOG);
-	SetMyRegLong(m_subkey, "MessageBox", m_flags&SNTPF_MESSAGE);
+	api.SetInt(m_subkey, "SaveLog", m_flags&SNTPF_LOG);
+	api.SetInt(m_subkey, "MessageBox", m_flags&SNTPF_MESSAGE);
 	
 	GetDlgItemText(hDlg, IDCE_SYNCSOUND, szSound, MAX_PATH);
-	SetMyRegStr(m_subkey, "Sound", szSound);
+	api.SetStr(m_subkey, "Sound", szSound);
 	
 	if(tchk[0].bValid) { // Synchronize System Clock With Remote Time Server
 		RegisterHotKey(g_hwndTClockMain, HOT_TSYNC, tchk[0].fsMod, tchk[0].vk);
@@ -388,14 +388,14 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 		strcpy(tchk[0].szText, "None");
 		UnregisterHotKey(g_hwndTClockMain, HOT_TSYNC);
 	}
-	SetMyRegLong("HotKeys\\HK5", "bValid", tchk[0].bValid);
-	SetMyRegLong("HotKeys\\HK5", "fsMod",  tchk[0].fsMod);
-	SetMyRegStr("HotKeys\\HK5", "szText", tchk[0].szText);
-	SetMyRegLong("HotKeys\\HK5", "vk",  tchk[0].vk);
+	api.SetInt("HotKeys\\HK5", "bValid", tchk[0].bValid);
+	api.SetInt("HotKeys\\HK5", "fsMod",  tchk[0].fsMod);
+	api.SetStr("HotKeys\\HK5", "szText", tchk[0].szText);
+	api.SetInt("HotKeys\\HK5", "vk",  tchk[0].vk);
 	
 	
 	ComboBox_GetText(hServer, szServer, sizeof(szServer));
-	SetMyRegStr(m_subkey, "Server", szServer);
+	api.SetStr(m_subkey, "Server", szServer);
 	
 	if(szServer[0]) {
 		int index = ComboBox_FindStringExact(hServer, -1, szServer);
@@ -408,17 +408,17 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	}
 	count = ComboBox_GetCount(hServer);
 	// removed deleted servers
-	for(i=GetMyRegLong(m_subkey,"ServerNum",0); i>count; --i){
+	for(i=api.GetInt(m_subkey,"ServerNum",0); i>count; --i){
 		wsprintf(entry, "Server%d", i);
-		DelMyReg(m_subkey, entry);
+		api.DelValue(m_subkey, entry);
 	}
 	// update server list
 	for(i=0; i < count; ++i) {
 		ComboBox_GetLBText(hServer, i, szServer);
 		wsprintf(entry, "Server%d", i+1);
-		SetMyRegStr(m_subkey, entry, szServer);
+		api.SetStr(m_subkey, entry, szServer);
 	}
-	SetMyRegLong(m_subkey, "ServerNum", count);
+	api.SetInt(m_subkey, "ServerNum", count);
 }
 //================================================================================================
 //------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
@@ -452,7 +452,7 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 			HWND hList = GetDlgItem(hDlg,IDC_LIST);
 			ListView_DeleteAllItems(hList);
 			
-			strcpy(logfile, g_mydir);
+			strcpy(logfile, api.root);
 			add_title(logfile, "SNTP.log");
 			fp = fopen(logfile, "w");
 			if(fp) fclose(fp);
@@ -495,16 +495,16 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	HWND hList = GetDlgItem(hDlg,IDC_LIST);
 	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 	
-	SetMyDialgPos(hDlg,21);
+	api.PositionWindow(hDlg,21);
 	
 	// Get the List of Configured Time Servers:
-	GetMyRegStr(m_subkey, "Server", str, sizeof(str), "");
-	count = GetMyRegLong(m_subkey, "ServerNum", 0);
+	api.GetStr(m_subkey, "Server", str, sizeof(str), "");
+	count = api.GetInt(m_subkey, "ServerNum", 0);
 	for(i = 1; i <= count; i++) {
 		char s[MAX_BUFF], entry[TNY_BUFF];
 		
 		wsprintf(entry, "Server%d", i);
-		GetMyRegStr(m_subkey, entry, s, 80, "");
+		api.GetStr(m_subkey, entry, s, 80, "");
 		if(s[0]) ComboBox_AddString(hServer, s);
 	}
 	if(!ComboBox_GetCount(hServer)){
@@ -533,26 +533,26 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 					   IMAGE_ICON, (LPARAM)g_hIconDel);
 					   
 	// Get the Sync Sound File:
-	GetMyRegStr(m_subkey, "Sound", str, sizeof(str), "");
+	api.GetStr(m_subkey, "Sound", str, sizeof(str), "");
 	SetDlgItemText(hDlg, IDCE_SYNCSOUND, str);
 	
 	// Get the Confirmation Options:
 	m_flags = 0;
-	if(GetMyRegLongEx(m_subkey, "SaveLog", 0)){
+	if(api.GetIntEx(m_subkey, "SaveLog", 0)){
 		CheckDlgButton(hDlg, IDCBX_SNTPLOG, 1);
 		m_flags |= SNTPF_LOG;
 	}
-	if(GetMyRegLongEx(m_subkey, "MessageBox", 0)){
+	if(api.GetIntEx(m_subkey, "MessageBox", 0)){
 		CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, 1);
 		m_flags |= SNTPF_MESSAGE;
 	}
 	
 	// Load & Display the Configured Synchronization HotKey:
 	tchk = (hotkey_t*)malloc(sizeof(hotkey_t));
-	tchk[0].bValid = GetMyRegLongEx("HotKeys\\HK5", "bValid", 0);
-	GetMyRegStrEx("HotKeys\\HK5", "szText", tchk[0].szText, TNY_BUFF, "None");
-	tchk[0].fsMod = GetMyRegLongEx("HotKeys\\HK5", "fsMod", 0);
-	tchk[0].vk = GetMyRegLongEx("HotKeys\\HK5", "vk", 0);
+	tchk[0].bValid = api.GetIntEx("HotKeys\\HK5", "bValid", 0);
+	api.GetStrEx("HotKeys\\HK5", "szText", tchk[0].szText, TNY_BUFF, "None");
+	tchk[0].fsMod = api.GetIntEx("HotKeys\\HK5", "fsMod", 0);
+	tchk[0].vk = api.GetIntEx("HotKeys\\HK5", "vk", 0);
 	
 	SetDlgItemText(hDlg, IDCE_SYNCHOTKEY, tchk[0].szText);
 	
@@ -573,7 +573,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	EnableDlgItem(hDlg, IDCB_SYNCNOW, GetSetTimePermissions());
 	
 	// Load the Time Synchronization Log File:
-	strcpy(str, g_mydir);
+	strcpy(str, api.root);
 	add_title(str, "SNTP.log");
 	
 	stReport = fopen(str, "r");

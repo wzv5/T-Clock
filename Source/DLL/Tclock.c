@@ -3,13 +3,12 @@
 //--------------------------------------------------------*/
 // Modified by Stoic Joker: Tuesday, March 2 2010 - 10:42:42
 #include "tcdll.h"
-#include "../common/tcolor.h"
 #undef NTDDI_VERSION // allow our own runtime OS check
 #define NTDDI_VERSION NTDDI_VISTA // used for drag&drop tooltip
 #include <Shlobj.h>//CFSTR_SHELLIDLIST
 #include <process.h>//_beginthread
 
-void OnTimer(HWND hwnd);
+void OnDrawTimer(HWND hwnd);
 void ReadStyleData(HWND hwnd, int preview);
 void ReadFormatData(HWND hwnd, int preview);
 void InitClock(HWND hwnd);
@@ -26,19 +25,6 @@ void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100);
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-//================================================================================================
-//----------------------------------------+++--> Definition of Data Segment Shared Among Processes:
-#ifndef __GNUC__
-#pragma data_seg(".MYDATA") //--------------------------------------------------------------+++-->
-HWND g_hwndTClockMain = NULL;
-HWND g_hwndClock = NULL;
-char g_bCalOpen = 0;
-#pragma data_seg()
-#else
-__attribute__((section(".MYDATA"),shared)) HWND g_hwndTClockMain = NULL;
-__attribute__((section(".MYDATA"),shared)) HWND g_hwndClock = NULL;
-__attribute__((section(".MYDATA"),shared)) char g_bCalOpen = 0;
-#endif // __GNUC__
 
 /*------------------------------------------------
   globals
@@ -92,9 +78,9 @@ union{
 } m_colBG;
 #define g_col_update(col,m_basecolorBG) do{\
 	COLORREF oldbg;\
-	m_col.ref=GetTColor(col,0);\
+	m_col.ref=api.GetColor(col,0);\
 	oldbg=m_colBG.ref;\
-	m_colBG.ref=GetTColor(m_basecolorBG,1);\
+	m_colBG.ref=api.GetColor(m_basecolorBG,1);\
 	if(m_colBG.ref!=oldbg)\
 		FillClockBG();\
 	} __pragma(warning(suppress:4127)) while(0)
@@ -169,7 +155,7 @@ static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 	}
 	*pos='\0';
 	
-	num=GetMyRegStr(REG_MOUSE, "DropFilesApp",app,sizeof(app),"");
+	num=api.GetStr(REG_MOUSE, "DropFilesApp",app,sizeof(app),"");
 	
 	if(self->type==DF_RECYCLE || self->type==DF_COPY || self->type==DF_MOVE) {
 		SHFILEOPSTRUCT shfos={0};
@@ -196,7 +182,7 @@ static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 			memcpy(command,app,num);
 			command[num]=' ';
 			memcpy(command+num+1,buf,(pos-buf)+1);
-			ExecFile(command,NULL);
+			api.ExecFile(command,NULL);
 			free(command);
 		}
 	}
@@ -204,7 +190,7 @@ static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 }
 static void MyDragDrop__SetDropTip_(MyDragDrop_t* self,int effect,const wchar_t* msg)
 {
-	if(g_tos>=TOS_VISTA && effect!=self->lasteffect){
+	if(api.OS >= TOS_VISTA && effect!=self->lasteffect){
 		HGLOBAL hDesc=GlobalAlloc(GMEM_MOVEABLE,sizeof(DROPDESCRIPTION));
 		if(hDesc){
 			STGMEDIUM medium={TYMED_HGLOBAL};
@@ -357,7 +343,7 @@ static void MyDragDrop_Enable(IDropTarget* myobj, int bEnable){
 	self->disabled=!bEnable;
 	free(self->szTarget); self->szTarget=NULL;
 	if(bEnable){
-		self->type=(char)GetMyRegLong(REG_MOUSE,"DropFiles",DF_RECYCLE);
+		self->type=(char)api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE);
 		switch(self->type){
 		case DF_NONE:
 			self->disabled=1;
@@ -367,7 +353,7 @@ static void MyDragDrop_Enable(IDropTarget* myobj, int bEnable){
 			break;
 		default:{
 			char app[MAX_PATH];
-			int num=GetMyRegStr(REG_MOUSE,"DropFilesApp",app,sizeof(app),"");
+			int num=api.GetStr(REG_MOUSE,"DropFilesApp",app,sizeof(app),"");
 			if(!num){
 				self->disabled=1;
 			}else{
@@ -482,13 +468,14 @@ void SubsCreate(){
 	}
 }
 HMODULE m_hself;
+int SetupClockAPI(int version, TClockAPI* api); // clock_api.c
 //================================================================================================
 //---------------------------------------------------------------------+++--> Initialize the Clock:
 void InitClock(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
-	g_hwndClock = hwnd;
+	gs_hwndClock = hwnd;
 	m_hself=LoadLibrary("T-Clock" ARCH_SUFFIX);
-	CheckSystemVersion();
+	SetupClockAPI(CLOCK_API, NULL); // initialize API
 	GetClientRect(hwnd,&m_rcClock); // use original clock size until we've loaded our settings
 	{//"top" margin detection // 2px Win8 default (Vista+)
 		RECT rcBar; GetClientRect(GetParent(GetParent(hwnd)),&rcBar);
@@ -591,7 +578,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;}
 	case WM_DWMCOLORIZATIONCOLORCHANGED://forwarded by T-Clock itself
-		OnTColor_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
+		api.On_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
 		/* fall through */
 	case WM_THEMECHANGED:
 		if(message==WM_THEMECHANGED)
@@ -621,7 +608,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;}
 	case WM_TIMER:
 		if(wParam == 1)
-			OnTimer(hwnd);
+			OnDrawTimer(hwnd);
 		else {
 			if(m_bNoClock) break;
 		}
@@ -630,21 +617,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		g_bCalOpen=FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL)!=NULL;
-		SetForegroundWindow(g_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
+		gs_bCalOpen = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL)!=NULL;
+		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;
 			InvalidateRect(hwnd, NULL, 1);
-			PostMessage(g_hwndTClockMain,MAINM_BLINKOFF,0,0);
+			PostMessage(gs_hwndTClockMain,MAINM_BLINKOFF,0,0);
 			return 0;
 		}
-		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+		PostMessage(gs_hwndTClockMain, message, wParam, lParam);
 		return 0;
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		PostMessage(g_hwndTClockMain, message, wParam, lParam);
+		PostMessage(gs_hwndTClockMain, message, wParam, lParam);
 		return 0;
 //	case WM_CONTEXTMENU:
 //		PostMessage(g_hwndTClockMain, message, wParam, lParam);
@@ -664,7 +651,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_MOUSEHOVER:
 		m_TipState=2;
-		if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0)){
+		if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0)){
 			ShowTip(hwnd);//show custom tooltip
 		}else{
 			PostMessage(hwnd, WM_USER+103,1,0);//show system tooltip
@@ -673,7 +660,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_MOUSELEAVE:
 		if(m_TipState){
 			if(m_TipState==2){
-				if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0))
+				if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
 					PostMessage(hwnd, WM_USER+103,0,0);//hide system tooltip
@@ -714,7 +701,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		/* fall through */
 	case CLOCKM_REFRESHTASKBAR:{ // refresh other elements than clock (somehow required to actually change the clock's size)
 		HWND taskbar=GetParent(GetParent(hwnd));
-		SetLayeredTaskbar(hwnd,0);
+		int alpha = api.GetIntEx("Taskbar", "AlphaTaskbar", 0);
+		int clear_taskbar = api.GetIntEx("Taskbar", "ClearTaskbar", FALSE);
+		SetLayeredTaskbar(hwnd, alpha, clear_taskbar, 0);
 		PostMessage(taskbar, WM_SIZE, SIZE_RESTORED, 0);
 		InvalidateRect(taskbar, NULL, 1);
 		return 0;}
@@ -732,7 +721,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(m_BlinkState){
 			m_BlinkState&=~BLINK_ON;
 			InvalidateRect(hwnd,NULL,1);
-			PostMessage(g_hwndTClockMain,MAINM_BLINKOFF,0,0);
+			PostMessage(gs_hwndTClockMain,MAINM_BLINKOFF,0,0);
 		}
 		return 0;
 	case CLOCKM_COPY: // copy format to clipboard
@@ -780,7 +769,7 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		SendMessage(g_hwndClock,message,wParam,lParam);
+		SendMessage(gs_hwndClock,message,wParam,lParam);
 		return 0;
 //	case WM_CONTEXTMENU:
 //		PostMessage(g_hwndTClockMain, message, wParam, lParam);
@@ -794,28 +783,28 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 			tme.dwHoverTime=HOVER_DEFAULT;
 			m_TipState=1;
 			TrackMouseEvent(&tme);
-			FillClockBGHover(g_hwndClock);
-			InvalidateRect(g_hwndClock,NULL,0);
+			FillClockBGHover(gs_hwndClock);
+			InvalidateRect(gs_hwndClock,NULL,0);
 		}
 		return 0;
 	case WM_MOUSEHOVER:
 		m_TipState=2;
-		if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0)){
+		if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0)){
 			ShowTip(hwnd);//show custom tooltip
 		}else{
-			SendMessage(g_hwndClock, WM_USER+103,1,0);//show system tooltip
+			SendMessage(gs_hwndClock, WM_USER+103,1,0);//show system tooltip
 		}
 		return 0;
 	case WM_MOUSELEAVE:
 		if(m_TipState){
 			if(m_TipState==2){
-				if(g_tos<TOS_VISTA || GetMyRegLong("Tooltip","bCustom",0))
+				if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
-					PostMessage(g_hwndClock, WM_USER+103,0,0);//hide system tooltip
+					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
 			}
-			FillClockBG(g_hwndClock);
-			InvalidateRect(g_hwndClock,NULL,0);
+			FillClockBG(gs_hwndClock);
+			InvalidateRect(gs_hwndClock,NULL,0);
 		}
 		m_TipState=0;
 		return 0;
@@ -887,13 +876,13 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	const char* section=(preview?"Preview":"Format");
 	DWORD dwInfoFormat;
 	SYSTEMTIME lt;
-	m_bNoClock = (char)GetMyRegLong(section, "NoClockCustomize", 0);
+	m_bNoClock = (char)api.GetInt(section, "NoClockCustomize", 0);
 	// read format
-	if(!GetMyRegStr(section, "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
+	if(!api.GetStr(section, "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
 		m_bNoClock = 1;
 	}
-	g_bHour12 = (char)GetMyRegLong(section, "Hour12", 0);
-	g_bHourZero = (char)GetMyRegLong(section, "HourZero", 0);
+	g_bHour12 = (char)api.GetInt(section, "Hour12", 0);
+	g_bHourZero = (char)api.GetInt(section, "HourZero", 0);
 	// parse format
 	dwInfoFormat = FindFormat(m_format);
 	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
@@ -921,33 +910,33 @@ void ReadStyleData(HWND hwnd, int preview)   //---------------------+++-->
 	BYTE fontquality;
 	HFONT hFon;
 	/// read style
-	m_basecolorFont = GetMyRegLong(section, "ForeColor", TCOLOR(TCOLOR_DEFAULT));
-	m_basecolorBG = GetMyRegLong(section, "BackColor", TCOLOR(TCOLOR_DEFAULT));
+	m_basecolorFont = api.GetInt(section, "ForeColor", TCOLOR(TCOLOR_DEFAULT));
+	m_basecolorBG = api.GetInt(section, "BackColor", TCOLOR(TCOLOR_DEFAULT));
 	g_col_update(m_basecolorFont,m_basecolorBG);
-	angle=GetMyRegLong(section,"Angle",0)%360;
+	angle=api.GetInt(section,"Angle",0)%360;
 	if(angle<0) angle+=360;
 	m_radian=(double)angle*3.14159265358979323/180.;// ye π doesn't need to be that long :P
-	dlineheight = GetMyRegLong(section, "LineHeight", 0);
-	m_height = GetMyRegLong(section, "ClockHeight", 0);
-	m_width = GetMyRegLong(section, "ClockWidth", 0);
-	dhpos = GetMyRegLong(section, "HorizPos", 0);
-	dvpos = GetMyRegLong(section, "VertPos", 0);
+	dlineheight = api.GetInt(section, "LineHeight", 0);
+	m_height = api.GetInt(section, "ClockHeight", 0);
+	m_width = api.GetInt(section, "ClockWidth", 0);
+	dhpos = api.GetInt(section, "HorizPos", 0);
+	dvpos = api.GetInt(section, "VertPos", 0);
 	/// font
-	GetMyRegStr(section, "Font", fontname, 80, "Arial");
-	fontsize = GetMyRegLong(section, "FontSize", 9);
+	api.GetStr(section, "Font", fontname, 80, "Arial");
+	fontsize = api.GetInt(section, "FontSize", 9);
 	if(fontsize>100 || fontsize<=0) fontsize=9;
-	italic = GetMyRegLong(section, "Italic", 0);
-	weight = GetMyRegLong(section, "Bold", 0);
+	italic = api.GetInt(section, "Italic", 0);
+	weight = api.GetInt(section, "Bold", 0);
 	switch(weight){
 	case 0: break;
 	case 1: weight=FW_BOLD; break;
 	default:
 		weight=FW_SEMIBOLD;
 	}
-	fontquality=(BYTE)GetMyRegLong(section, "FontQuality", CLEARTYPE_QUALITY);
+	fontquality = (BYTE)api.GetInt(section, "FontQuality", CLEARTYPE_QUALITY);
 	hFon = CreateMyFont(fontname, fontsize, weight, italic, angle*10, fontquality);
 	/// misc
-	m_bMultimon = GetMyRegLong("Desktop", "Multimon", 1);
+	m_bMultimon = api.GetInt("Desktop", "Multimon", 1);
 	/// create/update clock
 	UpdateClock(hwnd,hFon);
 	InvalidateRect(hwnd, NULL, 0);
@@ -972,7 +961,7 @@ void GetDisplayTime(SYSTEMTIME* pt, int* beat100)
 /*--------------------------------------------------
 ------------------------------------------- WM_TIMER
 --------------------------------------------------*/
-void OnTimer(HWND hwnd)
+void OnDrawTimer(HWND hwnd)
 {
 	SYSTEMTIME t;
 	int beat100=0;
@@ -1043,7 +1032,7 @@ void FillClockBG()
 	if(!m_colorBG_start) return;
 	if(m_colBG.ref==TCOLOR(TCOLOR_DEFAULT)){
 		if(IsXPThemeActive()){
-			DrawXPClockBackground(g_hwndClock,m_hdcClockBG,&m_rcClock);
+			DrawXPClockBackground(gs_hwndClock,m_hdcClockBG,&m_rcClock);
 			return;
 		}
 		col.ref=GetSysColor(COLOR_3DFACE);
@@ -1060,7 +1049,7 @@ void FillClockBGHover()
 {
 	if(!m_colorBG_start) return;
 	if(IsXPThemeActive()) {
-		DrawXPClockHover(g_hwndClock,m_hdcClockBG,&m_rcClock);
+		DrawXPClockHover(gs_hwndClock,m_hdcClockBG,&m_rcClock);
 	}
 }
 void CalculateClockTextPosition(){
@@ -1069,7 +1058,7 @@ void CalculateClockTextPosition(){
 	int textwidth=(int)(sin_*(m_textheight+m_leading));
 	int textheight=(int)(cos_*(m_textheight+m_leading));
 	/// use width / height based on angle.
-	GetClientRect(GetParent(GetParent(g_hwndClock)),&m_rcClock);
+	GetClientRect(GetParent(GetParent(gs_hwndClock)),&m_rcClock);
 	m_bHorizontalTaskbar=m_rcClock.right>m_rcClock.bottom;
 	if(m_bHorizontalTaskbar){
 		m_rcClock.bottom-=m_BORDER_MARGIN;//2px top
@@ -1280,7 +1269,7 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 	int beat100;
 	char fmt[256], str[FORMAT_MAX_SIZE];
 	
-	GetMyRegStr("Tooltip", "Tooltip", fmt, sizeof(fmt), "");
+	api.GetStr("Tooltip", "Tooltip", fmt, sizeof(fmt), "");
 	if(!*fmt) memcpy(fmt,TC_TOOLTIP,sizeof(TC_TOOLTIP));
 	
 	GetDisplayTime(&t, &beat100);
@@ -1307,7 +1296,7 @@ void OnCopy(HWND hwnd, LPARAM lParam)
 	entry[0]='0'+(char)LOWORD(lParam);
 	entry[1]='0'+(char)HIWORD(lParam);
 	memcpy(entry+2,"Clip",5);
-	GetMyRegStr("Mouse",entry,fmt,256,"");
+	api.GetStr("Mouse",entry,fmt,256,"");
 	if(!*fmt) strcpy(fmt,m_format);
 	
 	MakeFormat(s, fmt, &t, beat100);

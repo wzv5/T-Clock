@@ -24,7 +24,7 @@ void InitFormat(const char* section, SYSTEMTIME* lt)   //-----------------------
 	char year[6];
 	int i, ilang, ioptcal;
 	
-	ilang = GetMyRegLong(section, "Locale", GetUserDefaultLangID());
+	ilang = api.GetInt(section, "Locale", GetUserDefaultLangID());
 	
 	GetLocaleInfo(ilang, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&m_codepage, sizeof(m_codepage));
 	if(!IsValidCodePage(m_codepage)) m_codepage=CP_ACP;
@@ -39,12 +39,12 @@ void InitFormat(const char* section, SYSTEMTIME* lt)   //-----------------------
 	GetLocaleInfo(ilang, LOCALE_SABBREVMONTHNAME1 + i, m_MonthShort, sizeof(m_MonthShort));
 	GetLocaleInfo(ilang, LOCALE_SMONTHNAME1 + i, m_MonthLong, sizeof(m_MonthLong));
 	
-	GetMyRegStr(section, "AMsymbol", m_AM, sizeof(m_AM), "");
+	api.GetStr(section, "AMsymbol", m_AM, sizeof(m_AM), "");
 	if(!*m_AM){
 		GetLocaleInfo(ilang, LOCALE_S1159, m_AM, sizeof(m_AM));
 		if(!*m_AM) strcpy(m_AM,"AM");
 	}
-	GetMyRegStr(section, "PMsymbol", m_PM, sizeof(m_PM), "");
+	api.GetStr(section, "PMsymbol", m_PM, sizeof(m_PM), "");
 	if(!*m_PM){
 		GetLocaleInfo(ilang, LOCALE_S2359, m_PM, sizeof(m_PM));
 		if(!*m_PM) strcpy(m_PM,"PM");
@@ -345,30 +345,25 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		} else if(*fmt == 'S') { // uptime
 			int len, slen, st;
 			fmt++;
+			if(!TickCount) TickCount = api.GetTickCount64();
 			if(GetNumFormat(&fmt, 'd', &len, &slen) == TRUE) {//days
-				if(!TickCount) TickCount = pGetTickCount64();
 				st = (int)(TickCount/86400000);
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 'a', &len, &slen) == TRUE) {//hours total
-				if(!TickCount) TickCount = pGetTickCount64();
 				st = (int)(TickCount/3600000);
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 'h', &len, &slen) == TRUE) {//hours (max 24)
-				if(!TickCount) TickCount = pGetTickCount64();
 				st = (TickCount/3600000)%24;
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 'n', &len, &slen) == TRUE) {//minutes
-				if(!TickCount) TickCount = pGetTickCount64();
 				st = (TickCount/60000)%60;
 				SetNumFormat(&out, st, len, slen);
 			} else if(GetNumFormat(&fmt, 's', &len, &slen) == TRUE) {//seconds
-				if(!TickCount) TickCount = pGetTickCount64();
 				st = (TickCount/1000)%60;
 				SetNumFormat(&out, st, len, slen);
 			} else if(*fmt == 'T') { // ST, uptime as h:mm:ss
 				ULONGLONG past;
 				int sth, stm, sts;
-				if(!TickCount) TickCount = pGetTickCount64();
 				past = TickCount/1000;
 				sts = past%60; past /= 60;
 				stm = past%60; past /= 60;

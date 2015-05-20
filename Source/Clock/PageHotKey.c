@@ -64,10 +64,10 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	///////////////////////////////////////////////////////////////////////////////////
 	for(i = 0; i <= 4; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
-		SetMyRegLong(subkey, "bValid", tchk[i].bValid);
-		SetMyRegLong(subkey, "fsMod",  tchk[i].fsMod);
-		SetMyRegStr(subkey, "szText", tchk[i].szText);
-		SetMyRegLong(subkey, "vk",  tchk[i].vk);
+		api.SetInt(subkey, "bValid", tchk[i].bValid);
+		api.SetInt(subkey, "fsMod",  tchk[i].fsMod);
+		api.SetStr(subkey, "szText", tchk[i].szText);
+		api.SetInt(subkey, "vk",  tchk[i].vk);
 	}
 	//////////////////////////////////////////////////////////////////////////////////
 	bFirstTime = FALSE; // DO NOT Let Property Sheet Manager Fire OnApply(...) Twice!
@@ -210,11 +210,11 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	tchk = (hotkey_t*)malloc(sizeof(hotkey_t) * 5);
 	for(i=0; i <= 4; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
-		tchk[i].bValid = GetMyRegLong(subkey, "bValid", 0);
-//	  GetMyRegStrEx(subkey, "szText", tchk[i].szText, GEN_BUFF, "None");
-		GetMyRegStrEx(subkey, "szText", tchk[i].szText, TNY_BUFF, "None");
-		tchk[i].fsMod = GetMyRegLong(subkey, "fsMod", 0);
-		tchk[i].vk = GetMyRegLong(subkey, "vk", 0);
+		tchk[i].bValid = api.GetInt(subkey, "bValid", 0);
+//		api.GetStrEx(subkey, "szText", tchk[i].szText, GEN_BUFF, "None");
+		api.GetStrEx(subkey, "szText", tchk[i].szText, TNY_BUFF, "None");
+		tchk[i].fsMod = api.GetInt(subkey, "fsMod", 0);
+		tchk[i].vk = api.GetInt(subkey, "vk", 0);
 	}
 	
 	SetDlgItemText(hDlg, IDCE_HK_ADD, tchk[0].szText);
@@ -350,9 +350,9 @@ void GetHotKeyInfo(HWND hWnd)
 	
 	for(i = 0; i <= 5; i++) {
 		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
-		hk[i].bValid = GetMyRegLongEx(subkey, "bValid", 0);
-		hk[i].fsMod = GetMyRegLongEx(subkey, "fsMod", 0);
-		hk[i].vk = GetMyRegLongEx(subkey, "vk", 0);
+		hk[i].bValid = api.GetIntEx(subkey, "bValid", 0);
+		hk[i].fsMod = api.GetIntEx(subkey, "fsMod", 0);
+		hk[i].vk = api.GetIntEx(subkey, "vk", 0);
 	}
 	
 	if(hk[0].bValid) RegisterHotKey(hWnd, HOT_TIMER, hk[0].fsMod, hk[0].vk); // Add/Edit Timer

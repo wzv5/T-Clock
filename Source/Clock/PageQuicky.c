@@ -92,11 +92,11 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 --------------------------------------------------*/
 static void OnInit(HWND hDlg)   /*---------------*/
 {
-	CheckDlgButton(hDlg, IDC_QMEN_AUDIO, GetMyRegLong("QuickyMenu", "AudioProperties", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_DISPLAY, GetMyRegLong("QuickyMenu", "DisplayProperties", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_EXITWIN, GetMyRegLong("QuickyMenu", "ExitWindows", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_LAUNCH, GetMyRegLong("QuickyMenu", "QuickyMenu", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_NET, GetMyRegLong("QuickyMenu", "NetworkDrives", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_AUDIO, api.GetInt("QuickyMenu", "AudioProperties", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_DISPLAY, api.GetInt("QuickyMenu", "DisplayProperties", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_EXITWIN, api.GetInt("QuickyMenu", "ExitWindows", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_LAUNCH, api.GetInt("QuickyMenu", "QuickyMenu", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_NET, api.GetInt("QuickyMenu", "NetworkDrives", TRUE));
 	
 }
 /*--------------------------------------------------
@@ -104,11 +104,11 @@ static void OnInit(HWND hDlg)   /*---------------*/
 --------------------------------------------------*/
 void OnApply(HWND hDlg)   /*---------------------*/
 {
-	SetMyRegLong("QuickyMenu", "DisplayProperties", IsDlgButtonChecked(hDlg, IDC_QMEN_DISPLAY));
-	SetMyRegLong("QuickyMenu", "AudioProperties",   IsDlgButtonChecked(hDlg, IDC_QMEN_AUDIO));
-	SetMyRegLong("QuickyMenu", "NetworkDrives",     IsDlgButtonChecked(hDlg, IDC_QMEN_NET));
-	SetMyRegLong("QuickyMenu", "ExitWindows",       IsDlgButtonChecked(hDlg, IDC_QMEN_EXITWIN));
-	SetMyRegLong("QuickyMenu", "QuickyMenu",        IsDlgButtonChecked(hDlg, IDC_QMEN_LAUNCH));
+	api.SetInt("QuickyMenu", "DisplayProperties", IsDlgButtonChecked(hDlg, IDC_QMEN_DISPLAY));
+	api.SetInt("QuickyMenu", "AudioProperties",   IsDlgButtonChecked(hDlg, IDC_QMEN_AUDIO));
+	api.SetInt("QuickyMenu", "NetworkDrives",     IsDlgButtonChecked(hDlg, IDC_QMEN_NET));
+	api.SetInt("QuickyMenu", "ExitWindows",       IsDlgButtonChecked(hDlg, IDC_QMEN_EXITWIN));
+	api.SetInt("QuickyMenu", "QuickyMenu",        IsDlgButtonChecked(hDlg, IDC_QMEN_LAUNCH));
 }
 //================================================================================================
 //------------------------------+++--> Populate ListView Control With Currently Configured Options:
@@ -129,17 +129,17 @@ void AddListBoxRows(HWND hList)   //--------------------------------------------
 		lvItem.iSubItem = 0;
 		offset=9+wsprintf(key+9,"%i",idx);
 		memcpy(key+offset,"-Text",6);
-		GetMyRegStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "-");
+		api.GetStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "-");
 		ListView_InsertItem(hList, &lvItem);
 		
 		lvItem.iSubItem = 1;
 		memcpy(key+offset,"-Target",8);
-		GetMyRegStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
+		api.GetStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
 		ListView_SetItem(hList, &lvItem);
 		
 		lvItem.iSubItem = 2;
 		memcpy(key+offset,"-Switches",10);
-		GetMyRegStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
+		api.GetStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
 		ListView_SetItem(hList, &lvItem);
 	}
 }

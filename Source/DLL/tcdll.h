@@ -10,17 +10,16 @@
 #include <time.h>     // Required by time functions in Format.c
 #include <math.h>     // Required by use of floor() in Format.c
 
+#include "../common/resource.h"
 #include "../common/newapi.h" // UxTheme stuff
 #include "../common/utl.h" // utility functions
+#include "../common/clock.h" // common clock api
+
+extern HWND gs_hwndTClockMain; /**< our main window for hotkeys, menus and sounds \b [shared] */
+extern HWND gs_hwndClock;      /**< the clock hwnd \b [shared] */
+extern char gs_bCalOpen;      /**< calendar state \b [shared] \sa TClockAPI::IsCalendarOpen() */
 
 #define TZNAME_MAX		  256//10
-
-// main.c
-DLL_EXPORT int WINAPI IsCalendarOpen(int focus);
-DLL_EXPORT void WINAPI HookStart(HWND hwnd);
-DLL_EXPORT void WINAPI HookEnd();
-DLL_EXPORT void WINAPI ClockExit();
-
 
 // tclock.c
 void DrawClock(HDC hdc);

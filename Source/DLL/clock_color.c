@@ -1,9 +1,9 @@
-#include "globals.h"
-#include "newapi.h"
-#include "tcolor.h"
+#include "tcdll.h"
+#include "clock_internal.h"
 
-unsigned themecolor=0x00000000;
-void OnTColor_DWMCOLORIZATIONCOLORCHANGED(unsigned argb) /// there's a bug with "high" or "low" color intensity...
+static unsigned m_themecolor = 0x00000000;
+
+void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb) /// there's a bug with "high" or "low" color intensity...
 {
 	union{
 		unsigned ref;
@@ -20,9 +20,9 @@ void OnTColor_DWMCOLORIZATIONCOLORCHANGED(unsigned argb) /// there's a bug with 
 	tmp=col.quad.rgbRed*col.quad.rgbReserved/0xFF + whitepart;
 	col.quad.rgbRed=(tmp>255?255:(BYTE)tmp);
 	col.quad.rgbReserved=0x00;
-	themecolor=col.ref;
+	m_themecolor = col.ref;
 }
-unsigned GetTColor(unsigned ogbr,int useraw)
+unsigned Clock_GetColor(unsigned ogbr,int use_raw)
 {
 	// useraw = 1 == want some raw values, mainly "default"
 	// useraw = 2 == always want raw values (that is, everytime a TCOLOR_* isn't save to be right)
@@ -34,31 +34,31 @@ unsigned GetTColor(unsigned ogbr,int useraw)
 		return GetSysColor(sub);
 	switch(sub){
 	case TCOLOR_DEFAULT:
-		if(useraw)
+		if(use_raw)
 			return ogbr;
-		if(IsXPThemeActive())
-			return GetXPClockColor();
+		if(IsXPThemeActive() && gs_hwndClock)
+			return GetXPClockColor(gs_hwndClock);
 		else
 			return GetSysColor(COLOR_WINDOWTEXT);
 	case TCOLOR_TRANSPARENT:
-		if(useraw)
+		if(use_raw)
 			return ogbr;
 		return 0xFF000000;
 	case TCOLOR_THEME:{
 		HKEY hkey;
-		if(!themecolor && RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\DWM", &hkey) == 0) {
+		if(!m_themecolor && RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\DWM", &hkey) == 0) {
 			DWORD regtype,size=sizeof(sub);
 			if(RegQueryValueEx(hkey,"ColorizationColor",0,&regtype,(LPBYTE)&sub,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
-				OnTColor_DWMCOLORIZATIONCOLORCHANGED(sub);
+				Clock_On_DWMCOLORIZATIONCOLORCHANGED(sub);
 			RegCloseKey(hkey);
-			return themecolor;
+			return m_themecolor;
 		}
-		return themecolor;}
+		return m_themecolor;}
 	case TCOLOR_THEME2:
-		if(useraw==2)
+		if(use_raw==2)
 			return ogbr;
-		if(IsXPThemeActive())
-			return GetXPClockColorBG();
+		if(IsXPThemeActive() && gs_hwndClock)
+			return GetXPClockColorBG(gs_hwndClock);
 		else
 			return GetSysColor(COLOR_3DFACE);
 	}

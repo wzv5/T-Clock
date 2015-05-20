@@ -206,10 +206,10 @@ void OnInit(HWND hDlg)
 	/// add default sound files to sound file dropdown
 	CBAddString(hDlg,IDC_FILEALARM,"<  no sound  >");
 	CBAddString(hDlg,IDC_FILEJIHOU,"<  no sound  >");
-	if(g_tos>TOS_2000) {
+	if(api.OS > TOS_2000) {
 		HANDLE hFind;
 		WIN32_FIND_DATA FindFileData;
-		strcpy(tmp,g_mydir); add_title(tmp,"waves/*");
+		strcpy(tmp,api.root); add_title(tmp,"waves/*");
 		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
 			do{
 				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
@@ -221,7 +221,7 @@ void OnInit(HWND hDlg)
 		}
 	}
 	/// add alarms
-	count = GetMyRegLong("", "AlarmNum", 0);
+	count = api.GetInt("", "AlarmNum", 0);
 	if(count < 1) count = 0;
 	for(i=0; i<count; ++i) {
 		alarm_t* pAS = malloc(sizeof(alarm_t));
@@ -239,16 +239,16 @@ void OnInit(HWND hDlg)
 	}
 	
 	CheckDlgButton(hDlg, IDC_JIHOU,
-				   GetMyRegLong("", "Jihou", FALSE));
+				   api.GetInt("", "Jihou", FALSE));
 				   
-	GetMyRegStr("", "JihouFile", tmp, sizeof(tmp), "Clock.wav");
+	api.GetStr("", "JihouFile", tmp, sizeof(tmp), "Clock.wav");
 	SetDlgItemText(hDlg, IDC_FILEJIHOU, tmp);
 	
 	CheckDlgButton(hDlg, IDC_REPEATJIHOU,
-				   GetMyRegLong("", "JihouRepeat", FALSE));
+				   api.GetInt("", "JihouRepeat", FALSE));
 				   
 	CheckDlgButton(hDlg, IDC_BLINKJIHOU,
-				   GetMyRegLong("", "JihouBlink", FALSE));
+				   api.GetInt("", "JihouBlink", FALSE));
 				   
 	OnAlarmJihou(hDlg, IDC_JIHOU);
 	
@@ -317,22 +317,22 @@ void OnApply(HWND hDlg)
 	for(i=n_alarm; ; ++i) {
 		char subkey[20];
 		wsprintf(subkey, "Alarm%d", i + 1);
-		if(GetMyRegLong(subkey, "Hour", -1) >= 0)
-			DelMyRegKey(subkey);
+		if(api.GetInt(subkey, "Hour", -1) >= 0)
+			api.DelKey(subkey);
 		else break;
 	}
 	
-	SetMyRegLong("", "AlarmNum", n_alarm);
+	api.SetInt("", "AlarmNum", n_alarm);
 	
-	SetMyRegLong("", "Jihou",
+	api.SetInt("", "Jihou",
 				 IsDlgButtonChecked(hDlg, IDC_JIHOU));
 				 
 	GetDlgItemText(hDlg, IDC_FILEJIHOU, file, sizeof(file));
-	SetMyRegStr("", "JihouFile", file);
+	api.SetStr("", "JihouFile", file);
 	
-	SetMyRegLong("", "JihouRepeat",
+	api.SetInt("", "JihouRepeat",
 				 IsDlgButtonChecked(hDlg, IDC_REPEATJIHOU));
-	SetMyRegLong("", "JihouBlink",
+	api.SetInt("", "JihouBlink",
 				 IsDlgButtonChecked(hDlg, IDC_BLINKJIHOU));
 				 
 	InitAlarm(); // alarm.c
@@ -417,7 +417,7 @@ void SetDefaultAlarmToDlg(HWND hDlg)   //---------------------------------------
 	as.days=0x7f; // daily
 	as.hour=12;
 	as.iTimes=-1;
-	if(GetMyRegLong("Format","Hour12",1))
+	if(api.GetInt("Format","Hour12",1))
 		as.uFlags|=ALRM_12HPM;
 	as.uFlags|=ALRM_ONESHOT|ALRM_DIALOG|ALRM_BLINK|ALRM_REPEAT;
 	strcpy(as.fname,"Alarm.wav");

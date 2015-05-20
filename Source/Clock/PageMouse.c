@@ -75,7 +75,7 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 	lvItem.iItem=0;
 	ListView_DeleteAllItems(hList); // cleanup ListView
 	/*
-	if(GetMyRegLong(REG_MOUSE,"DropFiles",DF_RECYCLE)){
+	if(api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE)){
 		char szApp[LRG_BUFF];
 		lvItem.iSubItem=0;
 		lvItem.pszText="Drag";
@@ -172,7 +172,7 @@ static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //---
 	EnableDlgItem(hDlg,IDC_LABMOUSEFILE,(func==MOUSEFUNC_CLIPBOARD));
 	if(func==MOUSEFUNC_CLIPBOARD){
 		if(!*m_pData[button].format[click])
-			GetMyRegStr("Format","Format",m_pData[button].format[click],LRG_BUFF,"");
+			api.GetStr("Format","Format",m_pData[button].format[click],LRG_BUFF,"");
 		SetDlgItemText(hDlg,IDC_MOUSEFILE,m_pData[button].format[click]);
 	}
 	m_bTransition=0; // end transition
@@ -309,9 +309,9 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	/// setup basic controls
 	for(click=IDS_NONE; click<=IDS_MOVETO; ++click)
 		CBAddString(hDlg,IDC_DROPFILES,MyString(click));
-	CBSetCurSel(hDlg,IDC_DROPFILES,GetMyRegLong(REG_MOUSE,"DropFiles",DF_RECYCLE));
+	CBSetCurSel(hDlg,IDC_DROPFILES,api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE));
 	SendMessage(hDlg,WM_COMMAND,MAKEWPARAM(IDC_DROPFILES,CBN_SELCHANGE),0); // update IDC_DROPFILES related
-	GetMyRegStr(REG_MOUSE,"DropFilesApp",buf,256,"");
+	api.GetStr(REG_MOUSE,"DropFilesApp",buf,256,"");
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP,buf);
 	/// read mouse click settings
 	entry[2]='\0';
@@ -320,12 +320,12 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
-			m_pData[button].func[click]=GetMyRegLong(REG_MOUSE, entry, MOUSEFUNC_NONE);
+			m_pData[button].func[click]=api.GetInt(REG_MOUSE, entry, MOUSEFUNC_NONE);
 			m_pData[button].format[click][0]=0; // for Clipboard
 			m_pData[button].fname[click][0]=0; // for open file (N/A)
 			if(m_pData[button].func[click]==MOUSEFUNC_CLIPBOARD){
 				memcpy(entry+2,"Clip",5);
-				GetMyRegStr(REG_MOUSE,entry,m_pData[button].format[click],256,"");
+				api.GetStr(REG_MOUSE,entry,m_pData[button].format[click],256,"");
 				entry[2]='\0';
 			}
 		}
@@ -333,14 +333,14 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	// set mouse buttons/functions to combo boxes
 	InitMouseControls(hDlg); // Populate Mouse Click Action DropDown Menu
 	
-	if(g_tos<TOS_VISTA){
+	if(api.OS < TOS_VISTA){
 		EnableDlgItem(hDlg, IDCB_TOOLTIP, 0);
 		CheckDlgButton(hDlg,IDCB_TOOLTIP, 1);
 	}else{
-		CheckDlgButton(hDlg,IDCB_TOOLTIP, GetMyRegLongEx("Tooltip","bCustom",0));
+		CheckDlgButton(hDlg,IDCB_TOOLTIP, api.GetIntEx("Tooltip","bCustom",0));
 		EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	}
-	GetMyRegStr("Tooltip","Tooltip",buf,sizeof(buf),"");
+	api.GetStr("Tooltip","Tooltip",buf,sizeof(buf),"");
 	if(!*buf) memcpy(buf,TC_TOOLTIP,sizeof(TC_TOOLTIP));
 	SetDlgItemText(hDlg,IDC_TOOLTIP,buf);
 	/// setup list view
@@ -383,28 +383,28 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	char buf[LRG_BUFF], entry[3+4];
 	int sel, button, click;
 	sel = (int)CBGetCurSel(hDlg,IDC_DROPFILES);
-	SetMyRegLong(REG_MOUSE,"DropFiles",sel);
+	api.SetInt(REG_MOUSE,"DropFiles",sel);
 	GetDlgItemText(hDlg,IDC_DROPFILESAPP,buf,256);
-	SetMyRegStr(REG_MOUSE,"DropFilesApp",buf);
+	api.SetStr(REG_MOUSE,"DropFilesApp",buf);
 	entry[2]='\0';
 	for(button=0; button<m_mouseButtonCount; ++button) {
 		for(click=0; click<m_mouseClickCount; ++click) {
 			entry[0]='0'+(char)button;
 			entry[1]='1'+(char)click;
 			if(m_pData[button].func[click])
-				SetMyRegLong(REG_MOUSE, entry, m_pData[button].func[click]);
+				api.SetInt(REG_MOUSE, entry, m_pData[button].func[click]);
 			else
-				DelMyReg(REG_MOUSE, entry);
+				api.DelValue(REG_MOUSE, entry);
 			if(m_pData[button].func[click]==MOUSEFUNC_CLIPBOARD) {
 				memcpy(entry+2,"Clip",5);
-				SetMyRegStr(REG_MOUSE, entry, m_pData[button].format[click]);
+				api.SetStr(REG_MOUSE, entry, m_pData[button].format[click]);
 				entry[2]='\0';
 			}
 		}
 	}
-	if(g_tos>=TOS_VISTA) SetMyRegLong("Tooltip","bCustom",IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
+	if(api.OS >= TOS_VISTA) api.SetInt("Tooltip","bCustom",IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	GetDlgItemText(hDlg, IDC_TOOLTIP,buf,256);
-	SetMyRegStr("Tooltip","Tooltip",buf);
+	api.SetStr("Tooltip","Tooltip",buf);
 }
 //=======================================================================================
 //---------------------------//------------+++--> Free CLICKDATA Structure Memory on Exit:
@@ -480,7 +480,7 @@ void CheckMouseMenu()
 	for(button=0; button<m_mouseButtonCount; ++button) {
 		for(click=0; click<m_mouseClickCount; ++click) {
 			u.entryS=('0'+button)|(('0'+click)<<8);
-			if(GetMyRegLong(REG_MOUSE,u.entry,0)==MOUSEFUNC_MENU) {
+			if(api.GetInt(REG_MOUSE,u.entry,0)==MOUSEFUNC_MENU) {
 				hasmenu=1;
 				button=(short)m_mouseButtonCount; break;
 			}
@@ -488,6 +488,6 @@ void CheckMouseMenu()
 	}
 	if(!hasmenu){
 		u.entryS='1'|('1'<<8); // right, 1 click
-		SetMyRegLong(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
+		api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
 	}
 }

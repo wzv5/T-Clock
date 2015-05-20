@@ -1,8 +1,2 @@
 SECTIONS
-.MYDATA    SHARED READ WRITE
-
-EXPORTS
-IsCalendarOpen	@4
-HookEnd			@1
-HookStart		@2
-ClockExit		@3
+	.shared		SHARED READ WRITE

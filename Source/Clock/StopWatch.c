@@ -189,7 +189,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	GetWindowRect(hList,&rc);
 	m_rezCYlist=rc.bottom-rc.top;
 	m_rezCXlist=rc.right-rc.left;
-	rc.bottom=GetMyRegLong("Timers","SwSize",0);
+	rc.bottom=api.GetInt("Timers","SwSize",0);
 	if(rc.bottom){
 		SetWindowPos(hDlg,HWND_TOP,0,0,m_rezCX,rc.bottom,SWP_NOMOVE|SWP_NOZORDER);
 	}
@@ -261,16 +261,16 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 	switch(msg) {
 	case WM_INITDIALOG:
 		OnInit(hDlg);
-		SetMyDialgPos(hDlg,21);
+		api.PositionWindow(hDlg,21);
 		return TRUE;
 	case WM_DESTROY:{
 		// save pos & size
 		RECT rc; GetWindowRect(hDlg,&rc);
 		rc.bottom=rc.bottom-rc.top;
 		if(rc.bottom!=m_rezCY){
-			SetMyRegLong("Timers","SwSize",rc.bottom);
+			api.SetInt("Timers","SwSize",rc.bottom);
 		}else{
-			DelMyReg("Timers","SwSize");
+			api.DelValue("Timers","SwSize");
 		}
 		// cleaup elapsed font
 		{HFONT hfont=(HFONT)SendDlgItemMessage(hDlg,IDC_SW_ELAPSED,WM_GETFONT,0,0);
@@ -438,9 +438,9 @@ static INT_PTR CALLBACK DlgProcStopwatchExport(HWND hDlg, UINT msg, WPARAM wPara
 	switch(msg) {
 	case WM_INITDIALOG:{
 		char buf[128];
-		GetMyRegStr("Timers","SwExT",buf,sizeof(buf),"");
+		api.GetStr("Timers","SwExT",buf,sizeof(buf),"");
 		SetDlgItemText(hDlg,IDC_SWE_TOTAL,buf);
-		GetMyRegStr("Timers","SwExL",buf,sizeof(buf),"");
+		api.GetStr("Timers","SwExL",buf,sizeof(buf),"");
 		SetDlgItemText(hDlg,IDC_SWE_LAP,buf);
 		SendMessage(hDlg,WM_COMMAND,IDOK,0);
 		Edit_SetSel(GetDlgItem(hDlg,IDC_SWE_OUT),0,-1);
@@ -471,16 +471,16 @@ static INT_PTR CALLBACK DlgProcStopwatchExport(HWND hDlg, UINT msg, WPARAM wPara
 				char buf[128];
 				GetDlgItemText(hDlg,IDC_SWE_TOTAL,buf,sizeof(buf));
 				if(!*buf){
-					DelMyReg("Timers","SwExT");
+					api.DelValue("Timers","SwExT");
 					SetDlgItemText(hDlg,IDC_SWE_TOTAL,"\\n--------------------\\n\\t");
 				}else
-					SetMyRegStr("Timers","SwExT",buf);
+					api.SetStr("Timers","SwExT",buf);
 				GetDlgItemText(hDlg,IDC_SWE_LAP,buf,sizeof(buf));
 				if(!*buf){
-					DelMyReg("Timers","SwExL");
+					api.DelValue("Timers","SwExL");
 					SetDlgItemText(hDlg,IDC_SWE_LAP,"Lap \\#\\f: \\l (\\t)\\n");
 				}else
-					SetMyRegStr("Timers","SwExL",buf);
+					api.SetStr("Timers","SwExL",buf);
 				export_text(hDlg);
 				break;}
 			case IDCANCEL:

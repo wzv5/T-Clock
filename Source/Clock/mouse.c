@@ -18,7 +18,7 @@ static int GetMouseFuncNum(char button, char nclick) {
 	entry[0]='0'+button;
 	entry[1]='0'+nclick;
 	entry[2]='\0';
-	return GetMyRegLong(REG_MOUSE,entry,0);
+	return api.GetInt(REG_MOUSE,entry,0);
 }
 
 /*------------------------------------------------------------

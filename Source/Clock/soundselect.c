@@ -39,7 +39,7 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 	if(!*deffile || IsMMFile(deffile)) ofn.nFilterIndex = 1;
 	else ofn.nFilterIndex = 2;
 	
-	strcpy(initdir, g_mydir);
+	strcpy(initdir, api.root);
 	if(*deffile) {
 		WIN32_FIND_DATA fd;
 		HANDLE hfind;
@@ -64,8 +64,8 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 	ofn.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|OFN_FILEMUSTEXIST;
 	
 	if(GetOpenFileName(&ofn)) {
-		size_t tlen=strlen(g_mydir);
-		if(!strncmp(fname,g_mydir,tlen)) { // make relative to waves/ if possible
+		size_t tlen=api.root_len;
+		if(!strncmp(fname,api.root,tlen)) { // make relative to waves/ if possible
 			if(!strncmp(fname+tlen,"\\waves\\",7)) {
 				memmove(fname,fname+tlen+7,strlen(fname)-tlen-6);
 			}

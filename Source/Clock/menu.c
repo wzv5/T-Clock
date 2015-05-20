@@ -20,11 +20,11 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	HMENU hPopupMenu;
 	HMENU hMenu;
 	
-	g_bQMAudio   = GetMyRegLong("QuickyMenu", "AudioProperties",   TRUE);
-	g_bQMNet     = GetMyRegLong("QuickyMenu", "NetworkDrives",     TRUE);
-	g_bQMLaunch  = GetMyRegLong("QuickyMenu", "QuickyMenu",        TRUE);
-	g_bQMExitWin = GetMyRegLong("QuickyMenu", "ExitWindows",       TRUE);
-	g_bQMDisplay = GetMyRegLong("QuickyMenu", "DisplayProperties", TRUE);
+	g_bQMAudio   = api.GetInt("QuickyMenu", "AudioProperties",   TRUE);
+	g_bQMNet     = api.GetInt("QuickyMenu", "NetworkDrives",     TRUE);
+	g_bQMLaunch  = api.GetInt("QuickyMenu", "QuickyMenu",        TRUE);
+	g_bQMExitWin = api.GetInt("QuickyMenu", "ExitWindows",       TRUE);
+	g_bQMDisplay = api.GetInt("QuickyMenu", "DisplayProperties", TRUE);
 	
 	hMenu = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU));
 	hPopupMenu = GetSubMenu(hMenu, 0);
@@ -58,9 +58,9 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 		memcpy(key,"MenuItem-",offset);
 		for(idx=0; idx<12; ++idx) {
 			offset=9+wsprintf(key+9,"%i",idx);
-			if(GetMyRegLong("QuickyMenu\\MenuItems",key,0)){
+			if(api.GetInt("QuickyMenu\\MenuItems",key,0)){
 				memcpy(key+offset,"-Text",6);
-				GetMyRegStr("QuickyMenu\\MenuItems",key,name,sizeof(name),"");
+				api.GetStr("QuickyMenu\\MenuItems",key,name,sizeof(name),"");
 				mii.wID=IDM_I_MENU+idx;
 				InsertMenuItem(hPopupMenu, IDM_SHOWCALENDER, FALSE, &mii);
 			}
@@ -119,22 +119,22 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		break;
 		
 	case IDM_DISPLAYPROP: //------------------------------+++--> Display Properties
-		if(g_tos>=TOS_VISTA)
-			Exec("::{26EE0668-A00A-44D7-9371-BEB064C98683}\\1\\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}",NULL,NULL);
+		if(api.OS >= TOS_VISTA)
+			api.Exec("::{26EE0668-A00A-44D7-9371-BEB064C98683}\\1\\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}",NULL,NULL);
 		else
-			WinExec(("control.exe desk.cpl, display,1"),SW_SHOW);
+			api.Exec("control", "desk.cpl, display,1", NULL);
 		break;
 	case IDM_VOLUMECONTROL: //-------------------------------+++--> Volume Controls
 		#ifndef __x86_64__
-		#	define OPEN_VOLUME "SndVol32.exe"
+		#	define OPEN_VOLUME "SndVol32"
 		#else
-		#	define OPEN_VOLUME "SndVol.exe"
+		#	define OPEN_VOLUME "SndVol"
 		#endif
-		WinExec((OPEN_VOLUME),SW_SHOW);
+		api.Exec(OPEN_VOLUME, NULL, NULL);
 		break;
 		
 	case IDM_AUDIOPROP: //----------------------------------+++--> Audio Properties
-		WinExec(("control.exe mmsys.cpl"),SW_SHOW);
+		api.Exec("control", "mmsys.cpl", NULL);
 		break;
 		
 	case IDM_MAPDRIVE: //----------------------------------+++--> Map Network Drive
@@ -255,9 +255,9 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 			memcpy(key,"MenuItem-",offset);
 			offset+=wsprintf(key+offset,"%i",wID-IDM_I_MENU);
 			memcpy(key+offset,"-Target",8);
-			GetMyRegStr("QuickyMenu\\MenuItems",key,szQM_Target,sizeof(szQM_Target),"");
+			api.GetStr("QuickyMenu\\MenuItems",key,szQM_Target,sizeof(szQM_Target),"");
 			memcpy(key+offset,"-Switches",10);
-			GetMyRegStr("QuickyMenu\\MenuItems",key,szQM_Switch,sizeof(szQM_Switch),"");
+			api.GetStr("QuickyMenu\\MenuItems",key,szQM_Switch,sizeof(szQM_Switch),"");
 			ShellExecute(hwnd, "open", szQM_Target, szQM_Switch, NULL, SW_SHOWNORMAL);
 		}
 		#ifdef _DEBUG
@@ -275,13 +275,13 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 	char buf[MAX_PATH];
 	alarm_t pAS;
 	int count;
-	GetMyRegStr("","JihouFile",buf,MAX_PATH,"");
+	api.GetStr("","JihouFile",buf,MAX_PATH,"");
 	if(PathExists(buf)==1)
 		EnableMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_ENABLED);
 	if(GetHourlyChime()){
 		CheckMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_CHECKED);
 	}
-	count=GetMyRegLong("","AlarmNum",0);
+	count=api.GetInt("","AlarmNum",0);
 	if(count<1) count=0;
 	if(count){
 		int idx;

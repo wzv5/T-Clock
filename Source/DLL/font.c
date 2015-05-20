@@ -37,7 +37,7 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 	int cp, i;	BYTE charset;
 	
 	memset(&lf, 0, sizeof(LOGFONT));
-	langid = GetMyRegLong("Format", "Locale", GetUserDefaultLangID());
+	langid = api.GetInt("Format", "Locale", GetUserDefaultLangID());
 	
 	GetLocaleInfo(langid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&cp, sizeof(cp));
 	if(!IsValidCodePage(cp)) cp = CP_ACP;

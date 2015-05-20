@@ -33,7 +33,13 @@
     <ClCompile Include="..\..\common\utl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\common\tcolor.c">
+    <ClCompile Include="..\clock_api.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\clock_color.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\clock_utils.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,16 +53,19 @@
     <ClInclude Include="..\..\common\globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\common\clock.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\common\newapi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\utl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\tcolor.h">
+    <ClInclude Include="..\tcdll.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\tcdll.h">
+    <ClInclude Include="..\clock_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

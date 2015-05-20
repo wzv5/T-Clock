@@ -63,8 +63,6 @@ static BOOL bInitDrawTheme = FALSE;
 
 static void RefreshRebar(HWND hwndBar);
 
-static BOOL bClearTaskbar = FALSE;
-
 void InitLayeredWindow(void)
 {
 	if(bInitLayeredWindow) return;
@@ -90,7 +88,6 @@ void EndNewAPI(HWND hwndClock)
 		if(exstyle & WS_EX_LAYERED) {
 			exstyle &= ~WS_EX_LAYERED;
 			SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
-			bClearTaskbar = FALSE;
 			RefreshRebar(hwnd);
 		}
 	}
@@ -135,24 +132,21 @@ void GradientFillClock(HDC hdc, RECT* prc, COLORREF col1, COLORREF col2) {
 	GdiGradientFill(hdc, vert, 2, &gRect, 1, GRADIENT_FILL_RECT_H);
 }
 */
-void SetLayeredTaskbar(HWND hwndClock,BOOL refresh)
+void SetLayeredTaskbar(HWND hwndClock, int alpha, int clear_taskbar, int refresh)
 {
 	LONG_PTR exstyle;
 	HWND hwnd;
-	int alpha;
 	
-	alpha = GetMyRegLongEx("Taskbar", "AlphaTaskbar", 0);
-	bClearTaskbar = GetMyRegLongEx("Taskbar", "ClearTaskbar", FALSE);
 	alpha = 255 - (alpha * 255 / 100);
 	if(alpha < 8) alpha = 8; else if(alpha > 255) alpha = 255;
 	
-	if(!pSetLayeredWindowAttributes && (alpha < 255 || bClearTaskbar)) InitLayeredWindow();
+	if(!pSetLayeredWindowAttributes && (alpha < 255 || clear_taskbar)) InitLayeredWindow();
 	if(!pSetLayeredWindowAttributes) return;
 	
 	hwnd = GetParent(GetParent(hwndClock));
 	
 	exstyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-	if(alpha < 255 || bClearTaskbar) exstyle |= WS_EX_LAYERED;
+	if(alpha < 255 || clear_taskbar) exstyle |= WS_EX_LAYERED;
 	else exstyle &= ~WS_EX_LAYERED;
 	SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
 	if(refresh) {
@@ -160,9 +154,9 @@ void SetLayeredTaskbar(HWND hwndClock,BOOL refresh)
 	}
 	RefreshRebar(hwnd);
 	
-	if(alpha < 255 && !bClearTaskbar)
+	if(alpha < 255 && !clear_taskbar)
 		pSetLayeredWindowAttributes(hwnd, 0, (BYTE)alpha, LWA_ALPHA);
-	else if(bClearTaskbar)
+	else if(clear_taskbar)
 		pSetLayeredWindowAttributes(hwnd, GetSysColor(COLOR_3DFACE), (BYTE)alpha, LWA_COLORKEY|LWA_ALPHA);
 }
 
@@ -239,17 +233,17 @@ void ReloadXPClockTheme()
 		hClockTheme=NULL;
 	}
 }
-COLORREF GetXPClockColor()
+COLORREF GetXPClockColor(HWND hwndClock)
 {
 	COLORREF ret;
-	THEME_FUNC_CHECK_THEME(GetThemeColor,g_hwndClock,0x00FFFFFF)
+	THEME_FUNC_CHECK_THEME(GetThemeColor,hwndClock,0x00FFFFFF)
 	pGetThemeColor(hClockTheme,CLP_TIME,CLS_NORMAL,TMT_TEXTCOLOR,&ret);
 	return ret;
 }
-COLORREF GetXPClockColorBG()
+COLORREF GetXPClockColorBG(HWND hwndClock)
 {
 	COLORREF ret;
-	THEME_FUNC_CHECK_THEME(GetThemeColor,g_hwndClock,0x00000000)
+	THEME_FUNC_CHECK_THEME(GetThemeColor,hwndClock,0x00000000)
 	pGetThemeColor(hClockTheme,CLP_TIME,CLS_NORMAL,TMT_BACKGROUND,&ret);
 	return ret;
 }
