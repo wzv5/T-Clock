@@ -7,8 +7,12 @@
 #	define SHARED
 #	pragma data_seg(".shared")
 #endif
+// shared variables must be initialized
 SHARED char ms_root[MAX_PATH] = {0}; /**< \sa TClockAPI::root */
 SHARED size_t ms_root_len = 0; /**< \sa TClockAPI::root_len */
+SHARED char ms_bIniSetting = 0;
+SHARED char ms_inifile[MAX_PATH] = {0};
+
 SHARED HWND gs_hwndTClockMain = NULL;
 SHARED HWND gs_hwndClock = NULL;
 SHARED char gs_bCalOpen = 0;
@@ -87,6 +91,11 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		DBGOUT("%s\n",ms_root);
 		DBGMSG(ms_root);
 		
+		memcpy(ms_inifile, ms_root, ms_root_len+1);
+		strcat(ms_inifile, "\\Clock.ini");
+		if(PathExists(ms_inifile)){
+			ms_bIniSetting = 1;
+		}
 		
 		if(GetVersionEx(&osvi)){
 			switch(osvi.dwMajorVersion){

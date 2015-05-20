@@ -9,9 +9,6 @@
 static const char m_regkey[] = "Software\\Stoic Joker's\\T-Clock 2010"; /**< our registry key root */
 static const size_t m_regkey_size = sizeof(m_regkey); /**< size of \c m_regkey incl. trailing null \sa m_regkey */
 
-char m_bIniSetting = 0;
-char m_inifile[MAX_PATH] = {0};
-
 // misc
 
 int Clock_IsCalendarOpen(int set_focus)
@@ -148,13 +145,12 @@ static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,char* lpSubKey,REGSAM samDesired,D
 }
 
 /**
- * \brief prepares \a key string for registry functions by prefixing \a section with \c m_regkey .
- * Furthermore, initializes ini path \c m_inifile if enabled by \c m_bIniSetting
+ * \brief prepares \a key string for registry functions by prefixing \a section with \c m_regkey
  * \param[out] key resulting key to query or manipulate
  * \param[in] section
  * \return boolean
  * \remarks call once for every Get/Set* function and before using \c m_inifile
- * \sa m_regkey, m_bIniSetting, m_inifile */
+ * \sa m_regkey, ms_bIniSetting, m_inifile */
 static int PrepareMyRegKey_(char key[80], const char* section) {
 	size_t section_len = (section ? strlen(section)+1 : 0);
 	
@@ -165,11 +161,7 @@ static int PrepareMyRegKey_(char key[80], const char* section) {
 		return 0;
 	}
 	
-	if(m_bIniSetting){
-		if(!m_inifile[0]){
-			strcpy(m_inifile, api.root);
-			strcat(m_inifile, "\\Clock.ini");
-		}
+	if(ms_bIniSetting){
 		if(section_len > 1)
 			memcpy(key, section, section_len);
 		else
@@ -190,8 +182,8 @@ int Clock_GetInt(const char* section, const char* entry, LONG defval) {
 	HKEY hkey;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(m_bIniSetting) {
-			return GetPrivateProfileInt(key, entry, defval, m_inifile);
+		if(ms_bIniSetting) {
+			return GetPrivateProfileInt(key, entry, defval, ms_inifile);
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
 				DWORD regtype,size=sizeof(LONG);
@@ -210,8 +202,8 @@ int Clock_GetIntEx(const char* section, const char* entry, LONG defval) {
 	HKEY hkey;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(m_bIniSetting) {
-			return GetPrivateProfileInt(key, entry, defval, m_inifile);
+		if(ms_bIniSetting) {
+			return GetPrivateProfileInt(key, entry, defval, ms_inifile);
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
 				DWORD regtype,size=sizeof(LONG);
@@ -246,8 +238,8 @@ int Clock_GetStr(const char* section, const char* entry, char* val, int len, con
 	int ret=-1;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(m_bIniSetting) {
-			ret = GetPrivateProfileString(key, entry, defval, val, len, m_inifile);
+		if(ms_bIniSetting) {
+			ret = GetPrivateProfileString(key, entry, defval, val, len, ms_inifile);
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
 				size = len;
@@ -273,8 +265,8 @@ int Clock_GetStrEx(const char* section, const char* entry, char* val, int len, c
 	int ret=-1;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(m_bIniSetting) {
-			ret = GetPrivateProfileString(key, entry, defval, val, len, m_inifile);
+		if(ms_bIniSetting) {
+			ret = GetPrivateProfileString(key, entry, defval, val, len, ms_inifile);
 			if(ret == len)
 				Clock_SetStr(section, entry, defval);
 		} else {
@@ -323,10 +315,10 @@ BOOL Clock_SetInt(const char* section, const char* entry, LONG val) {
 	char key[80];
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(m_bIniSetting) {
+		if(ms_bIniSetting) {
 			char s[20];
 			wsprintf(s, "%d", val);
-			if(WritePrivateProfileString(key, entry, s, m_inifile))
+			if(WritePrivateProfileString(key, entry, s, ms_inifile))
 				r = TRUE;
 		} else {
 			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
@@ -344,8 +336,8 @@ BOOL Clock_SetStr(const char* section, const char* entry, const char* val) {
 	HKEY hkey;	char key[80];	BOOL r=FALSE;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(m_bIniSetting)
-			return WritePrivateProfileString(key, entry, val, m_inifile);
+		if(ms_bIniSetting)
+			return WritePrivateProfileString(key, entry, val, ms_inifile);
 		
 		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
 			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)strlen(val)) == ERROR_SUCCESS) {
@@ -361,8 +353,8 @@ BOOL Clock_DelValue(const char* section, const char* entry) {
 	HKEY hkey;	char key[80];	BOOL r = FALSE;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(m_bIniSetting)
-			return WritePrivateProfileString(key, entry, NULL, m_inifile);
+		if(ms_bIniSetting)
+			return WritePrivateProfileString(key, entry, NULL, ms_inifile);
 		
 		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
 			if(RegDeleteValue(hkey, entry) == ERROR_SUCCESS) r = TRUE;
@@ -377,8 +369,8 @@ BOOL Clock_DelKey(const char* section) {
 	
 	if(!PrepareMyRegKey_(key,section))
 		return 0;
-	if(m_bIniSetting)
-		return WritePrivateProfileString(key,NULL,NULL,m_inifile);
+	if(ms_bIniSetting)
+		return WritePrivateProfileString(key, NULL, NULL, ms_inifile);
 	return RegDeleteKeyEx(HKEY_CURRENT_USER,key,KEY_WOW64_64KEY,0) == ERROR_SUCCESS;
 }
 

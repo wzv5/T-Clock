@@ -2,6 +2,9 @@
 #define CLOCK_INTERNAL_H_
 #include <windows.h>
 
+extern char ms_bIniSetting; /**< use ini or registry */
+extern char ms_inifile[MAX_PATH]; /**< path to ini */
+
 typedef ULONGLONG (WINAPI* GetTickCount64_t)();
 
 extern unsigned short gs_tos; /**< \sa TClockAPI::OS */
