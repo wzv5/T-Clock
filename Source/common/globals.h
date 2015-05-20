@@ -41,13 +41,13 @@
 
 #define ARCH_SUFFIX_32 ""
 #define ARCH_SUFFIX_64 "64"
-#ifndef __x86_64__
+#ifndef _WIN64
 #	define ARCH_SUFFIX ARCH_SUFFIX_32
 #	define TCLOCK_SUFFIX ""
 #else
 #	define ARCH_SUFFIX ARCH_SUFFIX_64
 #	define TCLOCK_SUFFIX " x64"
-#endif // __x86_64__
+#endif // _WIN64
 
 #define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - " VER_SHORT_DOTS " build " STR(VER_REVISION)
 #define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux tries to continue Stoic Joker's efforts."

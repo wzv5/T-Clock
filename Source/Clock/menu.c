@@ -125,11 +125,11 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 			api.Exec("control", "desk.cpl, display,1", NULL);
 		break;
 	case IDM_VOLUMECONTROL: //-------------------------------+++--> Volume Controls
-		#ifndef __x86_64__
+		#ifndef _WIN64
 		#	define OPEN_VOLUME "SndVol32"
 		#else
 		#	define OPEN_VOLUME "SndVol"
-		#endif
+		#endif // _WIN64
 		api.Exec(OPEN_VOLUME, NULL, NULL);
 		break;
 		

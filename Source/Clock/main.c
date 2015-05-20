@@ -228,7 +228,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 //	FindTrayServer(hwndMain);
 	
 	// Make sure we're not running 32bit on 64bit OS / start the other one
-	#ifndef __x86_64__
+	#ifndef _WIN64
 	if(IsWow64()){
 		hwndMain = FindWindow(g_szClassName, NULL);
 		if(hwndMain) { // send commands to existing instance
@@ -240,7 +240,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 		return 0;
 	}
-	#endif // __x86_64__
+	#endif // _WIN64
 	
 	// Do Not Allow the Program to Execute Twice!
 	updated = 25; /**< wait up to 5 sec in 1/5th seconds for other instance */
