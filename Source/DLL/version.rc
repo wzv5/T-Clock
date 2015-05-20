@@ -1,5 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
+#include "../common/resource.h"
 #include "../common/version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -60,6 +61,11 @@ BEGIN
         VALUE "Translation", 0x0, 1200
     END
 END
+
+//
+// Icon resources
+//
+IDI_MAIN                ICON                    "../Clock/Clock.ico"
 
 //
 // Manifest resources

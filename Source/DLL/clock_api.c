@@ -27,6 +27,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 #define ClockAPI(func) Clock_##func,
 TClockAPI api = {
+	NULL, // hInstance
 	0, // OS
 	ms_root, // root
 	0, // root_len
@@ -75,7 +76,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		return -1;
 	
 	if(!ms_root_len){ // initialize once. (only use ms_/gs_ variables!!!)
-		GetModuleFileName(GetModuleHandle("T-Clock" ARCH_SUFFIX), own_path, sizeof(own_path));
+		GetModuleFileName(api.hInstance, own_path, sizeof(own_path));
 //		if(pGetLongPathName)
 //			pGetLongPathName(own_path,ms_root,MAX_PATH);
 //		else
@@ -161,7 +162,7 @@ void Clock_Inject(HWND hwnd)
 	}
 	
 	// install an hook to thread of taskbar
-	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, CallWndProc, hInstance, dwThreadId);
+	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, CallWndProc, api.hInstance, dwThreadId);
 	if(!m_hhook) {
 		SendMessage(hwnd, MAINM_ERROR, 0, 3);
 		return;

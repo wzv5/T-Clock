@@ -28,7 +28,7 @@ int Clock_Message(HWND parent, const char* msg, const char* title, UINT uType, U
 {
 	MSGBOXPARAMS mbp = {sizeof(MSGBOXPARAMS)};
 	mbp.hwndOwner = parent;
-	mbp.hInstance = hInstance;
+	mbp.hInstance = api.hInstance;
 	mbp.lpszText = msg;
 	mbp.lpszCaption = title;
 	mbp.dwStyle = MB_USERICON | uType;

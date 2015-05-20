@@ -2,7 +2,6 @@
 #define CLOCK_INTERNAL_H_
 #include <windows.h>
 
-extern HINSTANCE hInstance;
 typedef ULONGLONG (WINAPI* GetTickCount64_t)();
 
 extern unsigned short gs_tos; /**< \sa TClockAPI::OS */

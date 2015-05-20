@@ -57,9 +57,9 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		}
 		
 		// set data of property sheet
-		psh.dwFlags = PSH_USEICONID | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
+		psh.dwFlags = PSH_USEHICON | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
 		psh.hInstance = hInstance;
-		psh.pszIcon = MAKEINTRESOURCE(IDI_MAIN);
+		psh.hIcon = g_hIconTClock;
 		psh.pszCaption = "T-Clock Redux";
 		psh.nPages = PROPERTY_NUM;
 		psh.nStartPage = (page==-1?m_startpage:page);

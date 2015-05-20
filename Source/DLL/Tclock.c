@@ -29,7 +29,6 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 /*------------------------------------------------
   globals
 --------------------------------------------------*/
-HINSTANCE hInstance = 0;
 WNDPROC m_oldClockProc=NULL; // original clock procedure
 WNDPROC m_oldWorkerProc=NULL; // original worker procedure used by multi clocks (Win8+)
 #define MAX_MULTIMON_CLOCKS 4
@@ -374,7 +373,7 @@ void CreateTip(HWND hwnd)   //--------------------------------------------------
 {
 //	hwndTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX|TTS_BALLOON,
 	m_TipHwnd = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
-							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,hInstance,NULL);
+							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,api.hInstance,NULL);
 	if(!m_TipHwnd) return;
 	memset(&m_TipInfo,0,sizeof(TOOLINFO));
 	m_TipInfo.cbSize = sizeof(TOOLINFO);
@@ -435,7 +434,7 @@ void SubsCreate(){
 	// loop all secondary taskbars
 	hwndBar=FindWindowEx(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
 	while(hwndBar){
-		hwndChild=GetWindow(hwndBar,GW_CHILD);
+		hwndChild = GetWindow(hwndBar,GW_CHILD);
 		while(hwndChild){
 			GetClassName(hwndChild,classname,sizeof(classname));
 			if(!lstrcmpi(classname,"WorkerW")){
@@ -444,17 +443,17 @@ void SubsCreate(){
 				for(i=0; i<m_multiClocks && hwndChild!=m_multiClock[i].worker; ++i);
 				if(i==m_multiClocks){
 					if(!m_multiClockClass){
-						WNDCLASSEX wndclass={sizeof(WNDCLASSEX),CS_CLASSDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
-						wndclass.hCursor=LoadCursor(NULL,IDC_ARROW);
-						wndclass.hInstance=hInstance;
-						m_multiClockClass=RegisterClassEx(&wndclass);
+						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX),CS_CLASSDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
+						wndclass.hCursor = LoadCursor(NULL,IDC_ARROW);
+						wndclass.hInstance = api.hInstance;
+						m_multiClockClass = RegisterClassEx(&wndclass);
 					}
-					m_multiClock[i].clock=CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
+					m_multiClock[i].clock = CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
 					if(!m_multiClock[i].clock)
 						break;
-					if(!i) m_multiClockDC=GetDC(m_multiClock[0].clock);
+					if(!i) m_multiClockDC = GetDC(m_multiClock[0].clock);
 					GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
-					m_multiClock[i].worker=hwndChild;
+					m_multiClock[i].worker = hwndChild;
 					if(!i){ // all subs should use same worker proc (untested), so only get it once (otherwise we might get ourselves...)
 						m_oldWorkerProc = SubclassWindow(hwndChild, WndProcMultiClockWorker);
 					}
@@ -462,9 +461,9 @@ void SubsCreate(){
 				}
 				break;
 			}
-			hwndChild=GetWindow(hwndChild,GW_HWNDNEXT);
+			hwndChild = GetWindow(hwndChild,GW_HWNDNEXT);
 		}
-		hwndBar=FindWindowEx(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
+		hwndBar = FindWindowEx(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
 	}
 }
 HMODULE m_hself;

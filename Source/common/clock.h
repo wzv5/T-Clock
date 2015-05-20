@@ -33,6 +33,7 @@ enum TOS {
 };
 
 typedef struct TClockAPI_TAG {
+	HINSTANCE hInstance; /**< handle to T-Clock.dll */
 /**
  * \brief holds current OS version flags
  * \sa TOS, TOS_2000, TOS_XP, TOS_VISTA, TOS_WIN7, TOS_WIN8, TOS_WIN8_1, TOS_WIN10, TOS_NEWER, TOS_OLDER */

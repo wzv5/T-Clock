@@ -6,16 +6,12 @@
 
 void InitClock(HWND hwnd);
 
-/*------------------------------------------------
-  globals
---------------------------------------------------*/
-extern HINSTANCE hInstance;
 //========================================================================================
 //-----------------------------+++--> Entry Point of This (SystemTray Clock ShellHook) DLL:
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   //---+++-->
 {
 	(void)lpvReserved;
-	hInstance = hinstDLL;
+	api.hInstance = hinstDLL;
 	switch(fdwReason) {
 	case DLL_PROCESS_ATTACH:
 		break;
