@@ -659,10 +659,10 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 	if(!hwnd) return;
 	
 	if(g_bTrans2kIcons) {
-		if(ListView_GetTextBkColor(hwnd) == CLR_NONE) return;
 		col = CLR_NONE;
 	} else {
-		if(ListView_GetTextBkColor(hwnd) != CLR_NONE) return;
+		if(ListView_GetTextBkColor(hwnd) != CLR_NONE)
+			return;
 		col = GetSysColor(COLOR_DESKTOP);
 	}
 	
