@@ -1,10 +1,5 @@
-//#include "tcdll.h"
-// test only!!!
-#include "../common/globals.h"
-#include "../common/resource.h"
-#include "../common/clock.h"
+#include "tcdll.h"
 #include "clock_internal.h"
-// \test only!!!
 
 static const char m_regkey[] = "Software\\Stoic Joker's\\T-Clock 2010"; /**< our registry key root */
 static const size_t m_regkey_size = sizeof(m_regkey); /**< size of \c m_regkey incl. trailing null \sa m_regkey */
@@ -135,7 +130,7 @@ void Clock_GetFileAndOption(const char* command, char* fname, char* opt) {
 static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,char* lpSubKey,REGSAM samDesired,DWORD Reserved){
 	typedef LONG (WINAPI* RegDeleteKeyEx_t)(HKEY hKey,char* lpSubKey,REGSAM samDesired,DWORD Reserved);
 	static RegDeleteKeyEx_t pRegDeleteKeyEx=NULL;
-	if(gs_tos > TOS_XP){ // actually XP 64bit supports it...
+	if(gs_tos >= TOS_XP_64){
 		if(!pRegDeleteKeyEx)
 			pRegDeleteKeyEx=(RegDeleteKeyEx_t)GetProcAddress(GetModuleHandle("Advapi32"),"RegDeleteKeyExA");
 		if(pRegDeleteKeyEx)
@@ -185,7 +180,7 @@ int Clock_GetInt(const char* section, const char* entry, LONG defval) {
 		if(ms_bIniSetting) {
 			return GetPrivateProfileInt(key, entry, defval, ms_inifile);
 		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_sam,&hkey) == ERROR_SUCCESS) {
 				DWORD regtype,size=sizeof(LONG);
 				LONG dw=0;
 				if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
@@ -205,7 +200,7 @@ int Clock_GetIntEx(const char* section, const char* entry, LONG defval) {
 		if(ms_bIniSetting) {
 			return GetPrivateProfileInt(key, entry, defval, ms_inifile);
 		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_sam,&hkey) == ERROR_SUCCESS) {
 				DWORD regtype,size=sizeof(LONG);
 				LONG dw;
 				if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
@@ -223,7 +218,7 @@ int Clock_GetIntEx(const char* section, const char* entry, LONG defval) {
 int Clock_GetSystemInt(HKEY rootkey, const char* section, const char* entry, LONG defval) {
 	HKEY hkey;
 	
-	if(RegOpenKeyEx(rootkey,section,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+	if(RegOpenKeyEx(rootkey,section,0,ms_reg_sam,&hkey) == ERROR_SUCCESS) {
 		DWORD regtype,size=sizeof(LONG);
 		LONG dw;
 		if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&dw,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
@@ -241,7 +236,7 @@ int Clock_GetStr(const char* section, const char* entry, char* val, int len, con
 		if(ms_bIniSetting) {
 			ret = GetPrivateProfileString(key, entry, defval, val, len, ms_inifile);
 		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_sam,&hkey)==ERROR_SUCCESS) {
 				size = len;
 				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 					ret=size;
@@ -270,7 +265,7 @@ int Clock_GetStrEx(const char* section, const char* entry, char* val, int len, c
 			if(ret == len)
 				Clock_SetStr(section, entry, defval);
 		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey)==ERROR_SUCCESS) {
+			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_sam,&hkey)==ERROR_SUCCESS) {
 				size = len;
 				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 					ret=size;
@@ -293,7 +288,7 @@ int Clock_GetStrEx(const char* section, const char* entry, char* val, int len, c
 int Clock_GetSystemStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval) {
 	HKEY hkey;	DWORD regtype, size;	BOOL b = FALSE;	int r=0;
 	
-	if(RegOpenKeyEx(rootkey,section,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+	if(RegOpenKeyEx(rootkey,section,0,ms_reg_sam,&hkey) == ERROR_SUCCESS) {
 		size = len;
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 			if(size == 0) *val = 0;
@@ -321,7 +316,7 @@ BOOL Clock_SetInt(const char* section, const char* entry, LONG val) {
 			if(WritePrivateProfileString(key, entry, s, ms_inifile))
 				r = TRUE;
 		} else {
-			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
+			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_sam,NULL,&hkey,NULL) == ERROR_SUCCESS) {
 				if(RegSetValueEx(hkey,entry,0,REG_DWORD,(CONST BYTE*)&val,4)==ERROR_SUCCESS) {
 					r = TRUE;
 				}
@@ -339,7 +334,7 @@ BOOL Clock_SetStr(const char* section, const char* entry, const char* val) {
 		if(ms_bIniSetting)
 			return WritePrivateProfileString(key, entry, val, ms_inifile);
 		
-		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,NULL,&hkey,NULL) == ERROR_SUCCESS) {
+		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_sam,NULL,&hkey,NULL) == ERROR_SUCCESS) {
 			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (CONST BYTE*)val, (DWORD)strlen(val)) == ERROR_SUCCESS) {
 				r = TRUE;
 			}
@@ -356,7 +351,7 @@ BOOL Clock_DelValue(const char* section, const char* entry) {
 		if(ms_bIniSetting)
 			return WritePrivateProfileString(key, entry, NULL, ms_inifile);
 		
-		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,KEY_ALL_ACCESS|KEY_WOW64_64KEY,&hkey) == ERROR_SUCCESS) {
+		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_sam,&hkey) == ERROR_SUCCESS) {
 			if(RegDeleteValue(hkey, entry) == ERROR_SUCCESS) r = TRUE;
 			RegCloseKey(hkey);
 		}

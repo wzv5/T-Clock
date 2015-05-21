@@ -24,11 +24,12 @@ enum TOS {
 	TOS_OLDER	=0x0000, /**< unknown (older) OS or error \sa TClockAPI::OS */
 	TOS_2000	=0x0001, /**< does anyone still use it? \sa TClockAPI::OS */
 	TOS_XP		=0x0002, /**< the king is dead, long live the king! \sa TClockAPI::OS */
-	TOS_VISTA	=0x0004, /**< first one with lots of cool stuff... poorly implemented though \sa TClockAPI::OS */
-	TOS_WIN7	=0x0008, /**< best OS as of 2009-2015 as some might say \sa TClockAPI::OS */
-	TOS_WIN8	=0x0010, /**< first to support multiple taskbars, yet buggy \sa TClockAPI::OS */
-	TOS_WIN8_1	=0x0020, /**< first to require weird/stupid manifest... \sa TClockAPI::OS */
-	TOS_WIN10	=0x0040, /**< latest, didn't add anything new to T-Clock yet \sa TClockAPI::OS */
+	TOS_XP_64	=0x0004 | TOS_XP, /**< 64bit XP \sa TClockAPI::OS */
+	TOS_VISTA	=0x0008, /**< first one with lots of cool stuff... poorly implemented though \sa TClockAPI::OS */
+	TOS_WIN7	=0x0010, /**< best OS as of 2009-2015 as some might say \sa TClockAPI::OS */
+	TOS_WIN8	=0x0020, /**< first to support multiple taskbars, yet buggy \sa TClockAPI::OS */
+	TOS_WIN8_1	=0x0040, /**< first to require weird/stupid manifest... \sa TClockAPI::OS */
+	TOS_WIN10	=0x0080, /**< latest, didn't add anything new to T-Clock yet \sa TClockAPI::OS */
 	TOS_NEWER	=0x8000, /**< in case we're "outdated" and the curent OS is newer than our known ones \sa TClockAPI::OS */
 };
 

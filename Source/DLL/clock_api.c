@@ -10,6 +10,7 @@
 // shared variables must be initialized
 SHARED char ms_root[MAX_PATH] = {0}; /**< \sa TClockAPI::root */
 SHARED size_t ms_root_len = 0; /**< \sa TClockAPI::root_len */
+SHARED REGSAM ms_reg_sam = KEY_ALL_ACCESS | KEY_WOW64_64KEY;
 SHARED char ms_bIniSetting = 0;
 SHARED char ms_inifile[MAX_PATH] = {0};
 
@@ -96,7 +97,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		if(PathExists(ms_inifile)){
 			ms_bIniSetting = 1;
 		}
-		
+		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
 		if(GetVersionEx(&osvi)){
 			switch(osvi.dwMajorVersion){
 			case 0: case 1: case 2: case 3: case 4:
@@ -105,8 +106,10 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 				switch(osvi.dwMinorVersion ){
 				case 0:
 					gs_tos=TOS_2000; break;
-				default:
-					gs_tos=TOS_XP;
+				case 1:
+					gs_tos=TOS_XP; break;
+				default: // 2+
+					gs_tos=TOS_XP_64;
 				}
 				break;
 			case 6: // Vista+
@@ -129,6 +132,8 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 				gs_tos=TOS_NEWER;
 			}
 		}
+		if(gs_tos < TOS_XP_64) // Win2000 fix
+			ms_reg_sam &= ~KEY_WOW64_64KEY;
 	}
 	api.OS = gs_tos;
 	api.root_len = ms_root_len;
