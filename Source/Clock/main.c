@@ -22,7 +22,7 @@ HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
  * (For Windows 2000 Only)
  * UnAvertized EasterEgg Function */
 #ifdef WIN2K_COMPAT
-static BOOL m_bTrans2kIcons;
+BOOL g_bTrans2kIcons;
 static void SetDesktopIconTextBk();
 #endif // WIN2K_COMPAT
 
@@ -267,7 +267,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
 #	ifdef WIN2K_COMPAT
-	m_bTrans2kIcons = api.GetIntEx("Desktop", "Transparent2kIconText", FALSE);
+	g_bTrans2kIcons = api.GetIntEx("Desktop", "Transparent2kIconText", 0);
 #	endif // WIN2K_COMPAT
 	CancelAllTimersOnStartUp();
 	
@@ -642,21 +642,22 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 	COLORREF col;
 	HWND hwnd;
 	
-	if(m_bTrans2kIcons) {
-		hwnd = FindWindow("Progman", "Program Manager");
-		if(!hwnd) return;
-		hwnd = GetWindow(hwnd, GW_CHILD);
-		hwnd = GetWindow(hwnd, GW_CHILD);
-		while(hwnd) {
-			char s[80];
-			GetClassName(hwnd, s, 80);
-			if(lstrcmpi(s, "SysListView32") == 0) break;
-			hwnd = GetWindow(hwnd, GW_HWNDNEXT);
-		}
-		if(!hwnd) return;
-	} else return;
+	if(api.OS > TOS_2000)
+		return;
 	
-	if(m_bTrans2kIcons) {
+	hwnd = FindWindow("Progman", "Program Manager");
+	if(!hwnd) return;
+	hwnd = GetWindow(hwnd, GW_CHILD);
+	hwnd = GetWindow(hwnd, GW_CHILD);
+	while(hwnd) {
+		char s[80];
+		GetClassName(hwnd, s, 80);
+		if(lstrcmpi(s, "SysListView32") == 0) break;
+		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
+	}
+	if(!hwnd) return;
+	
+	if(g_bTrans2kIcons) {
 		if(ListView_GetTextBkColor(hwnd) == CLR_NONE) return;
 		col = CLR_NONE;
 	} else {

@@ -96,7 +96,9 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, api.GetIntEx("Calendar","ShowWeekNums",0));
 	CheckDlgButton(hDlg, IDCB_CLOSECAL, api.GetIntEx("Calendar","CloseCalendar",1));
 	CheckDlgButton(hDlg, IDCB_CALTOPMOST, api.GetIntEx("Calendar","CalendarTopMost",0));
+#	ifdef WIN2K_COMPAT
 	CheckDlgButton(hDlg, IDCB_TRANS2KICONS, api.GetInt("Desktop","Transparent2kIconText",0));
+#	endif // WIN2K_COMPAT
 	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, bMonOffOnLock);
 	CheckDlgButton(hDlg, IDCB_MULTIMON, api.GetInt("Desktop","Multimon",1));
 	
@@ -140,7 +142,10 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	api.SetInt("Calendar","CalendarTopMost", IsDlgButtonChecked(hDlg,IDCB_CALTOPMOST));
 	api.SetInt("Calendar","ViewMonths", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS32,0,0));
 	api.SetInt("Calendar","ViewMonthsPast", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS32,0,0));
-	api.SetInt("Desktop","Transparent2kIconText", IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS));
+#	ifdef WIN2K_COMPAT
+	g_bTrans2kIcons = IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS);
+	api.SetInt("Desktop","Transparent2kIconText", g_bTrans2kIcons);
+#	endif // WIN2K_COMPAT
 	api.SetInt("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
 	api.SetInt("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	

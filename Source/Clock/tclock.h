@@ -47,6 +47,9 @@ extern HWND g_hDlgTimerWatch; /**< timer watch dialog handle */
 extern HWND g_hwndSheet;      /**< property sheet window */
 /** frequently used icon handles */
 extern HICON g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
+#ifdef WIN2K_COMPAT
+extern BOOL g_bTrans2kIcons;
+#endif // WIN2K_COMPAT
 extern BOOL bMonOffOnLock; /**< locking workstation turns off monitor(s) */
 
 /**
