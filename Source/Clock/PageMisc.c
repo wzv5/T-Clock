@@ -99,7 +99,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 #	ifdef WIN2K_COMPAT
 	CheckDlgButton(hDlg, IDCB_TRANS2KICONS, api.GetInt("Desktop","Transparent2kIconText",0));
 #	endif // WIN2K_COMPAT
-	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, bMonOffOnLock);
+	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, api.GetInt("Desktop","MonOffOnLock",0));
 	CheckDlgButton(hDlg, IDCB_MULTIMON, api.GetInt("Desktop","Multimon",1));
 	
 	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETRANGE32,1,12);
@@ -155,11 +155,9 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	if(api.OS >= TOS_XP) { // This feature requires XP+
 		BOOL enabled=IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK);
 		if(enabled){
-			if(!bMonOffOnLock) {
-				RegisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to TRUE.
-			}
+			RegisterSession(g_hwndTClockMain);
 		} else {
-			UnregisterSession(g_hwndTClockMain); // Sets bMonOffOnLock to FALSE.
+			UnregisterSession(g_hwndTClockMain);
 		}
 	}
 	if(bRefresh){

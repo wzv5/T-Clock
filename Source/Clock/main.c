@@ -42,7 +42,6 @@ static void OnTimerMain(HWND hwnd);
 static void InitError(int n);
 static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;
-BOOL bMonOffOnLock = FALSE;
 
 // alarm.c
 extern char g_bPlayingNonstop;
@@ -79,18 +78,22 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 		api.Exec(cal,NULL,g_hwndTClockMain);
 	}
 }
+
+static BOOL m_bMonOffOnLock = FALSE;
 //================================================================================================
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
 void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 2000 }--------+++-->
 {
-	HINSTANCE handle = LoadLibrary("wtsapi32"); // Windows 2000 Does Not Have This .dll
-	// ...Or Support This Feature.
+	HINSTANCE handle;
+	if(!m_bMonOffOnLock)
+		return;
+	handle = LoadLibrary("wtsapi32");
 	if(handle){
 		typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
 		WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification=(WTSUnRegisterSessionNotification_t)GetProcAddress(handle,"WTSUnRegisterSessionNotification");
 		if(WTSUnRegisterSessionNotification){
 			WTSUnRegisterSessionNotification(hwnd);
-			bMonOffOnLock=FALSE;
+			m_bMonOffOnLock = FALSE;
 		}
 		FreeLibrary(handle);
 	}
@@ -99,14 +102,16 @@ void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 20
 //--------------------------------+++--> Register the Clock For Login Session Change Notifications:
 void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 2000 }---------+++-->
 {
-	HINSTANCE handle = LoadLibrary("wtsapi32"); // Windows 2000 Does Not Have This .dll
-	// ...Or Support This Feature.
+	HINSTANCE handle;
+	if(m_bMonOffOnLock)
+		return;
+	handle = LoadLibrary("wtsapi32");
 	if(handle){
 		typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);
 		WTSRegisterSessionNotification_t WTSRegisterSessionNotification=(WTSRegisterSessionNotification_t)GetProcAddress(handle,"WTSRegisterSessionNotification");
 		if(WTSRegisterSessionNotification) {
 			WTSRegisterSessionNotification(hwnd,NOTIFY_FOR_THIS_SESSION);
-			bMonOffOnLock=TRUE;
+			m_bMonOffOnLock = TRUE;
 		}
 		FreeLibrary(handle);
 	}
@@ -197,7 +202,6 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 //--------------------------------------------------==-+++--> Entry Point of Program Using WinMain:
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
-	BOOL SessionReged = FALSE; // IS Session Registered to Receive Session Change Notifications?
 	WNDCLASS wndclass;
 	HWND hwndMain;
 	MSG msg;
@@ -316,11 +320,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	GetHotKeyInfo(hwndMain);
 	
 	if(api.OS > TOS_2000) {
-		bMonOffOnLock = api.GetIntEx("Desktop", "MonOffOnLock", FALSE);
-		if(bMonOffOnLock) {
+		if(api.GetInt("Desktop", "MonOffOnLock", 0))
 			RegisterSession(hwndMain);
-			SessionReged = TRUE;
-		}
 	}
 	if(updated==1){
 		PostMessage(hwndMain,WM_COMMAND,IDM_SHOWPROP,0);
@@ -342,7 +343,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	UnregisterHotKey(hwndMain, HOT_CALEN);
 	UnregisterHotKey(hwndMain, HOT_TSYNC);
 	
-	if((SessionReged) || (bMonOffOnLock)) UnregisterSession(hwndMain);
+	UnregisterSession(hwndMain);
 	
 	EndNewAPI(NULL);
 	
