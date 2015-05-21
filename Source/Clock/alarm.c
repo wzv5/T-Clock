@@ -266,7 +266,7 @@ unsigned __stdcall PlayNoSoundProc(void* param)
 //--+++-->
 void PlayNoSoundThread(HWND hWnd, char* fname, DWORD dwLoops)
 {
-	strcpy_s(m_pcb.szFname, MAX_BUFF, fname);
+	strncpy_s(m_pcb.szFname, sizeof(m_pcb.szFname), fname, _TRUNCATE);
 	m_pcb.dwLoops = dwLoops;
 	m_pcb.hWnd = hWnd;
 	

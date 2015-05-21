@@ -91,12 +91,14 @@
   <ItemGroup>
     <ClCompile Include="..\common\clock.c" />
     <ClCompile Include="..\common\utl.c" />
+    <ClCompile Include="..\common\win2k_compat.c" />
     <ClCompile Include="DeskCalendar.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
     <ClInclude Include="..\common\globals.h" />
     <ClInclude Include="..\common\clock.h" />
+    <ClInclude Include="..\common\win2k_compat.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="calendar.ico" />

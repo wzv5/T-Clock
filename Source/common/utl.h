@@ -65,4 +65,6 @@ void str0cat(char* list, const char* str);
  * \return \c NULL on failure */
 char* MyString(UINT id);
 //void Pause(HWND hWnd, LPCTSTR pszArgs);
+
+#include "win2k_compat.h"
 #endif // TCLOCK_UTL_H

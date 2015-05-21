@@ -190,6 +190,7 @@
     <ClCompile Include="..\..\common\clock.c" />
     <ClCompile Include="..\..\common\newapi.c" />
     <ClCompile Include="..\..\common\utl.c" />
+    <ClCompile Include="..\..\common\win2k_compat.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\common\version.h" />
@@ -198,6 +199,7 @@
     <ClInclude Include="..\..\common\clock.h" />
     <ClInclude Include="..\..\common\newapi.h" />
     <ClInclude Include="..\..\common\utl.h" />
+    <ClInclude Include="..\..\common\win2k_compat.h" />
     <ClInclude Include="..\tclock.h" />
   </ItemGroup>
   <ItemGroup>

@@ -33,6 +33,9 @@
     <ClCompile Include="..\..\common\utl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\common\win2k_compat.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\clock_api.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -60,6 +63,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\common\utl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\common\win2k_compat.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\tcdll.h">

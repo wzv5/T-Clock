@@ -182,6 +182,7 @@
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 			<Add option="-fvisibility=hidden" />
+			<Add option="-DWIN2K_COMPAT" />
 			<Add option="-D__MINGW_USE_VC2005_COMPAT" />
 			<Add option="-DWINVER=0x0501" />
 		</Compiler>
@@ -497,6 +498,25 @@
 			<Option target="calendar" />
 		</Unit>
 		<Unit filename="common/version.h">
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+		</Unit>
+		<Unit filename="common/win2k_compat.c">
+			<Option compilerVar="CC" />
+			<Option target="calendar" />
+			<Option target="app" />
+			<Option target="dll" />
+			<Option target="app debug" />
+			<Option target="dll debug" />
+			<Option target="app-64" />
+			<Option target="dll-64" />
+		</Unit>
+		<Unit filename="common/win2k_compat.h">
+			<Option target="calendar" />
 			<Option target="app" />
 			<Option target="dll" />
 			<Option target="app debug" />
