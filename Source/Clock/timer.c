@@ -314,11 +314,12 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 //------------------------//------------------------+++--> free memories associated with combo box:
 void OnDestroy(HWND hDlg)   //--------------------------------------------------------------+++-->
 {
+	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
 	int idx;
-	int count=(int)CBGetCount(hDlg, IDC_TIMERNAME);
+	int count = ComboBox_GetCount(timer_cb);
 	StopFile();
 	for(idx=0; idx<count; ++idx) {
-		free((void*)CBGetItemData(hDlg,IDC_TIMERNAME,idx));
+		free((void*)ComboBox_GetItemData(timer_cb,idx));
 	}
 	g_hDlgTimer = NULL;
 }
@@ -326,6 +327,7 @@ void OnDestroy(HWND hDlg)   //--------------------------------------------------
 //------------------------//----------------------------------+++--> Initialize the "Timer" Dialog:
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
+	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
 	char subkey[TNY_BUFF];
 	size_t offset;
 	int idx, count;
@@ -347,9 +349,10 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		memcpy(tmp, api.root, api.root_len+1);
 		add_title(tmp,"waves/*");
 		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
+			HWND sound_cb = GetDlgItem(hDlg, IDC_TIMERFILE);
 			do{
 				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
-					CBAddString(hDlg,IDC_TIMERFILE,FindFileData.cFileName);
+					ComboBox_AddString(sound_cb, FindFileData.cFileName);
 				}
 			}while(FindNextFile(hFind,&FindFileData));
 			FindClose(hFind);
@@ -370,15 +373,15 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		pts->bBlink = (char)api.GetInt(subkey, "Blink", FALSE);
 		pts->bRepeat = (char)api.GetInt(subkey, "Repeat", FALSE);
 		pts->bActive = (char)api.GetInt(subkey, "Active", FALSE);
-		CBAddString(hDlg, IDC_TIMERNAME, pts->name);
-		CBSetItemData(hDlg, IDC_TIMERNAME, idx, pts);
+		ComboBox_AddString(timer_cb, pts->name);
+		ComboBox_SetItemData(timer_cb, idx, pts);
 	}
 	// add "new timer" item
 	pts = (timeropt_t*)calloc(1,sizeof(timeropt_t));
 	memcpy(pts->name,"   <new timer>",15);
-	CBAddString(hDlg, IDC_TIMERNAME, pts->name);
-	CBSetItemData(hDlg, IDC_TIMERNAME, count, pts);
-	CBSetCurSel(hDlg, IDC_TIMERNAME, 0);
+	ComboBox_AddString(timer_cb, pts->name);
+	ComboBox_SetItemData(timer_cb, count, pts);
+	ComboBox_SetCurSel(timer_cb, 0);
 	OnTimerName(hDlg);
 	SendDlgItemMessage(hDlg, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
 	SendDlgItemMessage(hDlg, IDC_TIMERDEL, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconDel);
@@ -389,6 +392,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 //--{ START TIMER }-----//-----------------+++--> Called When "OK" Button is Clicked (Start Timer):
 void OnOK(HWND hDlg)   //-------------------------------------------------------------------+++-->
 {
+	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
 	int idx, count, seconds, minutes, hours, days;
 	char subkey[TNY_BUFF];
 	size_t offset;
@@ -396,14 +400,14 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	char fname[MAX_PATH];
 	
 	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
-	GetDlgItemText(hDlg, IDC_TIMERNAME, name, sizeof(name));
+	ComboBox_GetText(timer_cb, name, sizeof(name));
 	
-	count = (int)CBGetCount(hDlg, IDC_TIMERNAME);
+	count = ComboBox_GetCount(timer_cb);
 	count -=1; // Skip the Last One Because It's the New Timer Dummy Item
 	
 	for(idx=0; idx<count; ++idx) {
 		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx);
+		pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx);
 		if(!strcmp(pts->name, name)) {
 			pts->bActive = TRUE;
 			break;
@@ -439,14 +443,15 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 //-----------------------------//-----+++--> Load the Data Set For Timer X When Its Name is Called:
 void OnTimerName(HWND hDlg)   //------------------------------------------------------------+++-->
 {
+	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
 	char name[TNY_BUFF];
 	int idx, count;
 	
-	GetDlgItemText(hDlg, IDC_TIMERNAME, name, sizeof(name));
-	count=(int)CBGetCount(hDlg,IDC_TIMERNAME);
+	ComboBox_GetText(timer_cb, name, sizeof(name));
+	count = ComboBox_GetCount(timer_cb);
 	for(idx=0; idx<count; ++idx){
 		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx);
+		pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx);
 		if(!strcmp(name, pts->name)){
 			SetDlgItemInt(hDlg, IDC_TIMERSECOND,	pts->second, 0);
 			SetDlgItemInt(hDlg, IDC_TIMERMINUTE,	pts->minute, 0);
@@ -490,16 +495,17 @@ void OnSanshoAlarm(HWND hDlg, WORD id)
 //-----------------------//-----------------------------+++--> Delete One of the Configured Timers:
 void OnDel(HWND hDlg)   //------------------------------------------------------------------+++-->
 {
+	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
 	char name[TNY_BUFF];
 	char subkey[TNY_BUFF];
 	size_t offset;
 	int idx, idx2, count;
 	
 	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-	GetDlgItemText(hDlg, IDC_TIMERNAME, name, sizeof(name));
-	count = (int)CBGetCount(hDlg, IDC_TIMERNAME) -1;
+	ComboBox_GetText(timer_cb, name, sizeof(name));
+	count = ComboBox_GetCount(timer_cb) -1;
 	for(idx=0; idx<count; ++idx) {
-		timeropt_t* pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx);
+		timeropt_t* pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx);
 		if(!strcmp(name,pts->name)){
 			break;
 		}
@@ -509,7 +515,7 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 	
 	for(idx2=idx+1; idx2<count; ++idx2) {
 		timeropt_t* pts;
-		pts = (timeropt_t*)CBGetItemData(hDlg, IDC_TIMERNAME, idx2);
+		pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx2);
 		wsprintf(subkey+offset, "%d", idx2); // we're 1 behind, as needed
 		api.SetStr(subkey, "Name",		pts->name);
 		api.SetInt(subkey, "Seconds",	pts->second);
@@ -524,10 +530,10 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 	wsprintf(subkey+offset, "%d", count);
 	api.DelKey(subkey);
 	api.SetInt(g_szTimersSubKey, "NumberOfTimers", --count);
-	free((void*)CBGetItemData(hDlg,IDC_TIMERNAME,idx));
-	CBDeleteString(hDlg,IDC_TIMERNAME,idx);
+	free((void*)ComboBox_GetItemData(timer_cb,idx));
+	ComboBox_DeleteString(timer_cb,idx);
 	
-	CBSetCurSel(hDlg, IDC_TIMERNAME, (idx>0)?(idx-1):idx);
+	ComboBox_SetCurSel(timer_cb, (idx>0)?(idx-1):idx);
 	OnTimerName(hDlg);
 	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
 }
@@ -622,15 +628,16 @@ void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, char bGoUp)   //-----------
 //-----------------------------//-------------------+++--> Stop & Cancel a Currently Running Timer:
 void OnStopTimer(HWND hWnd)   //------------------------------------------------------------+++-->
 {
+	HWND timer_cb = GetDlgItem(hWnd, IDC_TIMERNAME);
 	char name[GEN_BUFF];
 	int idx;
 	
-	GetDlgItemText(hWnd, IDC_TIMERNAME, name, sizeof(name));
+	ComboBox_GetText(timer_cb, name, sizeof(name));
 	
 	for(idx=0; idx<m_timers; ++idx) {
 		if(!strcmp(name, m_timer[idx].name)) {
 			int id=m_timer[idx].id;
-			timeropt_t* pts=(timeropt_t*)CBGetItemData(hWnd, IDC_TIMERNAME, id);;
+			timeropt_t* pts=(timeropt_t*)ComboBox_GetItemData(timer_cb, id);;
 			
 			StopTimer(id);
 			pts->bActive = 0;

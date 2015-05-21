@@ -136,13 +136,15 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 //----------------------------------------------+++--> Update UI controls: combo boxes and radiobutton:
 static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //-------+++-->
 {
+	HWND btn_cb = GetDlgItem(hDlg, IDC_MOUSEBUTTON);
+	HWND func_cb = GetDlgItem(hDlg, IDC_MOUSEFUNC);
 	int func;
 	if(m_bTransition) return;
 	m_bTransition=1; // start transition
 	if(button==-1){
-		button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+		button=ComboBox_GetCurSel(btn_cb);
 	}else{
-		CBSetCurSel(hDlg,IDC_MOUSEBUTTON,button);
+		ComboBox_SetCurSel(btn_cb,button);
 		if(click==-1){
 			for(click=0; click<m_mouseClickCount && !m_pData[button].func[click]; ++click);
 		}
@@ -154,14 +156,14 @@ static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //---
 		click=0;
 	CheckRadioButton(hDlg,IDC_RADSINGLE,IDC_RADDOUBLE,IDC_RADSINGLE+click);
 	if(type==1){
-		func=(int)CBGetItemData(hDlg,IDC_MOUSEFUNC,CBGetCurSel(hDlg,IDC_MOUSEFUNC));
-		m_pData[button].func[click]=func;
+		func = (int)ComboBox_GetItemData(func_cb,ComboBox_GetCurSel(func_cb));
+		m_pData[button].func[click] = func;
 	}else{
 		int iter;
-		func=m_pData[button].func[click];
+		func = m_pData[button].func[click];
 		for(iter=0; iter<m_mouseActionCount+1; ++iter) {
-			if(func==CBGetItemData(hDlg,IDC_MOUSEFUNC,iter)) {
-				CBSetCurSel(hDlg,IDC_MOUSEFUNC,iter);
+			if(func==ComboBox_GetItemData(func_cb,iter)) {
+				ComboBox_SetCurSel(func_cb,iter);
 				break;
 			}
 		}
@@ -189,12 +191,13 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		OnDestroy(hDlg);
 		break;
 	case WM_COMMAND:{
+		HWND control = (HWND)lParam;
 		WORD id=LOWORD(wParam);
 		WORD code=HIWORD(wParam);
 		/// "Drop files"
 		if(id == IDC_DROPFILES && code == CBN_SELCHANGE){
 			int iter, sel;
-			sel=(int)CBGetCurSel(hDlg,IDC_DROPFILES);
+			sel = ComboBox_GetCurSel(control);
 			SetDlgItemText(hDlg, IDC_LABDROPFILESAPP, MyString(sel>=3?IDS_LABFOLDER:IDS_LABPROGRAM));
 			for(iter=IDC_LABDROPFILESAPP; iter<=IDC_DROPFILESAPPSANSHO; ++iter)
 				EnableDlgItem(hDlg,iter,(sel>=2 && sel<=4));
@@ -212,7 +215,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			OnSansho(hDlg, id);
 		///  button
 		}else if(id == IDC_MOUSEBUTTON && code == CBN_SELCHANGE){
-			int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+			int button=ComboBox_GetCurSel(control);
 			UpdateUIControls(hDlg,button,-1,0);
 		/// clicks
 		}else if(id >= IDC_RADSINGLE && id <= IDC_RADDOUBLE){
@@ -223,12 +226,13 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			SendPSChanged(hDlg);
 		/// Mouse Function - File
 		}else if(id == IDC_MOUSEFILE && code==EN_CHANGE){
+			HWND func_cb = GetDlgItem(hDlg, IDC_MOUSEFUNC);
 			int click;
-			int button=(int)CBGetCurSel(hDlg,IDC_MOUSEBUTTON);
+			int button=ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_MOUSEBUTTON));
 			for(click=0; click<m_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
 			if(click<m_mouseClickCount){
-				if(CBGetItemData(hDlg,IDC_MOUSEFUNC,CBGetCurSel(hDlg,IDC_MOUSEFUNC)==MOUSEFUNC_CLIPBOARD))
-					GetDlgItemText(hDlg,IDC_MOUSEFILE,m_pData[button].format[click],256);
+				if(ComboBox_GetItemData(func_cb,ComboBox_GetCurSel(func_cb)==MOUSEFUNC_CLIPBOARD))
+					ComboBox_GetText(control, m_pData[button].format[click], 256);
 				SendPSChanged(hDlg);
 			}
 		}else if((id==IDC_TOOLTIP && code==EN_CHANGE) || id==IDCB_TOOLTIP){
@@ -300,7 +304,8 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 //------------------------//----------------------------++--> Initialize Mouse Tab Dialog Controls:
 void OnInit(HWND hDlg)   //-----------------------------------------------------+++-->
 {
-	HWND hList=GetDlgItem(hDlg,IDC_LIST);
+	HWND drop_cb = GetDlgItem(hDlg, IDC_DROPFILES);
+	HWND listview = GetDlgItem(hDlg, IDC_LIST);
 	char entry[3+4];
 	char buf[LRG_BUFF];
 	int button, click;
@@ -308,8 +313,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	m_bTransition=1; // start transition
 	/// setup basic controls
 	for(click=IDS_NONE; click<=IDS_MOVETO; ++click)
-		CBAddString(hDlg,IDC_DROPFILES,MyString(click));
-	CBSetCurSel(hDlg,IDC_DROPFILES,api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE));
+		ComboBox_AddString(drop_cb,MyString(click));
+	ComboBox_SetCurSel(drop_cb,api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE));
 	SendMessage(hDlg,WM_COMMAND,MAKEWPARAM(IDC_DROPFILES,CBN_SELCHANGE),0); // update IDC_DROPFILES related
 	api.GetStr(REG_MOUSE,"DropFilesApp",buf,256,"");
 	SetDlgItemText(hDlg, IDC_DROPFILESAPP,buf);
@@ -344,34 +349,34 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	if(!*buf) memcpy(buf,TC_TOOLTIP,sizeof(TC_TOOLTIP));
 	SetDlgItemText(hDlg,IDC_TOOLTIP,buf);
 	/// setup list view
-	ListView_SetExtendedListViewStyle(hList,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
-	SetXPWindowTheme(hList,L"Explorer",NULL);
+	ListView_SetExtendedListViewStyle(listview,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
+	SetXPWindowTheme(listview,L"Explorer",NULL);
 	
 	lvCol.mask=LVCF_FMT|LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM;
 	lvCol.iSubItem=0;
 	lvCol.pszText="Button";
 	lvCol.fmt=LVCFMT_CENTER;
 	lvCol.cx=60;
-	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
+	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Click Type";
 	lvCol.fmt=LVCFMT_CENTER;
 	lvCol.cx=70;
-	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
+	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Action";
 	lvCol.fmt=LVCFMT_LEFT;
 	lvCol.cx=160;
-	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
+	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Other";
 	lvCol.fmt=LVCFMT_LEFT;
 	lvCol.cx=151;
-	ListView_InsertColumn(hList,lvCol.iSubItem,&lvCol);
-	ShowWindow(hList,SW_SHOW);
+	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
+	ShowWindow(listview,SW_SHOW);
 	m_bTransition=0; // end transition
 	/// select first mouse setup and UpdateMouseClickList
 	UpdateUIControls(hDlg,0,-1,0); // pre-select first mouse button
@@ -382,7 +387,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 {
 	char buf[LRG_BUFF], entry[3+4];
 	int sel, button, click;
-	sel = (int)CBGetCurSel(hDlg,IDC_DROPFILES);
+	sel = ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_DROPFILES));
 	api.SetInt(REG_MOUSE,"DropFiles",sel);
 	GetDlgItemText(hDlg,IDC_DROPFILESAPP,buf,256);
 	api.SetStr(REG_MOUSE,"DropFilesApp",buf);
@@ -420,7 +425,7 @@ void OnSansho(HWND hDlg, WORD id)
 	char filter[80], deffile[MAX_PATH], fname[MAX_PATH];
 	
 	if(id==IDC_DROPFILESAPPSANSHO) {
-		if((int)CBGetCurSel(hDlg, IDC_DROPFILES) >= 3) {
+		if(ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_DROPFILES)) >= 3) {
 			BROWSEINFO bi;
 			LPITEMIDLIST pidl;
 			memset(&bi, 0, sizeof(BROWSEINFO));
@@ -457,15 +462,17 @@ void OnSansho(HWND hDlg, WORD id)
 //-----------------------------------//------+++--> Populate the Mouse Click Actions DropDown Menu:
 void InitMouseControls(HWND hDlg)   //------------------------------------------------------+++-->
 {
+	HWND btn_cb = GetDlgItem(hDlg, IDC_MOUSEBUTTON);
+	HWND func_cb = GetDlgItem(hDlg, IDC_MOUSEFUNC);
 	int iter;
 	for(iter=0; iter<m_mouseButtonCount;++iter)
-		CBAddString(hDlg,IDC_MOUSEBUTTON,m_mouseButton[iter]);
-	CBSetDroppedWidth(hDlg,IDC_MOUSEFUNC,180);
-	CBAddString(hDlg,IDC_MOUSEFUNC,MyString(IDS_NONE));
-	CBSetItemData(hDlg,IDC_MOUSEFUNC,0,0);
+		ComboBox_AddString(btn_cb, m_mouseButton[iter]);
+	ComboBox_SetDroppedWidth(func_cb, 180);
+	ComboBox_AddString(func_cb, MyString(IDS_NONE));
+	ComboBox_SetItemData(func_cb, 0, NULL);
 	for(iter=0; iter<m_mouseActionCount; ++iter){
-		CBAddString(hDlg,IDC_MOUSEFUNC,m_mouseAction[iter].name);
-		CBSetItemData(hDlg,IDC_MOUSEFUNC,iter+1,m_mouseAction[iter].id);
+		ComboBox_AddString(func_cb, m_mouseAction[iter].name);
+		ComboBox_SetItemData(func_cb, iter+1, m_mouseAction[iter].id);
 	}
 }
 void CheckMouseMenu()

@@ -194,15 +194,16 @@ static HWND m_hwndPage;
 --------------------------------------------------*/
 BOOL CALLBACK EnumLocalesProc(LPTSTR lpLocaleString)
 {
+	HWND locale_cb = GetDlgItem(m_hwndPage, IDC_LOCALE);
 	char str[80];
 	int x, index;
 	
 	x = atox(lpLocaleString);
 	if(GetLocaleInfo(x, LOCALE_SLANGUAGE, str, sizeof(str)) > 0)
-		index = (int)CBAddString(m_hwndPage, IDC_LOCALE, str);
+		index = ComboBox_AddString(locale_cb, str);
 	else
-		index = (int)CBAddString(m_hwndPage, IDC_LOCALE, lpLocaleString);
-	CBSetItemData(m_hwndPage, IDC_LOCALE, index, x);
+		index = ComboBox_AddString(locale_cb, lpLocaleString);
+	ComboBox_SetItemData(locale_cb, index, x);
 	return TRUE;
 }
 
@@ -214,6 +215,10 @@ void OnInit(HWND hDlg)
 	const char* AM[]={"AM","am","A","a"," ",};
 	const char* PM[]={"PM","pm","P","p"," ",};
 	const int AMPMs=sizeof(AM)/sizeof(AM[0]);
+	HWND format_cb = GetDlgItem(hDlg, IDC_FORMAT);
+	HWND locale_cb = GetDlgItem(hDlg, IDC_LOCALE);
+	HWND am_cb = GetDlgItem(hDlg, IDC_AMSYMBOL);
+	HWND pm_cb = GetDlgItem(hDlg, IDC_PMSYMBOL);
 	HFONT hfont;
 	char fmt[MAX_FORMAT];
 	int i, count;
@@ -228,58 +233,58 @@ void OnInit(HWND hDlg)
 //	hfont = (HFONT)GetStockObject(ANSI_FIXED_FONT); // pixel, "normal"
 	hfont = (HFONT)GetStockObject(OEM_FIXED_FONT); // cleartype, bold (same as console?)
 	if(hfont)
-		SendDlgItemMessage(hDlg, IDC_FORMAT, WM_SETFONT, (WPARAM)hfont, 0);
+		SendMessage(format_cb, WM_SETFONT, (WPARAM)hfont, 0);
 		
 	// Fill and select the "Locale" combobox
 	EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);
-	CBSetCurSel(hDlg, IDC_LOCALE, 0);
+	ComboBox_SetCurSel(locale_cb, 0);
 	
 	ChecksLocaleInit(checks,0);
 	Checks2Dialog(checks,hDlg,0);
-	count = (int)CBGetCount(hDlg, IDC_LOCALE);
+	count = ComboBox_GetCount(locale_cb);
 	for(i=0; i < count; ++i) {
 		int x;
-		x = (int)CBGetItemData(hDlg, IDC_LOCALE, i);
+		x = (int)ComboBox_GetItemData(locale_cb, i);
 		if(x == m_ilang) {
-			CBSetCurSel(hDlg, IDC_LOCALE, i); break;
+			ComboBox_SetCurSel(locale_cb, i); break;
 		}
 	}
 	
 	api.GetStr("Format", "Format", fmt, MAX_FORMAT, "");
-	SetDlgItemText(hDlg, IDC_FORMAT, fmt);
+	Edit_SetText(format_cb, fmt);
 	
 	m_pCustomFormat = malloc(MAX_FORMAT);
 	if(m_pCustomFormat)
 		api.GetStr("Format", "CustomFormat", m_pCustomFormat, MAX_FORMAT, "");
 	
 	// "AM Symbol" and "PM Symbol"
-	CBResetContent(hDlg, IDC_AMSYMBOL);
+	ComboBox_ResetContent(am_cb);
 	api.GetStr("Format", "AMsymbol", ampm_user, sizeof(ampm_user), "");
 	if(*ampm_user)
-		CBAddString(hDlg, IDC_AMSYMBOL, ampm_user);
+		ComboBox_AddString(am_cb, ampm_user);
 	if(GetLocaleInfo(m_ilang, LOCALE_S1159, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
-		CBAddString(hDlg,IDC_AMSYMBOL,ampm_locale);
+		ComboBox_AddString(am_cb, ampm_locale);
 	else
 		*ampm_locale='\0';
 	for(i=0; i<AMPMs; ++i){
 		if(strcmp(ampm_locale,AM[i]) && strcmp(ampm_user,AM[i]))
-			CBAddString(hDlg,IDC_AMSYMBOL,AM[i]);
+			ComboBox_AddString(am_cb, AM[i]);
 	}
-	CBSetCurSel(hDlg, IDC_AMSYMBOL, 0);
+	ComboBox_SetCurSel(am_cb, 0);
 	
-	CBResetContent(hDlg, IDC_PMSYMBOL);
+	ComboBox_ResetContent(pm_cb);
 	api.GetStr("Format", "PMsymbol", ampm_user, sizeof(ampm_user), "");
 	if(*ampm_user)
-		CBAddString(hDlg, IDC_PMSYMBOL, ampm_user);
+		ComboBox_AddString(pm_cb, ampm_user);
 	if(GetLocaleInfo(m_ilang, LOCALE_S2359, ampm_locale, sizeof(ampm_locale)) && strcmp(ampm_user,ampm_locale))
-		CBAddString(hDlg,IDC_PMSYMBOL,ampm_locale);
+		ComboBox_AddString(pm_cb, ampm_locale);
 	else
 		*ampm_locale='\0';
 	for(i=0; i<AMPMs; ++i){
 		if(strcmp(ampm_locale,PM[i]) && strcmp(ampm_user,PM[i]))
-			CBAddString(hDlg,IDC_PMSYMBOL,PM[i]);
+			ComboBox_AddString(pm_cb, PM[i]);
 	}
-	CBSetCurSel(hDlg, IDC_PMSYMBOL, 0);
+	ComboBox_SetCurSel(pm_cb, 0);
 	
 	OnCustom(hDlg, FALSE);
 	m_transition=0; // end transition lock, ready to go
@@ -290,30 +295,33 @@ void OnInit(HWND hDlg)
 void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------------------+++-->
 {
 	const char* section=preview?"Preview":"Format";
+	HWND am_cb = GetDlgItem(hDlg, IDC_AMSYMBOL);
+	HWND pm_cb = GetDlgItem(hDlg, IDC_PMSYMBOL);
+	HWND format_edt = GetDlgItem(hDlg, IDC_FORMAT);
+	HWND locale_cb = GetDlgItem(hDlg, IDC_LOCALE);
 	char str[MAX_FORMAT];
 	int i;
 	
-	api.SetInt(section, "Locale",
-				 (DWORD)CBGetItemData(hDlg, IDC_LOCALE, CBGetCurSel(hDlg, IDC_LOCALE)));
+	api.SetInt(section, "Locale", (DWORD)ComboBox_GetItemData(locale_cb, ComboBox_GetCurSel(locale_cb)));
 				 
 	for(i = IDC_YEAR4; i <= IDC_CUSTOM; i++) {
 		api.SetInt(section, ENTRY(i), IsDlgButtonChecked(hDlg, i));
 	}
 	
-	i=(int)SendDlgItemMessage(hDlg,IDC_AMSYMBOL,CB_GETCURSEL,0,0);
+	i = ComboBox_GetCurSel(am_cb);
 	if(i!=CB_ERR)
-		SendDlgItemMessage(hDlg,IDC_AMSYMBOL,CB_GETLBTEXT,i,(LPARAM)str);
+		ComboBox_GetLBText(am_cb, i, str);
 	else
-		GetDlgItemText(hDlg, IDC_AMSYMBOL, str, sizeof(str));
+		ComboBox_GetText(am_cb, str, sizeof(str));
 	api.SetStr(section, "AMsymbol", str);
-	i=(int)SendDlgItemMessage(hDlg,IDC_PMSYMBOL,CB_GETCURSEL,0,0);
+	i = ComboBox_GetCurSel(pm_cb);
 	if(i!=CB_ERR)
-		SendDlgItemMessage(hDlg,IDC_PMSYMBOL,CB_GETLBTEXT,i,(LPARAM)str);
+		ComboBox_GetLBText(pm_cb, i, str);
 	else
-		GetDlgItemText(hDlg, IDC_PMSYMBOL, str, sizeof(str));
+		ComboBox_GetText(pm_cb, str, sizeof(str));
 	api.SetStr(section, "PMsymbol", str);
 	
-	GetDlgItemText(hDlg, IDC_FORMAT, str, sizeof(str));
+	Edit_GetText(format_edt, str, sizeof(str));
 	api.SetStr(section, "Format", str);
 	
 	if(m_pCustomFormat) {
@@ -332,9 +340,10 @@ void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------
 //-------------------------------------------+++--> When User's Location (Locale ComboBox) Changes:
 void OnLocale(HWND hDlg)   //---------------------------------------------------------------+++-->
 {
+	HWND locale_cb = GetDlgItem(hDlg, IDC_LOCALE);
 	char checks[FORMAT_NUM];
 	char fmt[MAX_FORMAT];
-	int ilang=(int)CBGetItemData(hDlg,IDC_LOCALE,CBGetCurSel(hDlg,IDC_LOCALE));
+	int ilang = (int)ComboBox_GetItemData(locale_cb,ComboBox_GetCurSel(locale_cb));
 	// change locale
 	ChecksLocaleInit(checks,ilang);
 	Checks2Dialog(checks,hDlg,1);

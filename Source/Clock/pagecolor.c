@@ -14,7 +14,7 @@ static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg,BOOL preview);
 static void InitColor(HWND hDlg);
 static void InitComboFont(HWND hDlg);
-static void OnChooseColor(HWND hDlg, WORD id);
+static void OnChooseColor(HWND hDlg, WORD color_btn);
 static void OnDrawItemColorCombo(LPARAM lParam);
 static void SetComboFontSize(HWND hDlg, int bInit);
 static void OnMeasureItemColorCombo(LPARAM lParam);
@@ -135,6 +135,7 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 --------------------------------------------------*/
 void OnInit(HWND hDlg)
 {
+	HWND quality_cb = GetDlgItem(hDlg, IDC_FONTQUAL);
 	HDC hdc;
 	LOGFONT logfont;
 	HFONT hfont;
@@ -190,14 +191,14 @@ void OnInit(HWND hDlg)
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETRANGE32, 0,100);
 	SendDlgItemMessage(hDlg, IDC_SPINALPHA, UDM_SETPOS32, 0, api.GetInt("Taskbar", "AlphaTaskbar", 0));
 	
-	CBAddString(hDlg,IDC_FONTQUAL,"Default");				// DEFAULT_QUALITY			 = 0
-	CBAddString(hDlg,IDC_FONTQUAL,"Draft");					// DRAFT_QUALITY			 = 1
-	CBAddString(hDlg,IDC_FONTQUAL,"Proof");					// PROOF_QUALITY			 = 2
-	CBAddString(hDlg,IDC_FONTQUAL,"NonAntiAliased");		// NONANTIALIASED_QUALITY	 = 3
-	CBAddString(hDlg,IDC_FONTQUAL,"AntiAliased (Win7)");	// ANTIALIASED_QUALITY		 = 4
-	CBAddString(hDlg,IDC_FONTQUAL,"ClearType (WinXP+)");	// CLEARTYPE_QUALITY		 = 5
-	CBAddString(hDlg,IDC_FONTQUAL,"ClearType Natural");		// CLEARTYPE_NATURAL_QUALITY = 6
-	CBSetCurSel(hDlg,IDC_FONTQUAL,api.GetInt("Clock","FontQuality",CLEARTYPE_QUALITY));
+	ComboBox_AddString(quality_cb,"Default");            // 0 = DEFAULT_QUALITY
+	ComboBox_AddString(quality_cb,"Draft");              // 1 = DRAFT_QUALITY
+	ComboBox_AddString(quality_cb,"Proof");              // 2 = PROOF_QUALITY
+	ComboBox_AddString(quality_cb,"NonAntiAliased");     // 3 = NONANTIALIASED_QUALITY
+	ComboBox_AddString(quality_cb,"AntiAliased (Win7)"); // 4 = ANTIALIASED_QUALITY
+	ComboBox_AddString(quality_cb,"ClearType (WinXP+)"); // 5 = CLEARTYPE_QUALITY
+	ComboBox_AddString(quality_cb,"ClearType Natural");  // 6 = CLEARTYPE_NATURAL_QUALITY
+	ComboBox_SetCurSel(quality_cb,api.GetInt("Clock","FontQuality",CLEARTYPE_QUALITY));
 	m_transition=0; // end transition lock, ready to go
 }
 
@@ -208,26 +209,29 @@ void OnApply(HWND hDlg,BOOL preview)
 {
 	const char* section=preview?"Preview":"Clock";
 	char tmp[LF_FACESIZE];
-	HWND hwndSize = GetDlgItem(hDlg, IDC_FONTSIZE);
+	HWND fore_cb = GetDlgItem(hDlg, IDC_COLFORE);
+	HWND back_cb = GetDlgItem(hDlg, IDC_COLBACK);
+	HWND font_cb = GetDlgItem(hDlg, IDC_FONT);
+	HWND size_cb = GetDlgItem(hDlg, IDC_FONTSIZE);
 	int sel;
 	
-	api.SetInt(section, "ForeColor", (int)CBGetItemData(hDlg,IDC_COLFORE,CBGetCurSel(hDlg,IDC_COLFORE)));
-	api.SetInt(section, "BackColor", (int)CBGetItemData(hDlg,IDC_COLBACK,CBGetCurSel(hDlg,IDC_COLBACK)));
+	api.SetInt(section, "ForeColor", (COLORREF)ComboBox_GetItemData(fore_cb,ComboBox_GetCurSel(fore_cb)));
+	api.SetInt(section, "BackColor", (COLORREF)ComboBox_GetItemData(back_cb,ComboBox_GetCurSel(back_cb)));
 	
-	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), tmp);
+	ComboBox_GetLBText(font_cb, ComboBox_GetCurSel(font_cb), tmp);
 	api.SetStr(section, "Font", tmp);
 	
-	sel = ComboBox_GetCurSel(hwndSize);
+	sel = ComboBox_GetCurSel(size_cb);
 	if(sel == -1)
-		ComboBox_GetText(hwndSize, tmp, LF_FACESIZE);
+		ComboBox_GetText(size_cb, tmp, LF_FACESIZE);
 	else
-		ComboBox_GetLBText(hwndSize, sel, tmp);
+		ComboBox_GetLBText(size_cb, sel, tmp);
 	api.SetInt(section, "FontSize", atoi(tmp));
 	
 	api.SetInt(section, "Bold",   IsDlgButtonChecked(hDlg, IDC_BOLD));
 	api.SetInt(section, "Italic", IsDlgButtonChecked(hDlg, IDC_ITALIC));
 	
-	api.SetInt(section, "FontQuality", (int)CBGetCurSel(hDlg, IDC_FONTQUAL));
+	api.SetInt(section, "FontQuality", ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FONTQUAL)));
 	
 	api.SetInt(section, "ClockHeight", (int)SendDlgItemMessage(hDlg,IDC_SPINCHEIGHT,UDM_GETPOS32,0,0));
 	api.SetInt(section, "ClockWidth", (int)SendDlgItemMessage(hDlg,IDC_SPINCWIDTH,UDM_GETPOS32,0,0));
@@ -264,7 +268,7 @@ const syscolor_t syscolor[]={
 	{COLOR_INFOTEXT,"INFOTEXT"},
 	{COLOR_INFOBK,"INFOBK"},
 };
-const size_t syscolor_num=sizeof(syscolor)/sizeof(syscolor_t);
+const size_t syscolor_num = sizeof(syscolor)/sizeof(syscolor_t);
 const COLORREF basecolor[]={
 	0x00000080, 0x00008000, 0x00800000,
 	0x00008080, 0x00800080, 0x00808000,
@@ -272,8 +276,8 @@ const COLORREF basecolor[]={
 	0x0000FFFF, 0x00FF00FF, 0x00FFFF00,
 	0x00FFFFFF, 0x00C0C0C0, 0x00808080, 0x00000000,
 };
-const size_t basecolor_num=sizeof(basecolor)/sizeof(COLORREF);
-const size_t colorstotal=sizeof(syscolor)/sizeof(syscolor_t)+sizeof(basecolor)/sizeof(COLORREF);
+const size_t basecolor_num = sizeof(basecolor)/sizeof(COLORREF);
+const size_t colorstotal = sizeof(syscolor)/sizeof(syscolor_t)+sizeof(basecolor)/sizeof(COLORREF);
 void InitColor(HWND hDlg)
 {
 	COLORREF col;
@@ -281,27 +285,26 @@ void InitColor(HWND hDlg)
 	unsigned icol;
 	
 	for(id=IDC_COLFORE; id<=IDC_COLBACK; id+=2){
+		HWND color_cb = GetDlgItem(hDlg, id);
 		/// add sys colors
 		for(icol=0; icol<syscolor_num; ++icol){
-			CBAddString(hDlg, id, TCOLOR(syscolor[icol].col));
-//		for(j=0; j<31; ++j){
-//			CBAddString(hDlg, id, TCOLOR(j));
+			ComboBox_AddString(color_cb, (size_t)TCOLOR(syscolor[icol].col));
 		}
 		/// add base colors
 		for(icol=0; icol<basecolor_num; ++icol)
-			CBAddString(hDlg, id, basecolor[icol]);
+			ComboBox_AddString(color_cb, (size_t)basecolor[icol]);
 		/// select last used color
-		if(id==IDC_COLFORE)
+		if(id == IDC_COLFORE)
 			col=api.GetInt("Clock","ForeColor",TCOLOR(TCOLOR_DEFAULT));
 		else
 			col=api.GetInt("Clock","BackColor",TCOLOR(TCOLOR_DEFAULT));
 		for(icol=0; icol<colorstotal; ++icol) {
-			if(col==(COLORREF)CBGetItemData(hDlg,id,icol))
+			if(col==(COLORREF)ComboBox_GetItemData(color_cb,icol))
 				break;
 		}
 		if(icol==colorstotal) // Add the Selected Custom Color
-			CBAddString(hDlg, id, col);
-		CBSetCurSel(hDlg, id, icol);
+			ComboBox_AddString(color_cb, (size_t)col);
+		ComboBox_SetCurSel(color_cb, icol);
 	}
 }
 
@@ -372,16 +375,14 @@ void OnDrawItemColorCombo(LPARAM lParam)
 
 /*------------------------------------------------
 --------------------------------------------------*/
-void OnChooseColor(HWND hDlg, WORD id)
+void OnChooseColor(HWND hDlg, WORD color_btn)
 {
 	CHOOSECOLOR cc = {sizeof(CHOOSECOLOR)};
 	COLORREF col, colarray[16];
-	WORD idCombo;
+	HWND color_cb = GetDlgItem(hDlg, color_btn-1);
 	unsigned icol;
 	
-	idCombo = id - 1;
-	
-	col = api.GetColor((COLORREF)CBGetItemData(hDlg, idCombo, CBGetCurSel(hDlg, idCombo)),2);
+	col = api.GetColor((COLORREF)ComboBox_GetItemData(color_cb, ComboBox_GetCurSel(color_cb)),2);
 	
 	for(icol = 0; icol < 16; ++icol) colarray[icol] = 0x00FFFFFF;
 	
@@ -393,16 +394,16 @@ void OnChooseColor(HWND hDlg, WORD id)
 	if(!ChooseColor(&cc)) return;
 	
 	for(icol=0; icol<colorstotal; ++icol) {
-		if(cc.rgbResult==(COLORREF)CBGetItemData(hDlg,idCombo,icol))
+		if(cc.rgbResult==(COLORREF)ComboBox_GetItemData(color_cb,icol))
 			break;
 	}
-	if(icol==colorstotal){
-		if((unsigned)CBGetCount(hDlg,idCombo)==colorstotal)
-			CBAddString(hDlg,idCombo,cc.rgbResult);
+	if(icol == colorstotal){
+		if(ComboBox_GetCount(color_cb) == colorstotal)
+			ComboBox_AddString(color_cb, (size_t)cc.rgbResult);
 		else
-			CBSetItemData(hDlg,idCombo,icol,cc.rgbResult);
+			ComboBox_SetItemData(color_cb, icol, cc.rgbResult);
 	}
-	CBSetCurSel(hDlg, idCombo, icol);
+	ComboBox_SetCurSel(color_cb, icol);
 	
 	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
 	SendPSChanged(hDlg);
@@ -445,7 +446,8 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 	char str[LF_FACESIZE];
 	DWORD size;
 	LOGFONT lf = {0};
-	HWND hwndSize = GetDlgItem(hDlg, IDC_FONTSIZE);
+	HWND size_cb = GetDlgItem(hDlg, IDC_FONTSIZE);
+	HWND font_cb = GetDlgItem(hDlg, IDC_FONT);
 	int pos;
 	
 	// remember old size
@@ -453,31 +455,31 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 		size = api.GetInt("Clock", "FontSize", 9);
 		if(!size || size>100) size = 9;
 	} else { // when IDC_FONT has been changed
-		ComboBox_GetText(hwndSize, str, LF_FACESIZE);
+		ComboBox_GetText(size_cb, str, LF_FACESIZE);
 		size = atoi(str);
 	}
 	
-	ComboBox_ResetContent(hwndSize);
+	ComboBox_ResetContent(size_cb);
 	
 	hdc = GetDC(NULL);
 	m_logpixelsy = GetDeviceCaps(hdc, LOGPIXELSY);
 	
-	CBGetLBText(hDlg, IDC_FONT, CBGetCurSel(hDlg, IDC_FONT), str);
+	ComboBox_GetLBText(font_cb, ComboBox_GetCurSel(font_cb), str);
 	
 	strcpy(lf.lfFaceName, str);
 	lf.lfCharSet = DEFAULT_CHARSET;
 	EnumFontFamiliesEx(hdc, &lf, EnumSizeProcEx,
-					   (LPARAM)hwndSize, 0);
+					   (LPARAM)size_cb, 0);
 					   
 	ReleaseDC(NULL, hdc);
 	
 	wsprintf(str, "%d", size);
-	pos = ComboBox_FindStringExact(hwndSize, -1, str);
+	pos = ComboBox_FindStringExact(size_cb, -1, str);
 	if(pos != LB_ERR) {
-		ComboBox_SetCurSel(hwndSize, pos);
+		ComboBox_SetCurSel(size_cb, pos);
 		return;
 	}
-	ComboBox_SetText(hwndSize, str);
+	ComboBox_SetText(size_cb, str);
 }
 
 /*------------------------------------------------

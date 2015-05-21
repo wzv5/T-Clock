@@ -199,13 +199,16 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 --------------------------------------------------*/
 void OnInit(HWND hDlg)
 {
+	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
+	HWND file_cb = GetDlgItem(hDlg, IDC_FILEALARM);
+	HWND file_hourly_cb = GetDlgItem(hDlg, IDC_FILEJIHOU);
 	char tmp[MAX_PATH];
 	int i, count;
 	/// add "new" entry
-	CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, MyString(IDS_ADDALARM)), 0);
+	ComboBox_SetItemData(alarm_cb, ComboBox_AddString(alarm_cb, MyString(IDS_ADDALARM)), 0);
 	/// add default sound files to sound file dropdown
-	CBAddString(hDlg,IDC_FILEALARM,"<  no sound  >");
-	CBAddString(hDlg,IDC_FILEJIHOU,"<  no sound  >");
+	ComboBox_AddString(file_cb,"<  no sound  >");
+	ComboBox_AddString(file_hourly_cb,"<  no sound  >");
 	if(api.OS > TOS_2000) {
 		HANDLE hFind;
 		WIN32_FIND_DATA FindFileData;
@@ -213,8 +216,8 @@ void OnInit(HWND hDlg)
 		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
 			do{
 				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
-					CBAddString(hDlg,IDC_FILEALARM,FindFileData.cFileName);
-					CBAddString(hDlg,IDC_FILEJIHOU,FindFileData.cFileName);
+					ComboBox_AddString(file_cb,FindFileData.cFileName);
+					ComboBox_AddString(file_hourly_cb,FindFileData.cFileName);
 				}
 			}while(FindNextFile(hFind,&FindFileData));
 			FindClose(hFind);
@@ -226,23 +229,23 @@ void OnInit(HWND hDlg)
 	for(i=0; i<count; ++i) {
 		alarm_t* pAS = malloc(sizeof(alarm_t));
 		ReadAlarmFromReg(pAS, i);
-		CBSetItemData(hDlg, IDC_COMBOALARM, CBAddString(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name), pAS);
+		ComboBox_SetItemData(alarm_cb, ComboBox_AddString(alarm_cb, pAS->dlgmsg.name), pAS);
 		if(!i) SetAlarmToDlg(hDlg, pAS);
 	}
 	/// other
 	if(count > 0) {
-		CBSetCurSel(hDlg, IDC_COMBOALARM, 1);
+		ComboBox_SetCurSel(alarm_cb, 1);
 		m_curAlarm = 1;
 	} else {
 		SetDefaultAlarmToDlg(hDlg);
-		CBSetCurSel(hDlg, IDC_COMBOALARM, 0);
+		ComboBox_SetCurSel(alarm_cb, 0);
 	}
 	
 	CheckDlgButton(hDlg, IDC_JIHOU,
 				   api.GetInt("", "Jihou", FALSE));
 				   
 	api.GetStr("", "JihouFile", tmp, sizeof(tmp), "Clock.wav");
-	SetDlgItemText(hDlg, IDC_FILEJIHOU, tmp);
+	Edit_SetText(file_hourly_cb, tmp);
 	
 	CheckDlgButton(hDlg, IDC_REPEATJIHOU,
 				   api.GetInt("", "JihouRepeat", FALSE));
@@ -281,6 +284,7 @@ void OnDeinit(HWND hDlg)
 --------------------------------------------------*/
 void OnApply(HWND hDlg)
 {
+	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
 	char file[1024];
 	int i, count, n_alarm;
 	alarm_t* pAS;
@@ -289,26 +293,26 @@ void OnApply(HWND hDlg)
 	
 	if(m_curAlarm < 0) {
 		char name[sizeof(pAS->dlgmsg.name)];
-		GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->dlgmsg.name));
+		ComboBox_GetText(alarm_cb, name, sizeof(pAS->dlgmsg.name));
 		if(name[0] && IsDlgButtonChecked(hDlg, IDC_ALARM)) {
 			pAS = malloc(sizeof(alarm_t));
 			if(pAS) {
 				GetAlarmFromDlg(hDlg, pAS);
-				i = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
-				CBSetItemData(hDlg, IDC_COMBOALARM, i, pAS);
+				i = ComboBox_AddString(alarm_cb, pAS->dlgmsg.name);
+				ComboBox_SetItemData(alarm_cb, i, pAS);
 				m_curAlarm = i;
-				CBSetCurSel(hDlg, IDC_COMBOALARM, i);
+				ComboBox_SetCurSel(alarm_cb, i);
 				EnableDlgItem(hDlg, IDC_DELALARM, TRUE);
 			}
 		}
 	} else {
-		pAS=(alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
+		pAS=(alarm_t*)ComboBox_GetItemData(alarm_cb, m_curAlarm);
 		if(pAS) GetAlarmFromDlg(hDlg, pAS);
 	}
 	
-	count = (int)CBGetCount(hDlg, IDC_COMBOALARM);
+	count = ComboBox_GetCount(alarm_cb);
 	for(i=0; i<count; ++i) {
-		pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, i);
+		pAS = (alarm_t*)ComboBox_GetItemData(alarm_cb, i);
 		if(pAS) {
 			SaveAlarmToReg(pAS, n_alarm);
 			n_alarm++;
@@ -429,10 +433,11 @@ void SetDefaultAlarmToDlg(HWND hDlg)   //---------------------------------------
 --------------------------------------------------*/
 void OnChangeAlarm(HWND hDlg)
 {
+	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
 	alarm_t* pAS;
 	int index;
 	
-	index = (int)CBGetCurSel(hDlg, IDC_COMBOALARM);
+	index = ComboBox_GetCurSel(alarm_cb);
 	if(m_curAlarm >= 0 && index == m_curAlarm) return;
 	m_bTransition=1; // start transition
 	
@@ -440,23 +445,23 @@ void OnChangeAlarm(HWND hDlg)
 	
 	if(m_curAlarm < 0) {
 		char name[sizeof(pAS->dlgmsg.name)];
-		GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->dlgmsg.name));
+		ComboBox_GetText(alarm_cb, name, sizeof(pAS->dlgmsg.name));
 		if(name[0] && IsDlgButtonChecked(hDlg, IDC_ALARM)) {
 			pAS = malloc(sizeof(alarm_t));
 			if(pAS) {
 				int index;
 				GetAlarmFromDlg(hDlg, pAS);
-				index = (int)CBAddString(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
-				CBSetItemData(hDlg, IDC_COMBOALARM, index, pAS);
+				index = ComboBox_AddString(alarm_cb, pAS->dlgmsg.name);
+				ComboBox_SetItemData(alarm_cb, index, pAS);
 				m_curAlarm = index;
 			}
 		}
 	} else {
-		pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
+		pAS = (alarm_t*)ComboBox_GetItemData(alarm_cb, m_curAlarm);
 		if(pAS) GetAlarmFromDlg(hDlg, pAS);
 	}
 	
-	pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, index);
+	pAS = (alarm_t*)ComboBox_GetItemData(alarm_cb, index);
 	if(pAS) {
 		SetAlarmToDlg(hDlg, pAS);
 		EnableDlgItem(hDlg, IDC_DELALARM, TRUE);
@@ -473,19 +478,20 @@ void OnChangeAlarm(HWND hDlg)
 --------------------------------------------------*/
 void OnDropDownAlarm(HWND hDlg)
 {
+	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
 	alarm_t* pAS;
 	char name[sizeof(pAS->dlgmsg.name)];
 	
 	if(m_curAlarm < 0) return;
-	pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
+	pAS = (alarm_t*)ComboBox_GetItemData(alarm_cb, m_curAlarm);
 	if(!pAS) return;
-	GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(pAS->dlgmsg.name));
+	ComboBox_GetText(alarm_cb, name, sizeof(pAS->dlgmsg.name));
 	if(strcmp(name, pAS->dlgmsg.name)) {
 		strcpy(pAS->dlgmsg.name, name);
-		CBDeleteString(hDlg, IDC_COMBOALARM, m_curAlarm);
-		CBInsertString(hDlg, IDC_COMBOALARM, m_curAlarm, name);
-		CBSetItemData(hDlg, IDC_COMBOALARM, m_curAlarm, pAS);
-		CBSetCurSel(hDlg, IDC_COMBOALARM, m_curAlarm);
+		ComboBox_DeleteString(alarm_cb, m_curAlarm);
+		ComboBox_InsertString(alarm_cb, m_curAlarm, name);
+		ComboBox_SetItemData(alarm_cb, m_curAlarm, pAS);
+		ComboBox_SetCurSel(alarm_cb, m_curAlarm);
 	}
 }
 
@@ -622,20 +628,21 @@ void On12Hour(HWND hDlg, int bOnChange)
 --------------------------------------------------*/
 void OnDelAlarm(HWND hDlg)
 {
+	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
 	alarm_t* pAS;
 	
 	if(m_curAlarm < 0) return;
 	
 	StopTest(hDlg);
 	
-	pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
+	pAS = (alarm_t*)ComboBox_GetItemData(alarm_cb, m_curAlarm);
 	if(pAS) {
 		PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
-		CBDeleteString(hDlg, IDC_COMBOALARM, m_curAlarm);
+		ComboBox_DeleteString(alarm_cb, m_curAlarm);
 		free(pAS);
 		if(m_curAlarm > 0) --m_curAlarm;
-		CBSetCurSel(hDlg, IDC_COMBOALARM, m_curAlarm);
-		pAS = (alarm_t*)CBGetItemData(hDlg, IDC_COMBOALARM, m_curAlarm);
+		ComboBox_SetCurSel(alarm_cb, m_curAlarm);
+		pAS = (alarm_t*)ComboBox_GetItemData(alarm_cb, m_curAlarm);
 		if(pAS) SetAlarmToDlg(hDlg, pAS);
 		else {
 			SetDefaultAlarmToDlg(hDlg);

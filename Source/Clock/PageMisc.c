@@ -85,6 +85,7 @@ void SetMySysWeek(char* val)   //-----------------------------------------------
 //--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
+	HWND week_cb = GetDlgItem(hDlg, IDC_FIRSTWEEK);
 	UINT iter;
 	if(api.OS >= TOS_VISTA && !api.GetIntEx("Calendar","bCustom",0)){
 		for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
@@ -104,11 +105,11 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETRANGE32,0,2);
 	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,api.GetInt("Calendar","ViewMonthsPast",1));
 	
-	CBResetContent(hDlg, IDC_FIRSTWEEK);
-	CBAddString(hDlg, IDC_FIRSTWEEK, "0");
-	CBAddString(hDlg, IDC_FIRSTWEEK, "1");
-	CBAddString(hDlg, IDC_FIRSTWEEK, "2");
-	CBSetCurSel(hDlg, IDC_FIRSTWEEK, GetMySysWeek());
+	ComboBox_ResetContent(week_cb);
+	ComboBox_AddString(week_cb, "0");
+	ComboBox_AddString(week_cb, "1");
+	ComboBox_AddString(week_cb, "2");
+	ComboBox_SetCurSel(week_cb, GetMySysWeek());
 	
 	if(api.OS > TOS_2000) {
 		for(iter=IDCB_TRANS2KICONS_GRP; iter<=IDCB_TRANS2KICONS; ++iter)
