@@ -42,7 +42,6 @@ static void OnTimerMain(HWND hwnd);
 static void InitError(int n);
 static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;
-static int nCountFindingClock = -1;
 BOOL bMonOffOnLock = FALSE;
 
 // alarm.c
@@ -465,7 +464,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			if(bStartTimer) KillTimer(hwnd, wParam);
 			bStartTimer = FALSE;
 			api.Inject(hwnd); // install a hook
-			nCountFindingClock = 0;
 			#ifndef _DEBUG
 			EmptyWorkingSet(GetCurrentProcess());
 			#endif
@@ -532,13 +530,11 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		
 		//==================================================
 	case MAINM_CLOCKINIT: // Messages sent/posted from TCDLL.dll
-		nCountFindingClock = -1;
 		g_hwndClock = (HWND)lParam;
 		api.InjectFinalize(); // injected, now remove hook
 		return 0;
 		
 	case MAINM_ERROR:    // error
-		nCountFindingClock = -1;
 		InitError((int)lParam);
 		SendMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
@@ -617,32 +613,26 @@ void InitError(int n)
 ---- Main Timer -------------------------------------------
 ---- synchronize, alarm, timer, execute Desktop Calendar...
 ---------------------------------------------------------*/
-static int hourLast = -1, minuteLast = -1;
-static int daySaved = -1;
 //================================================================================================
 //-----------------------------------+++--> Values Above Are Required by Main Timer Function Below:
 void OnTimerMain(HWND hwnd)   //------------------------------------------------------------+++-->
 {
+	static unsigned s_hourLast = 0xFFFFFFFF;
+	static unsigned s_minuteLast;
 	SYSTEMTIME st;
-	BOOL b = TRUE;
+	
+	OnTimerTimer(hwnd); // timer.c
 	
 	GetLocalTime(&st); // Allow OnTimerAlarm(...) to Fire once Every 60 Seconds
-	if(hourLast == (int)st.wHour && minuteLast == (int)st.wMinute) b = FALSE;
+	if(st.wMinute == s_minuteLast && st.wHour == s_hourLast)
+		return;
+	s_hourLast = st.wHour;
+	s_minuteLast = st.wMinute;
 	
-	hourLast = st.wHour;
-	minuteLast = st.wMinute;
-	if(daySaved >= 0 && st.wDay != daySaved) ;
-	else daySaved = st.wDay;
-	
-	if(b) OnTimerAlarm(hwnd, &st); // alarm.c
-	OnTimerTimer(hwnd); // timer.c
+	OnTimerAlarm(hwnd, &st); // alarm.c
 #	ifdef WIN2K_COMPAT
-	if(b) SetDesktopIconTextBk();
+	SetDesktopIconTextBk();
 #	endif // WIN2K_COMPAT
-	
-	// the clock window exists ?
-	if(0 <= nCountFindingClock && nCountFindingClock < 20) nCountFindingClock++;
-	else if(nCountFindingClock == 20) nCountFindingClock++;
 }
 //================================================================================================
 //----------+++--> Make Background of Desktop Icon Text Labels Transparent (For Windows 2000 Only):
