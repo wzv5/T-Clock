@@ -21,7 +21,10 @@ HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 /** Make Background of Desktop Icon Text Labels Transparent:
  * (For Windows 2000 Only)
  * UnAvertized EasterEgg Function */
+#ifdef WIN2K_COMPAT
 static BOOL m_bTrans2kIcons;
+static void SetDesktopIconTextBk();
+#endif // WIN2K_COMPAT
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -37,7 +40,6 @@ static void ProcessCommandLine(HWND hwndMain,const char* cmdline);
 static void OnTimerMain(HWND hwnd);
 //static void FindTrayServer(); // Redux: what ever it was supposed to be..
 static void InitError(int n);
-static void SetDesktopIconTextBk(void);
 static UINT s_uTaskbarRestart = 0;
 static BOOL bStartTimer = FALSE;
 static int nCountFindingClock = -1;
@@ -265,7 +267,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		return 1;
 	}
 	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
+#	ifdef WIN2K_COMPAT
 	m_bTrans2kIcons = api.GetIntEx("Desktop", "Transparent2kIconText", FALSE);
+#	endif // WIN2K_COMPAT
 	CancelAllTimersOnStartUp();
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
@@ -632,7 +636,9 @@ void OnTimerMain(HWND hwnd)   //------------------------------------------------
 	
 	if(b) OnTimerAlarm(hwnd, &st); // alarm.c
 	OnTimerTimer(hwnd); // timer.c
+#	ifdef WIN2K_COMPAT
 	if(b) SetDesktopIconTextBk();
+#	endif // WIN2K_COMPAT
 	
 	// the clock window exists ?
 	if(0 <= nCountFindingClock && nCountFindingClock < 20) nCountFindingClock++;
@@ -640,6 +646,7 @@ void OnTimerMain(HWND hwnd)   //------------------------------------------------
 }
 //================================================================================================
 //----------+++--> Make Background of Desktop Icon Text Labels Transparent (For Windows 2000 Only):
+#ifdef WIN2K_COMPAT
 void SetDesktopIconTextBk(void)   //--------------------------------------------------------+++-->
 {
 	COLORREF col;
@@ -677,6 +684,7 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 	}
 }
+#endif // WIN2K_COMPAT
 //================================================================================================
 //-----------------------+++--> Go Find the Default Windows Clock Window - So We Can Assimilate it: (was this at anypoint from Windows itself?)
 //void FindTrayServer()   //---------------------------------------------------------+++-->
