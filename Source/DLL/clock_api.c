@@ -92,7 +92,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		DBGMSG(ms_root);
 		
 		memcpy(ms_inifile, ms_root, ms_root_len+1);
-		strcat(ms_inifile, "\\Clock.ini");
+		strcat(ms_inifile, "\\T-Clock.ini");
 		if(PathExists(ms_inifile)){
 			ms_bIniSetting = 1;
 		}
