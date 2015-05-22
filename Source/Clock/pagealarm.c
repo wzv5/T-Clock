@@ -200,29 +200,15 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 void OnInit(HWND hDlg)
 {
 	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
-	HWND file_cb = GetDlgItem(hDlg, IDC_FILEALARM);
-	HWND file_hourly_cb = GetDlgItem(hDlg, IDC_FILEJIHOU);
+	HWND file_boxes[2];
+	#define file_cb file_boxes[0]
+	#define file_hourly_cb file_boxes[1]
 	char tmp[MAX_PATH];
 	int i, count;
+	file_cb = GetDlgItem(hDlg, IDC_FILEALARM);
+	file_hourly_cb = GetDlgItem(hDlg, IDC_FILEJIHOU);
 	/// add "new" entry
 	ComboBox_SetItemData(alarm_cb, ComboBox_AddString(alarm_cb, MyString(IDS_ADDALARM)), 0);
-	/// add default sound files to sound file dropdown
-	ComboBox_AddString(file_cb,"<  no sound  >");
-	ComboBox_AddString(file_hourly_cb,"<  no sound  >");
-	if(api.OS > TOS_2000) {
-		HANDLE hFind;
-		WIN32_FIND_DATA FindFileData;
-		strcpy(tmp,api.root); add_title(tmp,"waves/*");
-		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
-			do{
-				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
-					ComboBox_AddString(file_cb,FindFileData.cFileName);
-					ComboBox_AddString(file_hourly_cb,FindFileData.cFileName);
-				}
-			}while(FindNextFile(hFind,&FindFileData));
-			FindClose(hFind);
-		}
-	}
 	/// add alarms
 	count = api.GetInt("", "AlarmNum", 0);
 	if(count < 1) count = 0;
@@ -245,7 +231,7 @@ void OnInit(HWND hDlg)
 				   api.GetInt("", "Jihou", FALSE));
 				   
 	api.GetStr("", "JihouFile", tmp, sizeof(tmp), "Clock.wav");
-	Edit_SetText(file_hourly_cb, tmp);
+	ComboBox_SetText(file_hourly_cb, tmp);
 	
 	CheckDlgButton(hDlg, IDC_REPEATJIHOU,
 				   api.GetInt("", "JihouRepeat", FALSE));
@@ -255,6 +241,10 @@ void OnInit(HWND hDlg)
 				   
 	OnAlarmJihou(hDlg, IDC_JIHOU);
 	
+	/// add default sound files to sound file dropdown
+	ComboBoxArray_AddSoundFiles(file_boxes, 2);
+	
+	/// add play icons
 	SendDlgItemMessage(hDlg, IDC_TESTALARM, BM_SETIMAGE, IMAGE_ICON,
 					   (LPARAM)g_hIconPlay);
 	OnFileChange(hDlg, IDC_FILEALARM);

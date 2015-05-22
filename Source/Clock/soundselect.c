@@ -5,6 +5,31 @@
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 #include "tclock.h"
 
+void ComboBoxArray_AddSoundFiles(HWND boxes[], int num)
+{
+	int i;
+	char search[MAX_PATH];
+	HANDLE hFind;
+	WIN32_FIND_DATA FindFileData;
+	memcpy(search, api.root, api.root_len);
+	memcpy(search+api.root_len, "/waves/*", 9);
+	for(i=0; i<num; ++i)
+		ComboBox_AddString(boxes[i],"<  no sound  >");
+	if((hFind=FindFirstFile(search, &FindFileData)) != INVALID_HANDLE_VALUE) {
+		do{
+			if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
+				for(i=0; i<num; ++i)
+					ComboBox_AddString(boxes[i], FindFileData.cFileName);
+			}
+		}while(FindNextFile(hFind, &FindFileData));
+		FindClose(hFind);
+	}
+	for(i=0; i<num; ++i){
+		if(!ComboBox_GetTextLength(boxes[i]))
+			ComboBox_SetCurSel(boxes[i], 0);
+	}
+}
+
 void GetMMFileExts(char* dst)
 {
 	char extlist[1024], *ext, *pout;

@@ -144,7 +144,7 @@
 #define IDCB_DELSERVER                  1037
 #define IDCBX_NTPSERVER                 1038
 #define IDCB_SYNCNOW                    1039
-#define IDCE_SYNCSOUND                  1040
+#define IDCBX_SYNCSOUND                 1040
 #define IDCB_SYNCSOUNDBROWSE            1041
 #define IDCBX_SNTPLOG                   1042
 #define IDCBX_SNTPMESSAGE               1043

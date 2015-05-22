@@ -121,6 +121,12 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
 int ChooseAlarmDay(HWND hDlg, unsigned days);
 
 // soundselect.c
+/**
+ * \brief adds a list of sound files from \e /waves/ to given combobox controls
+ * \param boxes[] array of combobox controls
+ * \param num number of controls in \a boxes
+ * \remark first entry is always "&lt;  no sound  &gt;" and will be selected if combobox is empty */
+void ComboBoxArray_AddSoundFiles(HWND boxes[], int num);
 BOOL IsMMFile(const char* fname);
 BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname);
 

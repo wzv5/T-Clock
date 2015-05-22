@@ -377,7 +377,7 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	api.SetInt(m_subkey, "SaveLog", m_flags&SNTPF_LOG);
 	api.SetInt(m_subkey, "MessageBox", m_flags&SNTPF_MESSAGE);
 	
-	GetDlgItemText(hDlg, IDCE_SYNCSOUND, szSound, MAX_PATH);
+	GetDlgItemText(hDlg, IDCBX_SYNCSOUND, szSound, MAX_PATH);
 	api.SetStr(m_subkey, "Sound", szSound);
 	
 	if(tchk[0].bValid) { // Synchronize System Clock With Remote Time Server
@@ -443,7 +443,7 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 			return TRUE;}
 			
 		case IDCB_SYNCSOUNDBROWSE:
-			OnSanshoAlarm(hDlg, IDCE_SYNCSOUND);
+			OnSanshoAlarm(hDlg, IDCBX_SYNCSOUND);
 			return TRUE;
 			
 		case IDCB_CLEAR:{
@@ -494,6 +494,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	int i, count;
 	HWND hList = GetDlgItem(hDlg,IDC_LIST);
 	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
+	HWND sound_cb = GetDlgItem(hDlg,IDCBX_SYNCSOUND);
 	
 	api.PositionWindow(hDlg,21);
 	
@@ -534,7 +535,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 					   
 	// Get the Sync Sound File:
 	api.GetStr(m_subkey, "Sound", str, sizeof(str), "");
-	SetDlgItemText(hDlg, IDCE_SYNCSOUND, str);
+	ComboBox_SetText(sound_cb, str);
+	ComboBoxArray_AddSoundFiles(&sound_cb, 1);
 	
 	// Get the Confirmation Options:
 	m_flags = 0;
