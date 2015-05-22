@@ -390,6 +390,10 @@ int Clock_ShellExecute(const char* method, const char* app, const char* params, 
 int Clock_Exec(const char* app, const char* params, HWND parent) {
 	return Clock_ShellExecute(NULL,app,params,parent,SW_SHOWNORMAL);
 }
+int Clock_ExecElevated(const char* app, const char* params, HWND parent)
+{
+	return Clock_ShellExecute("runas",app,params,parent,SW_SHOWNORMAL);
+}
 int Clock_ExecFile(const char* command, HWND parent) {
 	char app[MAX_PATH], params[MAX_PATH];
 	if(!command[0])

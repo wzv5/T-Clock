@@ -218,12 +218,6 @@
 			<Option target="app debug" />
 			<Option target="app-64" />
 		</Unit>
-		<Unit filename="Clock/GetSetTimePerms.c">
-			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="app debug" />
-			<Option target="app-64" />
-		</Unit>
 		<Unit filename="Clock/PageHotKey.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
@@ -425,6 +419,12 @@
 			<Option target="dll" />
 			<Option target="dll debug" />
 			<Option target="dll-64" />
+		</Unit>
+		<Unit filename="common/HaveSetTimePerms.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="app debug" />
+			<Option target="app-64" />
 		</Unit>
 		<Unit filename="common/autoversion.cpp">
 			<Option target="AutoVersion" />

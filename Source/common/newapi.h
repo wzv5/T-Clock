@@ -66,4 +66,13 @@ void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT* prc);
  * \sa DrawXPClockBackground(), DrawThemeParentBackground() */
 void DrawXPClockHover(HWND hwnd, HDC hdc, RECT* prc);
 
+// UAC and stuff
+
+#ifndef BCM_SETSHIELD /* _WIN32_WINNT >= 0x0600 */
+#	define BCM_SETSHIELD            (BCM_FIRST + 0x000C)
+/** \brief add or remove a UAC shield icon for a button \remark this macro is only useful on Windows Vista+ */
+#	define Button_SetElevationRequiredState(hwnd, fRequired) \
+		(LRESULT)SNDMSG((hwnd), BCM_SETSHIELD, 0, (LPARAM)fRequired)
+#endif
+
 #endif // TCLOCK_NEWAPI_H

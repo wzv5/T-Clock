@@ -32,6 +32,7 @@ static DWORD m_dwTickCountOnSend = 0;
 enum{
 	SNTPF_LOG		=0x01, /**< write to log file */
 	SNTPF_MESSAGE	=0x02, /**< display info message on sync */
+	SNTPF_UAC		=0x04, /**< we require UAC elevation */
 };
 
 BOOL GetSetTimePermissions();
@@ -297,10 +298,8 @@ SOCKET OpenTimeSocket(const char* server)
 	return sock;
 }
 //====================//========================================================================
-// Required for SNTP/UDP Socket Operation TimeOut Thread Only ===================================
-#include <process.h>   //--+++-->				 <--+++--<<<<< SNTP Code Starts Here >>>>>--+++-->
-//====================//===========================================================================
-void SyncTimeNow()   //============================================================================
+//---------------------------------------+++--><--+++--<<<<< SNTP Code Starts Here >>>>>--+++-->
+void SyncTimeNow()
 {
 	WORD wVersionRequested = MAKEWORD(2,2);
 	WSADATA wsaData; // Okay...Now We Want WinSock v2.2
@@ -320,7 +319,7 @@ void SyncTimeNow()   //=========================================================
 	if(!server[0]) {
 		wsprintf(szErr, "No SNTP Server Specified!");
 		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
-		if(!m_dlg) NetTimeConfigDialog();
+		if(!m_dlg) NetTimeConfigDialog(0);
 		return;
 	}
 	
@@ -354,9 +353,9 @@ and add your username to "Change the system time"). I don't know of any specific
 //---------------------------------------------------+++--> e.g. IS An Administrator.
 //================================================================================================
 //--------------------------------//---------------------+++--> Open the SNTP Configuration Dialog:
-void NetTimeConfigDialog(void)   //---------------------------------------------------------+++-->
+void NetTimeConfigDialog(int justElevated)   //---------------------------------------------------------+++-->
 {
-	DialogBox(0, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, DlgProcSNTPConfig);
+	DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, DlgProcSNTPConfig, (LPARAM)justElevated);
 }
 //================================================================================================
 //--------------------------//--+++--> Save Network Time Server Configuration Settings to Registry:
@@ -368,12 +367,6 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 	int i, count;
 	
-/// @todo (White-Tiger#1#05/11/15): properly handle "local" settings and keep them sync
-	m_flags = 0;
-	if(IsDlgButtonChecked(hDlg, IDCBX_SNTPLOG))
-		m_flags |= SNTPF_LOG;
-	if(IsDlgButtonChecked(hDlg, IDCBX_SNTPMESSAGE))
-		m_flags |= SNTPF_MESSAGE;
 	api.SetInt(m_subkey, "SaveLog", m_flags&SNTPF_LOG);
 	api.SetInt(m_subkey, "MessageBox", m_flags&SNTPF_MESSAGE);
 	
@@ -424,12 +417,12 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 //------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
 INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	(void)lParam;
-	
 	switch(msg)  {
 	case WM_INITDIALOG:
 		m_dlg = hDlg;
 		OnInit(hDlg);
+		if(lParam) // justElevated
+			PostMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDCB_SYNCNOW,BN_CLICKED), (LPARAM)GetDlgItem(hDlg,IDCB_SYNCNOW));
 		return TRUE;
 	case WM_DESTROY:
 		m_dlg = NULL;
@@ -439,8 +432,20 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 		switch(LOWORD(wParam))  {
 		case IDCB_SYNCNOW:{
 			OkaySave(hDlg);
+			if(m_flags&SNTPF_UAC){
+				if(api.ExecElevated(GetClockExe(),"/UAC /SyncOpt",hDlg) == 0)
+					EndDialog(hDlg, 2);
+				return TRUE;
+			}
 			SyncTimeNow();
 			return TRUE;}
+			
+		case IDCBX_SNTPLOG:
+			m_flags ^= SNTPF_LOG;
+			return TRUE;
+		case IDCBX_SNTPMESSAGE:
+			m_flags ^= SNTPF_MESSAGE;
+			return TRUE;
 			
 		case IDCB_SYNCSOUNDBROWSE:
 			OnSanshoAlarm(hDlg, IDCBX_SYNCSOUND);
@@ -572,7 +577,11 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	ListView_InsertColumn(hList, 0, &lvCol);
 	
 	// Test For: SE_SYSTEMTIME_NAME Priviledge Before Enabling Sync Now Button:
-	EnableDlgItem(hDlg, IDCB_SYNCNOW, GetSetTimePermissions());
+	if(!HaveSetTimePermissions()){
+		HWND hwndSync = GetDlgItem(hDlg, IDCB_SYNCNOW);
+		m_flags |= SNTPF_UAC;
+		Button_SetElevationRequiredState(hwndSync, 1);
+	}
 	
 	// Load the Time Synchronization Log File:
 	strcpy(str, api.root);

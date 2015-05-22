@@ -378,6 +378,7 @@ LRESULT CALLBACK MsgOnlyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 //---------------------------------------------//---------------+++--> T-Clock Command Line Option:
 void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------------------+++-->
 {
+	int justElevated = 0;
 	const char* p = cmdline;
 	if(g_hwndTClockMain != hwndMain){
 		g_hwndTClockMain = CreateWindow("STATIC",NULL,0,0,0,0,0,HWND_MESSAGE_nowarn,0,0,0);
@@ -412,19 +413,22 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
 				p += 3;
 			} else if(_strnicmp(p, "SyncOpt", 7) == 0) {
-				NetTimeConfigDialog();
+				NetTimeConfigDialog(justElevated);
 				p += 7;
 			} else if(_strnicmp(p, "Sync", 4) == 0) {
-				if(g_hwndTClockMain == hwndMain) {
-					MessageBox(0,
-							   TEXT("T-Clock Must be Running for Time Synchronization to Succeed\n"
-									"T-Clock Can Not be Started With the /Sync Switch"),
-							   "ERROR: Time Sync Failure", MB_OK|MB_ICONERROR);
-					SendMessage(hwndMain, WM_COMMAND, IDM_EXIT, 0);
-				} else {
+				p += 4;
+				if(HaveSetTimePermissions()){
 					SyncTimeNow();
-					p += 4;
+				} else if(!justElevated){
+					if(api.ExecElevated(GetClockExe(),"/UAC /Sync",NULL) != 0){
+						MessageBox(0,"T-Clock must be elevated to set your system time,\nbut elevation was cancled", "Time Sync Failed", MB_OK|MB_ICONERROR);
+					}
 				}
+				if(g_hwndTClockMain == hwndMain)
+					SendMessage(hwndMain, MAINM_EXIT, 0, 0);
+			} else if(strncmp(p, "UAC", 3) == 0) {
+				justElevated = 1;
+				p += 3;
 			}
 		}
 	}

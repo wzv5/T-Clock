@@ -168,7 +168,6 @@
     <ClCompile Include="..\alarmday.c" />
     <ClCompile Include="..\BounceWind.c" />
     <ClCompile Include="..\ExitWindows.c" />
-    <ClCompile Include="..\GetSetTimePerms.c" />
     <ClCompile Include="..\main.c" />
     <ClCompile Include="..\menu.c" />
     <ClCompile Include="..\mouse.c" />
@@ -190,6 +189,7 @@
     <ClCompile Include="..\..\common\clock.c" />
     <ClCompile Include="..\..\common\newapi.c" />
     <ClCompile Include="..\..\common\utl.c" />
+    <ClCompile Include="..\..\common\HaveSetTimePerms.c" />
     <ClCompile Include="..\..\common\win2k_compat.c" />
   </ItemGroup>
   <ItemGroup>

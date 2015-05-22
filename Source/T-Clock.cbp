@@ -199,13 +199,6 @@
 			<Option target="app-64" />
 			<Option target="app-64 debug" />
 		</Unit>
-		<Unit filename="Clock/GetSetTimePerms.c">
-			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="app debug" />
-			<Option target="app-64" />
-			<Option target="app-64 debug" />
-		</Unit>
 		<Unit filename="Clock/PageHotKey.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
@@ -469,6 +462,13 @@
 		<Unit filename="common/resource.h" />
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="common/HaveSetTimePerms.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="app-64" />
+			<Option target="app debug" />
+			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="common/utl.h" />
 		<Unit filename="common/version.h" />

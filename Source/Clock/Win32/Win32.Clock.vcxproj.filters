@@ -27,9 +27,6 @@
     <ClCompile Include="..\ExitWindows.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\GetSetTimePerms.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -91,6 +88,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\common\utl.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\common\HaveSetTimePerms.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\common\win2k_compat.c">

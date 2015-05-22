@@ -63,6 +63,7 @@ TClockAPI api = {
 	// exec
 	ClockAPI(ShellExecute)
 	ClockAPI(Exec)
+	ClockAPI(ExecElevated)
 	ClockAPI(ExecFile)
 	// translation
 //	ClockAPI(T)
@@ -89,8 +90,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		GetLongPathName(own_path, ms_root, sizeof(ms_root));
 		del_title(ms_root); del_title(ms_root);
 		ms_root_len = strlen(ms_root);
-		DBGOUT("%s\n",ms_root);
-		DBGMSG(ms_root);
+		DBGOUT("root: %s\n",ms_root);
 		
 		memcpy(ms_inifile, ms_root, ms_root_len+1);
 		strcat(ms_inifile, "\\T-Clock.ini");

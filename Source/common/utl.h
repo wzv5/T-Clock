@@ -1,6 +1,14 @@
 #pragma once
 #ifndef TCLOCK_UTL_H
 #define TCLOCK_UTL_H
+/**
+ * \brief checks if current process is in admin group
+ * \return boolean */
+int IsRunAsAdmin();
+/**
+ * \brief checks if current user is in admin group
+ * \return boolean */
+int IsUserInAdminGroup();
 // clock related
 /**
  * \brief finds the tray clock handle */
@@ -65,6 +73,11 @@ void str0cat(char* list, const char* str);
  * \return \c NULL on failure */
 char* MyString(UINT id);
 //void Pause(HWND hWnd, LPCTSTR pszArgs);
+// HaveSetTimePerms.c
+/**
+ * \brief checks for \c SetSystemTime() permissions (\c SE_SYSTEMTIME_NAME)
+ * \return boolean */
+int HaveSetTimePermissions();
 
 #include "win2k_compat.h"
 #endif // TCLOCK_UTL_H

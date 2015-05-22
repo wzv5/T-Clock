@@ -6,6 +6,54 @@
 #include "utl.h"
 //#include <sys/types.h>
 #include <sys/stat.h>
+
+int IsRunAsAdmin()
+{
+	int is_admin = 0;
+	char admin_group[SECURITY_MAX_SID_SIZE];
+	DWORD cbSize = sizeof(admin_group);
+	if(CreateWellKnownSid(WinBuiltinAdministratorsSid, NULL, &admin_group, &cbSize)){
+		CheckTokenMembership(NULL, admin_group, &is_admin);
+	}
+	return is_admin;
+}
+int IsUserInAdminGroup()
+{
+	int is_admin = 0;
+	char admin_group[SECURITY_MAX_SID_SIZE];
+	DWORD cbSize;
+	HANDLE hToken;
+	HANDLE hTokenTest = NULL;
+	if(OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_DUPLICATE, &hToken)){
+		// process might run with stripped down rights (that is, if UAC is active)
+		if(api.OS >= TOS_VISTA){
+			TOKEN_ELEVATION_TYPE elevType;
+			if(GetTokenInformation(hToken, TokenElevationType, &elevType, sizeof(elevType), &cbSize)){
+				if(elevType == TokenElevationTypeLimited){
+					if(!GetTokenInformation(hToken, TokenLinkedToken, &hTokenTest, sizeof(hTokenTest), &cbSize)){
+						CloseHandle(hToken);
+						return 0;
+					}
+				}
+			}
+		}
+		// no UAC involved? impersonate our primary token for use by CheckTokenMembership()
+		if(!hTokenTest){
+			if(!DuplicateToken(hToken, SecurityIdentification, &hTokenTest)){
+				hTokenTest = NULL;
+			}
+		}
+		if(hTokenTest){
+			cbSize = sizeof(admin_group);
+			if(CreateWellKnownSid(WinBuiltinAdministratorsSid, NULL, &admin_group, &cbSize)){
+				CheckTokenMembership(hTokenTest, admin_group, &is_admin);
+			}
+			CloseHandle(hTokenTest);
+		}
+		CloseHandle(hToken);
+	}
+	return is_admin;
+}
 //==================================================================================
 //--------------------------------------------------+++--> finds the tray clock hwnd:
 HWND FindClock()   //---------------------------------------------------------+++-->

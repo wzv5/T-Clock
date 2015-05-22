@@ -193,6 +193,12 @@ typedef struct TClockAPI_TAG {
  * \sa ExecElevated(), ExecFile(), ShellExecute() */
 	int (*Exec)(const char* app, const char* params, HWND parent);
 /**
+ * \brief starts an application elevated (displays UAC dialog when required)
+ * \return -1 on failure, 0 on success, 1 if user cancled
+ * \remarks this function is mainly for Vista+, though even Win2000 shows an user logon screen
+ * \sa Exec(), ExecFile(), ShellExecute() */
+	int (*ExecElevated)(const char* app, const char* params, HWND parent);
+/**
  * \brief opens a file or starts an application
  * \param command full commandline with filename and optional arguments
  * \param parent = \c NULL (parent window)

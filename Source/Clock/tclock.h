@@ -178,7 +178,7 @@ void GetHotKeyInfo(HWND hWnd);
 
 // SNTP.c
 void SyncTimeNow();
-void NetTimeConfigDialog();
+void NetTimeConfigDialog(int justElevated);
 
 // BounceWind.c
 int BounceWindOptions(HWND hDlg, dlgmsg_t* dlg);

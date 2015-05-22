@@ -57,6 +57,8 @@ void Clock_GetFileAndOption(const char* command, char* fname, char* opt);
 int Clock_ShellExecute(const char* method, const char* app, const char* params, HWND parent, int show);
 /** \sa TClockAPI::Exec() */
 int Clock_Exec(const char* app, const char* params, HWND parent);
+/** \sa TClockAPI::ExecElevated() */
+int Clock_ExecElevated(const char* app, const char* params, HWND parent);
 /** \sa TClockAPI::ExecFile() */
 int Clock_ExecFile(const char* command, HWND parent);
 
