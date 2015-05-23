@@ -279,9 +279,9 @@ void PlayNoSoundThread(HWND hWnd, char* fname, DWORD dwLoops)
 BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 {
 
-	if(!*fname) return FALSE;
-	if(*fname!='/' && *fname!='\\' && fname[1]!=':' // no abs path
-	&&(*fname!='.' || (fname[1]!='/' && fname[1]!='\\' && (fname[1]!='.' ||  (fname[2]!='/' && fname[2]!='\\'))))) // no relative path (strict relative)
+	if(!fname[0] || fname[0]=='<') return FALSE;
+	if(fname[0]!='/' && fname[0]!='\\' && fname[1]!=':' // no abs path
+	&&(fname[0]!='.' || (fname[1]!='/' && fname[1]!='\\' && (fname[1]!='.' ||  (fname[2]!='/' && fname[2]!='\\'))))) // no relative path (strict relative)
 	{ // do it relative to "waves/"
 		const size_t tlen=api.root_len;
 		const size_t len=strlen(fname)+1; // incl. terminating null
