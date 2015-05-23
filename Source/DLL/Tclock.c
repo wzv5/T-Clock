@@ -1000,8 +1000,7 @@ void OnDrawTimer(HWND hwnd)
 	else if(m_bDispSecond) bRedraw = 1;
 	else if(m_nDispBeat == 1 && m_beatLast != (beat100/100)) bRedraw = 1;
 	else if(m_nDispBeat == 2 && m_beatLast != beat100) bRedraw = 1;
-//	else if(bDispSysInfo) bRedraw = 1;
-	else if(m_LastTime.wHour!=t.wHour || m_LastTime.wMinute!=t.wMinute) bRedraw = 1;
+	else if(m_LastTime.wMinute!=t.wMinute) bRedraw = 1;
 	
 	if(m_LastTime.wDay!=t.wDay || m_LastTime.wMonth!=t.wMonth || m_LastTime.wYear!=t.wYear) {
 		InitFormat("Format",&t); // format.c

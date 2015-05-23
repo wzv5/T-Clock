@@ -165,6 +165,7 @@
 			</Target>
 		</Build>
 		<VirtualTargets>
+			<Add alias="debug" targets="app debug;app-64 debug;dll debug;dll-64 debug;" />
 			<Add alias="debug-32" targets="dll debug;app debug;" />
 			<Add alias="debug-64" targets="dll-64 debug;app-64 debug;" />
 			<Add alias="release" targets="app;app-64;dll-64;dll;" />
@@ -445,6 +446,13 @@
 			<Option target="dll-64" />
 			<Option target="dll-64 debug" />
 		</Unit>
+		<Unit filename="common/HaveSetTimePerms.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="app-64" />
+			<Option target="app debug" />
+			<Option target="app-64 debug" />
+		</Unit>
 		<Unit filename="common/clock.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
@@ -462,13 +470,6 @@
 		<Unit filename="common/resource.h" />
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="common/HaveSetTimePerms.c">
-			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="app-64" />
-			<Option target="app debug" />
-			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="common/utl.h" />
 		<Unit filename="common/version.h" />

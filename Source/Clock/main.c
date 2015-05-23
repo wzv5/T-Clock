@@ -241,7 +241,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			ProcessCommandLine(hwndMain,lpCmdLine);
 		}else{ // start new instance
 			char clock64[MAX_PATH];
-			strcpy(clock64,api.root); add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
+			memcpy(clock64, api.root, api.root_len);
+			add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
 			api.Exec(clock64,lpCmdLine,NULL);
 		}
 		return 0;
