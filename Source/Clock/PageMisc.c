@@ -108,9 +108,9 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,api.GetInt("Calendar","ViewMonthsPast",1));
 	
 	ComboBox_ResetContent(week_cb);
-	ComboBox_AddString(week_cb, "0");
-	ComboBox_AddString(week_cb, "1");
-	ComboBox_AddString(week_cb, "2");
+	ComboBox_AddString(week_cb, "week containing January 1 (USA)");
+	ComboBox_AddString(week_cb, "first full week");
+	ComboBox_AddString(week_cb, "first week with four days (EU)");
 	ComboBox_SetCurSel(week_cb, GetMySysWeek());
 	
 	if(api.OS > TOS_2000) {
@@ -132,8 +132,11 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 //-------------------------//-----------------------------+++--> Save Current Settings to Registry:
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
-	char szWeek[8];
-	char bRefresh=((unsigned)api.GetInt("Desktop","Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
+	union{
+		short i;
+		char str[2];
+	} week;
+	char bRefresh = ((unsigned)api.GetInt("Desktop","Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
 	api.SetInt("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
 	api.SetInt("Calendar","CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));
@@ -149,8 +152,8 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	api.SetInt("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
 	api.SetInt("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
-	GetDlgItemText(hDlg, IDC_FIRSTWEEK, szWeek, 8);
-	SetMySysWeek(szWeek);
+	week.i = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTWEEK));
+	SetMySysWeek(week.str);
 	
 	if(api.OS >= TOS_XP) { // This feature requires XP+
 		BOOL enabled=IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK);
