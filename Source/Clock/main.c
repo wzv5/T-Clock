@@ -467,8 +467,29 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		
 	case WM_TIMER:
 		if(wParam == IDTIMER_START) {
+			static DWORD s_restart_ticks = 0;
+			static int s_restart_num = 0;
+			DWORD ticks = GetTickCount();
 			if(bStartTimer) KillTimer(hwnd, wParam);
 			bStartTimer = FALSE;
+			if(ticks - s_restart_ticks < 30000){
+				if(++s_restart_num >= 3){
+					if(api.Message(0,
+					"Multiple Explorer crashes or restarts detected\n"
+					"It's possible that T-Clock is crashing your Explorer,\n"
+					"automated hooking postponed.\n"
+					"\n"
+					"Take precaution and exit T-Clock now?","T-Clock",MB_YESNO,MB_ICONEXCLAMATION) == IDYES){
+						SendMessage(hwnd, WM_CLOSE, 0, 0);
+						return 0;
+					}
+					s_restart_ticks = GetTickCount();
+					s_restart_num = 0;
+				}
+			}else{
+				s_restart_ticks = ticks;
+				s_restart_num = 0;
+			}
 			api.Inject(hwnd); // install a hook
 			#ifndef _DEBUG
 			EmptyWorkingSet(GetCurrentProcess());
