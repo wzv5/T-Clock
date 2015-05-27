@@ -328,6 +328,7 @@ void OnDestroy(HWND hDlg)   //--------------------------------------------------
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
 	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
+	HWND file_cb = GetDlgItem(hDlg, IDC_TIMERFILE);
 	char subkey[TNY_BUFF];
 	size_t offset;
 	int idx, count;
@@ -341,23 +342,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
 	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
 	/// add default sound files to file dropdown
-	if(api.OS > TOS_2000) {
-		char tmp[MAX_PATH];
-		HANDLE hFind;
-		WIN32_FIND_DATA FindFileData;
-		
-		memcpy(tmp, api.root, api.root_len+1);
-		add_title(tmp,"waves/*");
-		if((hFind=FindFirstFile(tmp,&FindFileData)) != INVALID_HANDLE_VALUE) {
-			HWND sound_cb = GetDlgItem(hDlg, IDC_TIMERFILE);
-			do{
-				if(!(FindFileData.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY)) { // only files (also ignores . and ..)
-					ComboBox_AddString(sound_cb, FindFileData.cFileName);
-				}
-			}while(FindNextFile(hFind,&FindFileData));
-			FindClose(hFind);
-		}
-	}
+	ComboBoxArray_AddSoundFiles(&file_cb, 1);
 	// add timer to combobox
 	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
 	count=api.GetInt(g_szTimersSubKey, "NumberOfTimers", 0);
