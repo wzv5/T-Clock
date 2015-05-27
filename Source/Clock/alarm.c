@@ -159,7 +159,7 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 			if(m_pAS[i].fname[0]) {
 				if(m_pAS[i].uFlags&ALRM_REPEAT && m_pAS[i].iTimes > 1) rep = m_pAS[i].iTimes; //-+> Ring X Times
 				else if(m_pAS[i].uFlags&ALRM_REPEAT) rep = -1; //-+> Ring To Infinity > ∞ < Or Until Stopped
-				else if(m_pAS[i].uFlags&ALRM_CHIMEHR) rep = h; //-+> Ring the Hour
+				else if(m_pAS[i].uFlags&ALRM_CHIMEHR && h > 0) rep = h - 1; //-+> Ring the Hour
 				else rep = 0;
 				
 				PlayFile(hwnd, m_pAS[i].fname, rep);
@@ -179,7 +179,7 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 		api.GetStr("", "JihouFile", fname, sizeof(fname), "");
 		if(fname[0]) {
 			if(m_bJihouRepeat) {
-				rep = h; // Chime the Hour as Requested (If Requested)
+				rep = h - 1; // Chime the Hour as Requested (If Requested)
 			} else {
 				rep = 0; // Ring Once & Go Away!
 			}
