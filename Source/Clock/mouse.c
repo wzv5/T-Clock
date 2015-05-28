@@ -125,7 +125,7 @@ void OnTimerMouse(HWND hwnd)
 		MyPropertySheet(-1);
 		break;
 	case MOUSEFUNC_CLIPBOARD:
-		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKELONG(m_click_button,m_click));
+		PostMessage(g_hwndClock,CLOCKM_COPY,0,MAKEWPARAM(m_click_button,m_click));
 		break;
 	case MOUSEFUNC_SCREENSAVER:
 		SendMessage(GetDesktopWindow(),WM_SYSCOMMAND,SC_SCREENSAVE,0);

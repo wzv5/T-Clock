@@ -111,7 +111,7 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				OnFileChange(hDlg,id);
 				SendPSChanged(hDlg);
 			}else if(code==CBN_SELCHANGE)
-				PostMessage(hDlg,WM_COMMAND,MAKELONG(id,CBN_EDITCHANGE),0);
+				PostMessage(hDlg,WM_COMMAND,MAKEWPARAM(id,CBN_EDITCHANGE),lParam);
 			break;
 		// day selector
 		case IDC_ALARMDAY:

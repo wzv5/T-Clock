@@ -201,7 +201,7 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				
 			case IDC_TIMERNAME:
 				if(code==CBN_EDITCHANGE) OnTimerName(hDlg);
-				else if(code==CBN_SELCHANGE) PostMessage(hDlg, WM_COMMAND, MAKELONG(id, CBN_EDITCHANGE), 0);
+				else if(code==CBN_SELCHANGE) PostMessage(hDlg, WM_COMMAND, MAKEWPARAM(id, CBN_EDITCHANGE), lParam);
 				break;
 				
 			case IDCB_STOPTIMER:

@@ -22,27 +22,27 @@ void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb) /// there's a bug with 
 	col.quad.rgbReserved=0x00;
 	m_themecolor = col.ref;
 }
-unsigned Clock_GetColor(unsigned ogbr,int use_raw)
+unsigned Clock_GetColor(unsigned color, int use_raw)
 {
 	// useraw = 1 == want some raw values, mainly "default"
 	// useraw = 2 == always want raw values (that is, everytime a TCOLOR_* isn't save to be right)
 	unsigned sub;
-	if((ogbr&TCOLOR_MASK)!=TCOLOR_MAGIC)
-		return ogbr;
-	sub=ogbr^TCOLOR_MAGIC;
+	if((color&TCOLOR_MASK)!=TCOLOR_MAGIC)
+		return color;
+	sub=color^TCOLOR_MAGIC;
 	if(sub<TCOLOR_BEGIN_)
 		return GetSysColor(sub);
 	switch(sub){
 	case TCOLOR_DEFAULT:
 		if(use_raw)
-			return ogbr;
+			return color;
 		if(IsXPThemeActive() && gs_hwndClock)
 			return GetXPClockColor(gs_hwndClock);
 		else
 			return GetSysColor(COLOR_WINDOWTEXT);
 	case TCOLOR_TRANSPARENT:
 		if(use_raw)
-			return ogbr;
+			return color;
 		return 0xFF000000;
 	case TCOLOR_THEME:{
 		HKEY hkey;
@@ -56,11 +56,11 @@ unsigned Clock_GetColor(unsigned ogbr,int use_raw)
 		return m_themecolor;}
 	case TCOLOR_THEME2:
 		if(use_raw==2)
-			return ogbr;
+			return color;
 		if(IsXPThemeActive() && gs_hwndClock)
 			return GetXPClockColorBG(gs_hwndClock);
 		else
 			return GetSysColor(COLOR_3DFACE);
 	}
-	return ogbr;
+	return color;
 }

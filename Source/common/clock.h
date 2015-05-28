@@ -83,15 +83,14 @@ typedef struct TClockAPI_TAG {
  * \brief extracts filename and parameters from command (used by ExecFile()) */
 	void (*GetFileAndOption)(const char* command, char* fname, char* opt);
 /**
- * \brief parses given color \a ogbr ( \c COLORREF ) and returns a \c agbr value for use by t-clock
- * \param ogbr color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)
+ * \brief parses given color ( \c COLORREF ) for use by T-Clock or Windows
+ * \param color color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)
  * \param use_raw \c 1 if raw color should be returned, eg. "unparsed" for some \c TCOLOR_* values that wouldn't be good to preview
- * \return \c agbr value
+ * \return parsed color value
  * \remark \a use_raw currently only applies to \c TCOLOR_DEFAULT and \c TCOLOR_TRANSPARENT
- * \remark \b alpha (a) ranges from 0-255, while 255 means fully transparent
- * \remark \b opacity (o) ranges from 0-255, while 255 means fully opaque
- * \sa TCOLORS, On_DWMCOLORIZATIONCOLORCHANGED(), COLORREF, GetSysColor() */
-	unsigned (*GetColor)(unsigned ogbr,int use_raw);
+ * \remark \b we use the highest byte as a transparency value, ranging from 0-255, while 255 means fully transparent
+ * \sa TCOLORS, On_DWMCOLORIZATIONCOLORCHANGED(), COLORREF, RGB(), GetSysColor() */
+	unsigned (*GetColor)(unsigned color,int use_raw);
 /**
  * \brief callback for use by \c WM_DWMCOLORIZATIONCOLORCHANGED messages to read current theme's color
  * \param argb wParam of \c WM_DWMCOLORIZATIONCOLORCHANGED
