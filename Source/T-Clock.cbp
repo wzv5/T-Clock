@@ -461,6 +461,19 @@
 			<Option target="app-64 debug" />
 		</Unit>
 		<Unit filename="common/clock.h" />
+		<Unit filename="common/control_extensions.c">
+			<Option compilerVar="CC" />
+			<Option target="app" />
+			<Option target="app-64" />
+			<Option target="app debug" />
+			<Option target="app-64 debug" />
+		</Unit>
+		<Unit filename="common/control_extensions.h">
+			<Option target="app" />
+			<Option target="app-64" />
+			<Option target="app debug" />
+			<Option target="app-64 debug" />
+		</Unit>
 		<Unit filename="common/globals.h" />
 		<Unit filename="common/manifest.xml" />
 		<Unit filename="common/newapi.c">

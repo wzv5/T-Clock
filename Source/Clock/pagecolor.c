@@ -12,12 +12,8 @@ static int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpnt
 
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg,BOOL preview);
-static void InitColor(HWND hDlg);
 static void InitComboFont(HWND hDlg);
-static void OnChooseColor(HWND hDlg, WORD color_btn);
-static void OnDrawItemColorCombo(LPARAM lParam);
 static void SetComboFontSize(HWND hDlg, int bInit);
-static void OnMeasureItemColorCombo(LPARAM lParam);
 
 static char m_transition=-1; // somehow WM_INITDIALOG gets called quite late, we need to initialize the var here. (related problem caused by spin control)
 static __inline void SendPSChanged(HWND hDlg){
@@ -48,11 +44,9 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		DeleteObject(hfonti);
 		break;}
 	case WM_MEASUREITEM:
-		OnMeasureItemColorCombo(lParam);
-		return TRUE;
+		return ColorBox_OnMeasureItem(wParam, lParam);
 	case WM_DRAWITEM:
-		OnDrawItemColorCombo(lParam);
-		return TRUE;
+		return ColorBox_OnDrawItem(wParam, lParam);
 	case WM_COMMAND: {
 		WORD id=LOWORD(wParam);
 		switch(HIWORD(wParam)){
@@ -71,7 +65,7 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			} break;
 		default:
 			if(id==IDC_CHOOSECOLFORE || id==IDC_CHOOSECOLBACK){
-				OnChooseColor(hDlg, id);
+				ColorBox_ChooseColor((HWND)lParam);
 			}else if(id==IDC_CHOOSEFONT){
 				HWND hwndCombo;
 				HDC hdc;
@@ -135,13 +129,18 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 --------------------------------------------------*/
 void OnInit(HWND hDlg)
 {
+	ColorBox colors[2];
 	HWND quality_cb = GetDlgItem(hDlg, IDC_FONTQUAL);
 	HDC hdc;
 	LOGFONT logfont;
 	HFONT hfont;
 	m_transition=-1; // start transition lock
 	// setting of "background" and "text"
-	InitColor(hDlg);
+	colors[0].hwnd = GetDlgItem(hDlg, IDC_COLFORE);
+	colors[0].color = api.GetInt("Clock","ForeColor",TCOLOR(TCOLOR_DEFAULT));
+	colors[1].hwnd = GetDlgItem(hDlg, IDC_COLBACK);
+	colors[1].color = api.GetInt("Clock","BackColor",TCOLOR(TCOLOR_DEFAULT));
+	ColorBox_Setup(colors, 2);
 	
 	// if color depth is 256 or less
 	hdc = CreateIC("DISPLAY", NULL, NULL, NULL);
@@ -215,8 +214,8 @@ void OnApply(HWND hDlg,BOOL preview)
 	HWND size_cb = GetDlgItem(hDlg, IDC_FONTSIZE);
 	int sel;
 	
-	api.SetInt(section, "ForeColor", (COLORREF)ComboBox_GetItemData(fore_cb,ComboBox_GetCurSel(fore_cb)));
-	api.SetInt(section, "BackColor", (COLORREF)ComboBox_GetItemData(back_cb,ComboBox_GetCurSel(back_cb)));
+	api.SetInt(section, "ForeColor", ColorBox_GetColorRaw(fore_cb));
+	api.SetInt(section, "BackColor", ColorBox_GetColorRaw(back_cb));
 	
 	ComboBox_GetLBText(font_cb, ComboBox_GetCurSel(font_cb), tmp);
 	api.SetStr(section, "Font", tmp);
@@ -246,167 +245,6 @@ void OnApply(HWND hDlg,BOOL preview)
 		m_transition=0;
 	}else
 		m_transition=1;
-}
-
-/*------------------------------------------------
---------------------------------------------------*/
-typedef struct {
-	COLORREF col;
-	const char* name;
-} syscolor_t;
-const syscolor_t syscolor[]={
-	{TCOLOR_DEFAULT,"<default>"},
-	{TCOLOR_TRANSPARENT,"<transparent>"},
-	{TCOLOR_THEME,"<theme color>"},
-//	{TCOLOR_THEME2,"<theme color II>"},
-	
-	{COLOR_3DFACE,"3DFACE"},
-	{COLOR_3DSHADOW,"3DSHADOW"},
-	{COLOR_3DHILIGHT,"3DHILIGHT"},
-	{COLOR_BTNTEXT,"BTNTEXT"},
-	{COLOR_WINDOWTEXT,"WINDOWTEXT"},
-	{COLOR_INFOTEXT,"INFOTEXT"},
-	{COLOR_INFOBK,"INFOBK"},
-};
-const size_t syscolor_num = sizeof(syscolor)/sizeof(syscolor_t);
-const COLORREF basecolor[]={
-	0x00000080, 0x00008000, 0x00800000,
-	0x00008080, 0x00800080, 0x00808000,
-	0x000000FF, 0x0000FF00, 0x00FF0000,
-	0x0000FFFF, 0x00FF00FF, 0x00FFFF00,
-	0x00FFFFFF, 0x00C0C0C0, 0x00808080, 0x00000000,
-};
-const size_t basecolor_num = sizeof(basecolor)/sizeof(COLORREF);
-const size_t colorstotal = sizeof(syscolor)/sizeof(syscolor_t)+sizeof(basecolor)/sizeof(COLORREF);
-void InitColor(HWND hDlg)
-{
-	COLORREF col;
-	WORD id;
-	unsigned icol;
-	
-	for(id=IDC_COLFORE; id<=IDC_COLBACK; id+=2){
-		HWND color_cb = GetDlgItem(hDlg, id);
-		/// add sys colors
-		for(icol=0; icol<syscolor_num; ++icol){
-			ComboBox_AddString(color_cb, (size_t)TCOLOR(syscolor[icol].col));
-		}
-		/// add base colors
-		for(icol=0; icol<basecolor_num; ++icol)
-			ComboBox_AddString(color_cb, (size_t)basecolor[icol]);
-		/// select last used color
-		if(id == IDC_COLFORE)
-			col=api.GetInt("Clock","ForeColor",TCOLOR(TCOLOR_DEFAULT));
-		else
-			col=api.GetInt("Clock","BackColor",TCOLOR(TCOLOR_DEFAULT));
-		for(icol=0; icol<colorstotal; ++icol) {
-			if(col==(COLORREF)ComboBox_GetItemData(color_cb,icol))
-				break;
-		}
-		if(icol==colorstotal) // Add the Selected Custom Color
-			ComboBox_AddString(color_cb, (size_t)col);
-		ComboBox_SetCurSel(color_cb, icol);
-	}
-}
-
-/*------------------------------------------------
---------------------------------------------------*/
-void OnMeasureItemColorCombo(LPARAM lParam)
-{
-	MEASUREITEMSTRUCT* pmis;
-	pmis = (MEASUREITEMSTRUCT*)lParam;
-	pmis->itemHeight = 7 * HIWORD(GetDialogBaseUnits()) / 8;
-}
-
-/*------------------------------------------------
---------------------------------------------------*/
-void OnDrawItemColorCombo(LPARAM lParam)
-{
-	DRAWITEMSTRUCT* pdis;
-	HBRUSH hbr;
-	COLORREF col;
-	TEXTMETRIC tm;
-	
-	pdis = (DRAWITEMSTRUCT*)lParam;
-	
-	if(IsWindowEnabled(pdis->hwndItem)) {
-		col = api.GetColor((COLORREF)pdis->itemData,2);
-	} else col = GetSysColor(COLOR_3DFACE);
-	
-	switch(pdis->itemAction) {
-	case ODA_DRAWENTIRE:
-	case ODA_SELECT: {
-		hbr = CreateSolidBrush(col);
-		FillRect(pdis->hDC, &pdis->rcItem, hbr);
-		DeleteObject(hbr);
-		
-		// print sys color names
-		if(pdis->itemID<syscolor_num){
-			int y;
-			SetBkMode(pdis->hDC, TRANSPARENT);
-			GetTextMetrics(pdis->hDC, &tm);
-			SetTextColor(pdis->hDC, 0x00FFFFFF-(col&0x00FFFFFF));
-			if(col==0x00808080)
-				SetTextColor(pdis->hDC, 0);
-			y = (pdis->rcItem.bottom - pdis->rcItem.top - tm.tmHeight)/2;
-			TextOut(pdis->hDC, pdis->rcItem.left + 4, pdis->rcItem.top + y,
-					syscolor[pdis->itemID].name, (int)strlen(syscolor[pdis->itemID].name));
-		}
-		if(!(pdis->itemState & ODS_FOCUS)) break;
-		}
-	case ODA_FOCUS: {
-		HBRUSH hbr2;
-		RECT rc;
-		rc.left=pdis->rcItem.left-1;
-		rc.top=pdis->rcItem.top-1;
-		rc.right=pdis->rcItem.right-1;
-		rc.bottom=pdis->rcItem.bottom-1;
-		if(pdis->itemState & ODS_FOCUS){
-			hbr=CreateSolidBrush(0x00000000);
-			hbr2=CreateSolidBrush(0x00FFFFFF);
-		}else
-			hbr=hbr2=CreateSolidBrush(col);
-		FrameRect(pdis->hDC, &pdis->rcItem, hbr);
-		FrameRect(pdis->hDC, &rc, hbr2);
-		if(hbr2!=hbr) DeleteObject(hbr2);
-		DeleteObject(hbr);
-		break;}
-	}
-}
-
-/*------------------------------------------------
---------------------------------------------------*/
-void OnChooseColor(HWND hDlg, WORD color_btn)
-{
-	CHOOSECOLOR cc = {sizeof(CHOOSECOLOR)};
-	COLORREF col, colarray[16];
-	HWND color_cb = GetDlgItem(hDlg, color_btn-1);
-	unsigned icol;
-	
-	col = api.GetColor((COLORREF)ComboBox_GetItemData(color_cb, ComboBox_GetCurSel(color_cb)),2);
-	
-	for(icol = 0; icol < 16; ++icol) colarray[icol] = 0x00FFFFFF;
-	
-	cc.hwndOwner = hDlg;
-	cc.rgbResult = col;
-	cc.lpCustColors = colarray;
-	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
-	
-	if(!ChooseColor(&cc)) return;
-	
-	for(icol=0; icol<colorstotal; ++icol) {
-		if(cc.rgbResult==(COLORREF)ComboBox_GetItemData(color_cb,icol))
-			break;
-	}
-	if(icol == colorstotal){
-		if(ComboBox_GetCount(color_cb) == colorstotal)
-			ComboBox_AddString(color_cb, (size_t)cc.rgbResult);
-		else
-			ComboBox_SetItemData(color_cb, icol, cc.rgbResult);
-	}
-	ComboBox_SetCurSel(color_cb, icol);
-	
-	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
-	SendPSChanged(hDlg);
 }
 
 /*------------------------------------------------

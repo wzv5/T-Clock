@@ -13,6 +13,7 @@
 #include <Psapi.h>//EmptyWorkingSet
 #include "../common/newapi.h"
 #include "../common/utl.h"
+#include "../common/control_extensions.h"
 
 // IDs for timer
 #define IDTIMER_START				2
