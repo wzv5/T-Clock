@@ -217,6 +217,7 @@
     <ClInclude Include="..\tclock.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\common\calendar.inc" />
     <None Include="..\Clock.ico" />
     <None Include="..\del.ico" />
     <None Include="..\JackRussel.bmp" />

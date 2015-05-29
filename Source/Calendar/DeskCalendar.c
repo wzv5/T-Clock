@@ -1,8 +1,10 @@
 #include "../common/globals.h"
+#include "../common/newapi.h"
+#include "../common/resource.h"
 #include <CommCtrl.h>
 #include <time.h>
-#include "resource.h"
 //other
+#include "../common/calendar.inc"
 TClockAPI api;
 BOOL m_bAutoClose;
 BOOL m_bTopMost;
@@ -32,8 +34,11 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		int iMonths,iMonthsPast;
 		DWORD dwCalStyle;
 		RECT rc; HWND hCal;
-		iMonths=api.GetIntEx("Calendar","ViewMonths",3);
-		iMonthsPast=api.GetIntEx("Calendar","ViewMonthsPast",1);
+		size_t idx;
+		size_t dirty = 0;
+		
+		iMonths = api.GetIntEx("Calendar","ViewMonths",3);
+		iMonthsPast = api.GetIntEx("Calendar","ViewMonthsPast",1);
 		
 		if(api.GetInt("Calendar", "ShowDayOfYear", 1)) {
 			char szTitle[32];
@@ -41,12 +46,22 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			SetWindowText(hwnd,szTitle);
 		}
 		
-		dwCalStyle=WS_BORDER|WS_CHILD|WS_VISIBLE|MCS_NOTODAYCIRCLE;
+		dwCalStyle=WS_CHILD|WS_VISIBLE;
 		if(api.GetInt("Calendar","ShowWeekNums",0))
 			dwCalStyle|=MCS_WEEKNUMBERS;
 		
 		hCal=CreateWindowEx(0,MONTHCAL_CLASS,"",dwCalStyle,0,0,0,0,hwnd,NULL,NULL,NULL);
 		if(!hCal) return -1;
+		
+		for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
+			unsigned color = api.GetInt("Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
+			if(color != TCOLOR(TCOLOR_DEFAULT)){
+				dirty |= (1<<idx);
+				MonthCal_SetColor(hCal, g_calendar_color[idx].mcsc, api.GetColor(color,0));
+			}
+		}
+		if(dirty&~1)
+			SetXPWindowTheme(hCal, NULL, L"");
 		
 		MonthCal_GetMinReqRect(hCal,&rc);//size for a single month
 		if(iMonths>1){
@@ -54,6 +69,10 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			#define CALTODAYTEXTHEIGHT 13
 			rc.right+=CALBORDER;
 			rc.bottom-=CALTODAYTEXTHEIGHT;
+			if(api.OS == TOS_2000){
+				rc.right+=2;
+				rc.bottom+=2;
+			}
 			switch(iMonths){
 			/*case 1:*/ case 2: case 3:
 			case 4: case 5:
@@ -130,13 +149,11 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 //---------------------------------------------------+++--> Open "Calendar":
 HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 {
-	INITCOMMONCONTROLSEX icex;
+	INITCOMMONCONTROLSEX icex = {sizeof(icex), ICC_DATE_CLASSES};
 	WNDCLASSEX wcx;
 	ATOM calclass;
 	m_bAutoClose = api.GetInt("Calendar", "CloseCalendar", 1);
 	m_bTopMost = api.GetInt("Calendar", "CalendarTopMost", 0);
-	icex.dwSize=sizeof(icex);
-	icex.dwICC=ICC_DATE_CLASSES;
 	InitCommonControlsEx(&icex);
 	
 	wcx.cbSize = sizeof(wcx);
@@ -175,5 +192,6 @@ int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine
 			DispatchMessage(&msg);
 		}
 	}
+	EndNewAPI(NULL);
 	return 0;
 }

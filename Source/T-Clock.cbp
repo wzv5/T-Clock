@@ -453,6 +453,12 @@
 			<Option target="app debug" />
 			<Option target="app-64 debug" />
 		</Unit>
+		<Unit filename="common/calendar.inc">
+			<Option target="app" />
+			<Option target="app-64" />
+			<Option target="app debug" />
+			<Option target="app-64 debug" />
+		</Unit>
 		<Unit filename="common/clock.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />

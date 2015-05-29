@@ -64,7 +64,7 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				SendPSChanged(hDlg);
 			} break;
 		default:
-			if(id==IDC_CHOOSECOLFORE || id==IDC_CHOOSECOLBACK){
+			if(id==IDC_COLFORE_BTN || id==IDC_COLBACK_BTN){
 				ColorBox_ChooseColor((HWND)lParam);
 			}else if(id==IDC_CHOOSEFONT){
 				HWND hwndCombo;
@@ -145,8 +145,8 @@ void OnInit(HWND hDlg)
 	// if color depth is 256 or less
 	hdc = CreateIC("DISPLAY", NULL, NULL, NULL);
 	if(GetDeviceCaps(hdc, BITSPIXEL) <= 8) {
-		EnableDlgItem(hDlg, IDC_CHOOSECOLFORE, FALSE);
-		EnableDlgItem(hDlg, IDC_CHOOSECOLBACK, FALSE);
+		EnableDlgItem(hDlg, IDC_COLFORE_BTN, FALSE);
+		EnableDlgItem(hDlg, IDC_COLBACK_BTN, FALSE);
 	}
 	DeleteDC(hdc);
 	

@@ -276,10 +276,6 @@
 			<Option target="calendar" />
 			<Option target="calendar debug" />
 		</Unit>
-		<Unit filename="Calendar/resource.h">
-			<Option target="calendar" />
-			<Option target="calendar debug" />
-		</Unit>
 		<Unit filename="Calendar/resource.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="calendar" />
@@ -545,6 +541,14 @@
 		<Unit filename="common/autoversion.cpp">
 			<Option target="AutoVersion" />
 		</Unit>
+		<Unit filename="common/calendar.inc">
+			<Option target="calendar" />
+			<Option target="app" />
+			<Option target="app debug" />
+			<Option target="app-64" />
+			<Option target="app-64 debug" />
+			<Option target="calendar debug" />
+		</Unit>
 		<Unit filename="common/clock.c">
 			<Option compilerVar="CC" />
 			<Option target="calendar" />
@@ -599,6 +603,8 @@
 			<Option target="dll-64" />
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
+			<Option target="calendar" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="common/newapi.h">
 			<Option target="app" />
@@ -619,6 +625,8 @@
 			<Option target="dll-64" />
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
+			<Option target="calendar" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />

@@ -97,16 +97,19 @@
   <ItemGroup>
     <ClCompile Include="..\common\clock.c" />
     <ClCompile Include="..\common\utl.c" />
+    <ClInclude Include="..\common\newapi.c" />
     <ClCompile Include="..\common\win2k_compat.c" />
     <ClCompile Include="DeskCalendar.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
+    <ClInclude Include="..\common\resource.h" />
     <ClInclude Include="..\common\globals.h" />
     <ClInclude Include="..\common\clock.h" />
+    <ClInclude Include="..\common\newapi.h" />
     <ClInclude Include="..\common\win2k_compat.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\common\calendar.inc" />
     <None Include="calendar.ico" />
   </ItemGroup>
   <ItemGroup>

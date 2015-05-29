@@ -35,6 +35,7 @@
 #define IDD_SNTPCONFIG                  130
 #define IDD_ALARMMSG                    131
 #define IDD_STOPWATCH_EXPORT            132
+#define IDD_CALENDAR_COLOR              133
 #define IDI_MAIN                        190
 #define IDI_STOICJOKER                  191
 #define IDI_PLAY                        192
@@ -183,6 +184,8 @@
 #define IDCB_MULTIMON_GRP               1077 /* group */
 #define IDCB_MULTIMON                   1078 /* end group */
 #define IDCB_USECALENDAR                1080
+
+#define GROUP_CALENDAR                  IDCB_SHOW_DOY
 #define IDCB_SHOW_DOY                   1081 /* group */
 #define IDCB_SHOWWEEKNUMS               1082
 #define IDCB_CLOSECAL                   1083
@@ -196,11 +199,14 @@
 #define IDC_CALSTATIC2                  1091
 #define IDC_CALSTATIC3                  1092
 #define IDC_CALSTATIC4                  1093
-#define IDC_CALSTATIC5                  1094 /* end group */
-#define IDC_COLFORE                     1100 /* group */
-#define IDC_CHOOSECOLFORE               1101
+#define IDC_CALSTATIC5                  1094
+#define IDC_CALCOLORS                   1095 /* end group */
+#define GROUP_CALENDAR_END              IDC_CALCOLORS
+
+#define IDC_COLFORE                     1100 /* group, ColorBox */
+#define IDC_COLFORE_BTN                 1101
 #define IDC_COLBACK                     1102
-#define IDC_CHOOSECOLBACK               1103 /* end group */
+#define IDC_COLBACK_BTN                 1103 /* end group */
 #define IDC_FONT                        1107
 #define IDC_CHOOSEFONT                  1108
 #define IDC_FONTSIZE                    1109
@@ -329,6 +335,24 @@
 #define IDC_TIMERREPEAT                 2013
 #define IDC_TIMERBLINK                  2014
 #define IDCB_STOPTIMER                  2015
+
+#define IDC_CAL_PRESET                  2101
+#define IDC_CAL_PREVIEW                 2102
+#define CALENDAR_COLOR_BEGIN            IDC_CAL_OUTER
+#define IDC_CAL_OUTER                   2111 /* group, ColorBox */
+#define IDC_CAL_OUTER_BTN               2112
+#define IDC_CAL_FORE                    2113
+#define IDC_CAL_FORE_BTN                2114
+#define IDC_CAL_BACK                    2115
+#define IDC_CAL_BACK_BTN                2116
+#define IDC_CAL_TITLE                   2117
+#define IDC_CAL_TITLE_BTN               2118
+#define IDC_CAL_TITLE_BG                2119
+#define IDC_CAL_TITLE_BG_BTN            2120
+#define IDC_CAL_TRAIL                   2121
+#define IDC_CAL_TRAIL_BTN               2122 /* end group */
+#define CALENDAR_COLOR_END              IDC_CAL_TRAIL_BTN
+#define CALENDAR_COLOR_NUM              ((1+CALENDAR_COLOR_END-CALENDAR_COLOR_BEGIN)/2)
 
 #define IDC_SWE_EXPORT                  2100
 #define IDC_SWE_TOTAL                   2101

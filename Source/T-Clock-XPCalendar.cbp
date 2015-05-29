@@ -59,16 +59,21 @@
 		<Unit filename="Calendar/DeskCalendar.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="Calendar/resource.h" />
 		<Unit filename="Calendar/resource.rc">
 			<Option compilerVar="WINDRES" />
 		</Unit>
+		<Unit filename="common/calendar.inc" />
 		<Unit filename="common/clock.c">
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="common/clock.h" />
 		<Unit filename="common/globals.h" />
 		<Unit filename="common/manifest.xml" />
+		<Unit filename="common/newapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="common/newapi.h" />
+		<Unit filename="common/resource.h" />
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />
 		</Unit>

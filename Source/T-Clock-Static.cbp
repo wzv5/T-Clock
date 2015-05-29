@@ -129,9 +129,6 @@
 			<Option compilerVar="CC" />
 			<Option target="calendar" />
 		</Unit>
-		<Unit filename="Calendar/resource.h">
-			<Option target="calendar" />
-		</Unit>
 		<Unit filename="Calendar/resource.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="calendar" />
@@ -327,6 +324,11 @@
 			<Option target="app" />
 			<Option target="app-64" />
 		</Unit>
+		<Unit filename="common/calendar.inc">
+			<Option target="app" />
+			<Option target="app-64" />
+			<Option target="calendar" />
+		</Unit>
 		<Unit filename="common/clock.c">
 			<Option compilerVar="CC" />
 			<Option target="app" />
@@ -347,23 +349,9 @@
 		<Unit filename="common/manifest.xml" />
 		<Unit filename="common/newapi.c">
 			<Option compilerVar="CC" />
-			<Option target="app" />
-			<Option target="dll" />
-			<Option target="app-64" />
-			<Option target="dll-64" />
 		</Unit>
-		<Unit filename="common/newapi.h">
-			<Option target="app" />
-			<Option target="dll" />
-			<Option target="app-64" />
-			<Option target="dll-64" />
-		</Unit>
-		<Unit filename="common/resource.h">
-			<Option target="app" />
-			<Option target="dll" />
-			<Option target="app-64" />
-			<Option target="dll-64" />
-		</Unit>
+		<Unit filename="common/newapi.h" />
+		<Unit filename="common/resource.h" />
 		<Unit filename="common/utl.c">
 			<Option compilerVar="CC" />
 		</Unit>

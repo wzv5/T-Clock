@@ -130,6 +130,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\common\calendar.inc">
+      <Filter>Include Files</Filter>
+    </None>
     <None Include="..\Clock.ico">
       <Filter>Resource Files</Filter>
     </None>

@@ -8,6 +8,118 @@ static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
+
+#include "../common/calendar.inc"
+typedef struct{
+	const char* name;
+	COLORREF color[CALENDAR_COLOR_NUM];
+} CalendarPreset;
+
+#define CALENDAR_PRESETS 3
+static CalendarPreset m_calendar_preset[CALENDAR_PRESETS] = {
+	{"Preset: default", {0}},
+	{"Preset: high contrast", {0x000000, 0xFFFFFF, 0x000000, 0x000000, 0xF28E28, 0xEB00DD}},
+	{"Preset: theme colored", {TCOLOR(TCOLOR_THEME), 0x000000, TCOLOR(TCOLOR_THEME), 0x000000, 0x808080, 0x808080}},
+};
+static char m_calendar_dirty;
+
+static INT_PTR CALLBACK DlgProcCalendarColors(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam){
+	switch(msg){
+	case WM_INITDIALOG:{
+		ColorBox colors[6];
+		HWND calendar = GetDlgItem(hDlg, IDC_CAL_PREVIEW);
+		HWND preset_cb = GetDlgItem(hDlg, IDC_CAL_PRESET);
+		int idx;
+		m_calendar_dirty = 0;
+		for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
+			unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
+			colors[idx].hwnd = GetDlgItem(hDlg, color_id);
+			colors[idx].color = api.GetInt("Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
+			m_calendar_preset[0].color[idx] = (COLORREF)MonthCal_GetColor(calendar, g_calendar_color[idx].mcsc);
+			if(colors[idx].color != TCOLOR(TCOLOR_DEFAULT)){
+				m_calendar_dirty |= (1<<idx);
+				MonthCal_SetColor(calendar, g_calendar_color[idx].mcsc, api.GetColor(colors[idx].color,0));
+			}
+		}
+		ColorBox_Setup(colors, 6);
+		for(idx=0; idx<CALENDAR_PRESETS; ++idx)
+			ComboBox_AddString(preset_cb, m_calendar_preset[idx].name);
+		ComboBox_AddString(preset_cb, "custom colors");
+		m_calendar_dirty ^= 1; // toggle bit to force refresh
+		SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDC_CAL_OUTER,CBN_SELCHANGE), (LPARAM)GetDlgItem(hDlg,IDC_CAL_OUTER));
+		return TRUE;}
+	case WM_MEASUREITEM:
+		return ColorBox_OnMeasureItem(wParam, lParam);
+	case WM_DRAWITEM:
+		return ColorBox_OnDrawItem(wParam, lParam);
+	case WM_COMMAND:{
+		unsigned control_id = LOWORD(wParam);
+		unsigned control_notify = HIWORD(wParam);
+		switch(control_id){
+		case IDC_CAL_PREVIEW:
+			break;
+		case IDC_CAL_PRESET:{
+			HWND calendar = GetDlgItem(hDlg, IDC_CAL_PREVIEW);
+			HWND preset_cb = GetDlgItem(hDlg, IDC_CAL_PRESET);
+			int preset = ComboBox_GetCurSel(preset_cb);
+			int idx;
+			if(preset == CALENDAR_PRESETS)
+				break;
+			for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
+				unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
+				HWND color_cb = GetDlgItem(hDlg, color_id);
+				if(preset == 0)
+					ColorBox_SetColor(color_cb, TCOLOR(TCOLOR_DEFAULT));
+				else
+					ColorBox_SetColor(color_cb, m_calendar_preset[preset].color[idx]);
+				MonthCal_SetColor(calendar, g_calendar_color[idx].mcsc, api.GetColor(m_calendar_preset[preset].color[idx],0));
+			}
+			if(preset == 0)
+				m_calendar_dirty = 0;
+			else
+				m_calendar_dirty = 0x01|0x02|0x04|0x08|0x10|0x20;
+			SetXPWindowTheme(GetDlgItem(hDlg,IDC_CAL_PREVIEW), NULL, (m_calendar_dirty ? L"" : NULL));
+			break;}
+		case IDC_CAL_OUTER: case IDC_CAL_FORE: case IDC_CAL_BACK: case IDC_CAL_TITLE: case IDC_CAL_TITLE_BG: case IDC_CAL_TRAIL:
+			if(control_notify == CBN_SELCHANGE){
+				unsigned id = (control_id-CALENDAR_COLOR_BEGIN)/2;
+				unsigned color = ColorBox_GetColorRaw((HWND)lParam);
+				char dirty = m_calendar_dirty;
+				if(color == TCOLOR(TCOLOR_DEFAULT))
+					dirty &= ~(1<<id);
+				else
+					dirty |= 1<<id;
+				if(dirty != m_calendar_dirty){
+					m_calendar_dirty = dirty;
+					SetXPWindowTheme(GetDlgItem(hDlg,IDC_CAL_PREVIEW), NULL, (dirty&~1 ? L"" : NULL));
+				}
+				ComboBox_SetCurSel(GetDlgItem(hDlg,IDC_CAL_PRESET), (dirty ? CALENDAR_PRESETS : 0));
+				if(color == TCOLOR(TCOLOR_DEFAULT))
+					color = m_calendar_preset[0].color[id];
+				else
+					color = api.GetColor(color, 0);
+				MonthCal_SetColor(GetDlgItem(hDlg,IDC_CAL_PREVIEW), g_calendar_color[id].mcsc, color);
+			}
+			break;
+		case IDOK:
+			{int idx;
+			for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
+				unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
+				HWND color_cb = GetDlgItem(hDlg, color_id);
+				api.SetInt("Calendar", g_calendar_color[idx].reg, ColorBox_GetColorRaw(color_cb));
+			}}
+			/* fall through */
+		case IDCANCEL:
+			EndDialog(hDlg, control_id);
+			break;
+		default:
+			ColorBox_ChooseColor((HWND)lParam);
+		}
+		return TRUE;}
+	}
+	return FALSE;
+}
+
 //================================================================================================
 //---------------------------------------------+++--> Dialog Procedure of Miscellaneous Tab Dialog:
 INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //------+++-->
@@ -30,9 +142,13 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 					CheckDlgButton(hDlg, IDCB_CLOSECAL, FALSE);
 			}else if(id==IDCB_USECALENDAR) {
 				UINT iter,enable=IsDlgButtonChecked(hDlg,IDCB_USECALENDAR);
-				for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,enable);
+				for(iter=GROUP_CALENDAR; iter<=GROUP_CALENDAR_END; ++iter) EnableDlgItem(hDlg,iter,enable);
 				SendPSChanged(hDlg);
 				return TRUE;
+			}else if(id==IDC_CALCOLORS) {
+				INITCOMMONCONTROLSEX icex = {sizeof(icex), ICC_DATE_CLASSES};
+				InitCommonControlsEx(&icex);
+				DialogBox(NULL,MAKEINTRESOURCE(IDD_CALENDAR_COLOR),hDlg,DlgProcCalendarColors);
 			}
 			
 			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE) || (id==IDC_CALMONTHSPAST&&code==EN_CHANGE))
@@ -88,7 +204,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	HWND week_cb = GetDlgItem(hDlg, IDC_FIRSTWEEK);
 	UINT iter;
 	if(api.OS >= TOS_VISTA && !api.GetIntEx("Calendar","bCustom",0)){
-		for(iter=IDCB_SHOW_DOY; iter<=IDC_CALSTATIC5; ++iter) EnableDlgItem(hDlg,iter,0);
+		for(iter=GROUP_CALENDAR; iter<=GROUP_CALENDAR_END; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
 	/// on Calendar defaults change, also update the Calendar itself to stay sync!
