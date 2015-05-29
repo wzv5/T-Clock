@@ -33,6 +33,27 @@
 					<Add option="-m32" />
 					<Add library="Comctl32" />
 				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
+			</Target>
+			<Target title="calendar debug">
+				<Option output="../Debug/misc/XPCalendar" prefix_auto="1" extension_auto="1" />
+				<Option object_output=".obj/dbg" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-m32" />
+					<Add option="-Og" />
+					<Add option="-g" />
+				</Compiler>
+				<Linker>
+					<Add option="-m32" />
+					<Add library="Comctl32" />
+				</Linker>
+				<ExtraCommands>
+					<Add before="common/AutoVersion --git . common/version.h" />
+				</ExtraCommands>
 			</Target>
 			<Target title="app">
 				<Option output="../Release/Clock" prefix_auto="1" extension_auto="1" />
@@ -228,10 +249,10 @@
 			</Target>
 		</Build>
 		<VirtualTargets>
-			<Add alias="debug" targets="app debug;dll debug;app-64 debug;dll-64 debug;" />
+			<Add alias="debug" targets="calendar debug;app debug;dll debug;app-64 debug;dll-64 debug;" />
 			<Add alias="debug-32" targets="dll debug;app debug;" />
-			<Add alias="debug-64" targets="app-64 debug;dll-64 debug;" />
-			<Add alias="release" targets="calendar;app;dll;dll-64;app-64;" />
+			<Add alias="debug-64" targets="dll-64 debug;app-64 debug;" />
+			<Add alias="release" targets="calendar;app;app-64;dll-64;dll;" />
 			<Add alias="release-32" targets="dll;app;" />
 			<Add alias="release-64" targets="dll-64;app-64;" />
 		</VirtualTargets>
@@ -244,8 +265,6 @@
 			<Add option="-DWINVER=0x0501" />
 		</Compiler>
 		<Linker>
-			<Add option="-static-libstdc++" />
-			<Add option="-static-libgcc" />
 			<Add option="-static" />
 			<Add library="Advapi32" />
 			<Add library="User32" />
@@ -255,13 +274,16 @@
 		<Unit filename="Calendar/DeskCalendar.c">
 			<Option compilerVar="CC" />
 			<Option target="calendar" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="Calendar/resource.h">
 			<Option target="calendar" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="Calendar/resource.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="calendar" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="Clock/BounceWind.c">
 			<Option compilerVar="CC" />
@@ -530,6 +552,7 @@
 			<Option target="app debug" />
 			<Option target="app-64" />
 			<Option target="app-64 debug" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="common/clock.h">
 			<Option target="calendar" />
@@ -541,6 +564,7 @@
 			<Option target="dll-64" />
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="common/control_extensions.c">
 			<Option compilerVar="CC" />
@@ -607,6 +631,7 @@
 			<Option target="calendar" />
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="common/utl.h">
 			<Option target="app" />
@@ -618,6 +643,7 @@
 			<Option target="calendar" />
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="common/version.h">
 			<Option target="app" />
@@ -640,6 +666,7 @@
 			<Option target="dll-64" />
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Unit filename="common/win2k_compat.h">
 			<Option target="calendar" />
@@ -651,6 +678,7 @@
 			<Option target="dll-64" />
 			<Option target="app-64 debug" />
 			<Option target="dll-64 debug" />
+			<Option target="calendar debug" />
 		</Unit>
 		<Extensions>
 			<code_completion />
