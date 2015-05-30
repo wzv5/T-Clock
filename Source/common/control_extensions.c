@@ -2,6 +2,8 @@
 #include "clock.h"
 
 #include <windowsx.h>
+#include <stdio.h>
+#include <string.h>
 
 
 
@@ -38,11 +40,20 @@ static const COLORREF m_basecolor[]={
 static const size_t m_basecolor_num = sizeof(m_basecolor)/sizeof(COLORREF);
 static const size_t m_colorstotal = sizeof(m_syscolor)/sizeof(syscolor_t)+sizeof(m_basecolor)/sizeof(COLORREF);
 
+static COLORREF m_usercolors[16] = {
+	0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF, 0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,
+	0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF, 0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF
+};
+
+static WNDPROC m_proc_combo = NULL;
+LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 void ColorBox_Setup(ColorBox boxes[], size_t num)
 {
 	COLORREF col;
 	size_t idx;
 	while(num--) {
+		m_proc_combo = SubclassWindow(boxes[num].hwnd, ColorBoxProc);
 		// add sys colors
 		for(idx=0; idx<m_syscolor_num; ++idx){
 			ComboBox_AddString(boxes[num].hwnd, (size_t)TCOLOR(m_syscolor[idx].col));
@@ -60,6 +71,97 @@ void ColorBox_Setup(ColorBox boxes[], size_t num)
 			ComboBox_AddString(boxes[num].hwnd, (size_t)col);
 		ComboBox_SetCurSel(boxes[num].hwnd, idx);
 	}
+}
+
+LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam){
+	switch(msg){
+	case WM_MEASUREITEM:
+		return ColorBox_OnMeasureItem(wParam, lParam);
+	case WM_DRAWITEM:
+		return ColorBox_OnDrawItem(wParam, lParam);
+	case WM_KEYDOWN:
+		if(lParam&0x4000)
+			break; // repeated msg, key was down
+		if(wParam == 'C' || wParam == 'X' || wParam == 'V'){
+			if(GetAsyncKeyState(VK_CONTROL)&0x8000){
+				SendMessage(hwnd, (wParam=='V'?WM_PASTE:WM_COPY), 0, 0);
+				return 0;
+			}
+		}
+		break;
+	case WM_CUT:
+	case WM_COPY:{
+		char color_str[8];
+		HGLOBAL hg;
+		char* pbuf;
+		unsigned color = api.GetColor(ColorBox_GetColorRaw(hwnd),2);
+		color = ((color&0xff)<<16) | (color&0xff00) | ((color&0xff0000)>>16);
+		__pragma(warning(suppress:4996)) sprintf(color_str, "#%06x", color);
+		if(!OpenClipboard(hwnd))
+			return 0;
+		EmptyClipboard();
+		hg = GlobalAlloc(GMEM_DDESHARE, 8);
+		pbuf = (char*)GlobalLock(hg);
+		memcpy(pbuf, color_str, 8);
+		GlobalUnlock(hg);
+		SetClipboardData(CF_TEXT, hg);
+		CloseClipboard();
+		return 0;}
+	case WM_PASTE:{
+		HGLOBAL hg;
+		const char* pbuf;
+		size_t size;
+		if(!OpenClipboard(hwnd))
+			return 0;
+		for(;;){ // only once loop, MSVC can't handle do{}while(0)
+			hg = GetClipboardData(CF_TEXT);
+			if(!hg)
+				break;
+			pbuf = (const char*)GlobalLock(hg);
+			if(!pbuf)
+				break;
+			size = GlobalSize(hg);
+			if(size > 6){ // could be a hex color (HTML format)
+				unsigned color = 0;
+				if(pbuf[0] == '#' && size > 7)
+					++pbuf;
+				for(size=6; size; ){
+					char c = (char)toupper(pbuf[--size]);
+					color <<= 8;
+					if(c >= 'A' && c <= 'F'){
+						color |= c-('A'-10);
+					}else if(c >= '0' && c <= '9'){
+						color |= c-'0';
+					}else
+						break;
+					c = (char)toupper(pbuf[size-1]); // in case we break;
+					if(c >= 'A' && c <= 'F'){
+						color |= (c-('A'-10)) << 4;
+					}else if(c >= '0' && c <= '9'){
+						color |= (c-'0') << 4;
+					}else
+						break;
+					--size;
+				}
+				if(!size){ // valid hex value
+					for(size=TCOLOR_BEGIN_; size<TCOLOR_END_; ++size){
+						if(color == (api.GetColor(TCOLOR(size),2) & 0xffffff))
+							break;
+					}
+					if(size != TCOLOR_END_)
+						ColorBox_SetColor(hwnd, TCOLOR(size));
+					else
+						ColorBox_SetColor(hwnd, color);
+					PostMessage(GetParent(hwnd),WM_COMMAND, MAKEWPARAM(GetWindowID(hwnd),CBN_SELCHANGE), (LPARAM)hwnd);
+				}
+			}
+			GlobalUnlock(hg);
+			break;
+		}
+		CloseClipboard();
+		return 0;}
+	}
+	return CallWindowProc(m_proc_combo, hwnd, msg, wParam, lParam);
 }
 
 /*------------------------------------------------
@@ -123,27 +225,26 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 	}
 	return 1;
 }
+
 int ColorBox_ChooseColor(HWND button)
 {
 	CHOOSECOLOR cc = {sizeof(CHOOSECOLOR)};
-	COLORREF col, colarray[16];
+	COLORREF color;
 	HWND color_cb = GetWindow(button, GW_HWNDPREV);
 	size_t idx;
 	
-	col = api.GetColor((COLORREF)ComboBox_GetItemData(color_cb, ComboBox_GetCurSel(color_cb)),2);
-	
-	for(idx=0; idx<16; ++idx) colarray[idx] = 0x00FFFFFF;
+	color = api.GetColor((COLORREF)ComboBox_GetItemData(color_cb, ComboBox_GetCurSel(color_cb)),2);
 	
 	cc.hwndOwner = GetParent(button);
-	cc.rgbResult = col;
-	cc.lpCustColors = colarray;
+	cc.rgbResult = color;
+	cc.lpCustColors = m_usercolors;
 	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
 	
 	if(!ChooseColor(&cc))
 		return 0;
 	
 	idx = ComboBox_GetCurSel(color_cb);
-	if(idx != (size_t)ColorBox_SetColor(color_cb, cc.rgbResult) || cc.rgbResult != col)
+	if(idx != (size_t)ColorBox_SetColor(color_cb, cc.rgbResult) || cc.rgbResult != color)
 		PostMessage(cc.hwndOwner,WM_COMMAND, MAKEWPARAM(GetWindowID(color_cb),CBN_SELCHANGE), (LPARAM)color_cb);
 	
 	return 1;

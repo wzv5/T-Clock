@@ -106,12 +106,6 @@ int atox(const char* p)
 	return r;
 }
 
-__inline int toupper(int c)
-{
-	if('a' <= c && c <= 'z') c -= 'a' - 'A';
-	return c;
-}
-
 void add_title(char* path, const char* title)
 {
 	char* p=path;

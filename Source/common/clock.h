@@ -10,7 +10,7 @@
 
 #define TCOLOR_MASK		0xFFFFFFC0
 #define TCOLOR_MAGIC	0xFAFCFEC0
-#define TCOLOR(tcolor) (TCOLOR_MAGIC|tcolor)
+#define TCOLOR(tcolor) (TCOLOR_MAGIC|(unsigned)(tcolor))
 enum TCOLORS {
 	TCOLOR_BEGIN_		=50,
 	TCOLOR_DEFAULT		=50, /**< meta, default color (if passed to \c GetColor() without \c use_raw, returns default clock foreground color) */
