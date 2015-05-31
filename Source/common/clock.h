@@ -153,12 +153,12 @@ typedef struct TClockAPI_TAG {
  * \param val new value
  * \return boolean */
 	int (*SetStr)(const char* section, const char* entry, const char* val);
-///**
-// * \brief update or add a string value in Windows' registry
-// * \param rootkey,section,entry
-// * \param val new value
-// * \return boolean */
-//	int (*SetSystemStr)(HKEY rootkey, const char* section, const char* entry, const char* val);
+/**
+ * \brief update or add a string value in Windows' registry
+ * \param rootkey,section,entry
+ * \param val new value
+ * \return boolean */
+	int (*SetSystemStr)(HKEY rootkey, const char* section, const char* entry, const char* val);
 /**
  * \brief deletes a value from our registry
  * \param section

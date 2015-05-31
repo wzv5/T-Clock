@@ -190,18 +190,17 @@
 #define IDCB_SHOWWEEKNUMS               1082
 #define IDCB_CLOSECAL                   1083
 #define IDCB_CALTOPMOST                 1084
-#define IDC_FIRSTWEEK                   1085
-#define IDC_CALMONTHS                   1086
-#define IDC_CALMONTHSPIN                1087
-#define IDC_CALMONTHSPAST               1088
-#define IDC_CALMONTHPASTSPIN            1089
-#define IDC_CALSTATIC1                  1090
-#define IDC_CALSTATIC2                  1091
-#define IDC_CALSTATIC3                  1092
-#define IDC_CALSTATIC4                  1093
-#define IDC_CALSTATIC5                  1094
-#define IDC_CALCOLORS                   1095 /* end group */
+#define IDC_CALMONTHS                   1085
+#define IDC_CALMONTHSPIN                1086
+#define IDC_CALMONTHSPAST               1087
+#define IDC_CALMONTHPASTSPIN            1088
+#define IDC_CALMONTHS_LABEL             1089
+#define IDC_CALMONTHSPAST_LABEL         1090
+#define IDC_CALSTATIC1                  1091
+#define IDC_CALCOLORS                   1092 /* end group */
 #define GROUP_CALENDAR_END              IDC_CALCOLORS
+#define IDC_FIRSTWEEK                   1100
+#define IDC_FIRSTDAY                    1101
 
 #define IDC_COLFORE                     1100 /* group, ColorBox */
 #define IDC_COLFORE_BTN                 1101

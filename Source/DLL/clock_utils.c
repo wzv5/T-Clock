@@ -344,6 +344,19 @@ BOOL Clock_SetStr(const char* section, const char* entry, const char* val) {
 	return r;
 }
 
+int Clock_SetSystemStr(HKEY rootkey, const char* section, const char* entry, const char* val) {
+	HKEY hkey;
+	int ret = 0;
+	
+	if(RegCreateKeyEx(rootkey,section,0,NULL,0,ms_reg_sam,NULL,&hkey,NULL) == ERROR_SUCCESS) {
+		if(RegSetValueEx(hkey, entry, 0, REG_SZ, (const BYTE*)val, (DWORD)strlen(val)) == ERROR_SUCCESS) {
+			ret = 1;
+		}
+		RegCloseKey(hkey);
+	}
+	return ret;
+}
+
 BOOL Clock_DelValue(const char* section, const char* entry) {
 	HKEY hkey;	char key[80];	BOOL r = FALSE;
 	

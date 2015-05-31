@@ -57,7 +57,7 @@ TClockAPI api = {
 	ClockAPI(GetSystemStr)
 	ClockAPI(SetInt)
 	ClockAPI(SetStr)
-//	ClockAPI(SetSystemStr)
+	ClockAPI(SetSystemStr)
 	ClockAPI(DelValue)
 	ClockAPI(DelKey)
 	// exec

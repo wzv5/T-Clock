@@ -151,7 +151,7 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				DialogBox(NULL,MAKEINTRESOURCE(IDD_CALENDAR_COLOR),hDlg,DlgProcCalendarColors);
 			}
 			
-			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE) || (id==IDC_CALMONTHSPAST&&code==EN_CHANGE))
+			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_FIRSTDAY&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE) || (id==IDC_CALMONTHSPAST&&code==EN_CHANGE))
 				SendPSChanged(hDlg);
 			else if(((id==IDCB_CLOSECAL) ||  // IF Anything Happens to Anything,
 				(id==IDCB_SHOWWEEKNUMS) || //--+++--> Send Changed Message.
@@ -175,33 +175,34 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 	}
 	return FALSE;
 }
-//-------+++--> Make Adjustable: HKEY_CURRENT_USER\Control Panel\International\iFirstWeekOfYear
-//-------+++--> Data Type: DWORD Possible Valid Values: 0, 1, or 2 - Else it Should Return Fail!
-//-------+++--> Purpose: Required for Reading and/or Correcting the Calendar Week Numbers Offset.
-//================================================================================================
-//--------------------//----------+++--> This is to Access the System Level iFirstWeekOfYear Value:
-int GetMySysWeek()   //---------------------------------------------------------------------+++-->
+/**
+ * \brief accesses <code>HKCR/Control Panel/International</code>; international user settings
+ * \param entry entry to read, such as \e iFirstWeekOfYear, \e iFirstDayOfWeek
+ * \return current value for given \p entry
+ * \remark \e iFirstWeekOfYear should be either 0-2
+ * \remark \e iFirstDayOfWeek ranges from 0-6, starting on Monday
+ * \sa SetInternational() */
+int GetInternationalInt(const char* entry)
 {
 	char val[8];
-	api.GetSystemStr(HKEY_CURRENT_USER,"Control Panel\\International","iFirstWeekOfYear",val,sizeof(val),"");
+	api.GetSystemStr(HKEY_CURRENT_USER, "Control Panel\\International", entry, val, sizeof(val), "");
 	return atoi(val);
 }
-//================================================================================================
-//------------------------------//---------------+++--> Set Value for iFirstWeekOfYear in Registry:
-void SetMySysWeek(char* val)   //-----------------------------------------------------------+++-->
+/**
+ * \brief writes to <code>HKCR/Control Panel/International</code>; international user settings
+ * \param entry entry to write, such as \e iFirstWeekOfYear, \e iFirstDayOfWeek
+ * \param val new value
+ * \sa GetInternationalInt() */
+void SetInternational(const char* entry, const char* val)
 {
-	HKEY hkey;
-	
-	if(RegCreateKey(HKEY_CURRENT_USER, "Control Panel\\International", &hkey) == ERROR_SUCCESS) {
-		RegSetValueEx(hkey, "iFirstWeekOfYear", 0, REG_SZ, (CONST BYTE*)val, (unsigned)strlen(val));
-		RegCloseKey(hkey);
-	}
+	api.SetSystemStr(HKEY_CURRENT_USER, "Control Panel\\International", entry, val);
 }
 //================================================================================================
 //--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
 	HWND week_cb = GetDlgItem(hDlg, IDC_FIRSTWEEK);
+	HWND day_cb = GetDlgItem(hDlg, IDC_FIRSTDAY);
 	UINT iter;
 	if(api.OS >= TOS_VISTA && !api.GetIntEx("Calendar","bCustom",0)){
 		for(iter=GROUP_CALENDAR; iter<=GROUP_CALENDAR_END; ++iter) EnableDlgItem(hDlg,iter,0);
@@ -223,11 +224,18 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETRANGE32,0,2);
 	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,api.GetInt("Calendar","ViewMonthsPast",1));
 	
-	ComboBox_ResetContent(week_cb);
 	ComboBox_AddString(week_cb, "week containing January 1 (USA)");
 	ComboBox_AddString(week_cb, "first full week");
 	ComboBox_AddString(week_cb, "first week with four days (EU)");
-	ComboBox_SetCurSel(week_cb, GetMySysWeek());
+	ComboBox_SetCurSel(week_cb, GetInternationalInt("iFirstWeekOfYear"));
+	ComboBox_AddString(day_cb, "Monday");
+	ComboBox_AddString(day_cb, "Tuesday");
+	ComboBox_AddString(day_cb, "Wednesday");
+	ComboBox_AddString(day_cb, "Thursday");
+	ComboBox_AddString(day_cb, "Friday");
+	ComboBox_AddString(day_cb, "Saturday");
+	ComboBox_AddString(day_cb, "Sunday");
+	ComboBox_SetCurSel(day_cb, GetInternationalInt("iFirstDayOfWeek"));
 	
 	if(api.OS > TOS_2000) {
 		for(iter=IDCB_TRANS2KICONS_GRP; iter<=IDCB_TRANS2KICONS; ++iter)
@@ -251,7 +259,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	union{
 		short i;
 		char str[2];
-	} week;
+	} intstr;
 	char bRefresh = ((unsigned)api.GetInt("Desktop","Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
 	api.SetInt("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
@@ -268,8 +276,10 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	api.SetInt("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
 	api.SetInt("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
-	week.i = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTWEEK));
-	SetMySysWeek(week.str);
+	intstr.i = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTWEEK));
+	SetInternational("iFirstWeekOfYear", intstr.str);
+	intstr.i = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTDAY));
+	SetInternational("iFirstDayOfWeek", intstr.str);
 	
 	if(api.OS >= TOS_XP) { // This feature requires XP+
 		BOOL enabled=IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK);
