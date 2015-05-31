@@ -16,7 +16,7 @@
 #include "../common/control_extensions.h"
 
 // IDs for timer
-#define IDTIMER_START				2
+#define IDTIMER_HOOK				2
 #define IDTIMER_MAIN				3
 #define IDTIMER_MOUSE				4
 #define IDTIMER_DEKSTOPICON			5

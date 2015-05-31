@@ -30,6 +30,7 @@ LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 ATOM g_atomTClock = 0; /**< main window class atom */
 const char g_szClassName[] = "TClockMainClass"; /**< our main window class name */
+UINT g_WM_TaskbarCreated = 0; /**< TaskbarCreated message (broadcasted on Explorer (re-)start) */
 
 /** \brief processes our commandline parameters
  * \param hwndMain clock hwnd of master instance
@@ -40,8 +41,6 @@ static void ProcessCommandLine(HWND hwndMain,const char* cmdline);
 static void OnTimerMain(HWND hwnd);
 //static void FindTrayServer(); // Redux: what ever it was supposed to be..
 static void InitError(int n);
-static UINT s_uTaskbarRestart = 0;
-static BOOL bStartTimer = FALSE;
 
 // alarm.c
 extern char g_bPlayingNonstop;
@@ -277,7 +276,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	CancelAllTimersOnStartUp();
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
-	s_uTaskbarRestart = RegisterWindowMessage("TaskbarCreated");
+	g_WM_TaskbarCreated = RegisterWindowMessage("TaskbarCreated");
 	// Load ALL of the Global Resources
 	g_hIconTClock = LoadIcon(api.hInstance, MAKEINTRESOURCE(IDI_MAIN));
 	g_hIconPlay = LoadImage(hInstance, MAKEINTRESOURCE(IDI_PLAY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
@@ -305,6 +304,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ChangeWindowMessageFilter_t ChangeWindowMessageFilter=(ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandle("User32"),"ChangeWindowMessageFilter");
 		if(ChangeWindowMessageFilter){
 			int msgid;
+			ChangeWindowMessageFilter(g_WM_TaskbarCreated,MSGFLT_ADD);
 			ChangeWindowMessageFilter(WM_COMMAND,MSGFLT_ADD);
 			for(msgid=WM_MOUSEFIRST; msgid<=WM_MOUSELAST; ++msgid)
 				ChangeWindowMessageFilter(msgid,MSGFLT_ADD);
@@ -461,17 +461,16 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	case WM_CREATE:
 		InitAlarm();  // initialize alarms
 		InitFormat(); // initialize/reset Date/Time format
-		SendMessage(hwnd, WM_TIMER, IDTIMER_START, 0);
+		SetTimer(hwnd, IDTIMER_HOOK, 50, NULL);
 		SetTimer(hwnd, IDTIMER_MAIN, 1000, NULL);
 		return 0;
 		
 	case WM_TIMER:
-		if(wParam == IDTIMER_START) {
+		if(wParam == IDTIMER_HOOK) {
 			static DWORD s_restart_ticks = 0;
 			static int s_restart_num = 0;
 			DWORD ticks = GetTickCount();
-			if(bStartTimer) KillTimer(hwnd, wParam);
-			bStartTimer = FALSE;
+			KillTimer(hwnd, wParam);
 			if(ticks - s_restart_ticks < 30000){
 				if(++s_restart_num >= 3){
 					if(api.Message(0,
@@ -503,6 +502,8 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			break;
 		/* fall through */
 	case WM_DESTROY:
+		KillTimer(hwnd, IDTIMER_HOOK);
+		KillTimer(hwnd, IDTIMER_MAIN);
 		if(g_hwndSheet && IsWindow(g_hwndSheet))
 			SendMessage(g_hwndSheet, WM_CLOSE, 0, 0);
 		if(g_hDlgTimer && IsWindow(g_hDlgTimer))
@@ -512,11 +513,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		g_hwndSheet = g_hDlgTimer = g_hDlgStopWatch = NULL;
 		EndAlarm();
 		EndAllTimers();
-		KillTimer(hwnd, IDTIMER_MAIN);
-		if(bStartTimer) {
-			KillTimer(hwnd, IDTIMER_START);
-			bStartTimer = FALSE;
-		}
 		api.Exit(); // exit clock, remove injection
 		if(message!=WM_ENDSESSION)
 			PostQuitMessage(0);
@@ -618,9 +614,8 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		}
 		break;
 	default:
-		if(message == s_uTaskbarRestart) { // IF the Explorer Shell Crashes,
-			SetTimer(hwnd, IDTIMER_START, 1000, NULL); //  and the taskbar is recreated.
-			bStartTimer = TRUE;
+		if(message == g_WM_TaskbarCreated){
+			SetTimer(hwnd, IDTIMER_HOOK, 1000, NULL);
 		}
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
