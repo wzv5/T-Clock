@@ -348,24 +348,27 @@ void OnLocale(HWND hDlg)   //---------------------------------------------------
 	ChecksLocaleInit(checks,ilang);
 	Checks2Dialog(checks,hDlg,1);
 	// update format
-	CreateFormat(fmt,checks);
-	SetDlgItemText(hDlg,IDC_FORMAT,fmt);
+	if(!IsDlgButtonChecked(hDlg, IDC_CUSTOM)){
+		CreateFormat(fmt,checks);
+		SetDlgItemText(hDlg,IDC_FORMAT,fmt); // SendPSChanged
+	}else
+		SendPSChanged(hDlg);
 }
 //================================================================================================
 //-----------------------------------+++--> Handler for Enable/Disable "Customize format" CheckBox:
 void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------------------+++-->
 {
-	BOOL b;
+	int use_custom;
 	int i;
 	
-	b = IsDlgButtonChecked(hDlg, IDC_CUSTOM);
-	EnableDlgItem(hDlg, IDC_FORMAT, b);
+	use_custom = IsDlgButtonChecked(hDlg, IDC_CUSTOM);
+	EnableDlgItem(hDlg, IDC_FORMAT, use_custom);
 	
 	for(i = IDC_YEAR4; i <= IDC_12HOUR; i++)
-		EnableDlgItem(hDlg, i, !b);
+		EnableDlgItem(hDlg, i, !use_custom);
 	
 	if(m_pCustomFormat && bmouse) {
-		if(b) {
+		if(use_custom) {
 			if(m_pCustomFormat[0])
 				SetDlgItemText(hDlg, IDC_FORMAT, m_pCustomFormat);
 		} else {
@@ -373,7 +376,8 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 		}
 	}
 	
-	if(!b) OnFormatCheck(hDlg, 0);
+	if(!use_custom)
+		OnFormatCheck(hDlg, 0);
 	SendPSChanged(hDlg);
 }
 /*------------------------------------------------
