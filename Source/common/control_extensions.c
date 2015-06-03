@@ -6,8 +6,11 @@
 */
 //#define WM_LINKSETTARGET    WM_USER+0x4910
 
-static HCURSOR m_cursor_hand = NULL;
-static WNDPROC m_proc_static = NULL;
+static short m_links = 0;
+static HFONT m_link_font_hovered = NULL;
+static HFONT m_link_font_underline;
+static HCURSOR m_cursor_hand;
+static WNDPROC m_proc_static;
 static LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 typedef struct{
 	const char* target;
@@ -16,8 +19,6 @@ typedef struct{
 
 void LinkControl_Setup(HWND link_control, unsigned char flags, const char* target) {
 	link_data* data;
-	if(!m_cursor_hand)
-		m_cursor_hand = LoadCursor(NULL, IDC_HAND);
 	if(GetWindowLongPtr(link_control, GWLP_USERDATA))
 		return;
 	
@@ -25,11 +26,23 @@ void LinkControl_Setup(HWND link_control, unsigned char flags, const char* targe
 	data->target = target;
 	data->flags = flags;
 	SetWindowLongPtr(link_control, GWLP_USERDATA, (LONG_PTR)data);
+	if(!m_links++){
+		HFONT hfont;
+		LOGFONT logft;
+		m_cursor_hand = LoadCursor(NULL, IDC_HAND);
+		hfont = GetWindowFont(link_control);
+		GetObject(hfont, sizeof(logft), &logft);
+		logft.lfUnderline = 1;
+		m_link_font_underline = CreateFontIndirect(&logft);
+	}
 	m_proc_static = SubclassWindow(link_control, LinkControlProc);
 }
 
 LRESULT LinkControl_OnCtlColorStatic(HWND hwnd, WPARAM wParam, LPARAM lParam) {
-	SetTextColor((HDC)wParam,RGB(0,0,255));
+	if(m_link_font_hovered)
+		SetTextColor((HDC)wParam,RGB(255,0,0));
+	else
+		SetTextColor((HDC)wParam,RGB(0,0,255));
 	return DefWindowProc(hwnd, WM_CTLCOLORSTATIC, wParam, lParam);
 }
 
@@ -38,11 +51,25 @@ LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 	case WM_DESTROY:{
 		link_data* data = (link_data*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		free(data);
+		if(!--m_links)
+			DeleteFont(m_link_font_underline);
 		break;}
 	//case WM_LINKSETTARGET:
 	//	return 0;
+	case WM_MOUSELEAVE: {
+		HFONT hfont = m_link_font_hovered;
+		m_link_font_hovered = NULL;
+		SetWindowFont(hwnd, hfont, 1);
+		return 0;}
 	case WM_SETCURSOR:
-		SetCursor(m_cursor_hand);
+		if(!m_link_font_hovered){
+			TRACKMOUSEEVENT tme = {sizeof(tme), TME_LEAVE, 0, 10};
+			tme.hwndTrack = hwnd;
+			m_link_font_hovered = GetWindowFont(hwnd);
+			SetCursor(m_cursor_hand);
+			SetWindowFont(hwnd, m_link_font_underline, 1);
+			TrackMouseEvent(&tme);
+		}
 		return TRUE;
 //	case WM_RBUTTONDOWN:
 	case WM_LBUTTONDOWN:{
