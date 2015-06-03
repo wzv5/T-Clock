@@ -1,11 +1,98 @@
+#include "../common/globals.h"
 #include "control_extensions.h"
-#include "clock.h"
 
-#include <windowsx.h>
-#include <stdio.h>
-#include <string.h>
+/*
+	LINK CONTROLS
+*/
+//#define WM_LINKSETTARGET    WM_USER+0x4910
 
+static HCURSOR m_cursor_hand = NULL;
+static WNDPROC m_proc_static = NULL;
+static LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+typedef struct{
+	const char* target;
+	unsigned char flags;
+} link_data;
 
+void LinkControl_Setup(HWND link_control, unsigned char flags, const char* target) {
+	link_data* data;
+	if(!m_cursor_hand)
+		m_cursor_hand = LoadCursor(NULL, IDC_HAND);
+	if(GetWindowLongPtr(link_control, GWLP_USERDATA))
+		return;
+	
+	data = (link_data*)malloc(sizeof(link_data));
+	data->target = target;
+	data->flags = flags;
+	SetWindowLongPtr(link_control, GWLP_USERDATA, (LONG_PTR)data);
+	m_proc_static = SubclassWindow(link_control, LinkControlProc);
+}
+
+LRESULT LinkControl_OnCtlColorStatic(HWND hwnd, WPARAM wParam, LPARAM lParam) {
+	SetTextColor((HDC)wParam,RGB(0,0,255));
+	return DefWindowProc(hwnd, WM_CTLCOLORSTATIC, wParam, lParam);
+}
+
+LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam){
+	switch(msg){
+	case WM_DESTROY:{
+		link_data* data = (link_data*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+		free(data);
+		break;}
+	//case WM_LINKSETTARGET:
+	//	return 0;
+	case WM_SETCURSOR:
+		SetCursor(m_cursor_hand);
+		return TRUE;
+//	case WM_RBUTTONDOWN:
+	case WM_LBUTTONDOWN:{
+		char str[MAX_PATH];
+		char* offset;
+		link_data* data = (link_data*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+		HWND parent = GetParent(hwnd);
+		if(data->flags != LCF_NOTIFYONLY){
+			str[0] = '\0';
+			offset = str;
+			if(data->flags & LCF_HTTP){
+				memcpy(offset, "http://", 7);
+				offset += 7;
+			}else if(data->flags & LCF_HTTPS){
+				memcpy(offset, "https://", 8);
+				offset += 8;
+			}else if(data->flags & LCF_MAIL){
+				memcpy(offset, "mailto:", 7);
+				offset += 7;
+			}else if(data->flags & LCF_RELATIVE){
+				memcpy(offset, api.root, api.root_len);
+				offset += api.root_len;
+				*offset++ = '\\';
+			}
+			
+			if(data->target){
+				strncpy_s(offset, (sizeof(str)-(offset-str)), data->target, _TRUNCATE);
+			}else{
+				GetWindowText(hwnd, offset, (int)(sizeof(str)-(offset-str)));
+			}
+			
+			if(str[0]){
+				if(data->flags & LCF_PARAMS)
+					api.ExecFile(str, parent);
+				else
+					api.Exec(str, NULL, parent);
+			}
+		}
+		
+		if(data->flags & LCF_NOTIFY)
+			SendMessage(parent, WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hwnd),STN_CLICKED), (LPARAM)hwnd);
+		return 0;}
+//	case WM_RBUTTONUP:
+	case WM_LBUTTONUP:
+//	case WM_RBUTTONDBLCLK:
+	case WM_LBUTTONDBLCLK:
+		return 0;
+	}
+	return CallWindowProc(m_proc_static, hwnd, msg, wParam, lParam);
+}
 
 /*
 	COLOR BOXES
@@ -46,7 +133,7 @@ static COLORREF m_usercolors[16] = {
 };
 
 static WNDPROC m_proc_combo = NULL;
-LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void ColorBox_Setup(ColorBox boxes[], size_t num)
 {

@@ -5,14 +5,9 @@
 #include "tclock.h"
 #include "../common/version.h"
 
-static WNDPROC m_oldLabProc = NULL;
-static HCURSOR m_hCurHand = NULL;
-
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 static void OnLinkClicked(HWND hDlg, UINT id);
-
-LRESULT CALLBACK LabLinkProc(HWND, UINT, WPARAM, LPARAM);
 
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 /////////////////////////////////////////////////////////////////////////////////////
@@ -36,14 +31,14 @@ INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 	case WM_CTLCOLORSTATIC:{
 		int id=GetDlgCtrlID((HWND)lParam);
 		if(id==IDC_ABT_WEBuri || id==IDC_ABT_MAILuri) {
-			SetTextColor((HDC)wParam,RGB(0,0,255));
+			return LinkControl_OnCtlColorStatic(hDlg, wParam, lParam);
 		}
 		break;}
 	case WM_COMMAND: {
 		WORD id, code;
 		id = LOWORD(wParam);
 		code = HIWORD(wParam);
-		if((id==IDC_ABT_WEBuri || id==IDC_ABT_MAILuri) && code==STN_CLICKED) {
+		if(id==IDC_ABT_MAILuri) {
 			OnLinkClicked(hDlg, id);
 		}
 		if((id==IDC_STARTUP) && ((code==BST_CHECKED) || (code==BST_UNCHECKED))) {
@@ -80,12 +75,10 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 		SendDlgItemMessage(hDlg,controlid,WM_SETFONT,(WPARAM)hftBold,0);
 	}
 	SendDlgItemMessage(hDlg,IDC_STARTUP,WM_SETFONT,(WPARAM)hftStartup,0);
-	if(!m_hCurHand) m_hCurHand = LoadCursor(NULL, IDC_HAND);
 	
-	m_oldLabProc = SubclassWindow(GetDlgItem(hDlg,IDC_ABT_WEBuri), LabLinkProc);
-	SubclassWindow(GetDlgItem(hDlg,IDC_ABT_MAILuri), LabLinkProc);
-//==================================================================================
-
+	LinkControl_Setup(GetDlgItem(hDlg,IDC_ABT_WEBuri), LCF_SIMPLE, NULL);
+	LinkControl_Setup(GetDlgItem(hDlg,IDC_ABT_MAILuri), LCF_NOTIFYONLY, NULL);
+	
 	CheckDlgButton(hDlg,IDC_STARTUP,GetStartupFile(hDlg,path));
 }
 /*--------------------------------------------------
@@ -104,22 +97,8 @@ void OnApply(HWND hDlg)
 void OnLinkClicked(HWND hDlg, UINT id)
 {
 	char str[128];
-	if(id==IDC_ABT_MAILuri) {
-		strcpy(str, "mailto:");
-		GetDlgItemText(hDlg, id, str+strlen(str), 64);
-		strcat(str, "?subject=About "); strcat(str, ABT_TITLE);
-	}else
-		GetDlgItemText(hDlg, id, str, 64);
-	ShellExecute(hDlg, NULL, str, NULL, "", SW_SHOWNORMAL);
-}
-//================================================================================================
-//-------{ Give me a Hand...(Icon) }------+++--> Change Curser to Hand When Mousing Over Web Links:
-LRESULT CALLBACK LabLinkProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
-{
-	switch(message) {
-	case WM_SETCURSOR:
-		SetCursor(m_hCurHand);
-		return TRUE;
-	}
-	return CallWindowProc(m_oldLabProc, hwnd, message, wParam, lParam);
+	strcpy(str, "mailto:");
+	GetDlgItemText(hDlg, id, str+7, 64);
+	strcat(str, "?subject=About "); strcat(str, ABT_TITLE);
+	api.Exec(str, NULL, hDlg);
 }
