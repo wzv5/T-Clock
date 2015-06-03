@@ -52,7 +52,7 @@ int Clock_DelValue(const char* section, const char* entry);
 int Clock_DelKey(const char* section);
 
 /** \sa TClockAPI::GetFileAndOption() */
-void Clock_GetFileAndOption(const char* command, char* fname, char* opt);
+void Clock_GetFileAndOption(const char* command, char* app, char* params);
 /** \sa TClockAPI::ShellExecute() */
 int Clock_ShellExecute(const char* method, const char* app, const char* params, HWND parent, int show);
 /** \sa TClockAPI::Exec() */

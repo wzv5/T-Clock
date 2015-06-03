@@ -80,8 +80,13 @@ typedef struct TClockAPI_TAG {
  * \sa GetTickCount(), GetTickCount64() */
 	ULONGLONG (WINAPI *GetTickCount64)();
 /**
- * \brief extracts filename and parameters from command (used by ExecFile()) */
-	void (*GetFileAndOption)(const char* command, char* fname, char* opt);
+ * \brief "smartly" extracts filename and parameters from command (used by \c ExecFile())
+ * \param[in] command command line to parse
+ * \param[out] app buffer of size \c MAX_PATH that receives the application path
+ * \param[out] params buffer of size \c MAX_PATH that receives parameters
+ * \remark this function tries to be smart, so spaces are generally ignored for as long as it finds a valid file
+ * \sa ExecFile(), MAX_PATH */
+	void (*GetFileAndOption)(const char* command, char* app, char* params);
 /**
  * \brief parses given color ( \c COLORREF ) for use by T-Clock or Windows
  * \param color color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)
@@ -202,7 +207,8 @@ typedef struct TClockAPI_TAG {
  * \param command full commandline with filename and optional arguments
  * \param parent = \c NULL (parent window)
  * \return -1 on failure, 0 on success, 1 if user cancled
- * \sa Exec(), ExecElevated(), ShellExecute() */
+ * \remark makes use of \c GetFileAndOption() internally and thus same rules apply for \p command
+ * \sa Exec(), ExecElevated(), ShellExecute(), GetFileAndOption() */
 	int (*ExecFile)(const char* command, HWND parent);
 	// translation API
 	const char* (*T)(int hash);

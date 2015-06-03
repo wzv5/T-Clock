@@ -87,38 +87,38 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
 }
 
-void Clock_GetFileAndOption(const char* command, char* fname, char* opt) {
-	const char* p, *pe;
-	char* pd;
-	WIN32_FIND_DATA fd;
-	HANDLE hfind;
+void Clock_GetFileAndOption(const char* command, char* app, char* params) {
+	const char* offset_params = NULL;
+	const char* offset = command;
+	char* out = app;
 	
-	p = command; pd = fname;
-	pe = NULL;
-	for(; ;) {
-		if(*p == ' ' || *p == 0) {
-			*pd = 0;
-			hfind = FindFirstFile(fname, &fd);
-			if(hfind != INVALID_HANDLE_VALUE) {
-				FindClose(hfind);
-				pe = p;
+	for(; *offset; ) {
+		if(*offset == ' ') {
+			*out = '\0';
+			if(PathExists(app) == 1){
+				offset_params = offset;
+			}else{
+				if(offset-command <= MAX_PATH-5){
+					memcpy(out, ".exe", 5);
+					if(PathExists(app) == 1)
+						offset_params = offset;
+				}
 			}
-			if(*p == 0) break;
+			for(; *offset == ' '; *out++ = *offset++);
+			continue; // spaces skipped, check for null
 		}
-		*pd++ = *p++;
+		*out++ = *offset++;
 	}
-	if(pe == NULL) pe = p;
-	
-	p = command; pd = fname;
-	for(; p != pe;) {
-		*pd++ = *p++;
+	if(!offset_params){ // no valid file found
+		offset_params = strchr(command, ' ');
+		if(!offset_params) // entire command
+			offset_params = offset;
 	}
-	*pd = 0;
-	if(*p == ' ') p++;
+	out[offset_params-offset] = '\0';
 	
-	pd = opt;
-	for(; *p;) *pd++ = *p++;
-	*pd = 0;
+	for(; *offset_params == ' ';  ++offset_params);
+	
+	strcpy(params, offset_params);
 }
 
 // registry
