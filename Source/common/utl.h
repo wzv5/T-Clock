@@ -18,7 +18,8 @@ HWND FindClock();
 void RefreshUs();
 // unsorted
 /**
- * \brief checks if given path exists */
+ * \brief checks if given path exists
+ * \return 1 for a file, 2 for directory */
 char PathExists(const char* path);
 /**
  * \brief converts a hex string to integer

@@ -16,7 +16,7 @@ static void InitComboFont(HWND hDlg);
 static void SetComboFontSize(HWND hDlg, int bInit);
 
 static char m_transition=-1; // somehow WM_INITDIALOG gets called quite late, we need to initialize the var here. (related problem caused by spin control)
-static __inline void SendPSChanged(HWND hDlg){
+static inline void SendPSChanged(HWND hDlg){
 	if(m_transition==-1) return;
 	g_bApplyClock = 1;
 	g_bApplyTaskbar = 1;

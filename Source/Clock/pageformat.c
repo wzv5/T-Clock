@@ -35,7 +35,7 @@ static char m_sep_time[4]; // time seperator such as : .
 
 
 static char m_transition=-1; // can become a problem if not initializes.. see pagecolor.c
-static __inline void SendPSChanged(HWND hDlg){
+static inline void SendPSChanged(HWND hDlg){
 	if(m_transition==-1) return;
 	g_bApplyClock = 1;
 	g_bApplyTaskbar = 1;
