@@ -59,6 +59,19 @@ INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			m_pCustomFormat = NULL;
 		}
 		break;
+	case WM_CTLCOLORSTATIC:{
+		HDC hdcStatic = (HDC)wParam;
+		int id = GetDlgCtrlID((HWND)lParam);
+		switch(id){
+		case IDC_FORMAT:
+			SetTextColor(hdcStatic, GetSysColor(COLOR_GRAYTEXT));
+			break;
+		case IDC_FORMAT_LNK:
+			LinkControl_OnCtlColorStatic(hDlg, wParam, lParam);
+			break;
+		}
+		return FALSE;
+	}
 	case WM_COMMAND: {
 		WORD id=LOWORD(wParam);
 		switch(id){
@@ -215,6 +228,7 @@ void OnInit(HWND hDlg)
 	const char* AM[]={"AM","am","A","a"," ",};
 	const char* PM[]={"PM","pm","P","p"," ",};
 	const int AMPMs=sizeof(AM)/sizeof(AM[0]);
+	HWND doc_lnk = GetDlgItem(hDlg, IDC_FORMAT_LNK);
 	HWND format_cb = GetDlgItem(hDlg, IDC_FORMAT);
 	HWND locale_cb = GetDlgItem(hDlg, IDC_LOCALE);
 	HWND am_cb = GetDlgItem(hDlg, IDC_AMSYMBOL);
@@ -234,7 +248,9 @@ void OnInit(HWND hDlg)
 	hfont = (HFONT)GetStockObject(OEM_FIXED_FONT); // cleartype, bold (same as console?)
 	if(hfont)
 		SendMessage(format_cb, WM_SETFONT, (WPARAM)hfont, 0);
-		
+	
+	LinkControl_Setup(doc_lnk, LCF_SIMPLE|LCF_RELATIVE, "T-Clock Help.rtf");
+	
 	// Fill and select the "Locale" combobox
 	EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);
 	ComboBox_SetCurSel(locale_cb, 0);
@@ -362,7 +378,7 @@ void OnCustom(HWND hDlg, BOOL bmouse)   //--------------------------------------
 	int i;
 	
 	use_custom = IsDlgButtonChecked(hDlg, IDC_CUSTOM);
-	EnableDlgItem(hDlg, IDC_FORMAT, use_custom);
+	Edit_SetReadOnly(GetDlgItem(hDlg,IDC_FORMAT), !use_custom);
 	
 	for(i = IDC_YEAR4; i <= IDC_12HOUR; i++)
 		EnableDlgItem(hDlg, i, !use_custom);

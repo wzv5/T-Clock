@@ -245,7 +245,7 @@
 #define FORMAT_END                      IDC_CUSTOM
 #define FORMAT_NUM                      /*15*/1+FORMAT_END-FORMAT_BEGIN
 #define IDC_FORMAT                      1216
-#define IDC_FORMATDETAIL                1217
+#define IDC_FORMAT_LNK                  1217
 #define IDC_AMSYMBOL                    1251
 #define IDC_PMSYMBOL                    1252
 #define IDC_LABAMSYMBOL                 1254
