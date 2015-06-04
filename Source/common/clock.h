@@ -87,10 +87,11 @@ typedef struct TClockAPI_TAG {
  * \brief "smartly" extracts filename and parameters from command (used by \c ExecFile())
  * \param[in] command command line to parse
  * \param[out] app buffer of size \c MAX_PATH that receives the application path
- * \param[out] params buffer of size \c MAX_PATH that receives parameters
+ * \param[out] params optional buffer of size \c MAX_PATH that receives parameters
+ * \return 0 if a valid path was found
  * \remark this function tries to be smart, so spaces are generally ignored for as long as it finds a valid file
  * \sa ExecFile(), MAX_PATH */
-	void (*GetFileAndOption)(const char* command, char* app, char* params);
+	int (*GetFileAndOption)(const char* command, char* app, char* params);
 /**
  * \brief parses given color ( \c COLORREF ) for use by T-Clock or Windows
  * \param color color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)

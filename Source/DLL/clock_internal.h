@@ -54,7 +54,7 @@ int Clock_DelKey(const char* section);
 /** \sa TClockAPI::PathExists() */
 char Clock_PathExists(const char* path);
 /** \sa TClockAPI::GetFileAndOption() */
-void Clock_GetFileAndOption(const char* command, char* app, char* params);
+int Clock_GetFileAndOption(const char* command, char* app, char* params);
 /** \sa TClockAPI::ShellExecute() */
 int Clock_ShellExecute(const char* method, const char* app, const char* params, HWND parent, int show);
 /** \sa TClockAPI::Exec() */

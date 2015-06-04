@@ -97,13 +97,14 @@ char Clock_PathExists(const char* path){
 	return S_ISDIR(st.st_mode)?2:1;
 }
 
-void Clock_GetFileAndOption(const char* command, char* app, char* params) {
+int Clock_GetFileAndOption(const char* command, char* app, char* params) {
+	int invalid_path = 0;
 	const char* offset_params = NULL;
 	const char* offset = command;
 	char* out = app;
 	
-	for(; *offset; ) {
-		if(*offset == ' ') {
+	for(;;) {
+		if(*offset <= ' ') { // any non-printable char, incl. null
 			*out = '\0';
 			if(Clock_PathExists(app) == 1){
 				offset_params = offset;
@@ -112,23 +113,33 @@ void Clock_GetFileAndOption(const char* command, char* app, char* params) {
 					memcpy(out, ".exe", 5);
 					if(Clock_PathExists(app) == 1)
 						offset_params = offset;
+					*out = '\0';
 				}
 			}
 			for(; *offset == ' '; *out++ = *offset++);
-			continue; // spaces skipped, check for null
+			if(!*offset)
+				break;
+		}
+		if(*offset == '/'){ // Windows still fails to work with "/" and relative paths
+			++offset;
+			*out++ = '\\';
+			continue;
 		}
 		*out++ = *offset++;
 	}
 	if(!offset_params){ // no valid file found
+		invalid_path = 1;
 		offset_params = strchr(command, ' ');
 		if(!offset_params) // entire command
 			offset_params = offset;
 	}
 	out[offset_params-offset] = '\0';
 	
-	for(; *offset_params == ' ';  ++offset_params);
-	
-	strcpy(params, offset_params);
+	if(params){
+		for(; *offset_params == ' ';  ++offset_params);
+		strcpy(params, offset_params);
+	}
+	return invalid_path;
 }
 
 // registry
