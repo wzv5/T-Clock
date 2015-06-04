@@ -276,7 +276,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 	alarm_t pAS;
 	int count;
 	api.GetStr("","JihouFile",buf,MAX_PATH,"");
-	if(PathExists(buf)==1)
+	if(api.PathExists(buf) == 1)
 		EnableMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_ENABLED);
 	if(GetHourlyChime()){
 		CheckMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_CHECKED);

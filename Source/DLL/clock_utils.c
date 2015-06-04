@@ -1,5 +1,6 @@
 #include "tcdll.h"
 #include "clock_internal.h"
+#include <sys/stat.h>
 
 static const char m_regkey[] = "Software\\Stoic Joker's\\T-Clock 2010"; /**< our registry key root */
 static const size_t m_regkey_size = sizeof(m_regkey); /**< size of \c m_regkey incl. trailing null \sa m_regkey */
@@ -87,6 +88,15 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
 }
 
+#ifndef S_ISDIR
+#	define S_ISDIR(mode) (mode&S_IFDIR)
+#endif // S_ISDIR
+char Clock_PathExists(const char* path){
+	struct stat st;
+	if(stat(path,&st)==-1) return 0;
+	return S_ISDIR(st.st_mode)?2:1;
+}
+
 void Clock_GetFileAndOption(const char* command, char* app, char* params) {
 	const char* offset_params = NULL;
 	const char* offset = command;
@@ -95,12 +105,12 @@ void Clock_GetFileAndOption(const char* command, char* app, char* params) {
 	for(; *offset; ) {
 		if(*offset == ' ') {
 			*out = '\0';
-			if(PathExists(app) == 1){
+			if(Clock_PathExists(app) == 1){
 				offset_params = offset;
 			}else{
 				if(offset-command <= MAX_PATH-5){
 					memcpy(out, ".exe", 5);
-					if(PathExists(app) == 1)
+					if(Clock_PathExists(app) == 1)
 						offset_params = offset;
 				}
 			}

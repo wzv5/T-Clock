@@ -80,6 +80,10 @@ typedef struct TClockAPI_TAG {
  * \sa GetTickCount(), GetTickCount64() */
 	ULONGLONG (WINAPI *GetTickCount64)();
 /**
+ * \brief checks if given path exists
+ * \return 1 for a file, 2 for directory */
+	char (*PathExists)(const char* path);
+/**
  * \brief "smartly" extracts filename and parameters from command (used by \c ExecFile())
  * \param[in] command command line to parse
  * \param[out] app buffer of size \c MAX_PATH that receives the application path

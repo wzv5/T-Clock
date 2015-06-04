@@ -4,8 +4,6 @@
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "globals.h"
 #include "utl.h"
-//#include <sys/types.h>
-#include <sys/stat.h>
 
 int IsRunAsAdmin()
 {
@@ -84,14 +82,6 @@ void RefreshUs()   //----------------------------------------------------------+
 		SendMessage(hclock,CLOCKM_REFRESHCLOCK,0,0);
 		SendMessage(hclock,CLOCKM_REFRESHTASKBAR,0,0);
 	}
-}
-#ifndef S_ISDIR
-#	define S_ISDIR(mode) (mode&S_IFDIR)
-#endif // S_ISDIR
-char PathExists(const char* path){
-	struct stat st;
-	if(stat(path,&st)==-1) return 0;
-	return S_ISDIR(st.st_mode)?2:1;
 }
 
 int atox(const char* p)

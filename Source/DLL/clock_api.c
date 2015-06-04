@@ -45,6 +45,7 @@ TClockAPI api = {
 	ClockAPI(Message)
 	ClockAPI(PositionWindow)
 	NULL, // ClockAPI(GetTickCount)
+	ClockAPI(PathExists)
 	ClockAPI(GetFileAndOption)
 	ClockAPI(GetColor)
 	ClockAPI(On_DWMCOLORIZATIONCOLORCHANGED)
@@ -94,7 +95,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		
 		memcpy(ms_inifile, ms_root, ms_root_len+1);
 		strcat(ms_inifile, "\\T-Clock.ini");
-		if(PathExists(ms_inifile)){
+		if(Clock_PathExists(ms_inifile)){
 			ms_bIniSetting = 1;
 		}
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
