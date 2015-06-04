@@ -97,7 +97,7 @@
   <ItemGroup>
     <ClCompile Include="..\common\clock.c" />
     <ClCompile Include="..\common\utl.c" />
-    <ClInclude Include="..\common\newapi.c" />
+    <ClCompile Include="..\common\newapi.c" />
     <ClCompile Include="..\common\win2k_compat.c" />
     <ClCompile Include="DeskCalendar.c" />
   </ItemGroup>
