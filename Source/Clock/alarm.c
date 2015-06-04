@@ -278,17 +278,20 @@ void PlayNoSoundThread(HWND hWnd, char* fname, DWORD dwLoops)
 //===================================================*
 BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 {
-
 	if(!fname[0] || fname[0]=='<') return FALSE;
 	if(fname[0]!='/' && fname[0]!='\\' && fname[1]!=':' // no abs path
 	&&(fname[0]!='.' || (fname[1]!='/' && fname[1]!='\\' && (fname[1]!='.' ||  (fname[2]!='/' && fname[2]!='\\'))))) // no relative path (strict relative)
 	{ // do it relative to "waves/"
+		char app[MAX_PATH];
 		const size_t tlen=api.root_len;
 		const size_t len=strlen(fname)+1; // incl. terminating null
 		if(len<MAX_PATH-tlen-7){
 			memmove(fname+tlen+7/* <mydir>/waves/ */,fname,len);
 			memcpy(fname,api.root,tlen); /// absolute path is at least required by .pcb / PlayNoSoundThread (not for .wav)
 			memcpy(fname+tlen,"\\waves\\",7);
+			if(api.GetFileAndOption(fname, app, NULL) != 0){
+				memmove(fname,fname+tlen+7,len); // restore relative
+			}
 		}
 	}
 	
