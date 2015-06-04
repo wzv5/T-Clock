@@ -3,6 +3,17 @@
 #include <windows.h>
 
 /*
+	GENERIC
+*/
+/**
+ * \brief add a string if not already present and select it
+ * \param box
+ * \param str string to add
+ * \param select if true, also select newly added string
+ * \sa ComboBox_AddString() */
+void ComboBox_AddStringOnce(HWND box, const char* str, int select);
+
+/*
 	LINK CONTROLS
 */
 #define LCF_SIMPLE       0x00 /**< use link target as is */

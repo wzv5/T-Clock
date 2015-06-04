@@ -25,7 +25,10 @@ void ComboBoxArray_AddSoundFiles(HWND boxes[], int num)
 		FindClose(hFind);
 	}
 	for(i=0; i<num; ++i){
-		if(!ComboBox_GetTextLength(boxes[i]))
+		if(ComboBox_GetTextLength(boxes[i])){
+			ComboBox_GetText(boxes[i], search, sizeof(search));
+			ComboBox_AddStringOnce(boxes[i], search, 1);
+		}else
 			ComboBox_SetCurSel(boxes[i], 0);
 	}
 }

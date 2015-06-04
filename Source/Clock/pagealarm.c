@@ -207,6 +207,8 @@ void OnInit(HWND hDlg)
 	int i, count;
 	file_cb = GetDlgItem(hDlg, IDC_FILEALARM);
 	file_hourly_cb = GetDlgItem(hDlg, IDC_FILEJIHOU);
+	/// add default sound files to sound file dropdown
+	ComboBoxArray_AddSoundFiles(file_boxes, 2);
 	/// add "new" entry
 	ComboBox_SetItemData(alarm_cb, ComboBox_AddString(alarm_cb, MyString(IDS_ADDALARM)), 0);
 	/// add alarms
@@ -241,9 +243,6 @@ void OnInit(HWND hDlg)
 				   
 	OnAlarmJihou(hDlg, IDC_JIHOU);
 	
-	/// add default sound files to sound file dropdown
-	ComboBoxArray_AddSoundFiles(file_boxes, 2);
-	
 	/// add play icons
 	SendDlgItemMessage(hDlg, IDC_TESTALARM, BM_SETIMAGE, IMAGE_ICON,
 					   (LPARAM)g_hIconPlay);
@@ -254,6 +253,8 @@ void OnInit(HWND hDlg)
 	
 	SendDlgItemMessage(hDlg, IDC_DELALARM, BM_SETIMAGE, IMAGE_ICON,
 					   (LPARAM)g_hIconDel);
+	#undef file_cb
+	#undef file_hourly_cb
 }
 /*------------------------------------------------
   deinitialize
@@ -374,6 +375,8 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 //-------------------------------------------------+++--> Load Dialog With Settings for This Alarm:
 void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------------------+++-->
 {
+	HWND file_cb = GetDlgItem(hDlg, IDC_FILEALARM);
+	
 	SetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
 	
 	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETRANGE32, 0,23);
@@ -382,7 +385,7 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_SETPOS32, 0, pAS->minute);
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETRANGE32, (WPARAM)-1,42);
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETPOS32, 0, pAS->iTimes);
-	SetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname);
+	ComboBox_AddStringOnce(file_cb, pAS->fname, 1);
 	
 	SetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message);
 	SetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings);

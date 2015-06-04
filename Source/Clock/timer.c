@@ -442,7 +442,7 @@ void OnTimerName(HWND hDlg)   //------------------------------------------------
 			SetDlgItemInt(hDlg, IDC_TIMERMINUTE,	pts->minute, 0);
 			SetDlgItemInt(hDlg, IDC_TIMERHOUR,		pts->hour,   0);
 			SetDlgItemInt(hDlg, IDC_TIMERDAYS,		pts->day,    0);
-			SetDlgItemText(hDlg, IDC_TIMERFILE,		pts->fname);
+			ComboBox_AddStringOnce(GetDlgItem(hDlg,IDC_TIMERFILE), pts->fname, 1);
 			CheckDlgButton(hDlg, IDC_TIMERREPEAT,	pts->bRepeat);
 			CheckDlgButton(hDlg, IDC_TIMERBLINK,	pts->bBlink);
 			if(pts->bActive){

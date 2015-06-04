@@ -2,6 +2,25 @@
 #include "control_extensions.h"
 
 /*
+	GENERIC
+*/
+
+void ComboBox_AddStringOnce(HWND box, const char* str, int select)
+{
+	int sel;
+	if(!str[0]){
+		ComboBox_SetText(box, str);
+		return;
+	}
+	sel = ComboBox_FindStringExact(box, -1, str);
+	if(sel == -1){
+		sel = ComboBox_AddString(box, str);
+	}
+	if(select)
+		ComboBox_SetCurSel(box, sel);
+}
+
+/*
 	LINK CONTROLS
 */
 //#define WM_LINKSETTARGET    WM_USER+0x4910
