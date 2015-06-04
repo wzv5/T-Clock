@@ -328,8 +328,8 @@ int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, 
 {
 	HWND hwndSize = (HWND)lParam;
 	(void)lpntme; (void)FontType;
-	if(lpelfe->lfFaceName[0]!='@' && ComboBox_FindStringExact(hwndSize, -1, lpelfe->lfFaceName)==LB_ERR) {
-		ComboBox_AddString(hwndSize, lpelfe->lfFaceName);
+	if(lpelfe->lfFaceName[0]!='@') {
+		ComboBox_AddStringOnce(hwndSize, lpelfe->lfFaceName, 0);
 	}
 	return 1;
 }

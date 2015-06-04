@@ -523,11 +523,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	}
 	if(!str[0])
 		strcpy(str,"pool.ntp.org");
-	i = ComboBox_FindStringExact(hServer, -1, str);
-	if(i == CB_ERR) {
-		i = ComboBox_InsertString(hServer, 0, str);
-	}
-	ComboBox_SetCurSel(hServer, i);
+	ComboBox_AddStringOnce(hServer, str, 1);
 	
 	if(!g_hIconDel) {
 		g_hIconDel = LoadImage(GetModuleHandle(NULL),
