@@ -57,6 +57,7 @@
 #define TC_TOOLTIP "\"T-Clock\"\\nLDATE"
 
 #include "clock.h"
+#include "win2k_compat.h"
 
 #define REG_MOUSE "Mouse"
 enum{ // Drop&File enum / registry settings

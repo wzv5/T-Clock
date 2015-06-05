@@ -75,6 +75,4 @@ char* MyString(UINT id);
  * \brief checks for \c SetSystemTime() permissions (\c SE_SYSTEMTIME_NAME)
  * \return boolean */
 int HaveSetTimePermissions();
-
-#include "win2k_compat.h"
 #endif // TCLOCK_UTL_H
