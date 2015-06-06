@@ -105,10 +105,15 @@ typedef struct{
 } alarm_t;
 BOOL GetHourlyChime();
 void SetHourlyChime(BOOL bEnabled);
+
 char GetAlarmEnabled(int idx);
 void SetAlarmEnabled(int idx,char bEnabled);
-void ReadAlarmFromReg(alarm_t* pAS, int num);
-void SaveAlarmToReg(alarm_t* pAS, int num);
+int GetAlarmNum();
+void SetAlarmNum(int num);
+void ReadAlarmFromReg(alarm_t* pAS, int idx);
+void SaveAlarmToReg(alarm_t* pAS, int idx);
+int DeleteAlarmFromReg(int idx);
+
 void StopFile();
 int IsPlaying();
 void EndAlarm();

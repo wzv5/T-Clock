@@ -3,7 +3,9 @@
 //--+++--> Sound a wave, a media file, or open a file =============================
 //================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
-static char g_alarmkey[20]="Alarm";
+#define MAX_ALARM 999999
+static char g_alarmkey[12]="Alarm";
+#define ALARMKEY_OFFSET 5
 
 static WAVEHDR m_wh;
 static HPSTR m_pData = NULL;
@@ -48,14 +50,31 @@ char GetAlarmEnabled(int idx){
 void SetAlarmEnabled(int idx,char bEnabled){
 	if(idx<0||idx>=m_maxAlarm)
 		return;
-	if(bEnabled) m_pAS[idx].uFlags|=ALRM_ENABLED;
-	else m_pAS[idx].uFlags&=~ALRM_ENABLED;
-	wsprintf(g_alarmkey+5,"%d",idx+1);
-	api.SetInt(g_alarmkey,"Alarm",m_pAS[idx].uFlags&ALRM_ENABLED);
+	if(bEnabled) m_pAS[idx].uFlags |= ALRM_ENABLED;
+	else m_pAS[idx].uFlags &= ~ALRM_ENABLED;
+	wsprintf(g_alarmkey+ALARMKEY_OFFSET, "%d", idx+1);
+	api.SetInt(g_alarmkey, "Alarm", m_pAS[idx].uFlags&ALRM_ENABLED);
 }
-void ReadAlarmFromReg(alarm_t* pAS, int num)
+int GetAlarmNum()
 {
-	wsprintf(g_alarmkey+5,"%d",num+1);
+	int num = api.GetInt("", "AlarmNum", 0);
+	if(num < 0)
+		num = 0;
+	if(num > MAX_ALARM)
+		num = MAX_ALARM;
+	return num;
+}
+void SetAlarmNum(int num)
+{
+	if(num > MAX_ALARM)
+		num = MAX_ALARM;
+	api.SetInt("", "AlarmNum", num);
+}
+void ReadAlarmFromReg(alarm_t* pAS, int idx)
+{
+	if(idx >= MAX_ALARM)
+		return;
+	wsprintf(g_alarmkey+ALARMKEY_OFFSET, "%d", idx+1);
 	api.GetStr(g_alarmkey, "Name", pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name), "");
 	pAS->hour = api.GetInt(g_alarmkey, "Hour", 12);
 	pAS->minute = api.GetInt(g_alarmkey, "Minute", 0);
@@ -77,12 +96,14 @@ void ReadAlarmFromReg(alarm_t* pAS, int num)
 	api.GetStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message), "");
 	api.GetStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings), "");
 	
-	if(!*pAS->dlgmsg.name)
+	if(!pAS->dlgmsg.name[0])
 		wsprintf(pAS->dlgmsg.name, "%02d:%02d", pAS->hour, pAS->minute);
 }
-void SaveAlarmToReg(alarm_t* pAS, int num)
+void SaveAlarmToReg(alarm_t* pAS, int idx)
 {
-	wsprintf(g_alarmkey+5,"%d",num+1);
+	if(idx >= MAX_ALARM)
+		return;
+	wsprintf(g_alarmkey+ALARMKEY_OFFSET, "%d", idx+1);
 	api.SetStr(g_alarmkey, "Name", pAS->dlgmsg.name);
 	api.SetInt(g_alarmkey, "Hour", pAS->hour);
 	api.SetInt(g_alarmkey, "Minute", pAS->minute);
@@ -103,14 +124,25 @@ void SaveAlarmToReg(alarm_t* pAS, int num)
 	api.SetInt(g_alarmkey,"Blink",pAS->uFlags&ALRM_BLINK);
 	api.SetInt(g_alarmkey,"jrMsgUsed",pAS->uFlags&ALRM_DIALOG);
 }
-
-//================================================================================================
-//-------------------------------------------------+++--> Load Configured Alarm Data From Registry:
-void InitAlarm(void)   //-------------------------------------------------------------------+++-->
+int DeleteAlarmFromReg(int idx)
 {
-	m_maxAlarm = api.GetInt("", "AlarmNum", 0);
-	if(m_maxAlarm < 1) m_maxAlarm = 0;
-	if(m_pAS) free(m_pAS); m_pAS = NULL;
+	if(idx >= MAX_ALARM)
+		return 1;
+	wsprintf(g_alarmkey+ALARMKEY_OFFSET, "%d", idx+1);
+	if(api.GetInt(g_alarmkey, "Hour", -1) == -1)
+		return 1;
+	api.DelKey(g_alarmkey);
+	return 0;
+}
+
+//=============================================================================================
+//----------------------------------------------+++--> Load Configured Alarm Data From Registry:
+void InitAlarm()   //--------------------------------------------------------------------+++-->
+{
+	m_maxAlarm = GetAlarmNum();
+	if(m_pAS)
+		free(m_pAS);
+	m_pAS = NULL;
 	if(m_maxAlarm > 0) {
 		int i;
 		m_pAS = malloc(sizeof(alarm_t) * m_maxAlarm);

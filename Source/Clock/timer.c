@@ -362,8 +362,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		ComboBox_SetItemData(timer_cb, idx, pts);
 	}
 	// add "new timer" item
-	pts = (timeropt_t*)calloc(1,sizeof(timeropt_t));
-	memcpy(pts->name,"   <new timer>",15);
+	pts = (timeropt_t*)calloc(1, sizeof(timeropt_t));
+	memcpy(pts->name, "<Add New...>", 13);
 	ComboBox_AddString(timer_cb, pts->name);
 	ComboBox_SetItemData(timer_cb, count, pts);
 	ComboBox_SetCurSel(timer_cb, 0);

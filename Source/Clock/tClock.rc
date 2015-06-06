@@ -597,7 +597,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_ADDALARM            "( Add )"
+    IDS_ADDALARM            "<Add New...>"
     IDS_MMFILE              "Multimedia  (*.wav,*.mid,*.pcb,...)"
     IDS_ALLFILE             "All (*.*)"
     IDS_PROGRAMFILE         "Program (*.exe,*.cmd)"
@@ -605,7 +605,7 @@ END
 
 STRINGTABLE 
 BEGIN
-    IDS_NONE                "(none)"
+    IDS_NONE                "<  disabled  >"
     IDS_RECYCLE             "Recycle Bin"
     IDS_OPENBY              "Open with..."
     IDS_COPYTO              "Copy To..."

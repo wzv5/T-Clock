@@ -281,8 +281,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 	if(GetHourlyChime()){
 		CheckMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_CHECKED);
 	}
-	count=api.GetInt("","AlarmNum",0);
-	if(count<1) count=0;
+	count = GetAlarmNum();
 	if(count){
 		int idx;
 		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
