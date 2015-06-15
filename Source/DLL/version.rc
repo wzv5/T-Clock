@@ -71,7 +71,7 @@ IDI_MAIN                ICON                    "../Clock/Clock.ico"
 // Manifest resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-2                  RT_MANIFEST    "..\\common\\manifest.xml"
+2                  RT_MANIFEST    "../common/manifest.xml"
 
 
 #ifdef APSTUDIO_INVOKED

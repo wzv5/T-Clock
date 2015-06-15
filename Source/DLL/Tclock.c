@@ -5,7 +5,7 @@
 #include "tcdll.h"
 #undef NTDDI_VERSION // allow our own runtime OS check
 #define NTDDI_VERSION NTDDI_VISTA // used for drag&drop tooltip
-#include <Shlobj.h>//CFSTR_SHELLIDLIST
+#include <shlobj.h>//CFSTR_SHELLIDLIST
 #include <process.h>//_beginthread
 
 void OnDrawTimer(HWND hwnd);
@@ -187,6 +187,24 @@ static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 	}
 	free(buf);
 }
+#ifndef CFSTR_DROPDESCRIPTION
+#	define CFSTR_DROPDESCRIPTION TEXT ("DropDescription")
+typedef enum {
+	DROPIMAGE_INVALID = -1,
+	DROPIMAGE_NONE = 0,
+	DROPIMAGE_COPY = DROPEFFECT_COPY,
+	DROPIMAGE_MOVE = DROPEFFECT_MOVE,
+	DROPIMAGE_LINK = DROPEFFECT_LINK,
+	DROPIMAGE_LABEL = 6,
+	DROPIMAGE_WARNING = 7,
+	DROPIMAGE_NOIMAGE = 8,
+} DROPIMAGETYPE;
+typedef struct {
+	DROPIMAGETYPE type;
+	WCHAR szMessage[MAX_PATH];
+	WCHAR szInsert[MAX_PATH];
+} DROPDESCRIPTION;
+#endif // CFSTR_DROPDESCRIPTION
 static void MyDragDrop__SetDropTip_(MyDragDrop_t* self,int effect,const wchar_t* msg)
 {
 	if(api.OS >= TOS_VISTA && effect!=self->lasteffect){

@@ -15,10 +15,10 @@
 #define _WIN32_IE 0x0600	// Change this to the appropriate value to target other versions of IE.
 #endif
 
-#include <Ws2tcpip.h> // getaddrinfo, Winsock2.h
-#include <Wspiapi.h> // for Windows 2000 mainly
-#include <Windows.h>  // Required by the fact it runs on Windows.
-#include <WindowsX.h>// usability macros: Edit_*, ComboBox_*, SubclassWindow, etc.
+#include <ws2tcpip.h> // getaddrinfo, Winsock2.h
+#include <wspiapi.h> // for Windows 2000 mainly
+#include <windows.h>  // Required by the fact it runs on Windows.
+#include <windowsx.h>// usability macros: Edit_*, ComboBox_*, SubclassWindow, etc.
 
 #ifndef MCM_SIZERECTTOMIN
 #	define MCM_SIZERECTTOMIN (MCM_FIRST+29)
@@ -26,8 +26,10 @@
 #endif
 
 #ifdef __GNUC__
-//#	define localtime_s _localtime64_s
-//#	define gmtime_s _gmtime64_s
+#	if __MINGW64_VERSION_MAJOR < 4 // linux is still at 2 or 4 sometimes (4 as of Debian Jessie)
+#		define localtime_s _localtime64_s
+#		define gmtime_s _gmtime64_s
+#	endif
 #	define __pragma(x) // MSVC pragmas, safe to ignore since we use them only to fix MSVC bugs...
 	static const GUID CLSID_Shell = {0x13709620,0xc279,0x11ce,{0xa4,0x9e,0x44,0x45,0x53,0x54,0,1}};
 	static const GUID IID_IShellDispatch4 = {0xefd84b2d,0x4bcf,0x4298,{0xbe,0x25,0xeb,0x54,0x2a,0x59,0xfb,0xda}};

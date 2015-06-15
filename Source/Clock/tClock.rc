@@ -1,7 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
-#include <Windows.h> // prepares some resource stuff such as WC_STATIC doesn't work without (also includes WinResrc.h)
-#include <CommCtrl.h> // UPDOWN_CLASS
+#include <windows.h> // prepares some resource stuff such as WC_STATIC doesn't work without (also includes WinResrc.h)
+#include <commctrl.h> // UPDOWN_CLASS
 #include "../common/resource.h"
 #ifdef __GNUC__ //sadly we can't do this for MSVC as it's not smart enough to detect if it's 64 bit or 32 bit
 #   include "version.rc"

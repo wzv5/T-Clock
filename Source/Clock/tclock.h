@@ -8,9 +8,9 @@
 #include "../common/resource.h"
 
 #include <stdio.h>//sprintf
-#include <Uxtheme.h>//SetWindowTheme
-#include <Shlwapi.h>//PathFileExists
-#include <Psapi.h>//EmptyWorkingSet
+#include <uxtheme.h>//SetWindowTheme
+#include <shlwapi.h>//PathFileExists
+#include <psapi.h>//EmptyWorkingSet
 #include "../common/newapi.h"
 #include "../common/utl.h"
 #include "../common/control_extensions.h"
@@ -56,9 +56,10 @@ extern BOOL g_bTrans2kIcons;
  * \brief returns full path to currently started Clock[64].exe
  * \return path to Clock.exe incl. filename
  * \remark currently just a wrapper for \c _pgmptr */
-inline const char* GetClockExe(){
-	return _pgmptr;
-}
+//inline const char* GetClockExe(){
+//	return _pgmptr;
+//}
+#define GetClockExe() _pgmptr
 
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);

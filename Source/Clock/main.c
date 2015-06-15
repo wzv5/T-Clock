@@ -5,7 +5,7 @@
 #include "tclock.h" //---------------{ Stoic Joker 2006-2011 }---------------+++-->
 #include <winver.h>
 #include <wtsapi32.h>
-#include <ShlObj.h>//SHGetFolderPath
+#include <shlobj.h>//SHGetFolderPath
 #include "../common/version.h"
 
 // Application Global Window Handles

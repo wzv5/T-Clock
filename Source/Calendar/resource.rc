@@ -14,7 +14,7 @@
 // Icon resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-IDI_MAIN           ICON           ".\\calendar.ico"
+IDI_MAIN           ICON           "calendar.ico"
 
 
 
@@ -60,4 +60,4 @@ VS_VERSION_INFO VERSIONINFO
 // Manifest resources
 //
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-1                  RT_MANIFEST    "..\\common\\manifest.xml"
+1                  RT_MANIFEST    "../common/manifest.xml"

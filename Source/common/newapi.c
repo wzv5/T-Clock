@@ -3,7 +3,7 @@
   GradientFill and Layerd Window
 ---------------------------------------------*/
 #include "../common/globals.h"
-#include <Uxtheme.h>
+#include <uxtheme.h>
 #include "../common/utl.h"
 
 int IsWow64(){

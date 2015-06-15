@@ -1,7 +1,7 @@
 #include "../common/globals.h"
 #include "../common/newapi.h"
 #include "../common/resource.h"
-#include <CommCtrl.h>
+#include <commctrl.h>
 #include <time.h>
 //other
 #include "../common/calendar.inc"

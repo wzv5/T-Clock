@@ -17,13 +17,20 @@
 				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
 					<Add option="-Os" />
+					<Add option="-Wall" />
+					<Add option="-m32" />
 				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-static" />
+					<Add option="-m32" />
+				</Linker>
 			</Target>
 			<Target title="calendar">
 				<Option output="../Release/misc/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="i686-w64-mingw32" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-m32" />
@@ -31,7 +38,7 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-m32" />
-					<Add library="Comctl32" />
+					<Add library="comctl32" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -41,7 +48,7 @@
 				<Option output="../Debug/misc/XPCalendar" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="i686-w64-mingw32" />
 				<Compiler>
 					<Add option="-m32" />
 					<Add option="-Og" />
@@ -49,7 +56,7 @@
 				</Compiler>
 				<Linker>
 					<Add option="-m32" />
-					<Add library="Comctl32" />
+					<Add library="comctl32" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -59,7 +66,7 @@
 				<Option output="../Release/Clock" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="i686-w64-mingw32" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-m32" />
@@ -68,15 +75,15 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-m32" />
-					<Add library="Psapi" />
-					<Add library="Comdlg32" />
+					<Add library="psapi" />
+					<Add library="comdlg32" />
 					<Add library="shlwapi" />
-					<Add library="Version" />
+					<Add library="version" />
 					<Add library="comctl32" />
-					<Add library="Winmm" />
-					<Add library="Ws2_32" />
-					<Add library="Mpr" />
-					<Add library="Uuid" />
+					<Add library="winmm" />
+					<Add library="ws2_32" />
+					<Add library="mpr" />
+					<Add library="uuid" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -86,7 +93,7 @@
 				<Option output="../Release/misc/T-Clock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj" />
 				<Option type="3" />
-				<Option compiler="gcc" />
+				<Option compiler="i686-w64-mingw32" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
@@ -106,7 +113,7 @@
 				<Option output="../Debug/Clock" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg" />
 				<Option type="0" />
-				<Option compiler="gcc" />
+				<Option compiler="i686-w64-mingw32" />
 				<Compiler>
 					<Add option="-m32" />
 					<Add option="-Og" />
@@ -116,15 +123,15 @@
 				</Compiler>
 				<Linker>
 					<Add option="-m32" />
-					<Add library="Psapi" />
-					<Add library="Comdlg32" />
+					<Add library="psapi" />
+					<Add library="comdlg32" />
 					<Add library="shlwapi" />
-					<Add library="Version" />
+					<Add library="version" />
 					<Add library="comctl32" />
-					<Add library="Winmm" />
-					<Add library="Ws2_32" />
-					<Add library="Mpr" />
-					<Add library="Uuid" />
+					<Add library="winmm" />
+					<Add library="ws2_32" />
+					<Add library="mpr" />
+					<Add library="uuid" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -134,7 +141,7 @@
 				<Option output="../Debug/misc/T-Clock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj/dbg" />
 				<Option type="3" />
-				<Option compiler="gcc" />
+				<Option compiler="i686-w64-mingw32" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
@@ -155,7 +162,7 @@
 				<Option output="../Release/Clock64" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64" />
 				<Option type="0" />
-				<Option compiler="gnu_gcc_compiler_x86_64" />
+				<Option compiler="x86_64-w64-mingw32" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-m64" />
@@ -164,15 +171,15 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-m64" />
-					<Add library="Psapi" />
-					<Add library="Comdlg32" />
+					<Add library="psapi" />
+					<Add library="comdlg32" />
 					<Add library="shlwapi" />
-					<Add library="Version" />
+					<Add library="version" />
 					<Add library="comctl32" />
-					<Add library="Winmm" />
-					<Add library="Ws2_32" />
-					<Add library="Mpr" />
-					<Add library="Uuid" />
+					<Add library="winmm" />
+					<Add library="ws2_32" />
+					<Add library="mpr" />
+					<Add library="uuid" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -182,7 +189,7 @@
 				<Option output="../Release/misc/T-Clock64" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64" />
 				<Option type="3" />
-				<Option compiler="gnu_gcc_compiler_x86_64" />
+				<Option compiler="x86_64-w64-mingw32" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
@@ -202,7 +209,7 @@
 				<Option output="../Debug/Clock64" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64/dbg" />
 				<Option type="0" />
-				<Option compiler="gnu_gcc_compiler_x86_64" />
+				<Option compiler="x86_64-w64-mingw32" />
 				<Compiler>
 					<Add option="-m64" />
 					<Add option="-Og" />
@@ -212,15 +219,15 @@
 				</Compiler>
 				<Linker>
 					<Add option="-m64" />
-					<Add library="Psapi" />
-					<Add library="Comdlg32" />
+					<Add library="psapi" />
+					<Add library="comdlg32" />
 					<Add library="shlwapi" />
-					<Add library="Version" />
+					<Add library="version" />
 					<Add library="comctl32" />
-					<Add library="Winmm" />
-					<Add library="Ws2_32" />
-					<Add library="Mpr" />
-					<Add library="Uuid" />
+					<Add library="winmm" />
+					<Add library="ws2_32" />
+					<Add library="mpr" />
+					<Add library="uuid" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -230,7 +237,7 @@
 				<Option output="../Debug/misc/T-Clock64" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output=".obj64/dbg" />
 				<Option type="3" />
-				<Option compiler="gnu_gcc_compiler_x86_64" />
+				<Option compiler="x86_64-w64-mingw32" />
 				<Option createDefFile="1" />
 				<Option createStaticLib="1" />
 				<Compiler>
@@ -266,9 +273,9 @@
 		</Compiler>
 		<Linker>
 			<Add option="-static" />
-			<Add library="Advapi32" />
-			<Add library="User32" />
-			<Add library="Ole32" />
+			<Add library="advapi32" />
+			<Add library="user32" />
+			<Add library="ole32" />
 			<Add library="gdi32" />
 		</Linker>
 		<Unit filename="Calendar/DeskCalendar.c">
