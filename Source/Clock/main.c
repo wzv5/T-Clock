@@ -210,8 +210,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	(void)nCmdShow;
 	
 	#if defined(__GNUC__) && defined(_DEBUG)
-	LoadLibraryA("exchndl.dll");
+	#	ifdef _WIN64
+	#		define LoadExcHndl() LoadLibraryExA("dbg\\64\\exchndl", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)
+	#	else
+	#		define LoadExcHndl() LoadLibraryExA("dbg\\exchndl", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)
+	#	endif
+	#else
+	#	define LoadExcHndl()
 	#endif
+	LoadExcHndl(); // LOAD_WITH_ALTERED_SEARCH_PATH works :P At least since Win2k
 	
 	if(LoadClockAPI("misc/T-Clock" ARCH_SUFFIX, &api)){
 		MessageBox(NULL, "Error loading: T-Clock" ARCH_SUFFIX ".dll", "API error", MB_OK|MB_ICONERROR);

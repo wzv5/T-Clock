@@ -53,6 +53,7 @@
 					<Add option="-m32" />
 					<Add option="-Og" />
 					<Add option="-g" />
+					<Add option="-fno-omit-frame-pointer" />
 				</Compiler>
 				<Linker>
 					<Add option="-m32" />
@@ -60,6 +61,8 @@
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
+					<Add after="objcopy --only-keep-debug ../Debug/misc/XPCalendar.exe ../Debug/misc/XPCalendar.dbg" />
+					<Add after="objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../Debug/misc/XPCalendar.dbg ../Debug/misc/XPCalendar.exe" />
 				</ExtraCommands>
 			</Target>
 			<Target title="app">
@@ -135,6 +138,8 @@
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
+					<Add after="objcopy --only-keep-debug ../Debug/Clock.exe ../Debug/Clock.dbg" />
+					<Add after="objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../Debug/Clock.dbg ../Debug/Clock.exe" />
 				</ExtraCommands>
 			</Target>
 			<Target title="dll debug">
@@ -156,6 +161,8 @@
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
+					<Add after="objcopy --only-keep-debug ../Debug/misc/T-Clock.dll ../Debug/misc/T-Clock.dbg" />
+					<Add after="objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../Debug/misc/T-Clock.dbg ../Debug/misc/T-Clock.dll" />
 				</ExtraCommands>
 			</Target>
 			<Target title="app-64">
@@ -231,6 +238,8 @@
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
+					<Add after="objcopy --only-keep-debug ../Debug/Clock64.exe ../Debug/Clock64.dbg" />
+					<Add after="objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../Debug/Clock64.dbg ../Debug/Clock64.exe" />
 				</ExtraCommands>
 			</Target>
 			<Target title="dll-64 debug">
@@ -252,6 +261,8 @@
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
+					<Add after="objcopy --only-keep-debug ../Debug/misc/T-Clock64.dll ../Debug/misc/T-Clock64.dbg" />
+					<Add after="objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../Debug/misc/T-Clock64.dbg ../Debug/misc/T-Clock64.dll" />
 				</ExtraCommands>
 			</Target>
 		</Build>
