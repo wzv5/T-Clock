@@ -6,22 +6,14 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+using namespace std;
 
-#define MYGITPATH "E:/zZ-Progra/Git/bin"
-
-#ifndef _MSC_VER
-#	include <unistd.h>//unlink,getcwd
-#	include <stdlib.h>//getenv/putenv
-#	ifndef _WIN32
-#		include <linux/limits.h>//PATH_MAX
-#	endif // _WIN32
-#else
+#ifdef _MSC_VER
 #	include <direct.h>//unlink,getcwd
 #	define PATH_MAX 260
 #	define popen _popen
 #	define pclose _pclose
 #	define unlink _unlink
-#	define putenv _putenv
 #	define getcwd _getcwd
 #	define sscanf sscanf_s
 #	define chdir _chdir
@@ -43,7 +35,20 @@
 		getenv_s(&wayne,ret,sizeof(ret),varname);
 		return ret;
 	}
+#else
+#	include <unistd.h>//unlink,getcwd
+#	include <stdlib.h>//getenv,setenv
+#	ifdef __linux__
+#		include <linux/limits.h>//PATH_MAX
+#		define stricmp strcasecmp
+#	endif // __linux__
 #endif
+
+#ifdef _WIN32
+#	include <windows.h>//ExpandEnvironmentStrings
+#	define setenv(name,value,force) SetEnvironmentVariable(name,value)
+#endif
+
 using namespace std;
 bool g_verbose=false;
 bool g_do_postbuild=true;
@@ -95,13 +100,52 @@ bool QueryGit(const char* path,Version* ver);
 bool QuerySVN(const char* path,Version* ver);
 void PrintDefine(FILE* fp,const char* define,const Version &ver);
 bool WriteHeader(const char* filepath,Version &ver);
+
+void SetupPath(const char* paths) {
+#	ifdef _WIN32
+#		define PATH_DELIM ";"
+#	else
+#		define PATH_DELIM ":"
+#	endif // _WIN32
+	string path;
+	const char* envp;
+	size_t len = 0;
+	if((envp=getenv("PATH")))
+		path += envp;
+	if(paths && paths[0]){
+		path += string(PATH_DELIM) + paths;
+		++len;
+	}
+	if((envp=getenv("AUVER_PATH")) && envp[0]){
+		path += string(PATH_DELIM) + envp;
+		++len;
+	}
+#	ifdef _WIN32
+	if(!len)
+		path += ";%ProgramW6432%/Git/bin;%ProgramFiles(x86)%/Git/bin;%LocalAppData%/GitHub/PORTAB~1/bin;%ProgramW6432%/TortoiseSVN/bin;%ProgramFiles(x86)%/TortoiseSVN/bin";
+	len = ExpandEnvironmentStrings(path.c_str(), NULL, 0);
+	char* new_path = (char*)malloc(len);
+	if(!new_path)
+		return;
+	ExpandEnvironmentStrings(path.c_str(), new_path, len);
+	setenv("PATH", new_path, 1);
+	//puts(new_path);
+	free(new_path);
+#	else
+	if(len)
+		setenv("PATH", path.c_str(), 1);
+	//puts(path.c_str());
+#	endif // _WIN32
+}
+
 int main(int argc, char** argv)
 {
-//	+svn +noincrement +noinc --minor=99
+	const char* additional_paths = NULL;
 	const char* headerPath=NULL;
 	char* Gitpath=NULL;
 	char* SVNpath=NULL;;
-	char* get_define = NULL;
+	const char* get_define = NULL;
+	
 	for(int i=1; i<argc; ++i) {
 		if(!strcmp("-v",argv[i])) {
 			g_verbose=true;
@@ -109,6 +153,12 @@ int main(int argc, char** argv)
 			g_repo|=REPO_GIT;
 			Gitpath=NULL;
 			break;
+		} else if(!strcmp("--path",argv[i])) {
+			if(i+1 >= argc){
+				puts("missing parameter argument\n");
+				return 2;
+			}
+			additional_paths = argv[++i];
 		} else if(!strcmp("--git",argv[i])) {
 			g_repo|=REPO_GIT;
 			if(i+1<argc)
@@ -141,9 +191,11 @@ int main(int argc, char** argv)
 			printf("Unknown Option: %s\n\n",argv[i]);
 		}
 	}
+	
 	if(g_repo&(REPO_GIT|REPO_SVN) && (!Gitpath&&!SVNpath)) {
 		puts("Usage: autoversion [options] [autoversion.h]\n"
 			"Options:\n"
+			"   --path <paths>           additional paths to append to PATH variable\n"
 			"   --git <path>             use Git for 'revision', also add Git date & URL\n"
 			"   --svn <path>             use SVN for 'revision', also add SVN date & URL\n"
 			"   --post-build, --post     do post-build stuff (clean lockfile to re-enable auto increment)\n"
@@ -153,6 +205,9 @@ int main(int argc, char** argv)
 			"   -v                       be verbose");
 		return 1;
 	}
+	
+	SetupPath(additional_paths);
+	
 	if(!headerPath)
 		headerPath="version.h";
 	size_t hlen=strlen(headerPath);
@@ -237,12 +292,11 @@ int main(int argc, char** argv)
 bool QueryGit(const char* path,Version* ver)
 {
 	bool found=false;
-#	ifdef _WIN32
-	string env="PATH=";env+=getenv("PATH");env+=";" MYGITPATH; putenv(const_cast<char*>(env.c_str()));
-#	endif // _WIN32
-	char cwd[PATH_MAX]; getcwd(cwd,sizeof(cwd));
-	if(chdir(path))
+	char cwd[PATH_MAX]; getcwd(cwd, sizeof(cwd));
+	if(chdir(path)){
+		puts("invalid repository path!");
 		return false;
+	}
 	char buf[4097],* pos,* data;
 	FILE* git;
 	git=popen("git rev-list HEAD --count","r");
