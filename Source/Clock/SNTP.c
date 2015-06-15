@@ -580,7 +580,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	}
 	
 	// Load the Time Synchronization Log File:
-	memcpy(str, api.root, api.root_len);
+	memcpy(str, api.root, api.root_len+1);
 	add_title(str, "SNTP.log");
 	
 	stReport = fopen(str, "r");
