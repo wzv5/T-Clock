@@ -49,17 +49,16 @@ using namespace std;
 #	define setenv(name,value,force) SetEnvironmentVariable(name,value)
 #endif
 
-using namespace std;
-bool g_verbose=false;
-bool g_do_postbuild=true;
 enum{
-	REPO_NONE		=0x00,
-	REPO_AUTOINC	=0x01, // fake repo, simple autoincrement
-	REPO_GIT		=0x02,
-	REPO_SVN		=0x04,
+	REPO_NONE     =0x00,
+	REPO_AUTOINC  =0x01, // fake repo, simple autoincrement
+	REPO_GIT      =0x02,
+	REPO_SVN      =0x04,
 };
-unsigned char g_repo=REPO_AUTOINC;
-bool g_only_postbuild=false;
+bool g_verbose = false;
+bool g_do_postbuild = true;
+unsigned char g_repo = REPO_AUTOINC;
+bool g_only_postbuild = false;
 
 //major.minor[.build[.revision]]
 //0.1a1
@@ -71,18 +70,18 @@ bool g_only_postbuild=false;
 //    1.2.3.0 instead of 1.2-r (commercial distribution)
 //    1.2.3.5 instead of 1.2-r5 (commercial distribution with many bug fixes)
 enum Status{
-	STATUS_Alpha=0,
+	STATUS_Alpha = 0,
 	STATUS_Beta,
 	STATUS_ReleaseCandidate,
 	STATUS_Release,
 	STATUS_ReleaseMaintenance,
 	STATUS_NUM_};
-//const char* STATUS_S[STATUS_NUM_]={"Alpha","Beta","Release Candidate","Release","Release Maintenance"};
-const char* STATUS_S[STATUS_NUM_]={"Alpha","Beta","RC","Release","Maintenance"};
-const char* STATUS_SS[STATUS_NUM_]={"a","b","rc","r","rm"};
-const char* STATUS_SS2[STATUS_NUM_]={"α","β","гc","г","гm"};
+//const char* STATUS_S[STATUS_NUM_]   = {"Alpha","Beta","Release Candidate","Release","Release Maintenance"};
+const char* STATUS_S[STATUS_NUM_]   = {"Alpha","Beta","RC","Release","Maintenance"};
+const char* STATUS_SS[STATUS_NUM_]  = {"a","b","rc","r","rm"};
+const char* STATUS_SS2[STATUS_NUM_] = {"α","β","гc","г","гm"};
 enum VersionFlags{
-	VER_DIRTY=0x01,
+	VER_DIRTY = 0x01,
 };
 struct Version{
 	unsigned char flags_;
@@ -96,6 +95,7 @@ struct Version{
 	string date;
 	string revhash;
 };
+
 bool ReadHeader(const char* filepath,Version &ver);
 bool QueryGit(const char* path,Version* ver);
 bool QuerySVN(const char* path,Version* ver);
@@ -142,17 +142,17 @@ void SetupPath(const char* paths) {
 int main(int argc, char** argv)
 {
 	const char* additional_paths = NULL;
-	const char* headerPath=NULL;
-	char* Gitpath=NULL;
-	char* SVNpath=NULL;;
+	const char* headerPath = NULL;
+	char* Gitpath = NULL;
+	char* SVNpath = NULL;;
 	const char* get_define = NULL;
 	
 	for(int i=1; i<argc; ++i) {
 		if(!strcmp("-v",argv[i])) {
-			g_verbose=true;
+			g_verbose = true;
 		} else if(!strcmp("--help",argv[i]) || !strcmp("-h",argv[i])) {
-			g_repo|=REPO_GIT;
-			Gitpath=NULL;
+			g_repo |= REPO_GIT;
+			Gitpath = NULL;
 			break;
 		} else if(!strcmp("--path",argv[i])) {
 			if(i+1 >= argc){
@@ -161,35 +161,34 @@ int main(int argc, char** argv)
 			}
 			additional_paths = argv[++i];
 		} else if(!strcmp("--git",argv[i])) {
-			g_repo|=REPO_GIT;
-			if(i+1<argc)
-				Gitpath=argv[++i];
+			g_repo |= REPO_GIT;
+			if(i+1 < argc)
+				Gitpath = argv[++i];
 			else
 				puts("no valid Git path given\n");
 		} else if(!strcmp("--svn",argv[i])) {
-			g_repo|=REPO_SVN;
-			if(i+1<argc)
-				SVNpath=argv[++i];
+			g_repo |= REPO_SVN;
+			if(i+1 < argc)
+				SVNpath = argv[++i];
 			else
 				puts("no valid SVN path given\n");
 		} else if(!strcmp("--post-build",argv[i]) || !strcmp("--post",argv[i])) {
-			g_only_postbuild=true;
+			g_only_postbuild = true;
 		} else if(!strcmp("+noincrement",argv[i]) || !strcmp("+noinc",argv[i])) {
-			g_repo&=~REPO_AUTOINC;
+			g_repo &= ~REPO_AUTOINC;
 		} else if(!strcmp("+nopost-build",argv[i]) || !strcmp("+nopost",argv[i])) {
-			g_do_postbuild=false;
+			g_do_postbuild = false;
 		} else if(!strcmp("--get",argv[i])) {
 			get_define = "";
-			if(i+1<argc){
-				get_define = argv[++i];
-				continue;
+			if(i+1 >= argc){
+				puts("missing parameter argument\n");
+				return 2;
 			}
-			puts("missing parameter argument\n");
-			return 2;
-		} else if((argv[i][0]!='-'&&argv[i][0]!='+') && !headerPath) {
-			headerPath=argv[i];
+			get_define = argv[++i];
+		} else if((argv[i][0]!='-' && argv[i][0]!='+') && !headerPath) {
+			headerPath = argv[i];
 		} else {
-			printf("Unknown Option: %s\n\n",argv[i]);
+			printf("Unknown Option: %s\n\n", argv[i]);
 		}
 	}
 	
@@ -210,8 +209,8 @@ int main(int argc, char** argv)
 	SetupPath(additional_paths);
 	
 	if(!headerPath)
-		headerPath="version.h";
-	size_t hlen=strlen(headerPath);
+		headerPath = "version.h";
+	size_t hlen = strlen(headerPath);
 	if(!get_define) {
 /// @todo (White-Tiger#1#): aren't both files doin' "nearly" the same?
 		char lockPath[PATH_MAX];
@@ -247,33 +246,33 @@ int main(int argc, char** argv)
 			//	do_autoinc=false;
 		}
 	}
-	Version ver={0};
-	ver.date="unknown date";
+	Version ver = {0};
+	ver.date = "unknown date";
 
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
-	ReadHeader(headerPath,ver);
+	ReadHeader(headerPath, ver);
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
-	unsigned int rev=ver.revision;
+	unsigned int rev = ver.revision;
 	if(g_repo&REPO_GIT){
 		if(QueryGit(Gitpath,&ver))
-			g_repo=REPO_GIT;
+			g_repo = REPO_GIT;
 		else
-			g_repo&=~REPO_GIT;
+			g_repo &= ~REPO_GIT;
 	}
 	if(g_repo&REPO_SVN){
 		if(QuerySVN(SVNpath,&ver))
-			g_repo=REPO_SVN;
+			g_repo = REPO_SVN;
 		else
-			g_repo&=~REPO_SVN;
+			g_repo &= ~REPO_SVN;
 	}
 	
 	if(get_define) {
-		PrintDefine(stdout,get_define,ver);
+		PrintDefine(stdout, get_define, ver);
 		return 0;
 	}
 	
 	if(g_repo&REPO_AUTOINC){
-		g_repo=REPO_NONE;
+		g_repo = REPO_NONE;
 		++ver.revision;
 	}
 //	if(g_repo){ // increase revision because on commit the revision increases :P
@@ -281,7 +280,7 @@ int main(int argc, char** argv)
 //	}
 //	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	if(rev!=ver.revision){
-		ver.flags_|=VER_DIRTY;
+		ver.flags_ |= VER_DIRTY;
 		puts("	- increased revision");
 	}
 	if(WriteHeader(headerPath,ver)){
@@ -292,7 +291,7 @@ int main(int argc, char** argv)
 }
 bool QueryGit(const char* path,Version* ver)
 {
-	bool found=false;
+	bool found = false;
 	char cwd[PATH_MAX]; getcwd(cwd, sizeof(cwd));
 	if(chdir(path)){
 		puts("invalid repository path!");
@@ -300,32 +299,32 @@ bool QueryGit(const char* path,Version* ver)
 	}
 	char buf[4097],* pos,* data;
 	FILE* git;
-	git=popen("git rev-list HEAD --count","r");
+	git = popen("git rev-list HEAD --count","r");
 	if(git){ /// revision count
 		int error;
-		size_t read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+		size_t read = fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
 		if(!error && *buf>='0' && *buf<='9'){ // simple error check on command failure
-			ver->revision=atoi(buf);
-			git=popen("git remote -v","r");
+			ver->revision = atoi(buf);
+			git = popen("git remote -v","r");
 			if(git){ /// url
-				read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+				read = fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
 				for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'&&*pos!=' '&&*pos!='\t'); ++pos);
 				for(data=pos; *data=='\r'||*data=='\n'||*data==' '||*data=='\t'; ++data);
 				for(pos=data; *pos && (*pos!='\r'&&*pos!='\n'&&*pos!=' '&&*pos!='\t'); ++pos);
 				if(!error && *data && pos>data){
 					ver->url.assign(data,pos-data);
-//					git=popen("git log -1 --pretty=%h%n%an%n%at","r"); // short hash, author, timestamp
-					git=popen("git log -1 --pretty=%h%n%at","r"); // short hash, timestamp
+//					git = popen("git log -1 --pretty=%h%n%an%n%at","r"); // short hash, author, timestamp
+					git = popen("git log -1 --pretty=%h%n%at","r"); // short hash, timestamp
 					if(git){ /// shorthash,author,timestamp		SVN date example: 2014-07-01 21:31:24 +0200 (Tue, 01 Jul 2014)
-						read=fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+						read = fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
 						for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'); ++pos);
 						if(!error && *pos){
 							ver->revhash.assign(buf,pos-buf); ++pos;
-							time_t tt=atoi(pos);
-							tm* ttm=gmtime(&tt);
+							time_t tt = atoi(pos);
+							tm* ttm = gmtime(&tt);
 							strftime(buf,64,"%Y-%m-%d %H:%M:%S +0000 (%a, %b %d %Y)",ttm);
 							ver->date.assign(buf);
-							found=true;
+							found = true;
 						}
 					}
 				}
@@ -342,32 +341,32 @@ bool QuerySVN(const char* path,Version* ver)
 	svncmd.append(path);
 	FILE* svn = popen(svncmd.c_str(), "r");
 	if(svn){
-		size_t attrib_len=0; char attrib[32]={};
-		size_t value_len=0; char value[128]={};
+		size_t attrib_len = 0; char attrib[32] = {0};
+		size_t value_len = 0; char value[128] = {0};
 		char buf[4097];
 		size_t read;
-		read=fread(buf,sizeof(char),4096,svn); buf[read]='\0';
-		if(pclose(svn)==0){
+		read = fread(buf,sizeof(char),4096,svn); buf[read]='\0';
+		if(pclose(svn) == 0){
 			for(char* c=buf; *c; ++c) {
 				nextloop:
-				if(attrib_len>=31) goto nextline;
+				if(attrib_len >= 31) goto nextline;
 				switch(*c) {
 				case ':':
-					attrib[attrib_len]='\0';
+					attrib[attrib_len] = '\0';
 					for(++c; *c==' ' || *c=='\t'; ++c);
 					for(; *c && *c!='\n'; ++c) {
-						if(value_len>=127) {
-							value_len=0; *value='\0';
+						if(value_len >= 127) {
+							value_len = 0; value[0] = '\0';
 							break;
 						}
-						value[value_len++]=*c;
+						value[value_len++] = *c;
 					}
-					if(*c=='\n') {
-						value[value_len]='\0';
+					if(*c == '\n') {
+						value[value_len] = '\0';
 						if(!strcmp(attrib,"Revision")) {
 //							printf("Found: %s %s\n",attrib,value);
-							ver->revision=atoi(value);
-							found=true;
+							ver->revision = atoi(value);
+							found = true;
 						} else if(!strcmp(attrib,"Last Changed Date")) {
 //							printf("Found: %s @ %s\n",attrib,value);
 							ver->date.assign(value);
@@ -376,17 +375,17 @@ bool QuerySVN(const char* path,Version* ver)
 							ver->url.assign(value);
 						}
 					}
-					value_len=0; *value='\0';
+					value_len = 0; value[0] = '\0';
 				case '\n':
 					goto nextline;
 				default:
-					attrib[attrib_len++]=*c;
+					attrib[attrib_len++] = *c;
 				}
 				continue;
 				nextline:
 				for(; *c && *c!='\n'; ++c);
 				for(; *c=='\r'||*c=='\n'||*c==' '||*c=='\t'; ++c);
-				attrib_len=0; *attrib='\0';
+				attrib_len = 0; attrib[0] = '\0';
 				if(!*c) break;
 				goto nextloop;
 			}
@@ -402,71 +401,71 @@ bool ReadHeader(const char* filepath,Version &ver)
 		return false;
 	}
 	unsigned cmajor=0,cminor=0,cbuild=0,cstatus=0;
-	char buf[2048]={};
+	char buf[2048] = {0};
 	fread(buf,2048,sizeof(char),fheader);
 	fclose(fheader);
 	size_t def_found, def_num=7;const char def[]="define ";
-	size_t attrib_len=0; char attrib[32]={};
-	size_t value_len=0; char value[64]={};
+	size_t attrib_len = 0; char attrib[32] = {0};
+	size_t value_len = 0; char value[64] = {0};
 	for(char* c=buf; *c; ++c) {
 		nextloop:
 		if(attrib_len>=31) {attrib_len=0; *attrib='\0'; goto nextline;}
 		switch(*c) {
 		case '#':
 			for(++c; *c==' '||*c=='\t'; ++c);
-			for(def_found=0;*c&&*c==def[def_found];c++,def_found++);
-			if(def_found!=def_num) goto nextline;
+			for(def_found=0; *c&&*c==def[def_found]; c++,def_found++);
+			if(def_found != def_num) goto nextline;
 			attrib_len=0; *attrib='\0';
 			for(; *c && *c!=' ' && *c!='\n'; attrib[attrib_len++]=*c++);
-			if(*c=='\n') goto nextline;
-			attrib[attrib_len]='\0';
+			if(*c == '\n') goto nextline;
+			attrib[attrib_len] = '\0';
 			for(++c; *c==' '||*c=='\t'; ++c);
-			value_len=0; *value='\0';
+			value_len = 0; *value = '\0';
 			for(; *c && *c!='\n'; ++c) {
 				if(value_len>=63) break;
-				value[value_len++]=*c;
+				value[value_len++] = *c;
 			}
-			if(*c=='\n') {
-				value[value_len]='\0';
+			if(*c == '\n') {
+				value[value_len] = '\0';
 //				printf("Found: %s: %s\n",attrib,value);
 				if(!strcmp(attrib,"VER_MAJOR")) {
-					int tmp=atoi(value);
-					if(tmp>0xFF)tmp=0xFF;
-					else if(tmp<0)tmp=0;
-					ver.major=tmp;
+					int tmp = atoi(value);
+					if(tmp > 0xFF) tmp = 0xFF;
+					else if(tmp < 0) tmp = 0;
+					ver.major = tmp;
 				} else if(!strcmp(attrib,"VER_MINOR")) {
-					int tmp=atoi(value);
-					if(tmp>0xFFFF)tmp=0xFFFF;
-					else if(tmp<0)tmp=0;
-					ver.minor=tmp;
+					int tmp = atoi(value);
+					if(tmp > 0xFFFF) tmp = 0xFFFF;
+					else if(tmp < 0) tmp = 0;
+					ver.minor = tmp;
 				} else if(!strcmp(attrib,"VER_BUILD")) {
-					int tmp=atoi(value);
-					if(tmp>0xFFFF)tmp=0xFFFF;
-					else if(tmp<0)tmp=0;
-					ver.build=tmp;
+					int tmp = atoi(value);
+					if(tmp > 0xFFFF) tmp = 0xFFFF;
+					else if(tmp < 0) tmp = 0;
+					ver.build = tmp;
 				} else if(!strcmp(attrib,"VER_REVISION")) {
-					ver.revision=atoi(value);
+					ver.revision = atoi(value);
 				} else if(!strcmp(attrib,"VER_STATUS")) {
-					int tmp=atoi(value);
-					if(tmp>STATUS_NUM_-1)tmp=STATUS_NUM_-1;
-					else if(tmp<0)tmp=0;
-					ver.status=tmp;
+					int tmp = atoi(value);
+					if(tmp > STATUS_NUM_-1) tmp = STATUS_NUM_-1;
+					else if(tmp < 0) tmp = 0;
+					ver.status = tmp;
 				} else if(!strcmp(attrib,"VER_RC_STATUS")) {
 					sscanf(value,"%u, %u, %u, %u",&cmajor,&cminor,&cbuild,&cstatus);
 				} else if(!strcmp(attrib,"VER_REVISION_URL")) {
-					ver.url=value;
+					ver.url = value;
 					if(ver.url.length() >=2)
-						ver.url=ver.url.substr(1,ver.url.length()-2);
+						ver.url = ver.url.substr(1,ver.url.length()-2);
 				} else if(!strcmp(attrib,"VER_REVISION_DATE")) {
-					ver.date=value;
+					ver.date = value;
 					if(ver.date.length() >=2)
-						ver.date=ver.date.substr(1,ver.date.length()-2);
+						ver.date = ver.date.substr(1,ver.date.length()-2);
 				} else if(!strcmp(attrib,"VER_REVISION_HASH")) {
-					ver.revhash=value;
+					ver.revhash = value;
 					if(ver.revhash.length() >=2)
-						ver.revhash=ver.revhash.substr(1,ver.revhash.length()-2);
+						ver.revhash = ver.revhash.substr(1,ver.revhash.length()-2);
 				} else if(!strcmp(attrib,"VER_TIMESTAMP")) {
-					ver.timestamp=atoi(value);
+					ver.timestamp = atoi(value);
 				}
 			}
 		default:
@@ -481,7 +480,7 @@ bool ReadHeader(const char* filepath,Version &ver)
 	}
 	ver.flags_=0;
 	if(cmajor!=ver.major || cminor!=ver.minor || cbuild!=ver.build || cstatus!=ver.status) {
-		ver.flags_|=VER_DIRTY;
+		ver.flags_ |= VER_DIRTY;
 	}
 	return true;
 }
