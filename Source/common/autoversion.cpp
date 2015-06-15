@@ -77,7 +77,8 @@ enum Status{
 	STATUS_Release,
 	STATUS_ReleaseMaintenance,
 	STATUS_NUM_};
-const char* STATUS_S[STATUS_NUM_]={"Alpha","Beta","Release Candidate","Release","Release Maintenance"};
+//const char* STATUS_S[STATUS_NUM_]={"Alpha","Beta","Release Candidate","Release","Release Maintenance"};
+const char* STATUS_S[STATUS_NUM_]={"Alpha","Beta","RC","Release","Maintenance"};
 const char* STATUS_SS[STATUS_NUM_]={"a","b","rc","r","rm"};
 const char* STATUS_SS2[STATUS_NUM_]={"α","β","гc","г","гm"};
 enum VersionFlags{
@@ -505,7 +506,10 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	
 	// version strings
 	}else if(!stricmp("FULL",define)) {
-		fprintf(fp,"%hu.%hu.%hu %s",ver.major,ver.minor,ver.build,STATUS_S[ver.status]);
+		if(STATUS_S[ver.status][0])
+			fprintf(fp,"%hu.%hu.%hu %s",ver.major,ver.minor,ver.build,STATUS_S[ver.status]);
+		else
+			fprintf(fp,"%hu.%hu.%hu",ver.major,ver.minor,ver.build);
 	}else if(!stricmp("SHORT",define)) {
 		fprintf(fp,"%hu.%hu%s%hu",ver.major,ver.minor,STATUS_SS[ver.status],ver.build);
 	}else if(!stricmp("SHORT_DOTS",define)) {
@@ -526,10 +530,14 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 		fprintf(fp,"%s",ver.revhash.c_str());
 	}else if(!stricmp("REVISION_TAG",define)) {
 		fprintf(fp,"v%hu.%hu.%hu#%hu",ver.major,ver.minor,ver.build,ver.revision);
-		if(ver.status!=STATUS_Release){
+		if(STATUS_S[ver.status][0]){
 			fputc('-',fp);
-			for(const char* c=STATUS_S[ver.status]; *c; ++c)
-				fputc(tolower(*c),fp);
+			for(const char* c=STATUS_S[ver.status]; *c; ++c){
+				if(*c == ' ')
+					fputc('_',fp);
+				else
+					fputc(tolower(*c),fp);
+			}
 		}
 	
 	// date / time
