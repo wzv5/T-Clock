@@ -4,7 +4,7 @@ T-Clock Redux <sub><sub><sub><sub>(click picture for full size)</sub></sub></sub
 **T-Clock Redux** in an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/)  
 with ISO week number support, bug fixes and the ability to use Windows default calendar and ToolTip.
 
-The Original T-Clock written by Kazubon in the early 90's was a popular classic that was on the edge of extinction when Windows started going 64bit. ... Stoic Joker simply chose not to let that happen. And now it's up to us to continue his tale.
+T-Clock *(called TClock)*, originally written by Kazubon in the early 90's, was a popular classic that was on the edge of extinction when Windows started going 64bit. ... Stoic Joker simply chose not to let that happen. And now it's up to us to continue their tale.
 
 If you don't mind to read lots of text, and want to know more about T-Clock and it's history: [check this page out!](http://greggdeselms.com/tclock.html) *(thanks Gregg)*
 
@@ -62,5 +62,5 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 * or click on the email in T-Clock's about screen
 
 ### License
-* GPLv2 ? *(license is currently unknown, needs more research)*
+* GPLv2 ? *(license is currently unknown, needs further research)*
 ~~~~

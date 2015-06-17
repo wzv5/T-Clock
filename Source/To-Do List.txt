@@ -1,6 +1,3 @@
-Store Configuration Data in (alternate) .ini File - As Option.
-REQUESTED .ini Based Portable Version.
-
 ADD Time Difference (from TClock Lite)
 
 Can we Control T-Clock's Volume Individually...?
