@@ -8,6 +8,8 @@
 #include <string>
 using namespace std;
 
+#define AV_VERSION "1.0.0"
+
 #ifdef _MSC_VER
 #	include <direct.h>//unlink,getcwd
 #	define PATH_MAX 260
@@ -55,10 +57,15 @@ enum{
 	REPO_GIT      =0x02,
 	REPO_SVN      =0x04,
 };
-bool g_verbose = false;
-bool g_do_postbuild = true;
+enum{
+	FLAG_NONE     =0x00,
+	FLAG_PRE      =0x01,
+	FLAG_POST     =0x02,
+	FLAG_VERBOSE  =0x10,
+	FLAG_ERROR    =0x80,
+};
+unsigned char g_flag = FLAG_PRE;
 unsigned char g_repo = REPO_AUTOINC;
-bool g_only_postbuild = false;
 
 //major.minor[.build[.revision]]
 //0.1a1
@@ -139,76 +146,391 @@ void SetupPath(const char* paths) {
 #	endif // _WIN32
 }
 
+#ifndef _MSC_VER
+#	include <getopt.h>
+#else // _MSC_VER
+#	define no_argument         no_argument_msvc
+#	define required_argument   required_argument_msvc
+#	define optional_argument   optional_argument_msvc
+#	define option              option_msvc
+#	define optind              optind_msvc
+#	define optopt              optopt_msvc
+#	define opterr              opterr_msvc
+#	define optarg              optarg_msvc
+#	define getopt_long         getopt_long_msvc
+struct option_msvc{
+	const char* name;
+	int has_arg;
+	int* flag;
+	int val;
+};
+int optind_msvc = 1; /* index of first non-option in argv      */
+int optopt_msvc = 0; /* single option character, as parsed     */
+int opterr_msvc = 1; /* flag to enable built-in diagnostics... */
+                     /* (user may set to zero, to suppress)    */
+char* optarg_msvc = NULL; /* pointer to argument of current option  */
+enum HAS_ARG{
+	no_argument_msvc = 0,   /* option never takes an argument */
+	required_argument_msvc, /* option always requires an argument */
+	optional_argument_msvc  /* option may take an argument */
+};
+// basic implementation, doesn't support GNU extensions in `optstring` (+-) or POSIXLY_CORRECT
+// http://linux.die.net/man/3/getopt_long
+int getopt_long_msvc(int argc, char*const argv[], const char* optstring, const struct option* longopts, int* longindex){
+	static int s_idx = 1;
+	static const char* s_nextchar = NULL;
+	int idx;
+	const char* opt;
+	int len;
+	#define printOptErr(fmt,...) if(opterr && *optstring!=':') fprintf(stderr, "%s: " fmt, argv[0], ##__VA_ARGS__)
+	if(optind <= 1){
+		optind = 2;
+		s_idx = 1;
+		s_nextchar = NULL;
+	}
+	if(longindex)
+		*longindex = 0;
+	optarg = NULL;
+	for(;;){
+	if(s_idx >= argc)
+		return -1;
+	if(!s_nextchar){ // new param
+		if(argv[s_idx][0] != '-' || !argv[s_idx][1]){
+			// not a parameter, search for next parameter
+			for(idx=optind; idx<argc; ++idx){
+				if(argv[idx][0] == '-' && argv[idx][1]){
+					char** nargv = (char**)argv;
+					int oldidx = s_idx;
+					int move;
+					int result;
+					// parse param
+					optind = idx;
+					s_idx = optind++;
+					s_nextchar = NULL;
+					result = getopt_long(argc, argv, optstring, longopts, longindex);
+					// permutate argv
+					if(result == -1) // --
+						s_idx = idx+1;
+					len = s_idx-idx;
+					optind = oldidx + len;
+					s_idx = optind++;
+					do{
+						opt = nargv[idx];
+						for(move=idx; move-- > oldidx; ){
+							nargv[move+1] = nargv[move];
+						}
+						nargv[oldidx] = (char*)opt;
+						++idx; ++oldidx;
+					}while(len-- > 1);
+					if(result == -1)
+						break;
+					return result;
+				}
+			}
+			optind = s_idx;
+			s_idx = argc;
+			return -1;
+		}
+		s_nextchar = argv[s_idx]+1;
+		if(*s_nextchar == '-'){
+			// long option
+			if(!*++s_nextchar){
+				s_idx = argc;
+				return -1;
+			}
+			opt = s_nextchar;
+			s_idx = optind++;
+			s_nextchar = strchr(opt, '=');
+			if(!s_nextchar)
+				s_nextchar = strchr(opt, '\0');
+			len = s_nextchar - opt;
+			s_nextchar = NULL;
+			for(idx=0; longopts[idx].name; ++idx){
+				if(!strncmp(opt, longopts[idx].name, len)){
+					optopt = longopts[idx].val;
+					if(longindex)
+						*longindex = idx;
+					if(longopts[idx].flag){
+						*longopts[idx].flag = longopts[idx].val;
+						return 0;
+					}
+					if(longopts[idx].has_arg != no_argument){
+						if(opt[len] == '='){
+							optarg = (char*)opt+len+1;
+						}else if(s_idx < argc){
+							optarg = argv[s_idx];
+							s_idx = optind++;
+						}else if(longopts[idx].has_arg != optional_argument){
+							if(opterr){
+								printOptErr("option requires an argument -- %s\n", opt);
+								return (*optstring==':'?':':'?');
+							}
+							optarg = (char*)"-";
+						}
+					}
+					return longopts[idx].val;
+				}
+			}
+			optopt = 0;
+			printOptErr("unknown option -- %.*s\n", len, opt);
+			return '?';
+			// end long option
+		}
+	}
+	// short option
+	if(!*s_nextchar){
+		s_idx = optind++;
+		s_nextchar = NULL;
+		continue;
+	}
+	for(opt=optstring; *opt; ++opt){
+		if(*opt == ':' || *opt == '+' || *opt == '-')
+			continue;
+		if(*opt == *s_nextchar)
+			break;
+	}
+	optopt = *s_nextchar++;
+	if(*opt){
+		if(opt[1] == ':'){
+			optarg = (char*)s_nextchar;
+			s_idx = optind++;
+			s_nextchar = NULL;
+			if(!*optarg){
+				optarg = NULL;
+				if(s_idx < argc){
+					optarg = argv[s_idx];
+					s_idx = optind++;
+				}else if(opt[2] != ':'){
+					printOptErr("option requires an argument -- %c\n", (char)optopt);
+					return (*optstring==':'?':':'?');
+				}
+			}
+		}
+		return *opt;
+	}
+	printOptErr("unknown option -- %c\n", (char)optopt);
+	return '?';
+	// end short option
+	}
+}
+#endif
+
+#define DH_ARGV 0
+#define DH_ARGV_SHORT (const char*)1
+struct help{
+	int opt;
+	const char* params;
+	const char* descr;
+};
+const char* PrintIndentedLine(const char* str, int max_line/**< 80 */, int indented, int indent){
+	const char* eol;
+	max_line -= indent+2;
+	if(!*str){
+		putc('\n', stdout);
+		return str;
+	}
+	for(; indented<indent; ++indented) putc(' ', stdout);
+	eol = strchr(str, '\n');
+	if(!eol)
+		eol = strchr(str, '\0');
+	if(eol-str > max_line){
+		eol = str + max_line;
+		for(; *eol > ' ' && eol != str; --eol);
+		if(eol == str)
+			eol = str + max_line - 1;
+	}
+	printf("  %.*s\n", eol-str, str);
+	if(*eol <= ' ' && *eol)
+		return eol + 1;
+	return eol;
+}
+int DisplayHelp(const char* argv0, const char* short_options, const struct option* long_options, const struct help* help_info){
+	size_t maxlen = 0;
+	size_t len;
+	int measure;
+	int idx;
+	int opt;
+	const char* offset;
+	// usage
+	if(help_info[0].params){
+		if(help_info[0].params == DH_ARGV_SHORT){
+			const char* short_name;
+			short_name = strrchr(argv0, '/');
+			if(!short_name)
+				short_name = strrchr(argv0, '\\');
+			if(!short_name)
+				short_name = argv0-1;
+			argv0 = short_name+1;
+		} else
+			argv0 = help_info[0].params;
+	}
+	printf("Usage:   %s %s\n", argv0, help_info[0].descr);
+	// get indent part one
+	for(opt=0; long_options[opt].name; ++opt){
+		len = 6 + strlen(long_options[opt].name);
+		if(len > maxlen)
+			maxlen = len;
+	}
+	// options
+	puts("Options:");
+	measure = 1;
+	do{
+		for(idx=1; help_info[idx].descr; ++idx){
+			len = 2;
+			for(offset=short_options; *offset; ++offset){
+				if(help_info[idx].opt == *offset){
+					len += 2; // -x
+					if(!measure)
+						printf("  -%c", help_info[idx].opt);
+					break;
+				}
+			}
+			opt = 0;
+			if(!*offset){
+				for(; long_options[opt].name; ++opt){
+					if(long_options[opt].val == help_info[idx].opt){
+						len += 2 + strlen(long_options[opt].name); // --x
+						if(!measure)
+							printf("  --%s", long_options[opt++].name);
+						break;
+					}
+				}
+				if(!long_options[opt].name)
+					opt = 0;
+			}
+			if(!len)
+				break;
+			if(help_info[idx].params){
+				len += 1 + strlen(help_info[idx].params);
+				if(!measure)
+					printf(" %s", help_info[idx].params);
+			}
+			
+			if(measure){
+				if(len > maxlen)
+					maxlen = len;
+				continue;
+			}
+			
+			offset = PrintIndentedLine(help_info[idx].descr, 80, len, maxlen);
+			for(; long_options[opt].name; ++opt){
+				if(long_options[opt].val == help_info[idx].opt){
+					len = printf("    --%s", long_options[opt].name);
+					offset = PrintIndentedLine(offset, 80, len, maxlen);
+				}
+			}
+			while(*offset)
+				offset = PrintIndentedLine(offset, 80, 0, maxlen);
+		}
+	}while(measure--);
+	return maxlen;
+}
+
 int main(int argc, char** argv)
 {
 	const char* additional_paths = NULL;
-	const char* headerPath = NULL;
+	const char* headerPath;
 	char* Gitpath = NULL;
 	char* SVNpath = NULL;;
 	const char* get_define = NULL;
-	
-	for(int i=1; i<argc; ++i) {
-		if(!strcmp("-v",argv[i])) {
-			g_verbose = true;
-		} else if(!strcmp("--help",argv[i]) || !strcmp("-h",argv[i])) {
-			g_repo |= REPO_GIT;
-			Gitpath = NULL;
+	static const char* short_options = "hvVa:g:s:d:pPI";
+	static struct option long_options[] = {
+		// basic
+		{"help",           no_argument,       0, 'h'},
+		{"version",        no_argument,       0, '1'},
+		{"verbose",        no_argument,       0, 'v'},
+		{"brief",          no_argument,       0, 'V'},
+		// repo settings
+		{"path",           required_argument, 0, 'a'},
+		{"git",            required_argument, 0, 'g'},
+		{"svn",            required_argument, 0, 's'},
+		// misc features
+		{"get",            required_argument, 0, 'd'},
+		// build features
+		{"post-build",     no_argument,       0, 'p'},
+		{"post",           no_argument,       0, 'p'},
+		{"no-post-build",  no_argument,       0, 'P'},
+		{"no-post",        no_argument,       0, 'P'},
+//		{"increment",      no_argument,       0, 'i'},
+//		{"inc",            no_argument,       0, 'i'},
+		{"no-increment",   no_argument,       0, 'I'},
+		{"no-inc",         no_argument,       0, 'I'},
+		{0}
+	};
+	const struct help help_info[] = {
+		{0,DH_ARGV_SHORT,"[options] [version.h]"},
+		{'h',0,"this help message"},
+		{'1',0,"displays version"},
+		{'v',0,"be verbose"},
+		//
+		{'a',"<paths>","additional paths to append to PATH variable. Works like the AUVER_PATH environment variable"},
+		{'g',"<repository>","use Git repo for 'revision', also add Git date & URL"},
+		{'s',"<repository>","use SVN repo for 'revision', also add SVN date & URL"},
+		//
+		{'d',"<define>","display <define> and exit"},
+		//
+		{'p',0,"execute post-build stuff now and exit\n(cleans lockfile to re-enable auto increment)\nNote: only needed if no repository was used"},
+		{'P',0,"disable post-build\n(don't create lockfile to disable auto increment)"},
+//		{'i',0,"-"},
+		{'I',0,"do not auto increment revision"},
+		{0}
+	};
+	for(;;){
+		int opt;
+		int option_index = 0;
+		opt = getopt_long(argc, argv, short_options, long_options, &option_index);
+		if (opt == -1)
 			break;
-		} else if(!strcmp("--path",argv[i])) {
-			if(i+1 >= argc){
-				puts("missing parameter argument\n");
-				return 2;
-			}
-			additional_paths = argv[++i];
-		} else if(!strcmp("--git",argv[i])) {
+		switch(opt){
+		case 0: case 1:
+			break;
+		case '?': /*case ':':*/
+			g_flag |= FLAG_ERROR;
+			break;
+		case 'h':
+			option_index = DisplayHelp(argv[0], short_options, long_options, help_info);
+			printf("Environment variables:\n"
+			       "  AUVER_PATH");
+			PrintIndentedLine("like --path", 80, 12, option_index);
+			puts("");
+			/* fall through */
+		case '1':
+			puts("AutoVersion " AV_VERSION);
+			return 1;
+		case 'v': g_flag |= FLAG_VERBOSE; break;
+		case 'V': g_flag &= ~FLAG_VERBOSE; break;
+		//
+		case 'a': additional_paths = optarg; break;
+		case 'g':
 			g_repo |= REPO_GIT;
-			if(i+1 < argc)
-				Gitpath = argv[++i];
-			else
-				puts("no valid Git path given\n");
-		} else if(!strcmp("--svn",argv[i])) {
+			Gitpath = optarg;
+			break;
+		case 's':
 			g_repo |= REPO_SVN;
-			if(i+1 < argc)
-				SVNpath = argv[++i];
-			else
-				puts("no valid SVN path given\n");
-		} else if(!strcmp("--post-build",argv[i]) || !strcmp("--post",argv[i])) {
-			g_only_postbuild = true;
-		} else if(!strcmp("+noincrement",argv[i]) || !strcmp("+noinc",argv[i])) {
-			g_repo &= ~REPO_AUTOINC;
-		} else if(!strcmp("+nopost-build",argv[i]) || !strcmp("+nopost",argv[i])) {
-			g_do_postbuild = false;
-		} else if(!strcmp("--get",argv[i])) {
-			get_define = "";
-			if(i+1 >= argc){
-				puts("missing parameter argument\n");
-				return 2;
-			}
-			get_define = argv[++i];
-		} else if((argv[i][0]!='-' && argv[i][0]!='+') && !headerPath) {
-			headerPath = argv[i];
-		} else {
-			printf("Unknown Option: %s\n\n", argv[i]);
+			SVNpath = optarg;
+			break;
+		//
+		case 'd': get_define = optarg; break;
+		//
+		case 'p': g_flag |= FLAG_POST; break;
+		case 'P': g_flag &= ~FLAG_PRE; break;
+		case 'I': g_repo &= ~REPO_AUTOINC; break;
+		default:
+			;
 		}
 	}
-	
+	if(g_flag & FLAG_ERROR)
+		return 2;
 	if(g_repo&(REPO_GIT|REPO_SVN) && (!Gitpath&&!SVNpath)) {
-		puts("Usage: autoversion [options] [autoversion.h]\n"
-			"Options:\n"
-			"   --path <paths>           additional paths to append to PATH variable\n"
-			"   --git <path>             use Git for 'revision', also add Git date & URL\n"
-			"   --svn <path>             use SVN for 'revision', also add SVN date & URL\n"
-			"   --post-build, --post     do post-build stuff (clean lockfile to re-enable auto increment)\n"
-			"   +noincrement, +noinc     do not auto increment revision\n"
-			"   +nopost-build, +nopost   do not do post-build stuff (create lockfile to disable auto increment)\n"
-			"   --get <DEFINE>           display <DEFINE> and exit\n"
-			"   -v                       be verbose");
+		DisplayHelp(argv[0], short_options, long_options, help_info);
 		return 1;
 	}
 	
 	SetupPath(additional_paths);
 	
-	if(!headerPath)
+	if(optind < argc)
+		headerPath = argv[optind];
+	else
 		headerPath = "version.h";
 	size_t hlen = strlen(headerPath);
 	if(!get_define) {
@@ -219,7 +541,7 @@ int main(int argc, char** argv)
 		//char incPath[hlen+6];
 		//	memcpy(incPath,headerPath,sizeof(char)*hlen);
 		//	memcpy(incPath+hlen,".inc",sizeof(char)*5);
-		if(g_only_postbuild) {
+		if(g_flag&FLAG_POST) {
 			FILE* flock = fopen(lockPath,"rb");
 			if(flock){
 				fclose(flock);
@@ -229,7 +551,7 @@ int main(int argc, char** argv)
 			//if(flock)
 			//	fclose(flock);
 			return 0;
-		} else if(g_do_postbuild && g_repo<=REPO_AUTOINC) {
+		} else if(g_flag&FLAG_PRE && g_repo<=REPO_AUTOINC) {
 			FILE* flock = fopen(lockPath,"rb");
 			if(flock){
 				fclose(flock);
