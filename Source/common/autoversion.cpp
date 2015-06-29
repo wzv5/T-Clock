@@ -8,7 +8,7 @@
 #include <string>
 using namespace std;
 
-#define AV_VERSION "1.0.0"
+#define AV_VERSION "1.0.1"
 
 #ifdef _MSC_VER
 #	include <direct.h>//unlink,getcwd
@@ -61,6 +61,8 @@ enum{
 	FLAG_NONE     =0x00,
 	FLAG_PRE      =0x01,
 	FLAG_POST     =0x02,
+	FLAG_E_IF     =0x04,
+	FLAG_E_IFNOT  =0x08,
 	FLAG_VERBOSE  =0x10,
 	FLAG_ERROR    =0x80,
 };
@@ -426,6 +428,23 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
 	return maxlen;
 }
 
+int GetEnvBool(const char* var){
+	const char* env = getenv(var);
+	if(!env)
+		return -1;
+	// *empty*, 0, 'null', 'n', 'no' nor 'false'
+	switch(tolower(env[0])){
+	case 0:
+		return 0;
+	case '0':
+	case 'n':
+		return !(!env[1] || !stricmp(env,"no") || !stricmp(env,"null"));
+	case 'f':
+		return stricmp(env,"false");
+	}
+	return 1;
+}
+
 int main(int argc, char** argv)
 {
 	const char* additional_paths = NULL;
@@ -433,7 +452,7 @@ int main(int argc, char** argv)
 	char* Gitpath = NULL;
 	char* SVNpath = NULL;;
 	const char* get_define = NULL;
-	static const char* short_options = "hvVa:g:s:d:pPI";
+	static const char* short_options = "hvVa:g:s:d:e:E:pPI";
 	static struct option long_options[] = {
 		// basic
 		{"help",           no_argument,       0, 'h'},
@@ -446,6 +465,8 @@ int main(int argc, char** argv)
 		{"svn",            required_argument, 0, 's'},
 		// misc features
 		{"get",            required_argument, 0, 'd'},
+		{"if",             required_argument, 0, 'e'},
+		{"if-not",         required_argument, 0, 'E'},
 		// build features
 		{"post-build",     no_argument,       0, 'p'},
 		{"post",           no_argument,       0, 'p'},
@@ -468,6 +489,8 @@ int main(int argc, char** argv)
 		{'s',"<repository>","use SVN repo for 'revision', also add SVN date & URL"},
 		//
 		{'d',"<define>","display <define> and exit"},
+		{'e',"<ENV>","only update version.h if specified environment variable is true. 'true' means that the content is neither:\n   *empty*, 0, 'null', 'n', 'no' nor 'false'"},
+		{'E',"<ENV>","inverse of -e, so don't update if 'true'."},
 		//
 		{'p',0,"execute post-build stuff now and exit\n(cleans lockfile to re-enable auto increment)\nNote: only needed if no repository was used"},
 		{'P',0,"disable post-build\n(don't create lockfile to disable auto increment)"},
@@ -491,7 +514,11 @@ int main(int argc, char** argv)
 			option_index = DisplayHelp(argv[0], short_options, long_options, help_info);
 			printf("Environment variables:\n"
 			       "  AUVER_PATH");
-			PrintIndentedLine("like --path", 80, 12, option_index);
+			PrintIndentedLine("see --path", 80, 12, option_index);
+			printf("  AUVER_IF");
+			PrintIndentedLine("see --if", 80, 10, option_index);
+			printf("  AUVER_IF_NOT");
+			PrintIndentedLine("see --if-not", 80, 14, option_index);
 			puts("");
 			/* fall through */
 		case '1':
@@ -511,6 +538,18 @@ int main(int argc, char** argv)
 			break;
 		//
 		case 'd': get_define = optarg; break;
+		case 'e': // if
+			if(GetEnvBool(optarg) != 1){
+				printf("if: '%s' is false\n", optarg);
+				g_flag |= FLAG_E_IF;
+			}
+			break;
+		case 'E': // if-not
+			if(GetEnvBool(optarg) == 1){
+				printf("if-not: '%s' is true\n", optarg);
+				g_flag |= FLAG_E_IFNOT;
+			}
+			break;
 		//
 		case 'p': g_flag |= FLAG_POST; break;
 		case 'P': g_flag &= ~FLAG_PRE; break;
@@ -518,6 +557,18 @@ int main(int argc, char** argv)
 		default:
 			;
 		}
+	}
+	if(GetEnvBool("AUVER_IF") == 0){
+		printf("AUVER_IF = %s\n", getenv("AUVER_IF"));
+		g_flag |= FLAG_E_IF;
+	}
+	if(GetEnvBool("AUVER_IF_NOT") == 1){
+		printf("AUVER_IF_NOT = %s\n", getenv("AUVER_IF_NOT"));
+		g_flag |= FLAG_E_IFNOT;
+	}
+	if(g_flag & (FLAG_E_IF|FLAG_E_IFNOT)){
+		puts("	version unchanged");
+		return 0;
 	}
 	if(g_flag & FLAG_ERROR)
 		return 2;
@@ -867,7 +918,7 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	
 	
 	}else{
-		fprintf(fp,"unknown define: %s",define);
+		fprintf(fp,"unknown define: %s\n",define);
 	}
 }
 void WriteDefine(FILE* fp,const char* define,const Version &ver)
