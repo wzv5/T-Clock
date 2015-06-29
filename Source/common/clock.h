@@ -16,7 +16,9 @@ enum TCOLORS {
 	TCOLOR_DEFAULT		=50, /**< meta, default color (if passed to \c GetColor() without \c use_raw, returns default clock foreground color) */
 	TCOLOR_TRANSPARENT, /**< meta, fully transparent color */
 	TCOLOR_THEME, /**< meta, current theme window color */
-	TCOLOR_THEME2, /**< meta, current theme's clock background color <b>failed attempt and useless</b> */
+	TCOLOR_THEME_DARK, /**< meta, current theme window color (dark) */
+	TCOLOR_THEME_ALPHA, /**< meta, current theme window color (alpha) */
+	TCOLOR_THEME_BG, /**< meta, current theme's clock background color <b>failed attempt and useless</b> */
 	TCOLOR_END_,
 };
 
@@ -104,8 +106,9 @@ typedef struct TClockAPI_TAG {
 /**
  * \brief callback for use by \c WM_DWMCOLORIZATIONCOLORCHANGED messages to read current theme's color
  * \param argb wParam of \c WM_DWMCOLORIZATIONCOLORCHANGED
+ * \param blend lParam of \c WM_DWMCOLORIZATIONCOLORCHANGED
  * \sa GetColor(), WM_DWMCOLORIZATIONCOLORCHANGED */
-	void (*On_DWMCOLORIZATIONCOLORCHANGED)(unsigned argb);
+	void (*On_DWMCOLORIZATIONCOLORCHANGED)(unsigned argb, BOOL blend);
 	
 	// registry
 	

@@ -2,24 +2,58 @@
 #include "clock_internal.h"
 
 static unsigned m_themecolor = 0x00000000;
+static unsigned m_themecolor_dark;
+static unsigned m_themecolor_alpha;
 
-void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb) /// there's a bug with "high" or "low" color intensity...
-{
+void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb, BOOL blend) { /// there's a bug with "high" or "low" color intensity...
 	union{
 		unsigned ref;
 		RGBQUAD quad;
 	} col;
 	BYTE whitepart;
 	unsigned tmp;
+	// currently, DwmGetColorizationColor() returns wrong values in some cases,
+	// but we can't use WM_DWMCOLORIZATIONCOLORCHANGED on startup...
+	// so always rely on the bugged DwmGetColorizationColor()
+	/* slightly wrong color but always "works". DwmGetColorizationColor fails for some colors
+	HKEY hkey;
+	if(RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\DWM", &hkey) == 0){
+		DWORD regtype,size=sizeof(sub);
+		if(RegQueryValueEx(hkey,"ColorizationColor",0,&regtype,(LPBYTE)&sub,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
+			Clock_On_DWMCOLORIZATIONCOLORCHANGED(sub, 1);
+		RegCloseKey(hkey);
+	}// */
+	typedef HRESULT (WINAPI *DwmGetColorizationColorPtr)(DWORD* pcrColorization, BOOL* pfOpaqueBlend);
+	HMODULE hdwm = LoadLibrary("dwmapi");
+	if(hdwm) {
+		DwmGetColorizationColorPtr pDwmGetColorizationColor; /**< \sa DwmGetColorizationColor() */
+		pDwmGetColorizationColor = (DwmGetColorizationColorPtr)GetProcAddress(hdwm,"DwmGetColorizationColor");
+		pDwmGetColorizationColor((DWORD*)&argb, &blend);
+		FreeLibrary(hdwm);
+	} else {
+		argb = 0x77010101; // fallback for <Vista
+	}
 	col.ref=(argb&0xFF00FF00)|((argb&0xFF)<<16)|((argb>>16)&0xFF);
-	whitepart=255-col.quad.rgbReserved;
-	tmp=col.quad.rgbBlue*col.quad.rgbReserved/0xFF + whitepart;
-	col.quad.rgbBlue=(tmp>255?255:(BYTE)tmp);
-	tmp=col.quad.rgbGreen*col.quad.rgbReserved/0xFF + whitepart;
-	col.quad.rgbGreen=(tmp>255?255:(BYTE)tmp);
-	tmp=col.quad.rgbRed*col.quad.rgbReserved/0xFF + whitepart;
-	col.quad.rgbRed=(tmp>255?255:(BYTE)tmp);
-	col.quad.rgbReserved=0x00;
+	if(!col.quad.rgbReserved && col.ref) // fix for high intensity colors and DwmGetColorizationColor()
+		col.quad.rgbReserved = 0xFF;
+//	if(!blend) DBGMSG("!blend"); // so far, not seen on Win8 but 7
+	
+	tmp = col.quad.rgbReserved;
+	col.quad.rgbReserved = 0xFF - col.quad.rgbReserved;
+	m_themecolor_alpha = col.ref;
+	
+	col.quad.rgbReserved = 0x00;
+	m_themecolor_dark = col.ref;
+	col.quad.rgbReserved = (BYTE)tmp;
+	
+	whitepart = (255-col.quad.rgbReserved);
+	tmp = (col.quad.rgbBlue*col.quad.rgbReserved/0xFF) + whitepart;
+	col.quad.rgbBlue = (BYTE)tmp;
+	tmp = (col.quad.rgbGreen*col.quad.rgbReserved/0xFF) + whitepart;
+	col.quad.rgbGreen = (BYTE)tmp;
+	tmp = (col.quad.rgbRed*col.quad.rgbReserved/0xFF) + whitepart;
+	col.quad.rgbRed = (BYTE)tmp;
+	col.quad.rgbReserved = 0x00;
 	m_themecolor = col.ref;
 }
 unsigned Clock_GetColor(unsigned color, int use_raw)
@@ -44,17 +78,19 @@ unsigned Clock_GetColor(unsigned color, int use_raw)
 		if(use_raw)
 			return color;
 		return 0xFF000000;
-	case TCOLOR_THEME:{
-		HKEY hkey;
-		if(!m_themecolor && RegOpenKey(HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\DWM", &hkey) == 0) {
-			DWORD regtype,size=sizeof(sub);
-			if(RegQueryValueEx(hkey,"ColorizationColor",0,&regtype,(LPBYTE)&sub,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
-				Clock_On_DWMCOLORIZATIONCOLORCHANGED(sub);
-			RegCloseKey(hkey);
-			return m_themecolor;
-		}
-		return m_themecolor;}
-	case TCOLOR_THEME2:
+	case TCOLOR_THEME:
+		if(!m_themecolor)
+			Clock_On_DWMCOLORIZATIONCOLORCHANGED(0, 1);
+		return m_themecolor;
+	case TCOLOR_THEME_DARK:
+		if(!m_themecolor)
+			Clock_On_DWMCOLORIZATIONCOLORCHANGED(0, 1);
+		return m_themecolor_dark;
+	case TCOLOR_THEME_ALPHA:
+		if(!m_themecolor)
+			Clock_On_DWMCOLORIZATIONCOLORCHANGED(0, 1);
+		return m_themecolor_alpha;
+	case TCOLOR_THEME_BG:
 		if(use_raw==2)
 			return color;
 		if(IsXPThemeActive() && gs_hwndClock)

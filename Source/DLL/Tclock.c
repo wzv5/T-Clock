@@ -75,11 +75,11 @@ union{
 	BGRQUAD quad;
 	COLORREF ref;
 } m_colBG;
-#define g_col_update(col,m_basecolorBG) do{\
+#define g_col_update(col,colBG) do{\
 	COLORREF oldbg;\
 	m_col.ref=api.GetColor(col,0);\
 	oldbg=m_colBG.ref;\
-	m_colBG.ref=api.GetColor(m_basecolorBG,1);\
+	m_colBG.ref=api.GetColor(colBG,1);\
 	if(m_colBG.ref!=oldbg)\
 		FillClockBG();\
 	} __pragma(warning(suppress:4127)) while(0)
@@ -595,7 +595,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;}
 	case WM_DWMCOLORIZATIONCOLORCHANGED://forwarded by T-Clock itself
-		api.On_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
+		api.On_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam, (BOOL)lParam);
 		/* fall through */
 	case WM_THEMECHANGED:
 		if(message==WM_THEMECHANGED)
@@ -603,6 +603,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		/* fall through */
 	case WM_SYSCOLORCHANGE:
 		g_col_update(m_basecolorFont,m_basecolorBG);
+		InvalidateRect(hwnd,NULL,0);
 		break;
 	case WM_TIMECHANGE:
 	case(WM_USER+101): {

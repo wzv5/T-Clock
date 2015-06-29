@@ -143,16 +143,21 @@ LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 /*
 	COLOR BOXES
 */
+static short m_color_boxes = 0;
+static HBITMAP m_transparent_pattern;
+static HBRUSH m_transparent_brush;
 
 typedef struct {
 	COLORREF col;
 	const char* name;
 } syscolor_t;
-const syscolor_t m_syscolor[]={
-	{TCOLOR_DEFAULT,"<default>"},
-	{TCOLOR_TRANSPARENT,"<transparent>"},
-	{TCOLOR_THEME,"<theme color>"},
-//	{TCOLOR_THEME2,"<theme color II>"},
+static const syscolor_t m_syscolor[]={
+	{TCOLOR_DEFAULT,"Default"},
+	{TCOLOR_TRANSPARENT,"Transparent"},
+	{TCOLOR_THEME,"Theme color"},
+	{TCOLOR_THEME_DARK,"Theme color (dark)"},
+	{TCOLOR_THEME_ALPHA,"Theme color w/ alpha"},
+//	{TCOLOR_THEME_BG,"Theme bg color"},
 	
 	{COLOR_3DFACE,"3DFACE"},
 	{COLOR_3DSHADOW,"3DSHADOW"},
@@ -186,7 +191,30 @@ void ColorBox_Setup(ColorBox boxes[], size_t num)
 	COLORREF col;
 	size_t idx;
 	while(num--) {
+		if(!m_color_boxes++){
+			const int box_size = 4;
+			RECT rc;
+			HDC wnd_dc = GetDC(boxes[num].hwnd);
+			HDC draw_dc = CreateCompatibleDC(wnd_dc);
+			
+			m_transparent_pattern = CreateCompatibleBitmap(wnd_dc, box_size*2, box_size*2);
+			ReleaseDC(boxes[num].hwnd, wnd_dc);
+			SelectBitmap(draw_dc, m_transparent_pattern);
+			rc.left=rc.top = 0;
+			rc.right=rc.bottom = box_size;
+			FillRect(draw_dc, &rc, GetStockBrush(GRAY_BRUSH));
+			rc.left += box_size; rc.right += box_size;
+			FillRect(draw_dc, &rc, GetStockBrush(WHITE_BRUSH));
+			rc.top += box_size; rc.bottom += box_size;
+			FillRect(draw_dc, &rc, GetStockBrush(GRAY_BRUSH));
+			rc.left -= box_size; rc.right -= box_size;
+			FillRect(draw_dc, &rc, GetStockBrush(WHITE_BRUSH));
+			m_transparent_brush = CreatePatternBrush(m_transparent_pattern);
+			DeleteDC(draw_dc);
+		}
 		m_proc_combo = SubclassWindow(boxes[num].hwnd, ColorBoxProc);
+//		ComboBox_SetDroppedWidth(boxes[num].hwnd, 130);
+		ComboBox_SetDroppedWidth(boxes[num].hwnd, 155);
 		// add sys colors
 		for(idx=0; idx<m_syscolor_num; ++idx){
 			ComboBox_AddString(boxes[num].hwnd, (size_t)TCOLOR(m_syscolor[idx].col));
@@ -208,6 +236,12 @@ void ColorBox_Setup(ColorBox boxes[], size_t num)
 
 LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam){
 	switch(msg){
+	case WM_DESTROY:{
+		if(!--m_color_boxes){
+			DeleteBrush(m_transparent_brush);
+			DeleteBitmap(m_transparent_pattern);
+		}
+		break;}
 	case WM_MEASUREITEM:
 		return ColorBox_OnMeasureItem(wParam, lParam);
 	case WM_DRAWITEM:
@@ -302,59 +336,99 @@ LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 LRESULT ColorBox_OnMeasureItem(WPARAM wParam, LPARAM lParam) {
 	MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
 	(void)wParam;
-	pmis->itemHeight = 7 * HIWORD(GetDialogBaseUnits()) / 8;
+//	pmis->itemWidth = MulDiv(80, LOWORD(GetDialogBaseUnits()), 4);
+	pmis->itemHeight = MulDiv(7, HIWORD(GetDialogBaseUnits()), 8);
 	return 1;
 }
 LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
+	const int color_margin = 1;
 	DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
 	HBRUSH hbr;
 	COLORREF col;
 	TEXTMETRIC tm;
+	int vert_pos;
+	char hexcolor[8];
+	const char* label;
+	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 0, 0};
+	HDC draw_dc;
+	HBITMAP draw_hbmp;
+	RECT draw_rc = {0, 0, 30, 0/*bottom*/};
+	RECT color_rc;
 	
 	(void)wParam;
 	
-	if(IsWindowEnabled(pdis->hwndItem)) {
-		col = api.GetColor((COLORREF)pdis->itemData,2);
-	} else col = GetSysColor(COLOR_3DFACE);
+	draw_rc.bottom = pdis->rcItem.bottom-pdis->rcItem.top - color_margin*2;
+	color_rc.left = pdis->rcItem.left + color_margin;
+	color_rc.top = pdis->rcItem.top + color_margin;
+	color_rc.right = color_rc.left + draw_rc.right;
+	color_rc.bottom = color_rc.top + draw_rc.bottom;
 	
-	switch(pdis->itemAction) {
-	case ODA_DRAWENTIRE:
-	case ODA_SELECT: {
-		hbr = CreateSolidBrush(col);
-		FillRect(pdis->hDC, &pdis->rcItem, hbr);
-		DeleteObject(hbr);
+	if(IsWindowEnabled(pdis->hwndItem)) {
+//		col = api.GetColor((COLORREF)pdis->itemData,2);
+//		if((col&TCOLOR_MASK)==TCOLOR_MAGIC)
+//			col &= 0x00ffffff;
+		col = api.GetColor((COLORREF)pdis->itemData,0);
+	} else
+		col = GetSysColor(COLOR_3DFACE);
+	
+	if(pdis->itemAction & (ODA_DRAWENTIRE|ODA_SELECT)) {
+		draw_dc = CreateCompatibleDC(pdis->hDC);
+		draw_hbmp = CreateCompatibleBitmap(pdis->hDC, draw_rc.right, draw_rc.bottom);
+		SelectBitmap(draw_dc, draw_hbmp);
+		// print sys color names and fill bg
+		if(pdis->itemState & ODS_SELECTED){
+			SetBkColor(pdis->hDC, GetSysColor(COLOR_HIGHLIGHT));
+			SetTextColor(pdis->hDC, GetSysColor(COLOR_HIGHLIGHTTEXT));
+		}else{
+			SetBkColor(pdis->hDC, GetSysColor(COLOR_WINDOW));
+			SetTextColor(pdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
+		}
+		if((int)pdis->itemID < m_syscolor_num)
+			label = m_syscolor[pdis->itemID].name;
+		else{
+			unsigned color = ((col&0xff)<<16) | (col&0xff00) | ((col&0xff0000)>>16);
+			sprintf(hexcolor, "#%06x", color);
+			label = hexcolor;
+		}
+		GetTextMetrics(pdis->hDC, &tm);
+		vert_pos = (pdis->rcItem.bottom - pdis->rcItem.top - tm.tmHeight)/2;
+		ExtTextOut(pdis->hDC, pdis->rcItem.left + 34, pdis->rcItem.top + vert_pos, ETO_CLIPPED|ETO_OPAQUE, &pdis->rcItem,
+				label, (int)strlen(label), NULL);
 		
-		// print sys color names
-		if((int)pdis->itemID < m_syscolor_num){
-			int y;
-			SetBkMode(pdis->hDC, TRANSPARENT);
-			GetTextMetrics(pdis->hDC, &tm);
-			SetTextColor(pdis->hDC, 0x00FFFFFF-(col&0x00FFFFFF));
-			if(col==0x00808080)
-				SetTextColor(pdis->hDC, 0);
-			y = (pdis->rcItem.bottom - pdis->rcItem.top - tm.tmHeight)/2;
-			TextOut(pdis->hDC, pdis->rcItem.left + 4, pdis->rcItem.top + y,
-					m_syscolor[pdis->itemID].name, (int)strlen(m_syscolor[pdis->itemID].name));
+		// draw color
+		hbr = CreateSolidBrush(col&0x00ffffff);
+		blend.SourceConstantAlpha = 255 - (col>>24);
+		if(blend.SourceConstantAlpha != 255){ // with transparency
+			HBRUSH oldBrush = SelectBrush(pdis->hDC, m_transparent_brush); // mis-aligned on creation
+//			RoundRect(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom, 8,5);
+			Rectangle(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom);
+			SelectBrush(pdis->hDC, oldBrush);
+			oldBrush = SelectBrush(draw_dc, hbr);
+//			RoundRect(draw_dc, draw_rc.left, draw_rc.top, draw_rc.right, draw_rc.bottom, 8,5);
+			Rectangle(draw_dc, draw_rc.left, draw_rc.top, draw_rc.right, draw_rc.bottom);
+			SelectBrush(draw_dc, oldBrush);
+			AlphaBlend(pdis->hDC, color_rc.left,color_rc.top,draw_rc.right,draw_rc.bottom, draw_dc, 0,0,draw_rc.right,draw_rc.bottom, blend);
+		}else{ // simple draw
+			HBRUSH oldBrush = SelectBrush(pdis->hDC, hbr);
+//			RoundRect(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom, 8,5);
+			Rectangle(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom);
+			SelectBrush(pdis->hDC, oldBrush);
 		}
-		if(!(pdis->itemState & ODS_FOCUS)) break;
-		}
-	case ODA_FOCUS: {
-		HBRUSH hbr2;
-		RECT rc;
-		rc.left=pdis->rcItem.left-1;
-		rc.top=pdis->rcItem.top-1;
-		rc.right=pdis->rcItem.right-1;
-		rc.bottom=pdis->rcItem.bottom-1;
-		if(pdis->itemState & ODS_FOCUS){
-			hbr=CreateSolidBrush(0x00000000);
-			hbr2=CreateSolidBrush(0x00FFFFFF);
-		}else
-			hbr=hbr2=CreateSolidBrush(col);
-		FrameRect(pdis->hDC, &pdis->rcItem, hbr);
-		FrameRect(pdis->hDC, &rc, hbr2);
-		if(hbr2!=hbr) DeleteObject(hbr2);
 		DeleteObject(hbr);
-		break;}
+		// "Default" color, draw right side (transparency)
+		if(!pdis->itemID){
+			HBRUSH oldBrush = SelectBrush(pdis->hDC, m_transparent_brush);
+			color_rc.left += draw_rc.right/2;
+//			RoundRect(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom, 8,5);
+			Rectangle(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom);
+			SelectBrush(pdis->hDC, oldBrush);
+		}
+		
+		// draw focus rect / selection
+		if(pdis->itemState & ODS_FOCUS)
+			DrawFocusRect(pdis->hDC, &pdis->rcItem);
+		DeleteDC(draw_dc);
+		DeleteObject(draw_hbmp);
 	}
 	return 1;
 }
@@ -368,8 +442,10 @@ int ColorBox_ChooseColor(HWND button)
 	
 	color = api.GetColor((COLORREF)ComboBox_GetItemData(color_cb, ComboBox_GetCurSel(color_cb)),2);
 	
+	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms646908%28v=vs.85%29.aspx
+	//   https://msdn.microsoft.com/en-us/library/ms646869%28v=vs.85%29.aspx
 	cc.hwndOwner = GetParent(button);
-	cc.rgbResult = color;
+	cc.rgbResult = color & 0x00ffffff;
 	cc.lpCustColors = m_usercolors;
 	cc.Flags = CC_FULLOPEN | CC_RGBINIT;
 	

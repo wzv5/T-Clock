@@ -29,6 +29,7 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
+					<Add library="msimg32" />
 				</Linker>
 			</Target>
 			<Target title="app-64">
@@ -53,6 +54,7 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
+					<Add library="msimg32" />
 				</Linker>
 			</Target>
 			<Target title="app debug">
@@ -76,6 +78,7 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
+					<Add library="msimg32" />
 				</Linker>
 			</Target>
 			<Target title="app-64 debug">
@@ -99,6 +102,7 @@
 					<Add library="Winmm" />
 					<Add library="Ws2_32" />
 					<Add library="Mpr" />
+					<Add library="msimg32" />
 				</Linker>
 			</Target>
 			<Target title="dll">

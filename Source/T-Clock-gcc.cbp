@@ -87,6 +87,7 @@
 					<Add library="ws2_32" />
 					<Add library="mpr" />
 					<Add library="uuid" />
+					<Add library="msimg32" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -135,6 +136,7 @@
 					<Add library="ws2_32" />
 					<Add library="mpr" />
 					<Add library="uuid" />
+					<Add library="msimg32" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -187,6 +189,7 @@
 					<Add library="ws2_32" />
 					<Add library="mpr" />
 					<Add library="uuid" />
+					<Add library="msimg32" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />
@@ -235,6 +238,7 @@
 					<Add library="ws2_32" />
 					<Add library="mpr" />
 					<Add library="uuid" />
+					<Add library="msimg32" />
 				</Linker>
 				<ExtraCommands>
 					<Add before="common/AutoVersion --git . common/version.h" />

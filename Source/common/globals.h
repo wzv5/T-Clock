@@ -20,6 +20,10 @@
 #include <windows.h>  // Required by the fact it runs on Windows.
 #include <windowsx.h>// usability macros: Edit_*, ComboBox_*, SubclassWindow, etc.
 
+#ifndef ComboBox_SetDroppedWidth
+#	define ComboBox_SetDroppedWidth(hwndCtl, width) ((int)(DWORD)SNDMSG((hwndCtl),CB_SETDROPPEDWIDTH,(WPARAM)(int)(width),(LPARAM)0))
+#endif
+
 #ifndef MCM_SIZERECTTOMIN
 #	define MCM_SIZERECTTOMIN (MCM_FIRST+29)
 #	define MonthCal_SizeRectToMin(hmc, prc) SNDMSG (hmc, MCM_SIZERECTTOMIN, 0,(LPARAM) (prc))
@@ -138,7 +142,7 @@ enum{ // Drop&File enum / registry settings
 #endif
 
 #ifdef _DEBUG
-#	define DBGMSG(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); MessageBox(0,_dbgbuf,"Debug",0);}while(0)
+#	define DBGMSG(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); MessageBox(0,_dbgbuf,"Debug",MB_SYSTEMMODAL);}while(0)
 #	define DBGOUT(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); OutputDebugString(_dbgbuf);}while(0)
 #else
 #	define DBGMSG(fmt,...)

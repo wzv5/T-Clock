@@ -590,7 +590,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		return 0;
 	// inform clock about DWM color change
 	case WM_DWMCOLORIZATIONCOLORCHANGED:
-		api.On_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam);
+		api.On_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam, (BOOL)lParam);
 		PostMessage(g_hwndClock, WM_DWMCOLORIZATIONCOLORCHANGED, wParam, lParam);
 		return 0;
 		

@@ -26,7 +26,7 @@ void Clock_PositionWindow(HWND hwnd, int padding);
 /** \sa TClockAPI::GetColor() */
 unsigned Clock_GetColor(unsigned agbr,int useraw);
 /** \sa TClockAPI::On_DWMCOLORIZATIONCOLORCHANGED() */
-void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb);
+void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb, BOOL blend);
 
 /** \sa TClockAPI::GetInt() */
 int Clock_GetInt(const char* section, const char* entry, LONG defval);
