@@ -4,18 +4,46 @@ sudo: false
 
 cache: ccache
 
+env:
+# certificate for tag releases
+- secure: nEd22lqGEnA0FSLfsoS/NwTWTqYcAPUMjM5QyJDkxWm1jXb3AScfQKhoLV+Mb1TbZIOpCQNHFUx2mVMCHQyRtx3MlkDiNyFwt9D5VWiF8tNWUS4hX0XHI6NnW5UYqqGtuXZNwNvWBIJqDhOJH6fkUfD+fjG3ANKSQX1K+Of3PZY=
+- secure: NQbryvM0ff6ZncpyslLT3uoa2IeOUDDj4FWLJj0vmIz7GSE9Ja7INUsJ6HUu0QmsqfgnJ8/TSIje0hLz7OGQLhcVXCGMIYjeUIUPA4kVV8KnQonFHOI4R5F+7VO93EW29LYcvfGojuInAP4y9mxqKoQcMEsx9ImCl6QvUf/+WaM=
+
 addons:
   apt:
     packages:
+    # 32bit gcc (for AutoVersion)
     - gcc-multilib
     - g++-multilib
+    # 32bit MinGW
     - binutils-mingw-w64-i686
     - gcc-mingw-w64-i686
     - g++-mingw-w64-i686
+    # 64bit MinGW
     - binutils-mingw-w64-x86-64
     - gcc-mingw-w64-x86-64
     - g++-mingw-w64-x86-64
+    # tag release
+    - p7zip-full
+    - autoconf
+    - libcurl4-openssl-dev
+    # testing
     - wine
+  artifacts:
+    paths:
+    - Release/T-Clock_static.zip
+
+before_deploy:
+- cd Source
+- ./make_ci_release.bat
+deploy:
+  provider: releases
+  api_key:
+    secure: L9jt2f+8Xg6dBS+63ji4NwpPky3sYfHafxY3p+p+dUx834AQoOlqS3m+QEcfenIuf6el5cUeX4aQV8H+PAxJ+cYlc4BYN87UG5X/zlgvdbq67cenH0dGLJKFlTCM6EgQh3HGtpdSvhTJd+bcVYKgYg1pTGGv4GVhOBCAJGsk7k4=
+  file: Release/T-Clock*.zip
+  skip_cleanup: true
+  on:
+    tags: true
 
 script:
 - cd Source
