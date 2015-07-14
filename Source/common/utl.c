@@ -96,6 +96,22 @@ int atox(const char* p)
 	return r;
 }
 
+int _24hTo12h(int hour){
+	hour %= 24;
+	if(hour > 12)
+		hour -= 12;
+	else
+		hour = (!hour?12:hour);
+	return hour;
+}
+int _12hTo24h(int hour, int pm){
+	if(hour >= 12)
+		hour = (pm?12:0);
+	else if(pm)
+		hour += 12;
+	return hour;
+}
+
 void add_title(char* path, const char* title)
 {
 	char* p=path;

@@ -345,21 +345,22 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 	}else
 		GetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name));
 	
-	pAS->hour = (int)SendDlgItemMessage(hDlg,IDC_SPINHOUR,UDM_GETPOS32,0,0);
-	pAS->minute = (int)SendDlgItemMessage(hDlg,IDC_SPINMINUTE,UDM_GETPOS32,0,0);
-	pAS->days = m_days;
-	
 	pAS->iTimes = GetDlgItemInt(hDlg,IDC_REPEATIMES,NULL,1);
 	
 	pAS->uFlags=0;
 	if(IsDlgButtonChecked(hDlg,IDC_ALARM)) pAS->uFlags|=ALRM_ENABLED;
 	if(IsDlgButtonChecked(hDlg,IDC_ALRM_ONCE)) pAS->uFlags|=ALRM_ONESHOT;
 	if(IsDlgButtonChecked(hDlg,IDC_12HOURALARM)) pAS->uFlags|=ALRM_12H;
-	if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)) pAS->uFlags|=ALRM_PM;
 	if(IsDlgButtonChecked(hDlg,IDC_CHIMEALARM)) pAS->uFlags|=ALRM_CHIMEHR;
 	if(IsDlgButtonChecked(hDlg,IDC_REPEATALARM)) pAS->uFlags|=ALRM_REPEAT;
 	if(IsDlgButtonChecked(hDlg,IDC_BLINKALARM)) pAS->uFlags|=ALRM_BLINK;
 	if(IsDlgButtonChecked(hDlg,IDC_MSG_ALARM)) pAS->uFlags|=ALRM_DIALOG;
+	
+	pAS->hour = (int)SendDlgItemMessage(hDlg,IDC_SPINHOUR,UDM_GETPOS32,0,0);
+	if(pAS->uFlags&ALRM_12H)
+		pAS->hour = _12hTo24h(pAS->hour, IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK));
+	pAS->minute = (int)SendDlgItemMessage(hDlg,IDC_SPINMINUTE,UDM_GETPOS32,0,0);
+	pAS->days = m_days;
 	
 	GetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname, MAX_PATH);
 	
@@ -374,8 +375,6 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	
 	SetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name);
 	
-	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETRANGE32, 0,23);
-	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETPOS32, 0, pAS->hour);
 	SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_SETRANGE32, 0,59);
 	SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_SETPOS32, 0, pAS->minute);
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETRANGE32, (WPARAM)-1,42);
@@ -387,16 +386,23 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	
 	CheckDlgButton(hDlg,IDC_ALARM,pAS->uFlags&ALRM_ENABLED);
 	CheckDlgButton(hDlg,IDC_ALRM_ONCE,pAS->uFlags&ALRM_ONESHOT);
-	CheckDlgButton(hDlg,IDC_12HOURALARM,pAS->uFlags&ALRM_12H);
-	CheckDlgButton(hDlg,IDC_AMPM_CHECK,pAS->uFlags&ALRM_PM);
 	CheckDlgButton(hDlg,IDC_CHIMEALARM,pAS->uFlags&ALRM_CHIMEHR);
 	CheckDlgButton(hDlg,IDC_REPEATALARM,pAS->uFlags&ALRM_REPEAT);
 	CheckDlgButton(hDlg,IDC_BLINKALARM,pAS->uFlags&ALRM_BLINK);
 	CheckDlgButton(hDlg,IDC_MSG_ALARM,pAS->uFlags&ALRM_DIALOG);
+	
+//	SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETRANGE32, 0,23); // On12Hour also does this
+	CheckDlgButton(hDlg,IDC_12HOURALARM,pAS->uFlags&ALRM_12H);
+	CheckDlgButton(hDlg, IDC_AMPM_CHECK, (pAS->hour>=12));
+	if(pAS->uFlags&ALRM_12H)
+		SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETPOS32, 0, _24hTo12h(pAS->hour));
+	else
+		SendDlgItemMessage(hDlg, IDC_SPINHOUR, UDM_SETPOS32, 0, pAS->hour);
+	On12Hour(hDlg,0); // enable/disable AM/PM, format hour (09 for 24h, 9 for 12h)
+	
 	m_days=pAS->days;
 	
 	FormatTimeText(hDlg,IDC_MINUTEALARM); // correctly format minutes (00, 09)
-	On12Hour(hDlg,0); // enable/disable AM/PM, format hour (09 for 24h, 9 for 12h)
 	OnFileChange(hDlg, IDC_FILEALARM);
 	OnMsgAlarm(hDlg, IDC_MSG_ALARM);
 	OnAlarmJihou(hDlg, IDC_ALARM);
@@ -410,8 +416,8 @@ void SetDefaultAlarmToDlg(HWND hDlg, int select_only)   //----------------------
 	as.hour = 12;
 	as.iTimes = -1;
 	as.uFlags =  ALRM_ENABLED | ALRM_ONESHOT | ALRM_DIALOG | ALRM_BLINK | ALRM_REPEAT;
-	if(api.GetInt("Format","Hour12",1))
-		as.uFlags |= ALRM_12HPM;
+	if(api.GetInt("Format","Hour12",1)) // if user prefers 12h format (his clock is 12h)
+		as.uFlags |= ALRM_12H;
 	if(select_only)
 		as.uFlags ^= ALRM_ENABLED;
 	strcpy(as.fname, "Alarm.wav");
@@ -590,7 +596,7 @@ void On12Hour(HWND hDlg, int bOnChange)
 	char hour[5];
 	Edit_GetText(GetDlgItem(hDlg,IDC_HOURALARM),hour,5);
 	h=atoi(hour);
-	if(h>24) h=24;
+	if(h>23) h=0;
 	
 	if(b12h){
 //		if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)){
@@ -602,21 +608,10 @@ void On12Hour(HWND hDlg, int bOnChange)
 		u=23; l=0; // 24h
 	}
 	if(bOnChange){
-		if(b12h){ // convert to 12h
-			if(h>=12 && h<24){
-				h-=12;
-				if(!h) h=12; // 12am / 12pm?
-			}else{
-				if(!h || h==24) h=12; // 12pm
-			}
-		}else{ // convert to 24h
-			if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)){
-				h+=12;
-				if(h>=24) h=12; // 12am
-//				if(h>=24) h=0; // 0am
-			}else if(h>=12)
-				h=0;
-		}
+		if(b12h) // convert to 12h
+			h = _24hTo12h(h);
+		else // convert to 24h
+			h = _12hTo24h(h, IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK));
 	}
 	EnableDlgItem(hDlg,IDC_AMPM_CHECK,b12h);
 	
@@ -730,8 +725,7 @@ void FormatTimeText(HWND hDlg, WORD idc)
 		Edit_GetText(edit,txt,5);
 		iTxt=atoi(txt);
 		if(b12h){
-			if(iTxt>12) iTxt=0; // 12am
-//			if(iTxt>11 && !IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)) iTxt=0; // 0am
+			if(iTxt>12) iTxt=12; // 12am / 12pm
 			wsprintf(txt2, "%d", iTxt);
 		}else{
 			if(iTxt>23) iTxt=0;
@@ -758,32 +752,13 @@ void UpdateAMPMDisplay(HWND hDlg)
 	
 	GetDlgItemText(hDlg, IDC_HOURALARM, time, 5);
 	hour = atoi(time);
+	if(IsDlgButtonChecked(hDlg,IDC_12HOURALARM))
+		hour = _12hTo24h(hour, IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK));
 	GetDlgItemText(hDlg, IDC_MINUTEALARM, time, 5);
 	min = atoi(time);
 	
-	if(IsDlgButtonChecked(hDlg,IDC_12HOURALARM)){
-		if(IsDlgButtonChecked(hDlg, IDC_AMPM_CHECK)){
-			if(!min && hour==12)
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "Noon");
-			else
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "PM");
-		}else{
-			if(!min && (!hour || hour==12))
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "Midnight");
-			else
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "AM");
-		}
-	}else{
-		if(hour<12){
-			if(!min && !hour)
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "Midnight");
-			else
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "AM");
-		}else{
-			if(!min && hour==12)
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "Noon");
-			else
-				SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, "PM");
-		}
-	}
+	if(hour<12)
+		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (!hour&&!min?"Midnight":"AM"));
+	else
+		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (hour==12&&!min?"Noon":"PM"));
 }

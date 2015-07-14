@@ -23,6 +23,17 @@ void RefreshUs();
  * \return parsed integer */
 int atox(const char* p);
 /**
+ * \brief converts \p hour from 24h format to 12h
+ * \param hour 24h format
+ * \return 12h format */
+int _24hTo12h(int hour);
+/**
+ * \brief converts \p hour from 12h format to 24h
+ * \param hour 12h format
+ * \param pm use when \p hour is (after)noon
+ * \return 24h format */
+int _12hTo24h(int hour, int pm);
+/**
  * \brief deletes the end of a path from \a path, eg. "C:/out.exe" becomes "C:/"
  * \param[in,out] path path to delete from
  * \sa add_title(), get_title() */

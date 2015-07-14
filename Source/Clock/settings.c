@@ -76,7 +76,11 @@ int CheckSettings(){
 		updateflags|=SFORMAT_SILENT;
 		/* fall through */
 		
-	case CURRENT_VER: /// current version
+	case 2: /// v2.4.0#000(dff0300,63ba670#106) alarms unified to always use 24h format internally
+		updateflags|=SFORMAT_SILENT;
+		/* fall through */
+		
+//	case CURRENT_VER: // current version
 		CheckMouseMenu(); // adds right mouse button click to handle context menu if missing
 		break;
 		
@@ -149,8 +153,26 @@ void ConvertSettings(){
 		}
 		/* fall through */
 		
-	case CURRENT_VER:
-		;
+	case 2:{
+		int b12h, hour;
+		// convert alarms to use 24h format
+		len = wsprintf(buf, "Alarm");
+		idx2 = GetAlarmNum();
+		for(idx=0; idx<idx2; ){
+			wsprintf(buf+len, "%d", ++idx);
+			b12h = api.GetInt(buf, "Hour12", 0);
+			if(b12h){ // convert to 24h format
+				hour = api.GetInt(buf, "Hour", 12);
+				api.SetInt(buf, "Hour", _12hTo24h(hour,api.GetInt(buf,"PM",0)));
+				api.SetInt(buf, "12h", b12h);
+			}
+			api.DelValue(buf, "Hour12");
+			api.DelValue(buf, "PM");
+		}}
+		/* fall through */
+		
+//	case CURRENT_VER:
+//		;
 	}
 	api.SetInt("","Ver",CURRENT_VER);
 }
