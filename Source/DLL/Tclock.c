@@ -75,7 +75,7 @@ union{
 	BGRQUAD quad;
 	COLORREF ref;
 } m_colBG;
-#define g_col_update(col,colBG) do{\
+#define ColorUpdate(col,colBG) do{\
 	COLORREF oldbg;\
 	m_col.ref=api.GetColor(col,0);\
 	oldbg=m_colBG.ref;\
@@ -602,7 +602,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			ReloadXPClockTheme(hwnd);
 		/* fall through */
 	case WM_SYSCOLORCHANGE:
-		g_col_update(m_basecolorFont,m_basecolorBG);
+		ColorUpdate(m_basecolorFont,m_basecolorBG);
 		InvalidateRect(hwnd,NULL,0);
 		break;
 	case WM_TIMECHANGE:
@@ -689,6 +689,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		m_TipState=0;
 		return 0;
 	case WM_NCHITTEST: // original clock uses this message for context menu and hover, etc. and we need our own "handler"
+//		return HTTRANSPARENT; // Windows' clock uses this
 //		return HTCAPTION; // xD
 		return DefWindowProc(hwnd, message, wParam, lParam);
 	case WM_MOUSEACTIVATE:
@@ -930,7 +931,7 @@ void ReadStyleData(HWND hwnd, int preview)   //---------------------+++-->
 	/// read style
 	m_basecolorFont = api.GetInt(section, "ForeColor", TCOLOR(TCOLOR_DEFAULT));
 	m_basecolorBG = api.GetInt(section, "BackColor", TCOLOR(TCOLOR_DEFAULT));
-	g_col_update(m_basecolorFont,m_basecolorBG);
+	ColorUpdate(m_basecolorFont,m_basecolorBG);
 	angle=api.GetInt(section,"Angle",0)%360;
 	if(angle<0) angle+=360;
 	m_radian=(double)angle*3.14159265358979323/180.;// ye π doesn't need to be that long :P

@@ -65,6 +65,8 @@ int CheckSettings(){
 		api.SetInt("","Ver",CURRENT_VER);
 		return 1;
 	}
+	
+	
 	/// old installation, set update flags if any
 	switch(api.GetInt("","Ver",0)){
 	case 0: /// v2.2.0#84(a507ca5) we no longer use the "FontRotateDirection" as it's replaced by "Angle", timers also work differently
@@ -86,13 +88,13 @@ int CheckSettings(){
 		
 	default:{
 		int ans=MessageBox(NULL,"Seems like you've been using a newer version.\nSome settings might not be readable\nby this older version and you could loose them.\n\nRun this version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);
-		if(ans==IDOK){
-			ConvertSettings(); // should do nothing, just downgrade our version number
-			return 0;
-		}else
+		if(ans!=IDOK)
 			return -1;
-		}
+		ConvertSettings(); // should do nothing, just downgrade our version number
+		return 0;}
 	}
+	
+	
 	/// check if update is "required"
 	if(updateflags){
 		int ans;
@@ -115,11 +117,10 @@ int CheckSettings(){
 			ans=MessageBox(NULL,msg,"You've just updated T-Clock",MB_OKCANCEL|MB_ICONINFORMATION);
 		}else // silent update
 			ans=IDOK;
-		if(ans==IDOK){
-			ConvertSettings();
-			return 2;
-		}else
+		if(ans!=IDOK)
 			return -1;
+		ConvertSettings();
+		return 2;
 	}
 	return 0;
 }
