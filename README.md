@@ -1,4 +1,4 @@
-<sup>MinGW</sup> [![Build Status](https://travis-ci.org/White-Tiger/T-Clock.svg?branch=yg-master)](https://travis-ci.org/White-Tiger/T-Clock) <sup>MSVC</sup> [![Build status](https://ci.appveyor.com/api/projects/status/coe2ptnt973ds91q?svg=true)](https://ci.appveyor.com/project/White-Tiger/t-clock)
+<sup>MinGW</sup> [![Build Status](https://travis-ci.org/White-Tiger/T-Clock.svg?branch=yg-master)](https://travis-ci.org/White-Tiger/T-Clock) <sup>MSVC</sup> [![Build status](https://ci.appveyor.com/api/projects/status/b3qehrl4c8naisx4?svg=true)](https://ci.appveyor.com/project/White-Tiger/t-clock)
 
 T-Clock Redux <sub><sub><sub><sub>(click picture for full size)</sub></sub></sub></sub>
 ==============
