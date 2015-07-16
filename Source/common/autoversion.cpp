@@ -32,10 +32,12 @@ using namespace std;
 	}
 #	define getenv getenvMShit
 	char* getenvMShit(const char* varname){
-		size_t wayne;
+		size_t wrote;
 		static char ret[2048];
-		getenv_s(&wayne,ret,sizeof(ret),varname);
-		return ret;
+		getenv_s(&wrote,ret,sizeof(ret),varname);
+		if(wrote)
+			return ret;
+		return NULL;
 	}
 #else
 #	include <unistd.h>//unlink,getcwd
