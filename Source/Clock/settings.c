@@ -85,7 +85,7 @@ int CheckSettings(){
 		break;
 		
 	default:{
-		int ans=MessageBox(NULL,"This version of T-Clock looks older than what you've used before.\nSome settings might not be readable and you might loose some stuff.\n\nDo you want to run this old version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);
+		int ans=MessageBox(NULL,"Seems like you've been using a newer version.\nSome settings might not be readable\nby this older version and you could loose them.\n\nRun this version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);
 		if(ans==IDOK){
 			ConvertSettings(); // should do nothing, just downgrade our version number
 			return 0;
@@ -99,20 +99,20 @@ int CheckSettings(){
 		if(updateflags!=SFORMAT_SILENT){
 			int flags;
 			char* pos=msg;
-			pos+=wsprintf(pos,"Seem like you've been using an older version before,\nthis version now saves some settings differently.\nThe new format is:");
+			pos+=wsprintf(pos,"T-Clock stores now some of its settings differently.\nDon't worry though, we'll convert your settings\nto the new format and nothing should get lost.\n\nThe new format is simply:");
 			for(flags=updateflags>>1/*ignore SFORMAT_SILENT*/,ans=0; flags; flags>>=1,++ans){
 				if(flags&1)
 					pos+=wsprintf(pos,"\n	+ %s",SFORMAT[ans]);
 			}
 			if(compatibilityflags){
-				pos+=wsprintf(pos,"\n\nBut if you want to use an older version, you might lose:");
+				pos+=wsprintf(pos,"\n\nIf you want to go back to an old version later on,\nyou could/will lose: (be warned)");
 				for(flags=compatibilityflags,ans=0; flags; flags>>=1,++ans){
 					if(flags&1)
 						pos+=wsprintf(pos,"\n	- %s",SCOMPAT[ans]);
 				}
 			}
-			pos+=wsprintf(pos,"\n\nConvert now? Or cancle and exit T-Clock?");
-			ans=MessageBox(NULL,msg,"T-Clock updated?",MB_OKCANCEL|MB_ICONINFORMATION);
+			pos+=wsprintf(pos,"\n\nRun T-Clock and convert settings now?");
+			ans=MessageBox(NULL,msg,"You've just updated T-Clock",MB_OKCANCEL|MB_ICONINFORMATION);
 		}else // silent update
 			ans=IDOK;
 		if(ans==IDOK){

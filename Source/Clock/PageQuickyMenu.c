@@ -71,6 +71,7 @@ Save the New Menu Item Options - From the Menu Item Details Tab
 -------------------------------------------------------------*/
 void SaveNewMenuOptions(HWND hDlg)
 {
+	/// @note : on next backward incompatible change, also change how we store QuickyMenu
 	char key[TNY_BUFF];
 	int offset=9;
 	char szmText[TNY_BUFF];

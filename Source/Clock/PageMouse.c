@@ -360,7 +360,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
 	
 	++lvCol.iSubItem;
-	lvCol.pszText="Click Type";
+	lvCol.pszText="Click type";
 	lvCol.fmt=LVCFMT_CENTER;
 	lvCol.cx=70;
 	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);

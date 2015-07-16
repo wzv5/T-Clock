@@ -758,7 +758,7 @@ void UpdateAMPMDisplay(HWND hDlg)
 	min = atoi(time);
 	
 	if(hour<12)
-		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (!hour&&!min?"Midnight":"AM"));
+		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (!hour&&!min?"midnight":"AM"));
 	else
-		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (hour==12&&!min?"Noon":"PM"));
+		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (hour==12&&!min?"noon":"PM"));
 }
