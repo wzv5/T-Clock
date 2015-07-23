@@ -1114,7 +1114,7 @@ void CalculateClockTextSize(){
 	time.wMonth=12;
 	time.wDayOfWeek=3;
 	time.wDay=22;
-	time.wHour=12;
+	time.wHour=10;
 	time.wMinute=time.wSecond=22;
 	time.wMilliseconds=666;
 	beat100=666;
