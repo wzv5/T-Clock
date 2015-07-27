@@ -100,6 +100,8 @@ enum{ // Drop&File enum / registry settings
 #define LRG_BUFF	256
 #define MAX_BUFF	1024
 
+#define MAX_FORMAT 256
+
 // font quality / smoothing
 #define DEFAULT_QUALITY				0
 #define DRAFT_QUALITY				1

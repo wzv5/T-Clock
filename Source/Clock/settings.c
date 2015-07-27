@@ -83,6 +83,7 @@ int CheckSettings(){
 		/* fall through */
 		
 //	case CURRENT_VER: // current version
+		InitFormat(); // initialize/reset Date/Time format
 		CheckMouseMenu(); // adds right mouse button click to handle context menu if missing
 		break;
 		

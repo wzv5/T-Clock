@@ -5,7 +5,6 @@
 ---------------------------------------------*/
 
 #include "tclock.h"
-#define MAX_FORMAT 256
 
 static char* m_entrydate[FORMAT_NUM]={
 	"Year4", "Year", "Month", "MonthS", "Day", "Weekday",
@@ -450,18 +449,21 @@ void OnFormatCheck(HWND hDlg, WORD id)
 }
 
 /*------------------------------------------------
-  Initialize a format string. Called from main.c
+  Initialize a format string. Called from settings.c
 --------------------------------------------------*/
 void InitFormat()
 {
+	char format_old[LRG_BUFF];
 	char format[LRG_BUFF];
 	char checks[FORMAT_NUM];
 	
-	if(api.GetInt("Format", ENTRY(IDC_CUSTOM), FALSE))
+	if(api.GetInt("Format", ENTRY(IDC_CUSTOM), 0))
 		return;
 	ChecksLocaleInit(checks,0);	
 	CreateFormat(format, checks);
-	api.SetStr("Format", "Format", format);
+	api.GetStr("Format", "Format", format_old, _countof(format_old), "");
+	if(strcmp(format, format_old))
+		api.SetStr("Format", "Format", format);
 }
 
 /*--------------------------------------------------
