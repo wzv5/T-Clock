@@ -15,7 +15,7 @@ static char m_AM[10], m_PM[10];
 static char m_EraStr[11];
 static int m_AltYear;
 
-extern char g_bHour12, g_bHourZero;
+extern char g_bHourZero;
 
 //================================================================================================
 //---------------------------------//+++--> load Localized Strings for Month, Day, & AM/PM Symbols:
@@ -155,37 +155,46 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 				*out++ = (char)((int)pt->wDay % 10) + '0';
 			}
 		} else if(*fmt=='h') {
-			int hour;
-			hour = pt->wHour;
-			if(g_bHour12) {
-				if(hour > 12) hour -= 12;
-				else if(hour == 0) hour = 12;
-				if(hour == 12 && g_bHourZero) hour = 0;
-			}
+			int hour = pt->wHour;
+			while(hour >= 12) // faster than mod 12 if "hour" <= 24
+				hour -= 12;
+			if(!hour && !g_bHourZero)
+				hour = 12;
 			if(fmt[1] == 'h') {
 				fmt += 2;
 				*out++ = (char)(hour / 10) + '0';
 			} else {
 				++fmt;
-				if(hour > 9) {
+				if(hour > 9)
 					*out++ = (char)(hour / 10) + '0';
-				}
 			}
 			*out++ = (char)(hour % 10) + '0';
-		} else if(*fmt == 'w' && (fmt[1]=='+'||fmt[1]=='-')) {
-			char bAdd=*++fmt=='+';
-			int hour=0;
-			for(; *++fmt<='9'&&*fmt>='0'; ){
-				hour*=10;
-				hour+=*fmt-'0';
+		} else if(*fmt=='H') {
+			if(fmt[1] == 'H') {
+				fmt += 2;
+				*out++ = (char)(pt->wHour / 10) + '0';
+			} else {
+				++fmt;
+				if(pt->wHour > 9)
+					*out++ = (char)(pt->wHour / 10) + '0';
 			}
-			if(!bAdd) hour=-hour;
+			*out++ = (char)(pt->wHour % 10) + '0';
+		} else if((*fmt=='w'||*fmt=='W') && (fmt[1]=='+'||fmt[1]=='-')) {
+			char is_12h = (*fmt == 'w');
+			char is_negative = (*++fmt == '-');
+			int hour = 0;
+			for(; *++fmt<='9'&&*fmt>='0'; ){
+				hour *= 10;
+				hour += *fmt-'0';
+			}
+			if(is_negative) hour = -hour;
 			hour = (pt->wHour + hour)%24;
 			if(hour < 0) hour += 24;
-			if(g_bHour12) {
-				if(hour > 12) hour -= 12;
-				else if(hour == 0) hour = 12;
-				if(hour == 12 && g_bHourZero) hour = 0;
+			if(is_12h){
+				while(hour >= 12) // faster than mod 12 if "hour" <= 24
+					hour -= 12;
+				if(!hour && !g_bHourZero)
+					hour = 12;
 			}
 			*out++ = (char)(hour / 10) + '0';
 			*out++ = (char)(hour % 10) + '0';

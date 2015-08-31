@@ -588,10 +588,17 @@ void CreateFormat(char* dst, char* checks)
 	btime=0;
 	
 	if(CHECKS(IDC_HOUR)) {
-		if(CHECKS(IDC_12HOUR) && CHECKS(IDC_HOUR)!=BST_INDETERMINATE)
-			strcat(dst, "h");
-		else
-			strcat(dst, "hh");
+		if(CHECKS(IDC_12HOUR)){
+			if(CHECKS(IDC_HOUR) != BST_INDETERMINATE)
+				strcat(dst, "h");
+			else
+				strcat(dst, "hh");
+		}else{
+			if(CHECKS(IDC_HOUR) != BST_INDETERMINATE) // reversed logic for compatibility and simpler default values
+				strcat(dst, "HH");
+			else
+				strcat(dst, "H");
+		}
 		++btime;
 	}
 	if(CHECKS(IDC_MINUTE)) {

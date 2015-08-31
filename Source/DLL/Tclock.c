@@ -100,7 +100,7 @@ enum{
 int m_BlinkState = BLINK_NONE;
 int m_width=0, m_height=0, dvpos=0, dlineheight=0, dhpos=0;
 char m_bTimer=0;
-char g_bHour12, g_bHourZero;
+char g_bHourZero;
 char m_bNoClock=0;
 static IDropTarget* m_droptarget;
 /// drag&drop stuff
@@ -900,7 +900,6 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	if(!api.GetStr(section, "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
 		m_bNoClock = 1;
 	}
-	g_bHour12 = (char)api.GetInt(section, "Hour12", 0);
 	g_bHourZero = (char)api.GetInt(section, "HourZero", 0);
 	// parse format
 	dwInfoFormat = FindFormat(m_format);

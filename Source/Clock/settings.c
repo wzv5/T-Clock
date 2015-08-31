@@ -156,20 +156,65 @@ void ConvertSettings(){
 		/* fall through */
 		
 	case 2:{
-		int b12h, hour;
+		int is12h, hour;
 		// convert alarms to use 24h format
 		len = wsprintf(buf, "Alarm");
 		idx2 = GetAlarmNum();
 		for(idx=0; idx<idx2; ){
 			wsprintf(buf+len, "%d", ++idx);
-			b12h = api.GetInt(buf, "Hour12", 0);
-			if(b12h){ // convert to 24h format
+			is12h = api.GetInt(buf, "Hour12", 0);
+			if(is12h){ // convert to 24h format
 				hour = api.GetInt(buf, "Hour", 12);
 				api.SetInt(buf, "Hour", _12hTo24h(hour,api.GetInt(buf,"PM",0)));
-				api.SetInt(buf, "12h", b12h);
+				api.SetInt(buf, "12h", is12h);
 			}
 			api.DelValue(buf, "Hour12");
 			api.DelValue(buf, "PM");
+		}
+		// convert old 12h switch - h/w(±) -> HH/W
+		if(!api.GetInt("Format","Hour12",1)){
+			char converted = 0;
+			char fmt[MAX_FORMAT];
+			size_t fmtlen;
+			char* pos;
+			fmtlen = api.GetStr("Format", "CustomFormat", fmt, MAX_FORMAT, "");
+			for(pos=fmt; *pos; ){
+				if(pos[0] == '"') {
+					do{
+						for(++pos; *pos&&*pos++!='"'; );
+					}while(*pos == '"');
+					if(!*pos) break;
+				}
+				if(pos[0] == 'S'){ // only format that also includes "h"
+					int width, padding;
+					++pos;
+					api.GetFormat((const char**)&pos, &width, &padding);
+					continue;
+				}
+				if(pos[0] == 'h'){
+					++converted;
+					pos[0] = 'H';
+					if(pos[1] == 'h'){
+						pos[1] = 'H';
+						++pos;
+					}else if(fmtlen+1 < MAX_FORMAT){
+						++pos;
+						++fmtlen; // we also copy null char
+						memmove(pos+1, pos, fmtlen-(pos-fmt));
+						*pos = 'H';
+					}
+				}else if(pos[0] == 'w' && (pos[1]=='+'||pos[1]=='-')){
+					++converted;
+					pos[0] = 'W';
+				}
+				++pos;
+			}
+			if(converted){
+				api.SetStr("Format", "CustomFormat", fmt);
+				if(api.GetInt("Format", "Custom", 0)){
+					api.SetStr("Format", "Format", fmt);
+				}
+			}
 		}}
 		/* fall through */
 		
