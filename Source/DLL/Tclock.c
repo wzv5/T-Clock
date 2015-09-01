@@ -89,7 +89,6 @@ HWND m_TipHwnd = NULL;
 TOOLINFO m_TipInfo;
 char m_format[256];
 SYSTEMTIME m_LastTime={0};
-int m_beatLast = -1;
 int m_bDispSecond = 0;
 int m_nDispBeat = 0;
 enum{
@@ -981,17 +980,18 @@ void GetDisplayTime(SYSTEMTIME* pt, int* beat100)
 void OnDrawTimer(HWND hwnd)
 {
 	SYSTEMTIME t;
-	int beat100=0;
+	int beat100 = 0;
 	int bRedraw;
-	static char bCalibration=0;
+	static char s_calibration = 0;
+	static int s_lastbeat = -1;
 	
 	GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
 	
 	if(t.wMilliseconds > 200) {
-		bCalibration = 1;
+		s_calibration = 1;
 		SetTimer(hwnd, 1, 1001 - t.wMilliseconds, NULL);
-	} else if(bCalibration) {
-		bCalibration = 0;
+	} else if(s_calibration) {
+		s_calibration = 0;
 		SetTimer(hwnd, 1, 1000, NULL);
 	}
 	
@@ -1013,10 +1013,14 @@ void OnDrawTimer(HWND hwnd)
 		
 	}
 	
-	else if(m_bDispSecond) bRedraw = 1;
-	else if(m_nDispBeat == 1 && m_beatLast != (beat100/100)) bRedraw = 1;
-	else if(m_nDispBeat == 2 && m_beatLast != beat100) bRedraw = 1;
-	else if(m_LastTime.wMinute!=t.wMinute) bRedraw = 1;
+	if(m_bDispSecond || m_LastTime.wMinute!=t.wMinute)
+		bRedraw = 1;
+	else if(m_nDispBeat){
+		if(!(m_nDispBeat&FORMAT_BEAT2))
+			beat100 /= 100;
+		bRedraw |= (s_lastbeat != beat100);
+		s_lastbeat = beat100;
+	}
 	
 	if(m_LastTime.wDay!=t.wDay || m_LastTime.wMonth!=t.wMonth || m_LastTime.wYear!=t.wYear) {
 		InitFormat("Format",&t); // format.c
@@ -1027,9 +1031,6 @@ void OnDrawTimer(HWND hwnd)
 	}
 	
 	memcpy(&m_LastTime, &t, sizeof(t));
-	
-	if(m_nDispBeat == 1) m_beatLast = beat100/100;
-	else if(m_nDispBeat > 1) m_beatLast = beat100;
 	
 	if(bRedraw)
 		InvalidateRect(hwnd,NULL,0);
