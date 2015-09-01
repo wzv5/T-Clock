@@ -282,6 +282,7 @@
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 			<Add option="-fvisibility=hidden" />
+			<Add option="-fno-ident" />
 			<Add option="-DWIN2K_COMPAT" />
 			<Add option="-D__MINGW_USE_VC2005_COMPAT" />
 			<Add option="-DWINVER=0x0501" />
