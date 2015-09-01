@@ -513,7 +513,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	m_droptarget=MyDragDrop_Create(hwnd);
 	RegisterDragDrop(hwnd,m_droptarget);
 	
-	/// for some strange reason, we need read our settings twice, otherwise our size doesn't match correctly (shouldn't be related to our settings but the DC creation or font usage, etc.)
+	/// for some strange reason, we need to read our settings twice, otherwise our size doesn't match correctly (shouldn't be related to our settings but the DC creation or font usage, etc.)
 	ReadFormatData(hwnd,0);
 	ReadStyleData(hwnd,0); // enough for our workaround
 	/// and of workaround, and start of clock creation
@@ -543,7 +543,7 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 	DestroyClock();
 	DestroyTip();
 	EndNewAPI(hwnd);
-	if(m_bTimer) KillTimer(hwnd,1); m_bTimer=0;
+	if(m_bTimer) m_bTimer = !KillTimer(hwnd,1);
 	SubclassWindow(hwnd, m_oldClockProc);
 	m_oldClockProc=NULL;
 	
@@ -905,8 +905,7 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	dwInfoFormat = FindFormat(m_format);
 	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
 	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!m_bTimer) SetTimer(hwnd, 1, 1000, NULL);
-	m_bTimer = 1;
+	if(!m_bTimer) m_bTimer = SetTimer(hwnd, 1, 1000, NULL);
 	GetLocalTime(&lt);
 	m_LastTime.wDay = lt.wDay;
 	InitFormat(section,&lt);      // format.c
@@ -989,11 +988,9 @@ void OnDrawTimer(HWND hwnd)
 	GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
 	
 	if(t.wMilliseconds > 200) {
-		KillTimer(hwnd, 1);
 		bCalibration = 1;
 		SetTimer(hwnd, 1, 1001 - t.wMilliseconds, NULL);
 	} else if(bCalibration) {
-		KillTimer(hwnd, 1);
 		bCalibration = 0;
 		SetTimer(hwnd, 1, 1000, NULL);
 	}
