@@ -64,6 +64,13 @@ int Clock_ExecElevated(const char* app, const char* params, HWND parent);
 /** \sa TClockAPI::ExecFile() */
 int Clock_ExecFile(const char* command, HWND parent);
 
+// format stuff
+/** \sa TClockAPI::GetFormat() */
+char Clock_GetFormat(const char** offset, int* minimum, int* padding);
+/** \sa TClockAPI::WriteFormatNum() */
+int Clock_WriteFormatNum(char* buffer, int number, int minimum, int padding);
+
+
 // translation API
 
 /** \sa TClockAPI::T() */

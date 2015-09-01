@@ -447,3 +447,52 @@ int Clock_ExecFile(const char* command, HWND parent) {
 	Clock_GetFileAndOption(command,app,params);
 	return Clock_ShellExecute(NULL,app,(params[0]?params:NULL),parent,SW_SHOWNORMAL);
 }
+
+// format stuff
+
+char Clock_GetFormat(const char** offset, int* minimum, int* padding) {
+	char specifier;
+	const char* pos = *offset;
+	int pad = 0;
+	int min = 0;
+	// padding
+	for(; *pos=='_'; ++pad,++pos);
+	specifier = *pos;
+	if(specifier){
+		// min / zeros
+		do{
+			++min; ++pos;
+		}while(*pos == specifier);
+	}
+	//
+	*padding = pad;
+	*offset = pos;
+	*minimum = min;
+	return specifier;
+}
+int Clock_WriteFormatNum(char* buffer, int number, int minimum, int padding) {
+	char* out = buffer;
+	char negative = '\0';
+	int num, nums = 1;
+	if(number < 0){
+		number = -number;
+		negative = '-';
+	}
+	// count chars && init
+	for(num=number; num>=10; ++nums,num/=10);
+	minimum -= nums;
+	padding += (minimum<0 ? minimum : 0);
+	// write padding
+	for(; padding>0; --padding)
+		*out++ = ' ';
+	// minus sign
+	if(negative)
+		*out++ = negative;
+	// write zero padding
+	for(; minimum>0; --minimum)
+		*out++ = '0';
+	// write number
+	ltoa(number, out, 10);
+	out += nums;
+	return out - buffer;
+}

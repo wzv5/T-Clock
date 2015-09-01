@@ -66,6 +66,9 @@ TClockAPI api = {
 	ClockAPI(Exec)
 	ClockAPI(ExecElevated)
 	ClockAPI(ExecFile)
+	// format stuff
+	ClockAPI(GetFormat)
+	ClockAPI(WriteFormatNum)
 	// translation
 //	ClockAPI(T)
 //	ClockAPI(Translate)

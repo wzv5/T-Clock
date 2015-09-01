@@ -218,6 +218,23 @@ typedef struct TClockAPI_TAG {
  * \remark makes use of \c GetFileAndOption() internally and thus same rules apply for \p command
  * \sa Exec(), ExecElevated(), ShellExecute(), GetFileAndOption() */
 	int (*ExecFile)(const char* command, HWND parent);
+	// format stuff
+/**
+ * \brief retrieves a format specifier, width and padding; starting from \p offset[0]
+ * \param[in,out] offset current offset of format input
+ * \param[out] minimum minimum width (padding zeros)
+ * \param[out] padding white-space padding
+ * \return parsed format specifier eg. 'h' or \0 if end was reached
+ * \remark \p offset will point to next format position or \0 if end was reached */
+	char (*GetFormat)(const char** offset, int* minimum, int* padding);
+/**
+ * \brief writes \p number to string \p buffer
+ * \param[out] buffer
+ * \param[in] number
+ * \param[in] minimum pads number with zeros to reach given minimum
+ * \param[in] padding additional white-space padding
+ * \return chars written (excl. \0) */
+	int (*WriteFormatNum)(char* buffer, int number, int minimum, int padding);
 	// translation API
 	const char* (*T)(int hash);
 	const char* (*Translate)(const char* str);

@@ -64,58 +64,6 @@ void InitFormat(const char* section, SYSTEMTIME* lt)   //-----------------------
 		m_AltYear=atoi(year);
 }
 //================================================================================================
-//--+++-->
-BOOL GetNumFormat(const char** sp, char x, int* len, int* slen)
-{
-	const char* p;
-	int n, ns;
-	
-	p = *sp;
-	n = 0;
-	ns = 0;
-	
-	while(*p == '_') {
-		ns++;
-		p++;
-	}
-	if(*p != x) return FALSE;
-	while(*p == x) {
-		n++;
-		p++;
-	}
-	
-	*len = n+ns;
-	*slen = ns;
-	*sp = p;
-	return TRUE;
-}
-//================================================================================================
-//--+++-->
-void SetNumFormat(char** dp, int n, int len, int slen)
-{
-	char* p;
-	int minlen,i;
-	
-	p = *dp;
-	
-	for(i=10,minlen=1; i<1000000000; i*=10,minlen++)
-		if(n < i) break;
-		
-	while(minlen < len) {
-		if(slen > 0) { *p++ = ' '; slen--; }
-		else { *p++ = '0'; }
-		len--;
-	}
-	
-	for(i=minlen-1; i>=0; i--) {
-		*(p+i) = (char)((n%10)+'0');
-		n/=10;
-	}
-	p += minlen;
-	
-	*dp = p;
-}
-//================================================================================================
 //-------------+++--> Format T-Clock's OutPut String From Current Date, Time, & System Information:
 unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, int beat100)   //------------------+++-->
 {
@@ -139,7 +87,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		/// for testing
 		else if(*fmt == 'S' && fmt[1] == 'S' && fmt[2] == 'S') {
 			fmt += 3;
-			SetNumFormat(&out, (int)pt->wMilliseconds, 3, 0);
+			out += api.WriteFormatNum(out, (int)pt->wMilliseconds, 3, 0);
 		}
 		
 		else if(*fmt == 'y' && fmt[1] == 'y') {
@@ -147,7 +95,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			len = 2;
 			if(*(fmt + 2) == 'y' && *(fmt + 3) == 'y') len = 4;
 			
-			SetNumFormat(&out, (len==2)?(int)pt->wYear%100:(int)pt->wYear, len, 0);
+			out += api.WriteFormatNum(out, (len==2)?(int)pt->wYear%100:(int)pt->wYear, len, 0);
 			fmt += len;
 		} else if(*fmt == 'm') {
 			if(*(fmt + 1) == 'm' && *(fmt + 2) == 'e') {
@@ -343,41 +291,46 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			for(pos=s; *pos; )  *out++=*pos++;
 			fmt += 4;
 		} else if(*fmt == 'S') { // uptime
-			int len, slen, st;
-			fmt++;
+			int width, padding, num;
+			const char* old_fmt = ++fmt;
+			char specifier = api.GetFormat(&fmt, &width, &padding);
 			if(!TickCount) TickCount = api.GetTickCount64();
-			if(GetNumFormat(&fmt, 'd', &len, &slen) == TRUE) {//days
-				st = (int)(TickCount/86400000);
-				SetNumFormat(&out, st, len, slen);
-			} else if(GetNumFormat(&fmt, 'a', &len, &slen) == TRUE) {//hours total
-				st = (int)(TickCount/3600000);
-				SetNumFormat(&out, st, len, slen);
-			} else if(GetNumFormat(&fmt, 'h', &len, &slen) == TRUE) {//hours (max 24)
-				st = (TickCount/3600000)%24;
-				SetNumFormat(&out, st, len, slen);
-			} else if(GetNumFormat(&fmt, 'n', &len, &slen) == TRUE) {//minutes
-				st = (TickCount/60000)%60;
-				SetNumFormat(&out, st, len, slen);
-			} else if(GetNumFormat(&fmt, 's', &len, &slen) == TRUE) {//seconds
-				st = (TickCount/1000)%60;
-				SetNumFormat(&out, st, len, slen);
-			} else if(*fmt == 'T') { // ST, uptime as h:mm:ss
-				ULONGLONG past;
-				int sth, stm, sts;
-				past = TickCount/1000;
-				sts = past%60; past /= 60;
-				stm = past%60; past /= 60;
-				sth = (int)past;
+			switch(specifier){
+			case 'd'://days
+				num = (int)(TickCount/86400000);
+				break;
+			case 'a'://hours total
+				num = (int)(TickCount/3600000);
+				break;
+			case 'h'://hours (max 24)
+				num = (TickCount/3600000)%24;
+				break;
+			case 'n'://minutes
+				num = (TickCount/60000)%60;
+				break;
+			case 's'://seconds
+				num = (TickCount/1000)%60;
+				break;
+			case 'T':{// ST, uptime as h:mm:ss
+				ULONGLONG past = TickCount/1000;
+				int hour, minute;
+				num = past%60; past /= 60;
+				minute = past%60; past /= 60;
+				hour = (int)past;
 				
-				SetNumFormat(&out, sth, 1, 0);
+				out += api.WriteFormatNum(out, hour, width, padding);
 				*out++ = ':';
-				SetNumFormat(&out, stm, 2, 0);
+				out += api.WriteFormatNum(out, minute, 2, 0);
 				*out++ = ':';
-				SetNumFormat(&out, sts, 2, 0);
-				
-				fmt++;
-			} else
+				width = 2; padding = 0;
+				break;}
+			default:
+				specifier = '\0';
+				fmt = old_fmt;
 				*out++ = 'S';
+			}
+			if(specifier)
+				out += api.WriteFormatNum(out, num, width, padding);
 		} else if(*fmt == 'W') { // Week-of-Year
 			struct tm tmnow;
 			time_t tnow;
