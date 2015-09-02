@@ -73,20 +73,21 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 	ULONGLONG TickCount = 0;
 	
 	while(*fmt) {
-		if(*fmt == '\"') {
-			++fmt;
-			while(*fmt != '\"' && *fmt) {
-				for(pos=CharNext(fmt); fmt!=pos; )
-					*out++=*fmt++;
-			}
-			if(*fmt == '\"') ++fmt;
-		} else if(*fmt=='\\' && fmt[1]=='n') {
+		if(*fmt == '"') {
+			for(++fmt; *fmt&&*fmt!='"'; )
+				*out++ = *fmt++;
+			if(*fmt) ++fmt;
+			continue;
+		}
+		if(*fmt=='\\' && fmt[1]=='n') {
 			fmt+=2;
 			*out++='\n';
 		}
 		/// for testing
 		else if(*fmt == 'S' && fmt[1] == 'S' && fmt[2] == 'S') {
 			fmt += 3;
+			out += api.WriteFormatNum(out, (int)pt->wSecond, 2, 0);
+			*out++ = '.';
 			out += api.WriteFormatNum(out, (int)pt->wMilliseconds, 3, 0);
 		}
 		
@@ -521,10 +522,12 @@ DWORD FindFormat(const char* fmt)
 	DWORD ret = 0;
 	
 	while(*fmt) {
-		if(*fmt == '\"') {
-			fmt++;
-			while(*fmt != '\"' && *fmt) fmt++;
-			if(*fmt == '\"') fmt++;
+		if(*fmt == '"') {
+			do{
+				for(++fmt; *fmt&&*fmt++!='"'; );
+			}while(*fmt == '"');
+			if(!*fmt)
+				break;
 		}
 		
 		else if(*fmt == 's') {

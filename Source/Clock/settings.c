@@ -183,7 +183,8 @@ void ConvertSettings(){
 					do{
 						for(++pos; *pos&&*pos++!='"'; );
 					}while(*pos == '"');
-					if(!*pos) break;
+					if(!*pos)
+						break;
 				}
 				if(pos[0] == 'S'){ // only format that also includes "h"
 					int width, padding;
