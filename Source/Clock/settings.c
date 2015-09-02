@@ -11,12 +11,14 @@ enum{
 	SFORMAT_EFFICIENT	=0x0004,
 	SFORMAT_LESSMEM		=0x0008,
 	SFORMAT_FEATURE		=0x0010,
+	SFORMAT_TEXTPOSITION=0x0020,
 };
 static const char* SFORMAT[]={
 	"different",//SFORMAT_BASIC
 	"more efficient",//SFORMAT_EFFICIENT
 	"using less memory",//SFORMAT_LESSMEM
 	"more feature rich",//SFORMAT_FEATURE
+	"positioning text differently",//SFORMAT_TEXTPOSITION
 };
 
 enum{
@@ -36,6 +38,7 @@ int CheckSettings(){
 	char msg[1024];
 	int updateflags=SFORMAT_NONE;
 	int compatibilityflags=SCOMPAT_NONE;
+	int version = api.GetInt("","Ver",0);
 //	api.SetStr(NULL,"ExePath",api.root);
 	api.GetStr("Clock","Font",msg,80,"");
 	/// new installation?
@@ -48,7 +51,7 @@ int CheckSettings(){
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
 		api.SetStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
 		
-		if(api.GetInt("","Ver",0) == 0){ // new installation for real
+		if(version == 0){ // very likely a new installation
 			u.entry[2]='\0';
 			u.entryS='0'|('1'<<8); // left, 1 click
 			api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_SHOWCALENDER);
@@ -73,9 +76,9 @@ int CheckSettings(){
 	
 	
 	/// old installation, set update flags if any
-	switch(api.GetInt("","Ver",0)){
-	case 0: /// v2.2.0#84(a507ca5) we no longer use the "FontRotateDirection" as it's replaced by "Angle", timers also work differently
-		updateflags|=SFORMAT_EFFICIENT|SFORMAT_LESSMEM|SFORMAT_FEATURE;
+	switch(version){
+	case 0: /// v2.2.0#84(a507ca5) we no longer use the "FontRotateDirection" as it's replaced by "Angle", timers also work differently and text is centered by default
+		updateflags|=SFORMAT_EFFICIENT|SFORMAT_LESSMEM|SFORMAT_FEATURE|SFORMAT_TEXTPOSITION;
 		compatibilityflags|=SCOMPAT_FORMAT|SCOMPAT_TIMERS;
 		/* fall through */
 		
@@ -88,7 +91,7 @@ int CheckSettings(){
 		/* fall through */
 		
 //	case CURRENT_VER: // current version
-		InitFormat(); // initialize/reset Date/Time format
+		InitFormat(); // initialize/reset automated Date/Time format
 		CheckMouseMenu(); // adds right mouse button click to handle context menu if missing
 		break;
 		
@@ -144,6 +147,12 @@ void ConvertSettings(){
 		case 'R': api.SetInt("Clock","Angle",270); break;
 		}
 		api.DelValue("Clock","FontRotateDirection");
+		// Reset text position; we now center text automatically (and it's relative to that, not the upper area)
+		// All settings were supposed to be one-off converts, not repeating if "Ver" resets, but that wouldn't work here
+		api.SetInt("Clock", "ClockHeight", 0);
+		api.SetInt("Clock", "ClockWidth", 0);
+		api.SetInt("Clock", "HorizPos", 0);
+		api.SetInt("Clock", "VertPos", 0);
 		// remove "ID" from "Timers" as no longer used
 		len=wsprintf(buf, "Timers\\Timer");
 		idx2=api.GetInt("Timers","NumberOfTimers",0);
