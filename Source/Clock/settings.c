@@ -45,25 +45,30 @@ int CheckSettings(){
 			unsigned short entryS;
 			char entry[3];
 		} u;
-		u.entry[2]='\0';
-		u.entryS='0'|('1'<<8); // left, 1 click
-		api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_SHOWCALENDER);
-		u.entryS='1'|('1'<<8); // right, 1 click
-		api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
-		u.entryS='2'|('1'<<8); // middle, 1 click
-		api.SetInt(REG_MOUSE,u.entry,IDM_STOPWATCH);
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS,sizeof(metrics),&metrics,0);
 		api.SetStr("Clock","Font",metrics.lfCaptionFont.lfFaceName);
-		if(!u.entryS){ /// @todo : XP: measure taskbar height to chose font size and or multiline/singleline (small vs "normal" taskbar)
-			HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
-			if(hwnd) {
-				RECT rc; GetClientRect(hwnd, &rc);
-				if(rc.right > rc.bottom) u.entryS = 1;
+		
+		if(api.GetInt("","Ver",0) == 0){ // new installation for real
+			u.entry[2]='\0';
+			u.entryS='0'|('1'<<8); // left, 1 click
+			api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_SHOWCALENDER);
+			u.entryS='1'|('1'<<8); // right, 1 click
+			api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
+			u.entryS='2'|('1'<<8); // middle, 1 click
+			api.SetInt(REG_MOUSE,u.entry,IDM_STOPWATCH);
+			
+			u.entryS = api.OS >= TOS_VISTA;
+			if(!u.entryS){ /// @todo : XP: measure taskbar height to chose font size and or multiline/singleline (small vs "normal" taskbar)
+				HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
+				if(hwnd) {
+					RECT rc; GetClientRect(hwnd, &rc);
+					if(rc.right > rc.bottom) u.entryS = 1; // vertical taskbar
+				}
 			}
+			api.SetInt("Format", "Kaigyo", u.entryS);
+			api.SetInt("","Ver",CURRENT_VER);
+			return 1;
 		}
-		api.SetInt("Format", "Kaigyo", u.entryS);
-		api.SetInt("","Ver",CURRENT_VER);
-		return 1;
 	}
 	
 	
