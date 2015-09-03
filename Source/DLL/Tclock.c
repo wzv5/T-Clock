@@ -41,7 +41,6 @@ struct {
 	LONG xdiff;
 	LONG ydiff;
 } m_multiClock[MAX_MULTIMON_CLOCKS];
-HDC m_multiClockDC;
 int m_multiClocks=0;
 /// draw variables
 static HDC m_hdcClock=NULL;
@@ -433,8 +432,9 @@ void SubsDestroy(){
 						m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
 						SWP_NOMOVE);
 		}
+		m_multiClock[m_multiClocks].worker = NULL;
 	}
-	m_oldWorkerProc=NULL;
+	m_oldWorkerProc = NULL;
 }
 void SubsSendResize(){
 	int i;
@@ -460,20 +460,19 @@ void SubsCreate(){
 				for(i=0; i<m_multiClocks && hwndChild!=m_multiClock[i].worker; ++i);
 				if(i==m_multiClocks){
 					if(!m_multiClockClass){
-						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX),CS_CLASSDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
+						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX),CS_PARENTDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
 						wndclass.hCursor = LoadCursor(NULL,IDC_ARROW);
 						wndclass.hInstance = api.hInstance;
 						m_multiClockClass = RegisterClassEx(&wndclass);
 					}
-					m_multiClock[i].clock = CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,0);
+					m_multiClock[i].clock = CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,NULL);
 					if(!m_multiClock[i].clock)
 						break;
-					if(!i) m_multiClockDC = GetDC(m_multiClock[0].clock);
-					GetClientRect(hwndChild,&m_multiClock[i].workerRECT);
+					GetClientRect(hwndChild, &m_multiClock[i].workerRECT);
 					m_multiClock[i].worker = hwndChild;
-					if(!i){ // all subs should use same worker proc (untested), so only get it once (otherwise we might get ourselves...)
-						m_oldWorkerProc = SubclassWindow(hwndChild, WndProcMultiClockWorker);
-					}
+					if(!i)
+						m_oldWorkerProc = (WNDPROC)GetWindowLongPtr(hwndChild, GWLP_WNDPROC);
+					SubclassWindow(hwndChild, WndProcMultiClockWorker);
 					++m_multiClocks;
 				}
 				break;
@@ -758,6 +757,7 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 		return 1;
 	}
 	case WM_CREATE:{
+		SetWindowLongPtr(hwnd, GWLP_ID, 303); // same ID as original clock
 		RegisterDragDrop(hwnd,m_droptarget); // setup DropFiles on sub-clock
 		return 0;
 	}
@@ -1269,12 +1269,26 @@ void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100)
 //		GdiAlphaBlend(hdc,0,0,g_rcClock.right,g_rcClock.bottom,g_hdcClock,0,0,g_rcClock.right,g_rcClock.bottom,fnc);
 //		BitBlt(hdc,0,0,g_rcClock.right,g_rcClock.bottom,g_hdcClock,0,0,SRCPAINT);
 		BitBlt(hdc,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,SRCCOPY);
-		if(m_multiClocks)
-			BitBlt(m_multiClockDC,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,SRCCOPY);
+		if(m_multiClocks){
+			vpos = 0;
+			do{
+				hdc = GetDC(m_multiClock[vpos].clock);
+				BitBlt(hdc, 0,0,m_rcClock.right,m_rcClock.bottom, m_hdcClock, 0,0, SRCCOPY);
+				ReleaseDC(m_multiClock[vpos].clock, hdc);
+				ValidateRect(m_multiClock[vpos].clock, NULL);
+			}while(++vpos < m_multiClocks);
+		}
 	}else{
 		BitBlt(hdc,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,NOTSRCCOPY);
-		if(m_multiClocks)
-			BitBlt(m_multiClockDC,0,0,m_rcClock.right,m_rcClock.bottom,m_hdcClock,0,0,NOTSRCCOPY);
+		if(m_multiClocks){
+			vpos = 0;
+			do{
+				hdc = GetDC(m_multiClock[vpos].clock);
+				BitBlt(hdc, 0,0,m_rcClock.right,m_rcClock.bottom, m_hdcClock, 0,0, NOTSRCCOPY);
+				ReleaseDC(m_multiClock[vpos].clock, hdc);
+				ValidateRect(m_multiClock[vpos].clock, NULL);
+			}while(++vpos < m_multiClocks);
+		}
 	}
 }
 
