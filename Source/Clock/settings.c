@@ -3,6 +3,15 @@
 
 #define CURRENT_VER 2
 
+static int ParseSettings();
+static void ConvertSettings();
+int CheckSettings(){
+	int ret = ParseSettings(); // do first-time setup or check and convert settings
+	InitFormat(); // initialize/reset automated Date/Time format
+	CheckMouseMenu(); // add context menu action if undefined
+	return ret;
+}
+
 enum{
 	SFORMAT_NONE		=0x0000,
 	SFORMAT_SILENT		=0x0001,
@@ -33,8 +42,7 @@ static const char* SCOMPAT[]={
 	"your timers",
 };
 
-static void ConvertSettings();
-int CheckSettings(){
+int ParseSettings(){
 	char msg[1024];
 	int updateflags=SFORMAT_NONE;
 	int compatibilityflags=SCOMPAT_NONE;
@@ -91,8 +99,6 @@ int CheckSettings(){
 		/* fall through */
 		
 //	case CURRENT_VER: // current version
-		InitFormat(); // initialize/reset automated Date/Time format
-		CheckMouseMenu(); // adds right mouse button click to handle context menu if missing
 		break;
 		
 	default:{
