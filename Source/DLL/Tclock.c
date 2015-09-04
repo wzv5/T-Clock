@@ -437,16 +437,16 @@ void SubsDestroy(){
 	m_oldWorkerProc = NULL;
 }
 void SubsSendResize(){
-	int i;
-	for(i=0; i<m_multiClocks; ++i){
-		SetWindowPos(m_multiClock[i].worker,0,0,0,10,10,0); // set new clock size and position
+	int clock_id;
+	for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
+		SetWindowPos(m_multiClock[clock_id].worker,0,0,0,10,10,0); // set new clock size and position
 	}
 }
 void SubsCreate(){
 	char classname[GEN_BUFF];
 	HWND hwndBar;
 	HWND hwndChild;
-	int i;
+	int clock_id;
 	if(m_multiClocks || !m_bMultimon) return;
 	// loop all secondary taskbars
 	hwndBar=FindWindowEx(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
@@ -457,20 +457,20 @@ void SubsCreate(){
 			if(!lstrcmpi(classname,"WorkerW")){
 				if(m_multiClocks==MAX_MULTIMON_CLOCKS)
 					break;
-				for(i=0; i<m_multiClocks && hwndChild!=m_multiClock[i].worker; ++i);
-				if(i==m_multiClocks){
+				for(clock_id=0; clock_id<m_multiClocks && hwndChild!=m_multiClock[clock_id].worker; ++clock_id); // try to find existing
+				if(clock_id==m_multiClocks){ // new
 					if(!m_multiClockClass){
 						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX),CS_PARENTDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
 						wndclass.hCursor = LoadCursor(NULL,IDC_ARROW);
 						wndclass.hInstance = api.hInstance;
 						m_multiClockClass = RegisterClassEx(&wndclass);
 					}
-					m_multiClock[i].clock = CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,NULL);
-					if(!m_multiClock[i].clock)
+					m_multiClock[clock_id].clock = CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,NULL);
+					if(!m_multiClock[clock_id].clock)
 						break;
-					GetClientRect(hwndChild, &m_multiClock[i].workerRECT);
-					m_multiClock[i].worker = hwndChild;
-					if(!i)
+					m_multiClock[clock_id].worker = hwndChild;
+					GetClientRect(hwndChild, &m_multiClock[clock_id].workerRECT);
+					if(!clock_id)
 						m_oldWorkerProc = (WNDPROC)GetWindowLongPtr(hwndChild, GWLP_WNDPROC);
 					SubclassWindow(hwndChild, WndProcMultiClockWorker);
 					++m_multiClocks;
@@ -837,49 +837,49 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 {
 	switch(message){
 	case WM_WINDOWPOSCHANGING:{
+		int x,y,cx,cy;
 		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
-		int i;
+		int clock_id;
 		if(m_bNoClock) break;
-		for(i=0; i<m_multiClocks; ++i){
-			if(m_multiClock[i].worker==hwnd){
-//				MessageBox(0,"WM_WINDOWPOSCHANGING",__FUNCTION__,0);
-				if(!(pwp->flags&SWP_NOSIZE)){
-					if(!pwp->flags && !pwp->x && !pwp->y && pwp->cx==10 && pwp->cy==10){ // special case for us
-//						MessageBox(0,"special",__FUNCTION__,0);
-						if(!m_multiClock[i].workerRECT.left && !m_multiClock[i].workerRECT.top){
-							ClientToScreen(m_multiClock[i].worker,(POINT*)&m_multiClock[i].workerRECT);
-							ScreenToClient(GetParent(m_multiClock[i].worker),(POINT*)&m_multiClock[i].workerRECT);
-						}
-						pwp->flags=SWP_NOMOVE;
-						pwp->cx=m_multiClock[i].workerRECT.right;
-						pwp->cy=m_multiClock[i].workerRECT.bottom;
+		for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
+			if(m_multiClock[clock_id].worker != hwnd)
+				continue;
+//			MessageBox(0,"WM_WINDOWPOSCHANGING",__FUNCTION__,0);
+			if(!(pwp->flags&SWP_NOSIZE)){
+				if(!pwp->flags && !pwp->x && !pwp->y && pwp->cx==10 && pwp->cy==10){ // special case for us
+//					MessageBox(0,"special",__FUNCTION__,0);
+					if(!m_multiClock[clock_id].workerRECT.left && !m_multiClock[clock_id].workerRECT.top){
+						ClientToScreen(m_multiClock[clock_id].worker,(POINT*)&m_multiClock[clock_id].workerRECT);
+						ScreenToClient(GetParent(m_multiClock[clock_id].worker),(POINT*)&m_multiClock[clock_id].workerRECT);
 					}
-					CallWindowProc(m_oldWorkerProc,hwnd,message,wParam,lParam); // adjusts left margin? (so changes size and pos)
-					m_multiClock[i].workerRECT.right=pwp->cx;
-					m_multiClock[i].workerRECT.bottom=pwp->cy;
-					if(pwp->cx > pwp->cy){ // horizontal
-						pwp->cx=pwp->cx-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
-					}else{
-						pwp->cy=pwp->cy-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
-					}
+					pwp->flags=SWP_NOMOVE;
+					pwp->cx=m_multiClock[clock_id].workerRECT.right;
+					pwp->cy=m_multiClock[clock_id].workerRECT.bottom;
 				}
-				if(!(pwp->flags&SWP_NOMOVE)){
-					m_multiClock[i].workerRECT.left=pwp->x;
-					m_multiClock[i].workerRECT.top=pwp->y;
-				}
-				{int x,y,cx,cy;
-				cx=m_rcClock.right;
-				cy=m_rcClock.bottom;
-				if(m_multiClock[i].workerRECT.right > m_multiClock[i].workerRECT.bottom){ // horizontal
-					x=m_multiClock[i].workerRECT.left+m_multiClock[i].workerRECT.right-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
-					y=m_multiClock[i].workerRECT.top+m_BORDER_MARGIN;
+				CallWindowProc(m_oldWorkerProc,hwnd,message,wParam,lParam); // adjusts left margin? (so changes size and pos)
+				m_multiClock[clock_id].workerRECT.right=pwp->cx;
+				m_multiClock[clock_id].workerRECT.bottom=pwp->cy;
+				if(pwp->cx > pwp->cy){ // horizontal
+					pwp->cx=pwp->cx-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
 				}else{
-					x=m_multiClock[i].workerRECT.left+m_BORDER_MARGIN;
-					y=m_multiClock[i].workerRECT.top+m_multiClock[i].workerRECT.bottom-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
+					pwp->cy=pwp->cy-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
 				}
-				SetWindowPos(m_multiClock[i].clock,0,x,y,cx,cy,0);}
-				break;
 			}
+			if(!(pwp->flags&SWP_NOMOVE)){
+				m_multiClock[clock_id].workerRECT.left=pwp->x;
+				m_multiClock[clock_id].workerRECT.top=pwp->y;
+			}
+			cx=m_rcClock.right;
+			cy=m_rcClock.bottom;
+			if(m_multiClock[clock_id].workerRECT.right > m_multiClock[clock_id].workerRECT.bottom){ // horizontal
+				x=m_multiClock[clock_id].workerRECT.left+m_multiClock[clock_id].workerRECT.right-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
+				y=m_multiClock[clock_id].workerRECT.top+m_BORDER_MARGIN;
+			}else{
+				x=m_multiClock[clock_id].workerRECT.left+m_BORDER_MARGIN;
+				y=m_multiClock[clock_id].workerRECT.top+m_multiClock[clock_id].workerRECT.bottom-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
+			}
+			SetWindowPos(m_multiClock[clock_id].clock,0,x,y,cx,cy,0);
+			break;
 		}
 		return 0;}
 	case WM_WINDOWPOSCHANGED:{
