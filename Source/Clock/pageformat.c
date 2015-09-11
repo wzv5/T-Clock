@@ -340,10 +340,9 @@ void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------
 	api.SetStr(section, "Format", str);
 	
 	if(m_pCustomFormat) {
-		if(IsDlgButtonChecked(hDlg, IDC_CUSTOM)) {
+		if(IsDlgButtonChecked(hDlg, IDC_CUSTOM))
 			strcpy(m_pCustomFormat, str);
-			api.SetStr(section, "CustomFormat", m_pCustomFormat);
-		}
+		api.SetStr(section, "CustomFormat", m_pCustomFormat);
 	}
 	if(!preview){
 		api.DelKey("Preview");
