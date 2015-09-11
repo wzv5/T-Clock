@@ -9,7 +9,7 @@
 static char* m_entrydate[FORMAT_NUM]={
 	"Year4", "Year", "Month", "MonthS", "Day", "Weekday",
 	"Hour", "Minute", "Second", "AMPM", "InternetTime",
-	"Kaigyo", "Hour12", "HourZero", "Custom",
+	"Lf", "Hour12", "HourZero", "Custom",
 };
 #define ENTRY(id) m_entrydate[(id)-FORMAT_BEGIN]
 #define CHECKS(id) checks[(id)-FORMAT_BEGIN]
@@ -470,152 +470,169 @@ void InitFormat()
 --------------------------------------------------*/
 void CreateFormat(char* dst, char* checks)
 {
-	char bdate=0, btime=0;
+	const char* spacer = " ";
+	char use_time = 0; ///< bitmask; 1 = date, 2 = time
 	int control;
+	int creation_bit; ///< date/time bits; &1 = date, !&1 = time
+	
+	creation_bit = 0b101; // Date+Time; old T-Clock default
 	
 	for(control=IDC_YEAR4; control<=IDC_WEEKDAY; ++control) {
 		if(CHECKS(control)) {
-			bdate=1;
+			use_time |= 1;
 			break;
 		}
 	}
 	
 	for(control=IDC_HOUR; control<=IDC_INTERNETTIME; ++control) {
 		if(CHECKS(control)) {
-			btime=1;
+			use_time |= 2;
 			break;
+		}
+	}
+	
+	if(use_time == 3) { // both bits (date&time) set
+		if(CHECKS(IDC_LINEFEED)){
+			spacer = "\\n";
+			if(CHECKS(IDC_LINEFEED) == BST_INDETERMINATE)
+				creation_bit = 0b110; // Time+Date; Vista+
+		} else {
+			if(m_idate < 2 && CHECKS(IDC_MONTHS) && (CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)))
+				spacer = "  "; // why do we do this?
 		}
 	}
 	
 	*dst = '\0';
 	
-	if(!m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
-		strcat(dst, "ddd");
-		for(control=IDC_YEAR4; control<=IDC_DAY; ++control) {
-			if(CHECKS(control)) {
-				if((m_ilang&0x00ff) == LANG_CHINESE) strcat(dst," ");
-				else if(m_sMon[0] && m_sMon[ strlen(m_sMon) - 1 ] == '.')
-					strcat(dst," ");
-				else strcat(dst, ", ");
+	do {
+		if(*dst)
+			strcat(dst, spacer);
+		if(creation_bit&1) {
+			//
+			// Date
+			//
+			if(!m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
+				strcat(dst, "ddd");
+				for(control=IDC_YEAR4; control<=IDC_DAY; ++control) {
+					if(CHECKS(control)) {
+						if((m_ilang&0x00ff) == LANG_CHINESE) strcat(dst," ");
+						else if(m_sMon[0] && m_sMon[ strlen(m_sMon) - 1 ] == '.')
+							strcat(dst," ");
+						else strcat(dst, ", ");
+						break;
+					}
+				}
+			}
+
+			switch(m_idate){
+			case 0: // m/d/y
+				if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
+					if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
+					if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
+					if(CHECKS(IDC_DAY) || CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
+						if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
+						else strcat(dst," ");
+					}
+				}
+				if(CHECKS(IDC_DAY)) {
+					strcat(dst, "dd");
+					if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
+						if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
+						else strcat(dst, ", ");
+					}
+				}
+				if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
+				if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
 				break;
+			case 1: // d/m/y
+				if(CHECKS(IDC_DAY)) {
+					strcat(dst, "dd");
+					if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
+						if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
+						else strcat(dst," ");
+					} else if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) strcat(dst, m_sep_date);
+				}
+				if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
+					if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
+					if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
+					if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
+						if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
+						else strcat(dst," ");
+					}
+				}
+				if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
+				if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
+				break;
+			default:  // y/m/d
+				if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
+					if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
+					if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
+					if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)
+					   || CHECKS(IDC_DAY)) {
+						if(CHECKS(IDC_MONTHS)) strcat(dst," ");
+						else strcat(dst, m_sep_date);
+					}
+				}
+				if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
+					if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
+					if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
+					if(CHECKS(IDC_DAY)) {
+						if(CHECKS(IDC_MONTHS)) strcat(dst," ");
+						else strcat(dst, m_sep_date);
+					}
+				}
+				if(CHECKS(IDC_DAY)) strcat(dst, "dd");
+			}
+
+			if(m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
+				for(control=IDC_YEAR4; control<=IDC_DAY; ++control) {
+					if(CHECKS(control)) { strcat(dst," "); break; }
+				}
+				strcat(dst, "ddd");
+			}
+		} else {
+			//
+			// Time
+			//
+			if(m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
+				strcat(dst, "tt");
+				if(use_time&2) strcat(dst," ");
+			}
+			use_time = 0;
+			
+			if(CHECKS(IDC_HOUR)) {
+				if(CHECKS(IDC_12HOUR)){
+					if(CHECKS(IDC_HOUR) != BST_INDETERMINATE)
+						strcat(dst, "h");
+					else
+						strcat(dst, "hh");
+				}else{
+					if(CHECKS(IDC_HOUR) != BST_INDETERMINATE) // reversed logic for compatibility and simpler default values
+						strcat(dst, "HH");
+					else
+						strcat(dst, "H");
+				}
+				++use_time;
+			}
+			if(CHECKS(IDC_MINUTE)) {
+				if(use_time++) strcat(dst, m_sep_time);
+				strcat(dst, "nn");
+			}
+			if(CHECKS(IDC_SECOND)) {
+				if(use_time++) strcat(dst, m_sep_time);
+				strcat(dst, "ss");
+			}
+			
+			if(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
+				if(use_time) strcat(dst," ");
+				strcat(dst, "tt");
+			}
+			
+			if(CHECKS(IDC_INTERNETTIME)){
+				if(use_time||CHECKS(IDC_AMPM)) strcat(dst," ");
+				strcat(dst,"@@@");
 			}
 		}
-	}
-	
-	switch(m_idate){
-	case 0: // m/d/y
-		if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
-			if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
-			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
-			if(CHECKS(IDC_DAY) || CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
-				else strcat(dst," ");
-			}
-		}
-		if(CHECKS(IDC_DAY)) {
-			strcat(dst, "dd");
-			if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
-				else strcat(dst, ", ");
-			}
-		}
-		if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
-		if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
-		break;
-	case 1: // d/m/y
-		if(CHECKS(IDC_DAY)) {
-			strcat(dst, "dd");
-			if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
-				else strcat(dst," ");
-			} else if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) strcat(dst, m_sep_date);
-		}
-		if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
-			if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
-			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
-			if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
-				if(CHECKS(IDC_MONTH)) strcat(dst, m_sep_date);
-				else strcat(dst," ");
-			}
-		}
-		if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
-		if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
-		break;
-	default:  // y/m/d
-		if(CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)) {
-			if(CHECKS(IDC_YEAR4)) strcat(dst, "yyyy");
-			if(CHECKS(IDC_YEAR)) strcat(dst, "yy");
-			if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)
-			   || CHECKS(IDC_DAY)) {
-				if(CHECKS(IDC_MONTHS)) strcat(dst," ");
-				else strcat(dst, m_sep_date);
-			}
-		}
-		if(CHECKS(IDC_MONTH) || CHECKS(IDC_MONTHS)) {
-			if(CHECKS(IDC_MONTH)) strcat(dst, "mm");
-			if(CHECKS(IDC_MONTHS)) strcat(dst, "mmm");
-			if(CHECKS(IDC_DAY)) {
-				if(CHECKS(IDC_MONTHS)) strcat(dst," ");
-				else strcat(dst, m_sep_date);
-			}
-		}
-		if(CHECKS(IDC_DAY)) strcat(dst, "dd");
-	}
-	
-	if(m_bDayOfWeekIsLast && CHECKS(IDC_WEEKDAY)) {
-		for(control=IDC_YEAR4; control<=IDC_DAY; ++control) {
-			if(CHECKS(control)) { strcat(dst," "); break; }
-		}
-		strcat(dst, "ddd");
-	}
-	
-	if(bdate && btime) {
-		if(CHECKS(IDC_KAIGYO))
-			strcat(dst,"\\n");
-		else{
-			if(m_idate < 2 && CHECKS(IDC_MONTHS) &&
-			   (CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)))
-				strcat(dst," ");
-			strcat(dst," ");
-		}
-	}
-	
-	if(m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
-		strcat(dst, "tt");
-		if(btime) strcat(dst," ");
-	}
-	btime=0;
-	
-	if(CHECKS(IDC_HOUR)) {
-		if(CHECKS(IDC_12HOUR)){
-			if(CHECKS(IDC_HOUR) != BST_INDETERMINATE)
-				strcat(dst, "h");
-			else
-				strcat(dst, "hh");
-		}else{
-			if(CHECKS(IDC_HOUR) != BST_INDETERMINATE) // reversed logic for compatibility and simpler default values
-				strcat(dst, "HH");
-			else
-				strcat(dst, "H");
-		}
-		++btime;
-	}
-	if(CHECKS(IDC_MINUTE)) {
-		if(btime++) strcat(dst, m_sep_time);
-		strcat(dst, "nn");
-	}
-	if(CHECKS(IDC_SECOND)) {
-		if(btime++) strcat(dst, m_sep_time);
-		strcat(dst, "ss");
-	}
-	
-	if(!m_bTimeMarkerIsFirst && CHECKS(IDC_AMPM)) {
-		if(btime) strcat(dst," ");
-		strcat(dst, "tt");
-	}
-	
-	if(CHECKS(IDC_INTERNETTIME)){
-		if(btime||CHECKS(IDC_AMPM)) strcat(dst," ");
-		strcat(dst,"@@@");
-	}
+		creation_bit >>= 1;
+	}while(creation_bit != 1);
 }

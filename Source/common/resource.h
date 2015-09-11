@@ -238,7 +238,7 @@
 #define IDC_SECOND                      1209 /* end groupB */
 #define IDC_AMPM                        1210 /* groupG */
 #define IDC_INTERNETTIME                1211 /* end groupF */
-#define IDC_KAIGYO                      1212
+#define IDC_LINEFEED                    1212
 #define IDC_12HOUR                      1213 /* end groupC */
 #define IDC_ZERO                        1214
 #define IDC_CUSTOM                      1215 /* end groupG, end groupA */

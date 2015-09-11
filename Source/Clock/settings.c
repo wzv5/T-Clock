@@ -68,15 +68,15 @@ int ParseSettings(){
 			u.entryS='2'|('1'<<8); // middle, 1 click
 			api.SetInt(REG_MOUSE,u.entry,IDM_STOPWATCH);
 			
-			u.entryS = api.OS >= TOS_VISTA;
+			u.entryS = (api.OS >= TOS_VISTA ? BST_INDETERMINATE : BST_UNCHECKED);
 			if(!u.entryS){ /// @todo : XP: measure taskbar height to chose font size and or multiline/singleline (small vs "normal" taskbar)
 				HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
 				if(hwnd) {
 					RECT rc; GetClientRect(hwnd, &rc);
-					if(rc.right > rc.bottom) u.entryS = 1; // vertical taskbar
+					if(rc.right > rc.bottom) u.entryS = BST_CHECKED; // vertical taskbar
 				}
 			}
-			api.SetInt("Format", "Kaigyo", u.entryS);
+			api.SetInt("Format", "Lf", u.entryS);
 			api.SetInt("","Ver",CURRENT_VER);
 			return 1;
 		}
@@ -94,7 +94,7 @@ int ParseSettings(){
 		updateflags|=SFORMAT_SILENT;
 		/* fall through */
 		
-	case 2: /// v2.4.0#000(dff0300,63ba670#106) alarms unified to always use 24h format internally
+	case 2: /// v2.4.0#000(dff0300,63ba670#106) alarms unified to always use 24h format internally, added distinct 24h format, "new line" format supports switched sides
 		updateflags|=SFORMAT_SILENT;
 		/* fall through */
 		
@@ -191,6 +191,10 @@ void ConvertSettings(){
 			api.DelValue(buf, "Hour12");
 			api.DelValue(buf, "PM");
 		}
+		// make sure "new line" format was set to one or zero
+		/// @note : on next backward incompatible change, remove "Kaigyo" key and this "if"
+		if(api.GetInt("Format", "Lf", -1) == -1)
+			api.SetInt("Format", "Lf", (api.GetInt("Format","Kaigyo",0) ? BST_CHECKED : BST_UNCHECKED));
 		// convert old 12h switch - h/w(±) -> HH/W
 		if(!api.GetInt("Format","Hour12",1)){
 			char converted = 0;
