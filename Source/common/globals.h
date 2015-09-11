@@ -143,12 +143,16 @@ enum{ // Drop&File enum / registry settings
 #	define DLL_EXPORT __declspec(dllexport)
 #endif
 
+/// displays a message using sprintf()
+#define DBGMSG_(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); MessageBox(0,_dbgbuf,"Debug",MB_SYSTEMMODAL);}while(0)
+/// outputs a debug message using sprintf()
+#define DBGOUT_(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); OutputDebugString(_dbgbuf);}while(0)
 #ifdef _DEBUG
-#	define DBGMSG(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); MessageBox(0,_dbgbuf,"Debug",MB_SYSTEMMODAL);}while(0)
-#	define DBGOUT(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); OutputDebugString(_dbgbuf);}while(0)
+#	define DBGMSG DBGMSG_ /**< DEBUG; \sa DBGMSG_ */
+#	define DBGOUT DBGOUT_ /**< DEBUG; \sa DBGOUT_ */
 #else
-#	define DBGMSG(fmt,...)
-#	define DBGOUT(fmt,...)
+#	define DBGMSG(fmt,...) /**< nop; RELEASE \sa DBGMSG_ */
+#	define DBGOUT(fmt,...) /**< nop; RELEASE \sa DBGOUT_ */
 #endif // _DEBUG
 
 #endif // TCLOCK_GLOBAL_H
