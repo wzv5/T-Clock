@@ -190,19 +190,16 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		if(hwndTray) PostMessage(hwndTray, WM_COMMAND, wID, 0);
 		break;}
 	case IDM_DATETIME_EX:{
-		HWND hwnd1=FindWindow("Shell_TrayWnd",NULL);
-		if(hwnd1){
-			HWND hwnd2;
-			int wait=40;
-			SendMessage(hwnd1,WM_COMMAND,IDM_FWD_DATETIME,0);
-			while((hwnd2=FindWindow(MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
-			if(hwnd2){
-				SetActiveWindow(hwnd2);
-				wait=10; while((hwnd1=FindWindowEx(hwnd2,NULL,MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
-				if(hwnd1){
-					hwnd2=GetDlgItem(hwnd1,116);
-					if(hwnd2) PostMessage(hwnd2,BM_CLICK,0,0);
-				}
+		HWND hwnd1, hwnd2;
+		int wait = 40;
+		api.Exec("timedate.cpl", "", 0);
+		while((hwnd2=FindWindow(MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
+		if(hwnd2){
+			SetActiveWindow(hwnd2);
+			wait=10; while((hwnd1=FindWindowEx(hwnd2,NULL,MAKEINTATOM(32770),"Date and Time"))==0 && wait--) Sleep(50);
+			if(hwnd1){
+				hwnd2=GetDlgItem(hwnd1,116);
+				if(hwnd2) PostMessage(hwnd2,BM_CLICK,0,0);
 			}
 		}
 		break;}
