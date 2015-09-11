@@ -12,6 +12,17 @@ HWND Clock_GetCalendar()
 	HWND hwnd = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
 	if(hwnd)
 		return hwnd;
+	hwnd = FindWindowEx(NULL, NULL, "Windows.UI.Core.CoreWindow", "Date and Time Information");
+	if(hwnd){ // starts "invisible" full-size and becomes re-sized/moved and "visible" later
+		union{
+			RECT rc;
+			POINT pt;
+		} u;
+		GetWindowRect(hwnd, &u.rc);
+		// IsWindowVisible()/IsWindowEnabled() are always true
+		if(WindowFromPoint(u.pt) == hwnd)
+			return hwnd;
+	}
 	return gs_hwndCalendar;
 }
 

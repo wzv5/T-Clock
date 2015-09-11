@@ -604,7 +604,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		InvalidateRect(hwnd,NULL,0);
 		break;
 	case WM_TIMECHANGE:
-	case(WM_USER+101): {
+	case WM_USER+101: {
 		HDC hdc;
 		if(m_bNoClock) break;
 		hdc = GetDC(hwnd);
@@ -634,6 +634,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
 		gs_hwndCalendar = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
+//		if(!gs_hwndCalendar)
+//			gs_hwndCalendar = FindWindowEx(NULL,NULL,"Windows.UI.Core.CoreWindow","Date and Time Information");
 		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;
@@ -783,12 +785,13 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
+		SetFocus(hwnd);
+		/* fall through */
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		SendMessage(gs_hwndClock,message,wParam,lParam);
-		return 0;
+		return SendMessage(gs_hwndClock,message,wParam,lParam);
 //	case WM_CONTEXTMENU:
 //		PostMessage(g_hwndTClockMain, message, wParam, lParam);
 //		return 0;

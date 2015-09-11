@@ -60,6 +60,22 @@ BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus)
 	}
 	return EnableWindow(hwnd,bEnable);
 }
+
+static void CALLBACK ToggleCalendar_done(HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult){
+	(void)uMsg;
+	(void)lResult;
+	hwnd = api.GetCalendar();
+	if(!hwnd && api.OS >= TOS_WIN10){ // Win10 (new slow calendar)
+		dwData = 50;
+		do{ // min 6-12 iterations on my VM (also seen 50+ under load)
+			Sleep(50);
+			hwnd = api.GetCalendar();
+		}while(!hwnd && --dwData);
+	}
+	// 11px padding is Win8 default, 0px is Win10
+	if(hwnd)
+		api.PositionWindow(hwnd, (api.OS<TOS_WIN10 ? 11 : 0));
+}
 //=================================================================
 //--------------------------+++--> toggle calendar (close or open):
 void ToggleCalendar(int type)   //---------------------------+++-->
@@ -70,9 +86,8 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 		return;
 	}
 	if(api.OS >= TOS_VISTA && (!api.GetInt("Calendar","bCustom",0) && type!=1)){
-		SendMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
-		// for multi-monitor support, 11px padding is Win8 default
-		api.PositionWindow(FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL),11);
+		// Windows 10 workaround as SendMessage doesn't work any longer (no error given)
+		SendMessageCallback(g_hwndClock, WM_USER+102, 1, 0, ToggleCalendar_done, 0);//1=open, 0=close
 	}else{
 		char cal[MAX_PATH];
 		memcpy(cal, api.root, api.root_len+1);
