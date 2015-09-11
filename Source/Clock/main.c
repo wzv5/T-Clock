@@ -64,8 +64,11 @@ BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus)
 //--------------------------+++--> toggle calendar (close or open):
 void ToggleCalendar(int type)   //---------------------------+++-->
 {
-	if(api.IsCalendarOpen(1))
+	HWND calendar = api.GetCalendar();
+	if(calendar){
+		SetForegroundWindow(calendar);
 		return;
+	}
 	if(api.OS >= TOS_VISTA && (!api.GetInt("Calendar","bCustom",0) && type!=1)){
 		SendMessage(g_hwndClock,WM_USER+102,1,0);//1=open, 0=close
 		// for multi-monitor support, 11px padding is Win8 default

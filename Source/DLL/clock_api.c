@@ -16,7 +16,7 @@ SHARED char ms_inifile[MAX_PATH] = {0};
 
 SHARED HWND gs_hwndTClockMain = NULL;
 SHARED HWND gs_hwndClock = NULL;
-SHARED char gs_bCalOpen = 0;
+SHARED HWND gs_hwndCalendar = NULL;
 SHARED unsigned short gs_tos = 0;
 #ifndef __GNUC__
 #	pragma data_seg()
@@ -41,7 +41,7 @@ TClockAPI api = {
 	ClockAPI(InjectFinalize)
 	ClockAPI(Exit)
 	// misc
-	ClockAPI(IsCalendarOpen)
+	ClockAPI(GetCalendar)
 	ClockAPI(Message)
 	ClockAPI(PositionWindow)
 	NULL, // ClockAPI(GetTickCount)

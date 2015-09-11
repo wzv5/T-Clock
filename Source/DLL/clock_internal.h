@@ -9,7 +9,6 @@ extern char ms_inifile[MAX_PATH]; /**< path to ini */
 typedef ULONGLONG (WINAPI* GetTickCount64_t)();
 
 extern unsigned short gs_tos; /**< \sa TClockAPI::OS */
-extern char gs_bCalOpen; /**< calendar state \sa TClockAPI::IsCalendarOpen() */
 
 void Clock_Inject(HWND hwndMain);
 void Clock_InjectFinalize();
@@ -17,8 +16,8 @@ void Clock_InjectFinalize();
 /** \sa TClockAPI::Exit() */
 void Clock_Exit();
 
-/** \sa TClockAPI::IsCalendarOpen() */
-int Clock_IsCalendarOpen(int set_focus);
+/** \sa TClockAPI::GetCalendar() */
+HWND Clock_GetCalendar();
 /** \sa TClockAPI::Message() */
 int Clock_Message(HWND parent, const char* msg, const char* title, UINT uType, UINT uBeep);
 /** \sa TClockAPI::PositionWindow() */

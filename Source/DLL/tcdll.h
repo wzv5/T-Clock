@@ -17,7 +17,7 @@
 
 extern HWND gs_hwndTClockMain; /**< our main window for hotkeys, menus and sounds \b [shared] */
 extern HWND gs_hwndClock;      /**< the clock hwnd \b [shared] */
-extern char gs_bCalOpen;      /**< calendar state \b [shared] \sa TClockAPI::IsCalendarOpen() */
+extern HWND gs_hwndCalendar;   /**< calendar state \b [shared] \sa TClockAPI::GetCalendar() */
 
 #define TZNAME_MAX		  256//10
 

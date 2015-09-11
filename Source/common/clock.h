@@ -58,10 +58,9 @@ typedef struct TClockAPI_TAG {
 	// misc
 	
 /**
- * \brief checks whether the calendar is currently open or not
- * \param set_focus focus calendar?
- * \return boolean */
-	int (*IsCalendarOpen)(int set_focus);
+ * \brief get currently opened calendar \c HWND, if any
+ * \return calendar \c HWND or \c NULL */
+	HWND (*GetCalendar)();
 /**
  * \brief displays a message box with clock icon
  * \param parent can be NULL

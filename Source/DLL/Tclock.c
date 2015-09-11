@@ -633,7 +633,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		gs_bCalOpen = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL)!=NULL;
+		gs_hwndCalendar = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
 		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;

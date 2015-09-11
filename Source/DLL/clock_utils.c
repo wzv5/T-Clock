@@ -7,14 +7,12 @@ static const size_t m_regkey_size = sizeof(m_regkey); /**< size of \c m_regkey i
 
 // misc
 
-int Clock_IsCalendarOpen(int set_focus)
+HWND Clock_GetCalendar()
 {
 	HWND hwnd = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
-	if(hwnd){
-		if(set_focus) SetForegroundWindow(hwnd);
-		return 1;
-	}
-	return gs_bCalOpen;
+	if(hwnd)
+		return hwnd;
+	return gs_hwndCalendar;
 }
 
 int Clock_Message(HWND parent, const char* msg, const char* title, UINT uType, UINT uBeep)
