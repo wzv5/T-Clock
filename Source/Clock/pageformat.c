@@ -631,6 +631,8 @@ void CreateFormat(char* dst, char* checks)
 			if(CHECKS(IDC_INTERNETTIME)){
 				if(use_time||CHECKS(IDC_AMPM)) strcat(dst," ");
 				strcat(dst,"@@@");
+				if(CHECKS(IDC_INTERNETTIME) == BST_INDETERMINATE)
+					strcat(dst, ".@@");
 			}
 		}
 		creation_bit >>= 1;
