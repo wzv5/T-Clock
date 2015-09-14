@@ -69,11 +69,12 @@ int ParseSettings(){
 			api.SetInt(REG_MOUSE,u.entry,IDM_STOPWATCH);
 			
 			u.entryS = (api.OS >= TOS_VISTA ? BST_INDETERMINATE : BST_UNCHECKED);
-			if(!u.entryS){ /// @todo : XP: measure taskbar height to chose font size and or multiline/singleline (small vs "normal" taskbar)
+			if(!u.entryS){ /// @todo : XP: measure taskbar height to choose font size and or multiline/singleline (small vs "normal" taskbar)
 				HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
 				if(hwnd) {
 					RECT rc; GetClientRect(hwnd, &rc);
-					if(rc.right > rc.bottom) u.entryS = BST_CHECKED; // vertical taskbar
+					if(rc.bottom > rc.right) // vertical taskbar
+						u.entryS = BST_CHECKED;
 				}
 			}
 			api.SetInt("Format", "Lf", u.entryS);
