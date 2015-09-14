@@ -69,6 +69,10 @@ void AddStartup(HWND hDlg);
 void RemoveStartup(HWND hDlg);
 int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name);
 
+// used by PageMisc.c and main.c
+extern const char kSectionImmersiveShell[56+1]; ///< SOFTWARE/Microsoft/Windows/CurrentVersion/ImmersiveShell
+extern const char kKeyWin32Tray[27+1]; ///< UseWin32TrayClockExperience
+
 // settings.c
 int CheckSettings();
 

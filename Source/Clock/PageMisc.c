@@ -151,7 +151,7 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				DialogBox(NULL,MAKEINTRESOURCE(IDD_CALENDAR_COLOR),hDlg,DlgProcCalendarColors);
 			}
 			
-			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_FIRSTDAY&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE) || (id==IDC_CALMONTHSPAST&&code==EN_CHANGE))
+			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_FIRSTDAY&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE) || (id==IDC_CALMONTHSPAST&&code==EN_CHANGE) || id==IDC_OLDCALENDAR)
 				SendPSChanged(hDlg);
 			else if(((id==IDCB_CLOSECAL) ||  // IF Anything Happens to Anything,
 				(id==IDCB_SHOWWEEKNUMS) || //--+++--> Send Changed Message.
@@ -208,6 +208,11 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 		for(iter=GROUP_CALENDAR; iter<=GROUP_CALENDAR_END; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
+	if(api.OS >= TOS_WIN10){
+		int old_calendar = api.GetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 0);
+		CheckDlgButton(hDlg, IDC_OLDCALENDAR, old_calendar);
+	}else
+		EnableDlgItem(hDlg, IDC_OLDCALENDAR, 0);
 	/// on Calendar defaults change, also update the Calendar itself to stay sync!
 	CheckDlgButton(hDlg, IDCB_SHOW_DOY, api.GetIntEx("Calendar","ShowDayOfYear",1));
 	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, api.GetIntEx("Calendar","ShowWeekNums",0));
@@ -287,6 +292,16 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			RegisterSession(g_hwndTClockMain);
 		} else {
 			UnregisterSession(g_hwndTClockMain);
+		}
+	}
+	if(api.OS >= TOS_WIN10){
+		int old_calendar = api.GetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 0);
+		if(IsDlgButtonChecked(hDlg, IDC_OLDCALENDAR) != old_calendar){
+			char param[5] = "/Wc0";
+			if(!old_calendar)
+				param[3] = '1';
+			if(api.ExecElevated(GetClockExe(), param, NULL) == 1)
+				CheckDlgButton(hDlg, IDC_OLDCALENDAR, old_calendar);
 		}
 	}
 	if(bRefresh){

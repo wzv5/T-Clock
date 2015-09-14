@@ -26,6 +26,10 @@ BOOL g_bTrans2kIcons;
 static void SetDesktopIconTextBk();
 #endif // WIN2K_COMPAT
 
+// used by PageMisc.c and main.c
+const char kSectionImmersiveShell[56+1] = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ImmersiveShell";
+const char kKeyWin32Tray[27+1] = "UseWin32TrayClockExperience";
+
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 ATOM g_atomTClock = 0; /**< main window class atom */
@@ -452,6 +456,12 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 				}
 				if(g_hwndTClockMain == hwndMain)
 					SendMessage(hwndMain, MAINM_EXIT, 0, 0);
+			} else if(strncmp(p, "Wc", 2) == 0) { // Win10 calendar "restore"
+				if(p[2] == '1') // restore to previous
+					api.SetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 1);
+				else // use the slow (new) one
+					api.DelSystemValue(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray);
+				p += 2;
 			} else if(strncmp(p, "UAC", 3) == 0) {
 				justElevated = 1;
 				p += 3;

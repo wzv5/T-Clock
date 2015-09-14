@@ -201,6 +201,7 @@
 #define GROUP_CALENDAR_END              IDC_CALCOLORS
 #define IDC_FIRSTWEEK                   1100
 #define IDC_FIRSTDAY                    1101
+#define IDC_OLDCALENDAR                 1102
 
 #define IDC_COLFORE                     1100 /* group, ColorBox */
 #define IDC_COLFORE_BTN                 1101
