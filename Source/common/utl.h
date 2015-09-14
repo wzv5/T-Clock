@@ -86,4 +86,15 @@ char* MyString(UINT id);
  * \brief checks for \c SetSystemTime() permissions (\c SE_SYSTEMTIME_NAME)
  * \return boolean */
 int HaveSetTimePermissions();
+/**
+ * \brief creates a dialog only if it isn't already there (\c CreateDialogParam)
+ * \param[in,out] hwnd "previous" dialog \c HWND to be checked; Set to intermediate state during creation and final \c HWND on return
+ * \param[in] hInstance
+ * \param[in] lpTemplateName
+ * \param[in] hWndParent
+ * \param[in] lpDialogFunc
+ * \param[in] dwInitParam
+ * \return created or previous \p hwnd
+ * \sa CreateDialogParam() */
+HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const char* lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
 #endif // TCLOCK_UTL_H

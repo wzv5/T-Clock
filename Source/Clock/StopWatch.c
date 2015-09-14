@@ -25,8 +25,7 @@ static void OnTimer(HWND hDlg);
 // -------------------------------------------------------------------+++--> Open Stopwatch Dialog:
 void DialogStopWatch()   //--------------------------------------------------------+++-->
 {
-	if(!g_hDlgStopWatch || !IsWindow(g_hDlgStopWatch))
-		g_hDlgStopWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_STOPWATCH),NULL,DlgProcStopwatch);
+	CreateDialogParamOnce(&g_hDlgStopWatch, 0, MAKEINTRESOURCE(IDD_STOPWATCH), NULL, DlgProcStopwatch, 0);
 }
 
 BOOL IsDialogStopWatchMessage(HWND hwnd, MSG* msg){ // handles hotkeys

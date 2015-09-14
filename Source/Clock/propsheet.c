@@ -41,7 +41,7 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		PageQuickyProc,
 		PageHotKeyProc, PageMiscProc,
 	};
-	if(!g_hwndSheet || !IsWindow(g_hwndSheet)) {
+	if(!g_hwndSheet || (g_hwndSheet != (HWND)1 && !IsWindow(g_hwndSheet))) {
 		#define PROPERTY_NUM sizeof(PageProc)/sizeof(DLGPROC)
 		PROPSHEETPAGE psp[PROPERTY_NUM];
 		PROPSHEETHEADER psh={sizeof(PROPSHEETHEADER)};
@@ -66,6 +66,7 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		psh.ppsp = psp;
 		psh.pfnCallback = PropSheetProc;
 		// show it !
+		g_hwndSheet = (HWND)1;
 		g_hwndSheet = (HWND)PropertySheet(&psh);
 	}
 	api.PositionWindow(g_hwndSheet,21);

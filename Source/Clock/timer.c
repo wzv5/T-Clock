@@ -168,8 +168,7 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 //===========================================================================================*
 void DialogTimer()
 {
-	if(!g_hDlgTimer || !IsWindow(g_hDlgTimer))
-		g_hDlgTimer=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMER),NULL,DlgProcTimer);
+	CreateDialogParamOnce(&g_hDlgTimer, 0, MAKEINTRESOURCE(IDD_TIMER), NULL, DlgProcTimer, 0);
 }
 //==============================================================================*
 // ---------------------------------- Dialog Procedure for Add/Edit Timers Dialog
@@ -808,7 +807,5 @@ void WatchTimer(int reset)   //-------------------------------------------------
 			m_timer[idx].bHomeless=1;
 		}
 	}
-	if(!g_hDlgTimerWatch || !IsWindow(g_hDlgTimerWatch)) {
-		g_hDlgTimerWatch=CreateDialog(0,MAKEINTRESOURCE(IDD_TIMERVIEW),NULL,DlgTimerViewProc);
-	}
+	CreateDialogParamOnce(&g_hDlgTimerWatch, 0, MAKEINTRESOURCE(IDD_TIMERVIEW), NULL, DlgTimerViewProc, 0);
 }
