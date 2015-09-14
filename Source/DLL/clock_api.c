@@ -10,7 +10,8 @@
 // shared variables must be initialized
 SHARED char ms_root[MAX_PATH] = {0}; /**< \sa TClockAPI::root */
 SHARED size_t ms_root_len = 0; /**< \sa TClockAPI::root_len */
-SHARED REGSAM ms_reg_sam = KEY_ALL_ACCESS | KEY_WOW64_64KEY;
+SHARED REGSAM ms_reg_fullaccess = KEY_ALL_ACCESS | KEY_WOW64_64KEY;
+SHARED REGSAM ms_reg_read = KEY_READ | KEY_WOW64_64KEY;
 SHARED char ms_bIniSetting = 0;
 SHARED char ms_inifile[MAX_PATH] = {0};
 
@@ -136,8 +137,10 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 				gs_tos=TOS_NEWER;
 			}
 		}
-		if(gs_tos < TOS_XP_64) // Win2000 fix
-			ms_reg_sam &= ~KEY_WOW64_64KEY;
+		if(gs_tos < TOS_XP_64) { // Win2000 fix
+			ms_reg_fullaccess &= ~KEY_WOW64_64KEY;
+			ms_reg_read &= ~KEY_WOW64_64KEY;
+		}
 	}
 	api.OS = gs_tos;
 	api.root_len = ms_root_len;

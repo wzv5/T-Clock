@@ -2,7 +2,8 @@
 #define CLOCK_INTERNAL_H_
 #include <windows.h>
 
-extern REGSAM ms_reg_sam; /**< desired registry access. set to \c KEY_ALL_ACCESS | \c KEY_WOW64_64KEY */
+extern REGSAM ms_reg_fullaccess; /**< full registry access. set to \c KEY_ALL_ACCESS | \c KEY_WOW64_64KEY */
+extern REGSAM ms_reg_read; /**< read-only registry access. set to \c KEY_READ | \c KEY_WOW64_64KEY */
 extern char ms_bIniSetting; /**< use ini or registry */
 extern char ms_inifile[MAX_PATH]; /**< path to ini */
 
