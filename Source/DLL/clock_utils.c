@@ -353,12 +353,25 @@ int Clock_SetInt(const char* section, const char* entry, LONG val) {
 			return WritePrivateProfileString(key, entry, s, ms_inifile);
 		} else {
 			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-				if(RegSetValueEx(hkey,entry,0,REG_DWORD,(const BYTE*)&val,4) == ERROR_SUCCESS) {
+				if(RegSetValueEx(hkey, entry, 0, REG_DWORD, (const BYTE*)&val, sizeof(val)) == ERROR_SUCCESS) {
 					ret = 1;
 				}
 				RegCloseKey(hkey);
 			}
 		}
+	}
+	return ret;
+}
+
+int Clock_SetSystemInt(HKEY rootkey, const char* section, const char* entry, LONG val) {
+	HKEY hkey;
+	int ret = 0;
+	
+	if(RegCreateKeyEx(rootkey,section,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
+		if(RegSetValueEx(hkey, entry, 0, REG_DWORD, (const BYTE*)&val, sizeof(val)) == ERROR_SUCCESS) {
+			ret = 1;
+		}
+		RegCloseKey(hkey);
 	}
 	return ret;
 }
@@ -409,6 +422,17 @@ int Clock_DelValue(const char* section, const char* entry) {
 				ret = 1;
 			RegCloseKey(hkey);
 		}
+	}
+	return ret;
+}
+
+int Clock_DelSystemValue(HKEY rootkey, const char* section, const char* entry) {
+	HKEY hkey;
+	int ret = 0;
+	if(RegOpenKeyEx(rootkey,section,0,ms_reg_fullaccess,&hkey) == ERROR_SUCCESS) {
+		if(RegDeleteValue(hkey, entry) == ERROR_SUCCESS)
+			ret = 1;
+		RegCloseKey(hkey);
 	}
 	return ret;
 }

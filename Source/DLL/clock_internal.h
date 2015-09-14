@@ -42,12 +42,16 @@ int Clock_GetStrEx(const char* section, const char* entry, char* val, int len, c
 int Clock_GetSystemStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval);
 /** \sa TClockAPI::SetInt() */
 int Clock_SetInt(const char* section, const char* entry, LONG val);
+/** \sa TClockAPI::SetSystemInt() */
+int Clock_SetSystemInt(HKEY rootkey, const char* section, const char* entry, LONG val);
 /** \sa TClockAPI::SetStr() */
 int Clock_SetStr(const char* section, const char* entry, const char* val);
 /** \sa TClockAPI::SetSystemStr() */
 int Clock_SetSystemStr(HKEY rootkey, const char* section, const char* entry, const char* val);
 /** \sa TClockAPI::DelValue() */
 int Clock_DelValue(const char* section, const char* entry);
+/** \sa TClockAPI::DelSystemValue() */
+int Clock_DelSystemValue(HKEY rootkey, const char* section, const char* entry);
 /** \sa TClockAPI::DelKey() */
 int Clock_DelKey(const char* section);
 
