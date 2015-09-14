@@ -80,14 +80,26 @@ TClockAPI api = {
 
 
 DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
+	const char* kConfigName = "\\T-Clock.ini";
 	char own_path[sizeof(ms_root)];
 	OSVERSIONINFO osvi = {sizeof(OSVERSIONINFO)};
+	HANDLE api_mutex;
 //	typedef DWORD (WINAPI* GetLongPathName_t)(char* lpszShortPath,char* lpszLongPath,DWORD cchBuffer);
 //	GetLongPathName_t pGetLongPathName=(GetLongPathName_t)GetProcAddress(GetModuleHandle("kernel32"),"GetLongPathNameA");
 	
 	if(version != CLOCK_API)
 		return -1;
 	
+	//
+	// synchronized code
+	//
+	api_mutex = CreateMutex(NULL, 0, kConfigName+1);
+	if(!api_mutex)
+		return -2;
+	if(WaitForSingleObject(api_mutex, 5000) == WAIT_TIMEOUT) {
+		CloseHandle(api_mutex);
+		return -3;
+	}
 	if(!ms_root_len){ // initialize once. (only use ms_/gs_ variables!!!)
 		GetModuleFileName(api.hInstance, own_path, sizeof(own_path));
 //		if(pGetLongPathName)
@@ -100,7 +112,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		DBGOUT("root: %s\n",ms_root);
 		
 		memcpy(ms_inifile, ms_root, ms_root_len+1);
-		strcat(ms_inifile, "\\T-Clock.ini");
+		strcat(ms_inifile, kConfigName);
 		if(Clock_PathExists(ms_inifile)){
 			ms_bIniSetting = 1;
 		}
@@ -144,6 +156,12 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 			ms_reg_read &= ~KEY_WOW64_64KEY;
 		}
 	}
+	ReleaseMutex(api_mutex);
+	CloseHandle(api_mutex);
+	//
+	// end of synchronized code
+	//
+	
 	api.OS = gs_tos;
 	api.root_len = ms_root_len;
 	if(gs_tos >= TOS_VISTA){
