@@ -415,7 +415,7 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 		SubclassWindow(g_hwndTClockMain, MsgOnlyProc);
 	}
 	
-	for(; *p; ++p) {
+	while(*p != '\0') {
 		if(*p == '/') {
 			++p;
 			if(_strnicmp(p, "prop", 4) == 0) {
@@ -466,7 +466,9 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 				justElevated = 1;
 				p += 3;
 			}
+			continue;
 		}
+		++p;
 	}
 	
 	if(g_hwndTClockMain != hwndMain){
