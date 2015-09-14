@@ -475,7 +475,7 @@ void CreateFormat(char* dst, char* checks)
 	int control;
 	int creation_bit; ///< date/time bits; &1 = date, !&1 = time
 	
-	creation_bit = 0b101; // Date+Time; old T-Clock default
+	creation_bit = 1<<2 | 0<<1 | 1<<0; // Date+Time; old T-Clock default (0b101)
 	
 	for(control=IDC_YEAR4; control<=IDC_WEEKDAY; ++control) {
 		if(CHECKS(control)) {
@@ -495,7 +495,7 @@ void CreateFormat(char* dst, char* checks)
 		if(CHECKS(IDC_LINEFEED)){
 			spacer = "\\n";
 			if(CHECKS(IDC_LINEFEED) == BST_INDETERMINATE)
-				creation_bit = 0b110; // Time+Date; Vista+
+				creation_bit = 1<<2 | 1<<1 | 0<<0; // Time+Date; Vista+ (0b110)
 		} else {
 			if(m_idate < 2 && CHECKS(IDC_MONTHS) && (CHECKS(IDC_YEAR4) || CHECKS(IDC_YEAR)))
 				spacer = "  "; // why do we do this?

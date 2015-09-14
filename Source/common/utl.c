@@ -380,8 +380,8 @@ void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcS
 
 HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance,const char* lpTemplateName,HWND hWndParent,DLGPROC lpDialogFunc,LPARAM dwInitParam) {
 	HWND hwnd_ = *hwnd;
-	if(!hwnd_ || (hwnd_ != (HWND)1 && !IsWindow(hwnd_))){
-		*hwnd = (HWND)1;
+	if(!hwnd_ || (hwnd_ != (HWND)(intptr_t)1 && !IsWindow(hwnd_))){
+		*hwnd = (HWND)(intptr_t)1;
 		*hwnd = CreateDialogParam(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 	}
 	return *hwnd;

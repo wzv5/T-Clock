@@ -42,6 +42,7 @@
 #else
 #	define strdup _strdup
 #	define wcsdup _wcsdup
+#	define ltoa _ltoa
 #	define inline __inline
 #endif // __GNUC__
 

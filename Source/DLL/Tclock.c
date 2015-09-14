@@ -907,7 +907,7 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	dwInfoFormat = FindFormat(m_format);
 	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
 	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!m_bTimer) m_bTimer = SetTimer(hwnd, 1, 1000, NULL);
+	if(!m_bTimer) m_bTimer = (char)SetTimer(hwnd, 1, 1000, NULL);
 	GetLocalTime(&lt);
 	m_LastTime.wDay = lt.wDay;
 	InitFormat(section,&lt);      // format.c

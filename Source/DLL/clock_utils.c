@@ -527,5 +527,5 @@ int Clock_WriteFormatNum(char* buffer, int number, int minimum, int padding) {
 	// write number
 	ltoa(number, out, 10);
 	out += nums;
-	return out - buffer;
+	return (int)(out - buffer);
 }

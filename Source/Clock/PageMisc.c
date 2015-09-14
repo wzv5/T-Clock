@@ -296,7 +296,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	}
 	if(api.OS >= TOS_WIN10){
 		int old_calendar = api.GetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 0);
-		if(IsDlgButtonChecked(hDlg, IDC_OLDCALENDAR) != old_calendar){
+		if((int)IsDlgButtonChecked(hDlg, IDC_OLDCALENDAR) != old_calendar){
 			char param[5] = "/Wc0";
 			if(!old_calendar)
 				param[3] = '1';
