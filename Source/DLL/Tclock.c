@@ -8,7 +8,10 @@
 #include <shlobj.h>//CFSTR_SHELLIDLIST
 #include <process.h>//_beginthread
 
-void OnDrawTimer(HWND hwnd);
+#define WIN_CLOCK_TIMER_ID 0
+#define TCLOCK_TIMER_ID 13 ///< non-conflicting timer ID
+
+void CALLBACK OnDrawTimer(HWND hwnd, unsigned uMsg, uintptr_t idEvent, unsigned long dwTime);
 void ReadStyleData(HWND hwnd, int preview);
 void ReadFormatData(HWND hwnd, int preview);
 void InitClock(HWND hwnd);
@@ -97,7 +100,6 @@ enum{
 };
 int m_BlinkState = BLINK_NONE;
 int m_width=0, m_height=0, dvpos=0, dlineheight=0, dhpos=0;
-char m_bTimer=0;
 char g_bHourZero;
 char m_bNoClock=0;
 static IDropTarget* m_droptarget;
@@ -514,7 +516,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	/// for some strange reason, we need to read our settings twice, otherwise our size doesn't match correctly (shouldn't be related to our settings but the DC creation or font usage, etc.)
 	ReadFormatData(hwnd,0);
 	ReadStyleData(hwnd,0); // enough for our workaround
-	/// and of workaround, and start of clock creation
+	/// end of workaround; start of clock creation
 	SendMessage(hwnd, CLOCKM_REFRESHCLOCK, 0, 0); // reads settings and creates clock
 	SendMessage(hwnd, CLOCKM_REFRESHTASKBAR, 0, 0);
 	if(!m_color_start) // fixes display issue when clock has same size as T-Clock (Win7 + default settings)
@@ -541,9 +543,13 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 	DestroyClock();
 	DestroyTip();
 	EndNewAPI(hwnd);
-	if(m_bTimer) m_bTimer = !KillTimer(hwnd,1);
+	KillTimer(hwnd, TCLOCK_TIMER_ID);
 	SubclassWindow(hwnd, m_oldClockProc);
 	m_oldClockProc=NULL;
+	
+	// Windows uses timer ID 0 for every-minute drawing
+	// make sure it is set (again)
+	SetTimer(hwnd, WIN_CLOCK_TIMER_ID, 10*1000, NULL);
 	
 //  bClockUseTrans = 0;
 //	if(IsWindow(g_hwndTClockMain))
@@ -622,12 +628,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		EndPaint(hwnd,&ps);
 //		InvalidateRect(hwnd,NULL,0); /// uncomment for debugging purpose, eg. does our drawing flicker
 		return 0;}
-	case WM_TIMER:
-		if(wParam == 1)
-			OnDrawTimer(hwnd);
-		else {
-			if(m_bNoClock) break;
-		}
+	case WM_TIMER: // Windows uses timer ID 0 to update every minute (tries to stay ~1 sec. close to full minute)
+		if(m_bNoClock) break;
 		return 0;
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -710,6 +712,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		MyDragDrop_Enable(m_droptarget,1); // enable/disable DropFiles on clock
 		SubsCreate();
 		SubsSendResize();
+		// "try" to setup our timer on every "manual" clock-refresh
+		if(m_bNoClock) { // kill our timer; setup Windows'
+			KillTimer(hwnd, TCLOCK_TIMER_ID);
+			SetTimer(hwnd, WIN_CLOCK_TIMER_ID, 10*1000, NULL);
+		} else { // kill Windows' timer; setup ours
+			KillTimer(hwnd, WIN_CLOCK_TIMER_ID);
+			SetTimer(hwnd, TCLOCK_TIMER_ID, 1000, OnDrawTimer);
+		}
 		return 0;}
 	case CLOCKM_REFRESHCLOCKPREVIEW: // refresh the clock
 		ReadStyleData(hwnd,1); // also creates/updates clock
@@ -907,7 +917,7 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	dwInfoFormat = FindFormat(m_format);
 	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
 	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
-	if(!m_bTimer) m_bTimer = (char)SetTimer(hwnd, 1, 1000, NULL);
+//	if(!m_bTimer) m_bTimer = (char)SetTimer(hwnd, TCLOCK_TIMER_ID, 1000, OnDrawTimer);
 	GetLocalTime(&lt);
 	m_LastTime.wDay = lt.wDay;
 	InitFormat(section,&lt);      // format.c
@@ -980,7 +990,7 @@ void GetDisplayTime(SYSTEMTIME* pt, int* beat100)
 /*--------------------------------------------------
 ------------------------------------------- WM_TIMER
 --------------------------------------------------*/
-void OnDrawTimer(HWND hwnd)
+void CALLBACK OnDrawTimer(HWND hwnd, unsigned uMsg, uintptr_t idEvent, unsigned long dwTime)
 {
 	SYSTEMTIME t;
 	int beat100 = 0;
@@ -988,14 +998,16 @@ void OnDrawTimer(HWND hwnd)
 	static char s_calibration = 0;
 	static int s_lastbeat = -1;
 	
+	(void)uMsg; (void)idEvent; (void)dwTime;
+	
 	GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
 	
-	if(t.wMilliseconds > 200) {
+	if(t.wMilliseconds >= 128) {
 		s_calibration = 1;
-		SetTimer(hwnd, 1, 1001 - t.wMilliseconds, NULL);
+		SetTimer(hwnd, TCLOCK_TIMER_ID, 1001 - t.wMilliseconds, OnDrawTimer);
 	} else if(s_calibration) {
 		s_calibration = 0;
-		SetTimer(hwnd, 1, 1000, NULL);
+		SetTimer(hwnd, TCLOCK_TIMER_ID, 1000, OnDrawTimer);
 	}
 	
 	if(CheckDaylightTimeTransition(&t)) {
