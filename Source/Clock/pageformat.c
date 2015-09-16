@@ -252,7 +252,9 @@ void OnInit(HWND hDlg)
 	
 	// Fill and select the "Locale" combobox
 	EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);
-	ComboBox_SetCurSel(locale_cb, 0);
+	i = ComboBox_AddString(locale_cb, "<  user default  >");
+	ComboBox_SetItemData(locale_cb, i, LOCALE_USER_DEFAULT);
+	ComboBox_SetCurSel(locale_cb, i);
 	
 	ChecksLocaleInit(checks,0);
 	Checks2Dialog(checks,hDlg,0);
