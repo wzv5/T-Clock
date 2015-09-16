@@ -279,26 +279,23 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		}
 		
 		else if(*fmt == 'L' && strncmp(fmt, "LDATE", 5) == 0) {
-			char s[80];
-			GetDateFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
-						  DATE_LONGDATE, pt, NULL, s, 80);
-			for(pos=s; *pos; )  *out++=*pos++;
+			GetDateFormat(LOCALE_USER_DEFAULT,
+						  DATE_LONGDATE, pt, NULL, out, bufend-out);
+			for(; *out; ++out);
 			fmt += 5;
 		}
 		
 		else if(*fmt == 'D' && strncmp(fmt, "DATE", 4) == 0) {
-			char s[80];
-			GetDateFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
-						  DATE_SHORTDATE, pt, NULL, s, 80);
-			for(pos=s; *pos; ) *out++=*pos++;
+			GetDateFormat(LOCALE_USER_DEFAULT,
+						  DATE_SHORTDATE, pt, NULL, out, bufend-out);
+			for(; *out; ++out);
 			fmt += 4;
 		}
 		
 		else if(*fmt == 'T' && strncmp(fmt, "TIME", 4) == 0) {
-			char s[80];
-			GetTimeFormat(MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT),
-						  TIME_FORCE24HOURFORMAT, pt, NULL, s, 80);
-			for(pos=s; *pos; )  *out++=*pos++;
+			GetTimeFormat(LOCALE_USER_DEFAULT,
+						  0, pt, NULL, out, bufend-out);
+			for(; *out; ++out);
 			fmt += 4;
 		} else if(*fmt == 'S') { // uptime
 			int width, padding, num;
