@@ -667,14 +667,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			tme.dwFlags=TME_HOVER|TME_LEAVE;
 			tme.hwndTrack=hwnd;
 			tme.dwHoverTime=HOVER_DEFAULT;
-			m_TipState=1;
-			TrackMouseEvent(&tme);
+			m_TipState = TrackMouseEvent(&tme);
 			FillClockBGHover(hwnd);
 			InvalidateRect(hwnd,NULL,0);
 		}
 		return 0;
 	case WM_MOUSEHOVER:
-		m_TipState=2;
+		m_TipState = 2;
 		if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0)){
 			ShowTip(hwnd);//show custom tooltip
 		}else{
@@ -683,16 +682,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_MOUSELEAVE:
 		if(m_TipState){
-			if(m_TipState==2){
+			if(m_TipState == 2){
 				if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
 					PostMessage(hwnd, WM_USER+103,0,0);//hide system tooltip
 			}
+			m_TipState = 0;
 			FillClockBG(hwnd);
 			InvalidateRect(hwnd,NULL,0);
 		}
-		m_TipState=0;
 		return 0;
 	case WM_NCHITTEST: // original clock uses this message for context menu and hover, etc. and we need our own "handler"
 //		return HTTRANSPARENT; // Windows' clock uses this
@@ -710,6 +709,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			EndClock(hwnd);
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
+		m_TipState = 0;
 		SubsDestroy();
 		ReadFormatData(hwnd,0);
 		ReadStyleData(hwnd,0); // also creates/updates clock
