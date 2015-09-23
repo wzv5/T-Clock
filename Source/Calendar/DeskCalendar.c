@@ -18,7 +18,7 @@ void GetDayOfYearTitle(char* szTitle, int ivMonths)   //------------------------
 	
 	time(&ltime);
 	_localtime64_s(&today, &ltime);
-//  strftime(szDoY, 8, "%#j", &today); // <--{OutPut}--> Day 95
+//	strftime(szDoY, 8, "%#j", &today); // <--{OutPut}--> Day 95
 	strftime(szDoY, 8, "%j", &today);   // <--{OutPut}--> Day 095
 	
 	if(api.OS < TOS_VISTA && ivMonths==1) {
@@ -119,7 +119,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		SetWindowPos(hwnd,HWND_TOP,0,0, rc.right-rc.left,rc.bottom-rc.top, SWP_NOMOVE);//force to be on top
 		if(m_bTopMost)
 			SetWindowPos(hwnd,HWND_TOPMOST,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE);
-		api.PositionWindow(hwnd, 11);
+		api.PositionWindow(hwnd, (api.OS<TOS_WIN10 && api.OS>=TOS_WIN7 ? 11 : 0));
 		if(m_bAutoClose && GetForegroundWindow()!=hwnd)
 			PostMessage(hwnd,WM_CLOSE,0,0);
 		return 0;}

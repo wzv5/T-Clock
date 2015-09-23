@@ -78,7 +78,7 @@ static void CALLBACK ToggleCalendar_done(HWND hwnd, UINT uMsg, ULONG_PTR dwData,
 	}
 	// 11px padding is Win8 default, 0px is Win10
 	if(hwnd)
-		api.PositionWindow(hwnd, (api.OS<TOS_WIN10 ? 11 : 0));
+		api.PositionWindow(hwnd, (api.OS<TOS_WIN10 && api.OS>=TOS_WIN7 ? 11 : 0));
 }
 //=================================================================
 //--------------------------+++--> toggle calendar (close or open):
