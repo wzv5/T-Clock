@@ -602,8 +602,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		api.On_DWMCOLORIZATIONCOLORCHANGED((unsigned)wParam, (BOOL)lParam);
 		/* fall through */
 	case WM_THEMECHANGED:
-		if(message==WM_THEMECHANGED)
+		if(message == WM_THEMECHANGED) {
 			ReloadXPClockTheme(hwnd);
+			FillClockBG(hwnd);
+			if(m_TipState) // draws on-top
+				FillClockBGHover(hwnd);
+		}
 		/* fall through */
 	case WM_SYSCOLORCHANGE:
 		ColorUpdate(m_basecolorFont,m_basecolorBG);
