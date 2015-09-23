@@ -513,10 +513,6 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	m_droptarget=MyDragDrop_Create(hwnd);
 	RegisterDragDrop(hwnd,m_droptarget);
 	
-	/// for some strange reason, we need to read our settings twice, otherwise our size doesn't match correctly (shouldn't be related to our settings but the DC creation or font usage, etc.)
-	ReadFormatData(hwnd,0);
-	ReadStyleData(hwnd,0); // enough for our workaround
-	/// end of workaround; start of clock creation
 	SendMessage(hwnd, CLOCKM_REFRESHCLOCK, 0, 0); // reads settings and creates clock
 	SendMessage(hwnd, CLOCKM_REFRESHTASKBAR, 0, 0);
 	if(!m_color_start) // fixes display issue when clock has same size as T-Clock (Win7 + default settings)
@@ -910,7 +906,6 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 {
 	const char* section=(preview?"Preview":"Format");
 	DWORD dwInfoFormat;
-	SYSTEMTIME lt;
 	m_bNoClock = (char)api.GetInt(section, "NoClockCustomize", 0);
 	// read format
 	if(!api.GetStr(section, "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
@@ -922,9 +917,8 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
 	m_nDispBeat = dwInfoFormat & (FORMAT_BEAT1 | FORMAT_BEAT2);
 //	if(!m_bTimer) m_bTimer = (char)SetTimer(hwnd, TCLOCK_TIMER_ID, 1000, OnDrawTimer);
-	GetLocalTime(&lt);
-	m_LastTime.wDay = lt.wDay;
-	InitFormat(section,&lt);      // format.c
+	GetLocalTime(&m_LastTime);
+	InitFormat(section, &m_LastTime); // format.c
 	// update clock if preview
 	if(preview){
 		UpdateClock(hwnd,NULL);
