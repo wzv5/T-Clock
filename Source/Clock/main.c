@@ -8,6 +8,9 @@
 #include <shlobj.h>//SHGetFolderPath
 #include "../common/version.h"
 
+HINSTANCE g_instance;
+TClockAPI api;
+
 // Application Global Window Handles
 HWND	g_hwndTClockMain = NULL;
 HWND	g_hwndClock;
@@ -174,7 +177,7 @@ void AddStartup(HWND hDlg) //--+++-->
 	if(GetStartupFile(hDlg,path) || !*path)
 		return;
 	*strrchr(path,'\\')='\0';
-	GetModuleFileName(GetModuleHandle(NULL),myexe,MAX_PATH);
+	GetModuleFileName(g_instance, myexe, MAX_PATH);
 	CreateLink(myexe,path,CONF_START);
 }
 //==========================
@@ -242,6 +245,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	#endif
 	LoadExcHndl(); // LOAD_WITH_ALTERED_SEARCH_PATH works :P At least since Win2k
 	
+	g_instance = hInstance;
 	if(LoadClockAPI("misc/T-Clock" ARCH_SUFFIX, &api)){
 		MessageBox(NULL, "Error loading: T-Clock" ARCH_SUFFIX ".dll", "API error", MB_OK|MB_ICONERROR);
 		return 2;
@@ -258,6 +262,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		MessageBox(NULL,"ObjectBar and T-Clock can't be run together","ObjectBar detected!",MB_OK|MB_ICONERROR);
 		return 1;
 	}
+	
+	// Load ALL of the Global Resources
+	g_hIconTClock = LoadIcon(api.hInstance, MAKEINTRESOURCE(IDI_MAIN));
+	g_hIconPlay = LoadImage(g_instance, MAKEINTRESOURCE(IDI_PLAY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+	g_hIconStop = LoadImage(g_instance, MAKEINTRESOURCE(IDI_STOP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+	g_hIconDel  = LoadImage(g_instance, MAKEINTRESOURCE(IDI_DEL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+	g_hwndSheet = g_hDlgTimer = NULL;
 	
 //	FindTrayServer(hwndMain);
 	
@@ -306,19 +317,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
 	g_WM_TaskbarCreated = RegisterWindowMessage("TaskbarCreated");
-	// Load ALL of the Global Resources
-	g_hIconTClock = LoadIcon(api.hInstance, MAKEINTRESOURCE(IDI_MAIN));
-	g_hIconPlay = LoadImage(hInstance, MAKEINTRESOURCE(IDI_PLAY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	g_hIconStop = LoadImage(hInstance, MAKEINTRESOURCE(IDI_STOP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	g_hIconDel  = LoadImage(hInstance, MAKEINTRESOURCE(IDI_DEL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	g_hwndSheet = g_hDlgTimer = NULL;
 	
 	// register a window class
 	wndclass.style         = 0;
 	wndclass.lpfnWndProc   = WndProc;
 	wndclass.cbClsExtra    = 0;
 	wndclass.cbWndExtra    = 0;
-	wndclass.hInstance     = hInstance;
+	wndclass.hInstance     = g_instance;
 	wndclass.hIcon         = g_hIconTClock;
 	wndclass.hCursor       = LoadCursor(NULL, IDC_ARROW);
 	wndclass.hbrBackground = (HBRUSH)(intptr_t)(COLOR_WINDOW+1);
@@ -343,7 +348,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 	
 	// create a hidden window
-	g_hwndTClockMain = hwndMain = CreateWindowEx(WS_EX_NOACTIVATE, MAKEINTATOM(g_atomTClock),NULL, 0, 0,0,0,0, NULL,NULL,hInstance,NULL);
+	g_hwndTClockMain = hwndMain = CreateWindowEx(WS_EX_NOACTIVATE, MAKEINTATOM(g_atomTClock),NULL, 0, 0,0,0,0, NULL,NULL,g_instance,NULL);
 	// This Checks for First Instance Startup Options
 	ProcessCommandLine(hwndMain,lpCmdLine);
 	

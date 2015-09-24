@@ -259,6 +259,6 @@ typedef struct TClockAPI_TAG {
  * \return returns non-zero on error. >0 if internal API failure, <0 if external */
 int LoadClockAPI(const char* dll_path, TClockAPI* api);
 
-TClockAPI api;
+extern TClockAPI api;
 
 #endif // CLOCK_API_H_

@@ -5,6 +5,7 @@
 #include <time.h>
 //other
 #include "../common/calendar.inc"
+HINSTANCE g_instance;
 TClockAPI api;
 BOOL m_bAutoClose;
 BOOL m_bTopMost;
@@ -146,9 +147,9 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
-//==========================================================================
-//---------------------------------------------------+++--> Open "Calendar":
-HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
+//======================================================
+//-------------------------------+++--> Open "Calendar":
+HWND CreateCalender(HWND hwnd)   //---------------+++-->
 {
 	INITCOMMONCONTROLSEX icex = {sizeof(icex), ICC_DATE_CLASSES};
 	WNDCLASSEX wcx;
@@ -162,16 +163,16 @@ HWND CreateCalender(HINSTANCE hInstance,HWND hwnd)   //---------------+++-->
 	wcx.lpfnWndProc = MainWndProc;
 	wcx.cbClsExtra = 0;
 	wcx.cbWndExtra = 0;
-	wcx.hInstance = hInstance;
+	wcx.hInstance = g_instance;
 	wcx.hIcon = NULL;
-	wcx.hIcon = LoadIcon(hInstance,MAKEINTRESOURCE(IDI_MAIN));
+	wcx.hIcon = LoadIcon(g_instance,MAKEINTRESOURCE(IDI_MAIN));
 	wcx.hCursor = LoadCursor(NULL,IDC_ARROW);
 	wcx.hbrBackground = (HBRUSH)COLOR_WINDOWFRAME;
 	wcx.lpszMenuName = NULL;
 	wcx.lpszClassName = "ClockFlyoutWindow";
 	wcx.hIconSm=NULL;
 	calclass=RegisterClassEx(&wcx);
-	hwnd=CreateWindowEx(0,MAKEINTATOM(calclass),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,hInstance,NULL);
+	hwnd=CreateWindowEx(0,MAKEINTATOM(calclass),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,g_instance,NULL);
 	return hwnd;
 }
 
@@ -181,9 +182,10 @@ int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine
 	MSG msg;
 	BOOL bRet;
 	(void)hPrevInstance; (void)lpCmdLine; (void)nCmdShow;// don't warn me about they being unused
+	g_instance = hInstance;
 	if(LoadClockAPI("T-Clock" ARCH_SUFFIX, &api))
 		return 2;
-	if(!CreateCalender(hInstance,0))
+	if(!CreateCalender(0))
 		return 1;
 	while((bRet=GetMessage(&msg,NULL,0,0))!=0){
 		if(bRet==-1){//handle the error and possibly exit

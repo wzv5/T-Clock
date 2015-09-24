@@ -45,20 +45,19 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		#define PROPERTY_NUM sizeof(PageProc)/sizeof(DLGPROC)
 		PROPSHEETPAGE psp[PROPERTY_NUM];
 		PROPSHEETHEADER psh={sizeof(PROPSHEETHEADER)};
-		HMODULE hInstance=GetModuleHandle(NULL);
 		int i;
 		// Allocate Clean Memory for Each Page
 		for(i=0; i<PROPERTY_NUM; ++i) {
 			memset(&psp[i], 0, sizeof(PROPSHEETPAGE));
 			psp[i].dwSize = sizeof(PROPSHEETPAGE);
-			psp[i].hInstance = hInstance;
+			psp[i].hInstance = g_instance;
 			psp[i].pfnDlgProc = PageProc[i];
 			psp[i].pszTemplate = MAKEINTRESOURCE(PROPERTY_BASE+i);
 		}
 		
 		// set data of property sheet
 		psh.dwFlags = PSH_USEHICON | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
-		psh.hInstance = hInstance;
+		psh.hInstance = g_instance;
 		psh.hIcon = g_hIconTClock;
 		psh.pszCaption = "T-Clock Redux";
 		psh.nPages = PROPERTY_NUM;
@@ -178,7 +177,7 @@ BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char*
 	
 	fname[0] = '\0';
 	ofn.hwndOwner = hDlg;
-	ofn.hInstance = GetModuleHandle(NULL);
+	ofn.hInstance = g_instance;
 	ofn.lpstrFilter = filter;
 	ofn.nFilterIndex = nFilterIndex;
 	ofn.lpstrFile= fname;

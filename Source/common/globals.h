@@ -63,6 +63,7 @@
 
 #define TC_TOOLTIP "\"T-Clock\"\\nLDATE"
 
+extern HINSTANCE g_instance;
 #include "clock.h"
 #include "win2k_compat.h"
 

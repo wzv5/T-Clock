@@ -26,7 +26,7 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	g_bQMExitWin = api.GetInt("QuickyMenu", "ExitWindows",       TRUE);
 	g_bQMDisplay = api.GetInt("QuickyMenu", "DisplayProperties", TRUE);
 	
-	hMenu = LoadMenu(GetModuleHandle(NULL), MAKEINTRESOURCE(IDR_MENU));
+	hMenu = LoadMenu(g_instance, MAKEINTRESOURCE(IDR_MENU));
 	hPopupMenu = GetSubMenu(hMenu, 0);
 	
 	if(!g_bQMAudio)		DeleteMenu(hPopupMenu, IDC_SOUNDAUDIO,	MF_BYCOMMAND);

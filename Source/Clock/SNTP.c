@@ -525,12 +525,6 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		strcpy(str,"pool.ntp.org");
 	ComboBox_AddStringOnce(hServer, str, 1);
 	
-	if(!g_hIconDel) {
-		g_hIconDel = LoadImage(GetModuleHandle(NULL),
-							   MAKEINTRESOURCE(IDI_DEL),
-							   IMAGE_ICON, 16, 16,
-							   LR_DEFAULTCOLOR);
-	}
 	SendDlgItemMessage(hDlg, IDCB_DELSERVER, BM_SETIMAGE,
 					   IMAGE_ICON, (LPARAM)g_hIconDel);
 					   
