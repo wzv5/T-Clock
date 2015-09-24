@@ -8,7 +8,7 @@
 #include <string>
 using namespace std;
 
-#define AV_VERSION "1.0.1"
+#define AV_VERSION "1.0.2"
 
 #ifdef _MSC_VER
 #	include <direct.h>//unlink,getcwd
@@ -668,14 +668,19 @@ bool WriteHeader(const char* filepath,Version &ver)
 		puts("Error: Couldn't open output file.");
 		return false;
 	}
-	fputs("/* Note: to use integer defines as strings, use for example STR(VER_REVISION) */\n",fheader);
-	fputs("#pragma once\n",fheader);
 	fputs("#ifndef AUTOVERSION_H\n",fheader);
 	fputs("#define AUTOVERSION_H\n",fheader);
-	fputs("#	define XSTR(x) #x\n",fheader);
-	fputs("#	define STR(x) XSTR(x)\n",fheader);
+	fputs("/* Note: to use integer defines as strings, use STR(), eg. STR(VER_REVISION) */\n",fheader);
+	fputs("#ifndef STR\n",fheader);
+	fputs("#	define STR_(x) #x\n",fheader);
+	fputs("#	define STR(x) STR_(x)\n",fheader);
+	fputs("#endif\n",fheader);
+	fputs("#ifndef L\n",fheader);
+	fputs("#	define L_(x) L##x\n",fheader);
+	fputs("#	define L(x) L_(x)\n",fheader);
+	fputs("#endif\n",fheader);
 //	fputs("namespace Version{\n",fheader);
-	fputs("/** Version **/\n",fheader);
+	fputs("/**** Version ****/\n",fheader);
 	WriteDefine(fheader,"MAJOR",ver);
 	WriteDefine(fheader,"MINOR",ver);
 	WriteDefine(fheader,"BUILD",ver);
@@ -696,7 +701,7 @@ bool WriteHeader(const char* filepath,Version &ver)
 	WriteDefine(fheader,"RC_REVISION",ver);
 	WriteDefine(fheader,"RC_STATUS",ver);
 	if(g_repo) {
-		fputs("/** Subversion Information **/\n",fheader);
+		fputs("/**** Subversion Information ****/\n",fheader);
 		WriteDefineString(fheader,"REVISION_URL",ver);
 		WriteDefineString(fheader,"REVISION_DATE",ver);
 		WriteDefineString(fheader,"REVISION_HASH",ver);
@@ -706,7 +711,7 @@ bool WriteHeader(const char* filepath,Version &ver)
 	char tmp[64];
 	time(&ver.timestamp);
 	tm* ttm=gmtime(&ver.timestamp);
-	fputs("/** Date/Time **/\n",fheader);
+	fputs("/**** Date/Time ****/\n",fheader);
 	WriteDefine(fheader,"TIMESTAMP",ver);
 	fprintf(fheader,"#	define VER_TIME_SEC %i\n",ttm->tm_sec);
 	fprintf(fheader,"#	define VER_TIME_MIN %i\n",ttm->tm_min);
