@@ -57,15 +57,15 @@ int IsUserInAdminGroup()
 HWND FindClock()   //---------------------------------------------------------+++-->
 {
 	char classname[80];
-	HWND hwndBar = FindWindow("Shell_TrayWnd",NULL);
+	HWND hwndBar = FindWindowA("Shell_TrayWnd",NULL);
 	// find the clock window
 	HWND hwndChild;
 	for(hwndChild=GetWindow(hwndBar,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
-		GetClassName(hwndChild,classname,sizeof(classname));
-		if(!lstrcmpi(classname,"TrayNotifyWnd")) {
+		GetClassNameA(hwndChild,classname,sizeof(classname));
+		if(!lstrcmpiA(classname,"TrayNotifyWnd")) {
 			for(hwndChild=GetWindow(hwndChild,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
-				GetClassName(hwndChild,classname,sizeof(classname));
-				if(!lstrcmpi(classname,"TrayClockWClass"))
+				GetClassNameA(hwndChild,classname,sizeof(classname));
+				if(!lstrcmpiA(classname,"TrayClockWClass"))
 					return hwndChild;
 			}
 			break;
@@ -119,7 +119,7 @@ void add_title(char* path, const char* title)
 		if(*title == '\\') { // absolute path
 			if(*p && p[1]==':') p+=2;
 		}else{ // relative path
-			for(; *p; p=CharNext(p)) {
+			for(; *p; p=CharNextA(p)) {
 				if((*p=='\\' || *p=='/') && !p[1]) {
 					break;
 				}
@@ -135,7 +135,7 @@ void del_title(char* path)
 {
 	char* p,* ep;
 	
-	for(p=ep=path; *p; p=CharNext(p)) {
+	for(p=ep=path; *p; p=CharNextA(p)) {
 		if(*p=='\\' || *p=='/') {
 			if(p>path && p[-1]==':') ep=p+1;
 			else ep=p;
@@ -148,9 +148,9 @@ void get_title(char* dst, const char* path)
 {
 	const char* p,* ep;
 	
-	for(p=ep=path; *p; p=CharNext(p)) {
+	for(p=ep=path; *p; p=CharNextA(p)) {
 		if(*p=='\\' || *p=='/') {
-			if(!*CharNext(p)) break;
+			if(!*CharNextA(p)) break;
 			if(p>path && p[-1]==':') ep=p+1;
 			else ep=p;
 		}
@@ -169,7 +169,7 @@ int ext_cmp(const char* fname, const char* ext)
 	const char* p, *sp;
 	
 	sp=NULL;
-	for(p=fname; *p; p=CharNext(p)) {
+	for(p=fname; *p; p=CharNextA(p)) {
 		if(*p=='.') sp=p;
 		else if(*p=='\\' || *p=='/') sp=NULL;
 	}
@@ -254,7 +254,7 @@ char* MyString(UINT id)
 	static char buf[80];
 	
 	*buf = '\0';
-	LoadString(GetModuleHandle(NULL), id, buf, 80);
+	LoadStringA(GetModuleHandle(NULL), id, buf, 80);
 	return buf;
 }
 
@@ -382,7 +382,7 @@ HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance,const char* lpTemplat
 	HWND hwnd_ = *hwnd;
 	if(!hwnd_ || (hwnd_ != (HWND)(intptr_t)1 && !IsWindow(hwnd_))){
 		*hwnd = (HWND)(intptr_t)1;
-		*hwnd = CreateDialogParam(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		*hwnd = CreateDialogParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 	}
 	return *hwnd;
 }

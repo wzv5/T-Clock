@@ -145,9 +145,9 @@ enum{ // Drop&File enum / registry settings
 #endif
 
 /// displays a message using sprintf()
-#define DBGMSG_(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); MessageBox(0,_dbgbuf,"Debug",MB_SYSTEMMODAL);}while(0)
+#define DBGMSG_(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); MessageBoxA(0,_dbgbuf,"Debug",MB_SYSTEMMODAL);}while(0)
 /// outputs a debug message using sprintf()
-#define DBGOUT_(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); OutputDebugString(_dbgbuf);}while(0)
+#define DBGOUT_(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); OutputDebugStringA(_dbgbuf);}while(0)
 #ifdef _DEBUG
 #	define DBGMSG DBGMSG_ /**< DEBUG; \sa DBGMSG_ */
 #	define DBGOUT DBGOUT_ /**< DEBUG; \sa DBGOUT_ */

@@ -10,7 +10,7 @@ int IsWow64(){
 	int ret=0;
 	#ifndef _WIN64
 	typedef BOOL (WINAPI *IsWow64Process_t)(HANDLE hProcess,BOOL* iswow64);
-	IsWow64Process_t pIsWow64Process=(IsWow64Process_t)GetProcAddress(GetModuleHandle("kernel32"),"IsWow64Process");
+	IsWow64Process_t pIsWow64Process=(IsWow64Process_t)GetProcAddress(GetModuleHandleA("kernel32"),"IsWow64Process");
 	if(pIsWow64Process){
 		pIsWow64Process(GetCurrentProcess(),&ret);
 	}
@@ -67,7 +67,7 @@ void InitLayeredWindow(void)
 {
 	if(bInitLayeredWindow) return;
 	
-	hmodUSER32 = LoadLibrary("user32");
+	hmodUSER32 = LoadLibraryA("user32");
 	if(hmodUSER32) {
 		pSetLayeredWindowAttributes = (pSetLayeredWindowAttributes_t)GetProcAddress(hmodUSER32, "SetLayeredWindowAttributes");
 		if(!pSetLayeredWindowAttributes) {
@@ -170,8 +170,8 @@ void RefreshRebar(HWND hwndBar)
 	
 	hwnd = GetWindow(hwndBar, GW_CHILD);
 	while(hwnd) {
-		GetClassName(hwnd, classname, 80);
-		if(lstrcmpi(classname, "ReBarWindow32") == 0) {
+		GetClassNameA(hwnd, classname, 80);
+		if(lstrcmpiA(classname, "ReBarWindow32") == 0) {
 			InvalidateRect(hwnd, NULL, TRUE);
 			hwnd = GetWindow(hwnd, GW_CHILD);
 			while(hwnd) {
@@ -196,7 +196,7 @@ void InitDrawTheme()
 {
 	if(bInitDrawTheme) return;
 	bInitDrawTheme=1;
-	hmodUxTheme=LoadLibrary("uxtheme");
+	hmodUxTheme=LoadLibraryA("uxtheme");
 	if(hmodUxTheme){
 		THEME_FUNC_RETRIEVE(CloseThemeData);
 		THEME_FUNC_RETRIEVE(OpenThemeData);
