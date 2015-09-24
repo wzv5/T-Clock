@@ -1076,7 +1076,7 @@ void FillClockBG()
 void FillClockBGHover()
 {
 	if(!m_colorBG_start) return;
-	if(api.OS>=TOS_VISTA && IsXPThemeActive()) {
+	if(api.OS>=TOS_WIN7 && IsXPThemeActive()) {
 		DrawXPClockHover(gs_hwndClock,m_hdcClockBG,&m_rcClock);
 	}
 }
