@@ -280,21 +280,21 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		
 		else if(*fmt == 'L' && strncmp(fmt, "LDATE", 5) == 0) {
 			GetDateFormat(LOCALE_USER_DEFAULT,
-						  DATE_LONGDATE, pt, NULL, out, bufend-out);
+						  DATE_LONGDATE, pt, NULL, out, (int)(bufend-out));
 			for(; *out; ++out);
 			fmt += 5;
 		}
 		
 		else if(*fmt == 'D' && strncmp(fmt, "DATE", 4) == 0) {
 			GetDateFormat(LOCALE_USER_DEFAULT,
-						  DATE_SHORTDATE, pt, NULL, out, bufend-out);
+						  DATE_SHORTDATE, pt, NULL, out, (int)(bufend-out));
 			for(; *out; ++out);
 			fmt += 4;
 		}
 		
 		else if(*fmt == 'T' && strncmp(fmt, "TIME", 4) == 0) {
 			GetTimeFormat(LOCALE_USER_DEFAULT,
-						  0, pt, NULL, out, bufend-out);
+						  0, pt, NULL, out, (int)(bufend-out));
 			for(; *out; ++out);
 			fmt += 4;
 		} else if(*fmt == 'S') { // uptime

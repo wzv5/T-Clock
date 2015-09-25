@@ -423,34 +423,34 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 	while(*p != '\0') {
 		if(*p == '/') {
 			++p;
-			if(_strnicmp(p, "prop", 4) == 0) {
+			if(strncasecmp(p, "prop", 4) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_SHOWPROP, 0);
 				p += 4;
-			} else if(_strnicmp(p, "exit", 4) == 0) {
+			} else if(strncasecmp(p, "exit", 4) == 0) {
 				SendMessage(hwndMain, MAINM_EXIT, 0, 0);
 				p += 4;
-			} else if(_strnicmp(p, "start", 5) == 0) {
+			} else if(strncasecmp(p, "start", 5) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_START, 0);
 				p += 5;
-			} else if(_strnicmp(p, "stop", 4) == 0) {
+			} else if(strncasecmp(p, "stop", 4) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_STOP, 0);
 				p += 4;
-			} else if(_strnicmp(p, "reset", 5) == 0) {
+			} else if(strncasecmp(p, "reset", 5) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESET, 0);
 				p += 5;
-			} else if(_strnicmp(p, "pause", 5) == 0) {
+			} else if(strncasecmp(p, "pause", 5) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_PAUSE, 0);
 				p += 5;
-			} else if(_strnicmp(p, "resume", 6) == 0) {
+			} else if(strncasecmp(p, "resume", 6) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESUME, 0);
 				p += 6;
-			} else if(_strnicmp(p, "lap", 3) == 0) {
+			} else if(strncasecmp(p, "lap", 3) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
 				p += 3;
-			} else if(_strnicmp(p, "SyncOpt", 7) == 0) {
+			} else if(strncasecmp(p, "SyncOpt", 7) == 0) {
 				NetTimeConfigDialog(justElevated);
 				p += 7;
-			} else if(_strnicmp(p, "Sync", 4) == 0) {
+			} else if(strncasecmp(p, "Sync", 4) == 0) {
 				p += 4;
 				if(HaveSetTimePermissions()){
 					SyncTimeNow();
@@ -715,7 +715,7 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 	while(hwnd) {
 		char s[80];
 		GetClassName(hwnd, s, 80);
-		if(lstrcmpi(s, "SysListView32") == 0) break;
+		if(strcmp(s, "SysListView32") == 0) break;
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 	}
 	if(!hwnd) return;

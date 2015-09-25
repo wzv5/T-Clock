@@ -456,7 +456,7 @@ void SubsCreate(){
 		hwndChild = GetWindow(hwndBar,GW_CHILD);
 		while(hwndChild){
 			GetClassName(hwndChild,classname,sizeof(classname));
-			if(!lstrcmpi(classname,"WorkerW")){
+			if(!strcmp(classname,"WorkerW")){
 				if(m_multiClocks==MAX_MULTIMON_CLOCKS)
 					break;
 				for(clock_id=0; clock_id<m_multiClocks && hwndChild!=m_multiClock[clock_id].worker; ++clock_id); // try to find existing

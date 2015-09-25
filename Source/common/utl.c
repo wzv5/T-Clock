@@ -62,10 +62,10 @@ HWND FindClock()   //---------------------------------------------------------++
 	HWND hwndChild;
 	for(hwndChild=GetWindow(hwndBar,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
 		GetClassNameA(hwndChild,classname,sizeof(classname));
-		if(!lstrcmpiA(classname,"TrayNotifyWnd")) {
+		if(!strcmp(classname,"TrayNotifyWnd")) {
 			for(hwndChild=GetWindow(hwndChild,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
 				GetClassNameA(hwndChild,classname,sizeof(classname));
-				if(!lstrcmpiA(classname,"TrayClockWClass"))
+				if(!strcmp(classname,"TrayClockWClass"))
 					return hwndChild;
 			}
 			break;

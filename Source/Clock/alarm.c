@@ -347,7 +347,7 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 		strcat(command, "\" alias myfile");
 		if(mciSendString(command, NULL, 0, NULL) == 0) {
 			strcpy(command, "set myfile time format ");
-			if(_stricmp(fname, "cdaudio") == 0 || ext_cmp(fname, "cda") == 0) {
+			if(strcasecmp(fname, "cdaudio") == 0 || ext_cmp(fname, "cda") == 0) {
 				strcat(command, "tmsf"); m_bTrack = TRUE;
 			} else {
 				strcat(command, "milliseconds"); m_bTrack = FALSE;

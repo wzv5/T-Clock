@@ -92,7 +92,7 @@ BOOL ShowHotKey(HWND hWnd, int iCtrlID, char* szKey, BOOL bMod, BOOL bFnKey, BOO
 	(void)bMod;
 	
 	Edit_GetText(hWnd, szTmp, TNY_BUFF);
-	if(_stricmp("None", szTmp)) { // None = Zero Input - Clear Display.
+	if(strcasecmp("None", szTmp)) { // None = Zero Input - Clear Display.
 		wnsprintf(szHotKey,sizeof(szHotKey)-1, "%s + %s", szTmp, szKey); // HotKey = X + Y
 		Edit_SetText(hWnd, szHotKey); //-+> Display the Key(s) Pressed.
 		bHaveKey = bEnd; // Beginning & End Confirmed, Combo Save-able

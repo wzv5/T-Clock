@@ -171,7 +171,7 @@ void RefreshRebar(HWND hwndBar)
 	hwnd = GetWindow(hwndBar, GW_CHILD);
 	while(hwnd) {
 		GetClassNameA(hwnd, classname, 80);
-		if(lstrcmpiA(classname, "ReBarWindow32") == 0) {
+		if(strcasecmp(classname, "ReBarWindow32") == 0) {
 			InvalidateRect(hwnd, NULL, TRUE);
 			hwnd = GetWindow(hwnd, GW_CHILD);
 			while(hwnd) {

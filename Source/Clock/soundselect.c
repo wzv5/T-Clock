@@ -106,7 +106,7 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname)
 BOOL IsMMFile(const char* fname)
 {
 	char extlist[1024], *ext;
-	if(!lstrcmpi(fname,"cdaudio")) return TRUE;
+	if(!strcasecmp(fname,"cdaudio")) return TRUE;
 	if(!ext_cmp(fname,"pcb")) return TRUE;
 	GetProfileString("mci extensions",NULL,"",extlist,sizeof(extlist));
 	for(ext=extlist; *ext; ++ext) {

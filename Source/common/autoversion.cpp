@@ -19,7 +19,7 @@ using namespace std;
 #	define getcwd _getcwd
 #	define sscanf sscanf_s
 #	define chdir _chdir
-#	define stricmp _stricmp
+#	define strcasecmp _stricmp
 #	define fopen fopenMShit
 	FILE* fopenMShit(const char* filename, const char* mode){
 		FILE* ret; fopen_s(&ret,filename,mode);
@@ -44,7 +44,6 @@ using namespace std;
 #	include <stdlib.h>//getenv,setenv
 #	ifdef __linux__
 #		include <linux/limits.h>//PATH_MAX
-#		define stricmp strcasecmp
 #	endif // __linux__
 #endif
 
@@ -162,9 +161,9 @@ int GetEnvBool(const char* var){
 		return 0;
 	case '0':
 	case 'n':
-		return !(!env[1] || !stricmp(env,"no") || !stricmp(env,"null"));
+		return !(!env[1] || !strcasecmp(env,"no") || !strcasecmp(env,"null"));
 	case 'f':
-		return stricmp(env,"false");
+		return strcasecmp(env,"false");
 	}
 	return 1;
 }
@@ -583,48 +582,48 @@ bool ReadHeader(const char* filepath,Version &ver)
 }
 void PrintDefine(FILE* fp,const char* define,const Version &ver)
 {
-	if(!stricmp("MAJOR",define)) {
+	if(!strcasecmp("MAJOR",define)) {
 		fprintf(fp,"%hu",ver.major);
-	}else if(!stricmp("MINOR",define)) {
+	}else if(!strcasecmp("MINOR",define)) {
 		fprintf(fp,"%hu",ver.minor);
-	}else if(!stricmp("BUILD",define)) {
+	}else if(!strcasecmp("BUILD",define)) {
 		fprintf(fp,"%hu",ver.build);
-	}else if(!stricmp("STATUS",define)) {
+	}else if(!strcasecmp("STATUS",define)) {
 		fprintf(fp,"%hu",ver.status);
-	}else if(!stricmp("STATUS_FULL",define)) {
+	}else if(!strcasecmp("STATUS_FULL",define)) {
 		fprintf(fp,"%s",STATUS_S[ver.status]);
-	}else if(!stricmp("STATUS_SHORT",define)) {
+	}else if(!strcasecmp("STATUS_SHORT",define)) {
 		fprintf(fp,"%s",STATUS_SS[ver.status]);
-	}else if(!stricmp("STATUS_GREEK",define)) {
+	}else if(!strcasecmp("STATUS_GREEK",define)) {
 		fprintf(fp,"%s",STATUS_SS2[ver.status]);
-	}else if(!stricmp("REVISION",define)) {
+	}else if(!strcasecmp("REVISION",define)) {
 		fprintf(fp,"%u",ver.revision);
 	
 	// version strings
-	}else if(!stricmp("FULL",define)) {
+	}else if(!strcasecmp("FULL",define)) {
 		if(STATUS_S[ver.status][0])
 			fprintf(fp,"%hu.%hu.%hu %s",ver.major,ver.minor,ver.build,STATUS_S[ver.status]);
 		else
 			fprintf(fp,"%hu.%hu.%hu",ver.major,ver.minor,ver.build);
-	}else if(!stricmp("SHORT",define)) {
+	}else if(!strcasecmp("SHORT",define)) {
 		fprintf(fp,"%hu.%hu%s%hu",ver.major,ver.minor,STATUS_SS[ver.status],ver.build);
-	}else if(!stricmp("SHORT_DOTS",define)) {
+	}else if(!strcasecmp("SHORT_DOTS",define)) {
 		fprintf(fp,"%hu.%hu.%hu",ver.major,ver.minor,ver.build);
-	}else if(!stricmp("SHORT_GREEK",define)) {
+	}else if(!strcasecmp("SHORT_GREEK",define)) {
 		fprintf(fp,"%hu.%hu%s%hu",ver.major,ver.minor,STATUS_SS2[ver.status],ver.build);
-	}else if(!stricmp("RC_REVISION",define)) {
+	}else if(!strcasecmp("RC_REVISION",define)) {
 		fprintf(fp,"%hu, %u, %u, %u",ver.major,ver.minor,ver.build,ver.revision);
-	}else if(!stricmp("RC_STATUS",define)) {
+	}else if(!strcasecmp("RC_STATUS",define)) {
 		fprintf(fp,"%hu, %u, %u, %u",ver.major,ver.minor,ver.build,ver.status);
 	
 	// repository
-	}else if(!stricmp("REVISION_URL",define)) {
+	}else if(!strcasecmp("REVISION_URL",define)) {
 		fprintf(fp,"%s",ver.url.c_str());
-	}else if(!stricmp("REVISION_DATE",define)) {
+	}else if(!strcasecmp("REVISION_DATE",define)) {
 		fprintf(fp,"%s",ver.date.c_str());
-	}else if(!stricmp("REVISION_HASH",define)) {
+	}else if(!strcasecmp("REVISION_HASH",define)) {
 		fprintf(fp,"%s",ver.revhash.c_str());
-	}else if(!stricmp("REVISION_TAG",define)) {
+	}else if(!strcasecmp("REVISION_TAG",define)) {
 		fprintf(fp,"v%hu.%hu.%hu#%hu",ver.major,ver.minor,ver.build,ver.revision);
 		if(STATUS_S[ver.status][0]){
 			fputc('-',fp);
@@ -637,7 +636,7 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 		}
 	
 	// date / time
-	}else if(!stricmp("TIMESTAMP",define)) {
+	}else if(!strcasecmp("TIMESTAMP",define)) {
 		fprintf(fp,"%lu",ver.timestamp);
 	
 	

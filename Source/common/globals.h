@@ -44,6 +44,10 @@
 #	define wcsdup _wcsdup
 #	define ltoa _ltoa
 #	define inline __inline
+#	define strcasecmp _stricmp
+#	define wcscasecmp _wcsicmp
+#	define strncasecmp _strnicmp
+#	define wcsncasecmp _wcsnicmp
 #endif // __GNUC__
 
 #define ARCH_SUFFIX_32 ""
