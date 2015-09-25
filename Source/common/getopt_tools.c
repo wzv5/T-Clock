@@ -107,7 +107,7 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
 }
 
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(GETOPT_OVERWRITE)
 int optind_msvc = 1; /* index of first non-option in argv      */
 int optopt_msvc = 0; /* single option character, as parsed     */
 int opterr_msvc = 1; /* flag to enable built-in diagnostics... */
@@ -197,15 +197,17 @@ int getopt_long_msvc(int argc, char*const argv[], const char* optstring, const s
 					if(longopts[idx].has_arg != no_argument){
 						if(opt[len] == '='){
 							optarg = (char*)opt+len+1;
-						}else if(s_idx < argc){
-							optarg = argv[s_idx];
-							s_idx = optind++;
-						}else if(longopts[idx].has_arg != optional_argument){
-							if(opterr){
-								printOptErr("option requires an argument -- %s\n", opt);
-								return (*optstring==':'?':':'?');
+						}else if(longopts[idx].has_arg != optional_argument) {
+							if(s_idx < argc){
+								optarg = argv[s_idx];
+								s_idx = optind++;
+							}else{
+								if(opterr){
+									printOptErr("option requires an argument -- %s\n", opt);
+									return (*optstring==':'?':':'?');
+								}
+								optarg = (char*)"-";
 							}
-							optarg = (char*)"-";
 						}
 					}
 					return longopts[idx].val;
@@ -237,12 +239,14 @@ int getopt_long_msvc(int argc, char*const argv[], const char* optstring, const s
 			s_nextchar = NULL;
 			if(!*optarg){
 				optarg = NULL;
-				if(s_idx < argc){
-					optarg = argv[s_idx];
-					s_idx = optind++;
-				}else if(opt[2] != ':'){
-					printOptErr("option requires an argument -- %c\n", (char)optopt);
-					return (*optstring==':'?':':'?');
+				if(opt[2] != ':') {
+					if(s_idx < argc){
+						optarg = argv[s_idx];
+						s_idx = optind++;
+					}else{
+						printOptErr("option requires an argument -- %c\n", (char)optopt);
+						return (*optstring==':'?':':'?');
+					}
 				}
 			}
 		}

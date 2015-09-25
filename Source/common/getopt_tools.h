@@ -1,7 +1,7 @@
 #ifndef GETOPT_TOOLS_H_
 #define GETOPT_TOOLS_H_
 
-#if !defined( _MSC_VER)
+#if !defined( _MSC_VER) && !defined(GETOPT_OVERWRITE)
 #	include <getopt.h>
 #else // _MSC_VER
 #	include <windows.h>

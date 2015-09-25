@@ -684,7 +684,7 @@ bool WriteHeader(const char* filepath,Version &ver)
 	WriteDefine(fheader,"MAJOR",ver);
 	WriteDefine(fheader,"MINOR",ver);
 	WriteDefine(fheader,"BUILD",ver);
-	fprintf(fheader,"	/* status values: 0=%s",STATUS_S[0]);
+	fprintf(fheader,"	/** status values: 0=%s",STATUS_S[0]);
 	for(int i=1; i<STATUS_NUM_; ++i)
 		fprintf(fheader,", %i=%s",i,STATUS_S[i]);
 	fputs(" */\n",fheader);
