@@ -202,7 +202,7 @@ int main(int argc, char** argv)
 		{0}
 	};
 	const struct help help_info[] = {
-		{0,DH_ARGV_SHORT,"[options] [version.h]"},
+		{0,DH_ARGV_SHORT,"[option] ... [version.h]"},
 		{'h',0,"this help message"},
 		{'1',0,"displays version"},
 		{'v',0,"be verbose"},
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
 			g_flag |= FLAG_ERROR;
 			break;
 		case 'h':
-			option_index = DisplayHelp(argv[0], short_options, long_options, help_info);
+			option_index = DisplayHelp(argv[0], short_options, long_options, help_info, 80);
 			printf("Environment variables:\n"
 			       "  AUVER_PATH");
 			PrintIndentedLine("see --path", 80, 12, option_index);
@@ -296,7 +296,7 @@ int main(int argc, char** argv)
 	if(g_flag & FLAG_ERROR)
 		return 2;
 	if(g_repo&(REPO_GIT|REPO_SVN) && (!Gitpath&&!SVNpath)) {
-		DisplayHelp(argv[0], short_options, long_options, help_info);
+		DisplayHelp(argv[0], short_options, long_options, help_info, 80);
 		return 1;
 	}
 	

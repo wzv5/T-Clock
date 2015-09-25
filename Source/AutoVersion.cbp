@@ -37,6 +37,12 @@
 			<Add library="Ole32" />
 		</Linker>
 		<Unit filename="common/autoversion.cpp" />
+		<Unit filename="common/getopt_tools.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
+		</Unit>
+		<Unit filename="common/getopt_tools.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

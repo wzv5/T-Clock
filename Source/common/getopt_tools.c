@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 
-const char* PrintIndentedLine(const char* str, int max_line/**< = 80 */, int indented, int indent){
+const char* PrintIndentedLine(const char* str, int max_line, int indented, int indent){
 	const char* eol;
-	max_line -= indent+2;
+	max_line -= indent;
 	if(!*str){
 		putc('\n', stdout);
 		return str;
@@ -19,13 +19,20 @@ const char* PrintIndentedLine(const char* str, int max_line/**< = 80 */, int ind
 		if(eol == str)
 			eol = str + max_line - 1;
 	}
-	printf("  %.*s\n", eol-str, str);
+	printf("%.*s\n", eol-str, str);
 	if(*eol <= ' ' && *eol)
 		return eol + 1;
 	return eol;
 }
-int DisplayHelp(const char* argv0, const char* short_options, const struct option* long_options, const struct help* help_info){
-	size_t maxlen = 0;
+int DisplayHelp(const char* argv0, const char* short_options, const struct option* long_options, const struct help* help_info, int max_line){
+	enum{
+		flags_invalid = 0,
+		flag_valid    = 0x01,
+		flag_long     = 0x02,
+		flag_optional = 0x04,
+	};
+	int flags;
+	size_t longest_line;
 	size_t len;
 	int measure;
 	int idx;
@@ -44,66 +51,92 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
 		} else
 			argv0 = help_info[0].params;
 	}
-	printf("Usage:   %s %s\n", argv0, help_info[0].descr);
+	longest_line = printf("Usage:   %s ", argv0);
+	offset = PrintIndentedLine(help_info[0].descr, max_line, longest_line, longest_line);
+	while(*offset) {
+		len = 0;
+		if(offset[-1] == '\n')
+			len = printf("%*s ", longest_line-1, argv0);
+		offset = PrintIndentedLine(offset, max_line, len, longest_line);
+	}
 	// get indent part one
+	longest_line = 0;
 	for(opt=0; long_options[opt].name; ++opt){
-		len = 6 + strlen(long_options[opt].name);
-		if(len > maxlen)
-			maxlen = len;
+		len = 4 + 2 + strlen(long_options[opt].name) + 2;
+		if(len > longest_line)
+			longest_line = len;
 	}
 	// options
 	puts("Options:");
 	measure = 1;
 	do{
 		for(idx=1; help_info[idx].descr; ++idx){
+			flags = flags_invalid;
+			opt = 0;
 			len = 2;
+			// print option
 			for(offset=short_options; *offset; ++offset){
 				if(help_info[idx].opt == *offset){
+					flags = flag_valid;
+					if(!strcmp(offset+1, "::"))
+						flags |= flag_optional;
 					len += 2; // -x
 					if(!measure)
 						printf("  -%c", help_info[idx].opt);
 					break;
 				}
 			}
-			opt = 0;
-			if(!*offset){
+			if(flags == flags_invalid) {
 				for(; long_options[opt].name; ++opt){
 					if(long_options[opt].val == help_info[idx].opt){
+						flags = flag_valid | flag_long;
+						if(long_options[opt].has_arg == optional_argument)
+							flags |= flag_optional;
 						len += 2 + strlen(long_options[opt].name); // --x
 						if(!measure)
-							printf("  --%s", long_options[opt++].name);
+							printf("  --%s", long_options[opt].name);
+						++opt;
 						break;
 					}
 				}
-				if(!long_options[opt].name)
-					opt = 0;
+				if(flags == flags_invalid)
+					continue;
 			}
-			if(!len)
-				break;
+			// print parameter
 			if(help_info[idx].params){
 				len += 1 + strlen(help_info[idx].params);
-				if(!measure)
+				if(flags & flag_optional) {
+					if(flags & flag_long) {
+						len += 2;
+						if(!measure)
+							putc('=', stdout);
+					}else
+						++len;
+					if(!measure)
+						printf("[%s]", help_info[idx].params);
+				}else if(!measure)
 					printf(" %s", help_info[idx].params);
 			}
 			
 			if(measure){
-				if(len > maxlen)
-					maxlen = len;
+				len += 2; // additional padding
+				if(len > longest_line)
+					longest_line = len;
 				continue;
 			}
-			
-			offset = PrintIndentedLine(help_info[idx].descr, 80, len, maxlen);
+			// print description & option aliases
+			offset = PrintIndentedLine(help_info[idx].descr, max_line, len, longest_line);
 			for(; long_options[opt].name; ++opt){
 				if(long_options[opt].val == help_info[idx].opt){
-					len = printf("    --%s", long_options[opt].name);
-					offset = PrintIndentedLine(offset, 80, len, maxlen);
+					len = printf("    --%s  ", long_options[opt].name);
+					offset = PrintIndentedLine(offset, max_line, len, longest_line);
 				}
 			}
 			while(*offset)
-				offset = PrintIndentedLine(offset, 80, 0, maxlen);
+				offset = PrintIndentedLine(offset, max_line, 0, longest_line);
 		}
 	}while(measure--);
-	return maxlen;
+	return longest_line;
 }
 
 

@@ -48,6 +48,7 @@ struct help {
  * \param short_options same as \c options for \c getopt(_long)
  * \param long_options same as \c longopts for \c getopt_long
  * \param help_info help information structure. Contains descriptions of valid arguments in \p short_options and \p long_options
+ * \param max_line max. chars per line (split by word boundary. Recommended: 80)
  * \return the maximum option / indentation length for use by \c PrintIndentedLine() or zero on failure
  * \remark \p help_info [0] configures the behavior of \c DisplayHelp()
  * \remark \c help_info[0].opt is currently unused and should be zero.
@@ -55,7 +56,7 @@ struct help {
  * \remark \c help_info[0].descr is the usage description after the program name. Eg. <code>[OPTION]... [-T] SOURCE DEST</code>
  * \remark \p Note: argv0 can be \c NULL when \c help_info[0].params points to a valid string
  * \remark \sa help, DH_ARGV, DH_ARGV_SHORT, PrintIndentedLine(), getopt(), getopt_long() */
-int DisplayHelp(const char* argv0, const char* short_options, const struct option* long_options, const struct help* help_info);
+int DisplayHelp(const char* argv0, const char* short_options, const struct option* long_options, const struct help* help_info, int max_line);
 /** \brief prints a line to \c stdout indented by \p indent with maximum \p max_line characters per line
  * \param str string to output
  * \param max_line max. chars per line (split by word boundary. Recommended: 80)

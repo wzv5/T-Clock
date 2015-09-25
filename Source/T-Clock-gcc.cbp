@@ -606,6 +606,15 @@
 			<Option target="app-64" />
 			<Option target="app-64 debug" />
 		</Unit>
+		<Unit filename="common/getopt_tools.c">
+			<Option compilerVar="CC" />
+			<Option compile="0" />
+			<Option link="0" />
+			<Option target="AutoVersion" />
+		</Unit>
+		<Unit filename="common/getopt_tools.h">
+			<Option target="AutoVersion" />
+		</Unit>
 		<Unit filename="common/globals.h">
 			<Option target="app" />
 			<Option target="dll" />
