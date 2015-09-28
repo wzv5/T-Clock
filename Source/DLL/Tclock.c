@@ -1187,6 +1187,8 @@ int UpdateClock(HWND hwnd, HFONT fnt)
 		SetBkMode(m_hdcClock,TRANSPARENT);
 		SetTextAlign(m_hdcClock,TA_CENTER|TA_TOP);
 		SetTextColor(m_hdcClock,0x00000000);
+		// select a 1x1 placeholder bitmap for proper clock text size calculation
+		m_oldbmp = SelectObject(m_hdcClock, CreateBitmap(1,1,1,32,NULL));
 	}
 	if(fnt){
 		if(!m_oldfnt)
@@ -1194,8 +1196,9 @@ int UpdateClock(HWND hwnd, HFONT fnt)
 		else
 			DeleteObject(SelectObject(m_hdcClock,fnt));
 	}
-	CalculateClockTextSize(); // height only change bugs...
-	SetWindowPos(hwnd,HWND_TOP,0,0,m_rcClock.right+1,m_rcClock.bottom,SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOMOVE|SWP_NOCOPYBITS); // without doing this...
+	CalculateClockTextSize();
+	// height-only change is buggy without this +1
+	SetWindowPos(hwnd, HWND_TOP, 0,0, m_rcClock.right+1, m_rcClock.bottom, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOMOVE|SWP_NOCOPYBITS);
 	return 1;
 }
 int UpdateClockSize(HWND hwnd)
