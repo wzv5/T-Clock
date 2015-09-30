@@ -2,9 +2,8 @@
 //	Rev: 7109 @ 2011-04-15T11:53:16.901970Z
 //Now released as WTFPL
 #include <stdio.h>
-#include <ctime>
-#include <cstdlib>
-#include <cstring>
+#include <time.h>
+#include <string.h>
 #include <string>
 using namespace std;
 
@@ -708,7 +707,7 @@ bool WriteHeader(const char* filepath,Version &ver)
 		WriteDefineString(fheader,"REVISION_TAG",ver);
 	}
 	char tmp[64];
-	time(&ver.timestamp);
+	ver.timestamp = time(NULL);
 	tm* ttm=gmtime(&ver.timestamp);
 	fputs("/**** Date/Time ****/\n",fheader);
 	WriteDefine(fheader,"TIMESTAMP",ver);

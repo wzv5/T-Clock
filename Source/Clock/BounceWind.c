@@ -272,7 +272,7 @@ typedef struct{
 static void __cdecl MessageThread(void* param){
 	bounce_t* data=(bounce_t*)param;
 	if(!*data->msg){
-		time_t tt; time(&tt);
+		time_t tt = time(NULL);
 		free(data->msg);
 		data->msg=malloc(128);
 		if(data->msg)

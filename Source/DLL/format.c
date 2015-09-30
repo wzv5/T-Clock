@@ -340,8 +340,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 				out += api.WriteFormatNum(out, num, width, padding);
 		} else if(*fmt == 'W') { // Week-of-Year
 			struct tm tmnow;
-			time_t tnow;
-			time(&tnow);
+			time_t tnow = time(NULL);
 			localtime_s(&tmnow, &tnow);
 			++fmt;
 			if(*fmt == 's') { // Week-Of-Year Starts Sunday
@@ -395,9 +394,8 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			struct tm Julian;
 			int id, is, i=0;
 			char* szJulian;
-			time_t UTC;
+			time_t UTC = time(NULL);
 			
-			time(&UTC);
 			gmtime_s(&Julian, &UTC);
 			
 			y = Julian.tm_year +1900;	// Year
@@ -434,10 +432,9 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		else if(*fmt == 'O' && *(fmt + 1) == 'D') { //--------+++--> Ordinal Date UTC:
 			char szOD[16] = {0};
 			struct tm today;
-			time_t UTC;
+			time_t UTC = time(NULL);
 			char* od;
 			
-			time(&UTC);
 			gmtime_s(&today, &UTC);
 			strftime(szOD, 16, "%Y-%j", &today);
 			od = szOD;
@@ -448,10 +445,9 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		else if(*fmt == 'O' && *(fmt + 1) == 'd') { //------+++--> Ordinal Date Local:
 			char szOD[16] = {0};
 			struct tm today;
-			time_t ltime;
+			time_t ltime = time(NULL);
 			char* od;
 			
-			time(&ltime);
 			localtime_s(&today, &ltime);
 			strftime(szOD, 16, "%Y-%j", &today);
 			od = szOD;
@@ -462,10 +458,9 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		else if(*fmt == 'D' && strncmp(fmt, "DOY", 3) == 0) { //--+++--> Day-Of-Year:
 			char szDoy[8] = {0};
 			struct tm today;
-			time_t ltime;
+			time_t ltime = time(NULL);
 			char* doy;
 			
-			time(&ltime);
 			localtime_s(&today, &ltime);
 			strftime(szDoy, 8, "%j", &today);
 			doy = szDoy;
