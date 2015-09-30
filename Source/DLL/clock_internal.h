@@ -29,11 +29,13 @@ unsigned Clock_GetColor(unsigned agbr,int useraw);
 void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb, BOOL blend);
 
 /** \sa TClockAPI::GetInt() */
-int Clock_GetInt(const char* section, const char* entry, LONG defval);
+int Clock_GetInt(const char* section, const char* entry, int defval);
+/** \sa TClockAPI::GetInt64() */
+int64_t Clock_GetInt64(const char* section, const char* entry, int64_t defval);
 /** \sa TClockAPI::GetIntEx() */
-int Clock_GetIntEx(const char* section, const char* entry, LONG defval);
+int Clock_GetIntEx(const char* section, const char* entry, int defval);
 /** \sa TClockAPI::GetSystemInt() */
-int Clock_GetSystemInt(HKEY rootkey, const char* section, const char* entry, LONG defval);
+int Clock_GetSystemInt(HKEY rootkey, const char* section, const char* entry, int defval);
 /** \sa TClockAPI::GetStr() */
 int Clock_GetStr(const char* section, const char* entry, char* val, int len, const char* defval);
 /** \sa TClockAPI::GetStrEx() */
@@ -41,9 +43,11 @@ int Clock_GetStrEx(const char* section, const char* entry, char* val, int len, c
 /** \sa TClockAPI::GetSystemStr() */
 int Clock_GetSystemStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval);
 /** \sa TClockAPI::SetInt() */
-int Clock_SetInt(const char* section, const char* entry, LONG val);
+int Clock_SetInt(const char* section, const char* entry, int val);
+/** \sa TClockAPI::SetInt64() */
+int Clock_SetInt64(const char* section, const char* entry, int64_t val);
 /** \sa TClockAPI::SetSystemInt() */
-int Clock_SetSystemInt(HKEY rootkey, const char* section, const char* entry, LONG val);
+int Clock_SetSystemInt(HKEY rootkey, const char* section, const char* entry, int val);
 /** \sa TClockAPI::SetStr() */
 int Clock_SetStr(const char* section, const char* entry, const char* val);
 /** \sa TClockAPI::SetSystemStr() */

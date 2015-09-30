@@ -1,6 +1,7 @@
 #ifndef CLOCK_API_H_
 #define CLOCK_API_H_
 #include <windows.h>
+#include <stdint.h>
 
 #define CLOCK_API 1
 
@@ -116,19 +117,25 @@ typedef struct TClockAPI_TAG {
  * \param section,entry
  * \param defval default value to return
  * \return read int or defval */
-	int (*GetInt)(const char* section, const char* entry, LONG defval);
+	int (*GetInt)(const char* section, const char* entry, int defval);
+/**
+ * \brief read a int64_t value from our registry
+ * \param section,entry
+ * \param defval default value to return
+ * \return read int64_t or \p defval */
+	int64_t (*GetInt64)(const char* section, const char* entry, int64_t defval);
 /**
  * \brief try to read a int value from our registry or add it if missing
  * \param section,entry
  * \param defval default value to write and return
  * \return read int or defval on failure */
-	int (*GetIntEx)(const char* section, const char* entry, LONG defval);
+	int (*GetIntEx)(const char* section, const char* entry, int defval);
 /**
  * \brief read a int value from Windows' registry
  * \param rootkey,section,entry
  * \param defval default value to return if entry wasn't found
  * \return read int or defval on failure */
-	int (*GetSystemInt)(HKEY rootkey, const char* section, const char* entry, LONG defval);
+	int (*GetSystemInt)(HKEY rootkey, const char* section, const char* entry, int defval);
 /**
  * \brief read a string value from our registry
  * \param[in] section,entry
@@ -158,13 +165,19 @@ typedef struct TClockAPI_TAG {
  * \param section,entry
  * \param val new value
  * \return boolean */
-	int (*SetInt)(const char* section, const char* entry, LONG val);
+	int (*SetInt)(const char* section, const char* entry, int val);
+/**
+ * \brief update or add a int64_t value in our registry
+ * \param section,entry
+ * \param val new value
+ * \return boolean */
+	int (*SetInt64)(const char* section, const char* entry, int64_t val);
 /**
  * \brief update or add a int value in Windows' registry
  * \param rootkey,section,entry
  * \param val new value
  * \return boolean */
-	int (*SetSystemInt)(HKEY rootkey, const char* section, const char* entry, LONG val);
+	int (*SetSystemInt)(HKEY rootkey, const char* section, const char* entry, int val);
 /**
  * \brief update or add a string value in our registry
  * \param section,entry
@@ -256,7 +269,7 @@ typedef struct TClockAPI_TAG {
  * \brief load and initialize T-Clock.dll
  * \param dll_path path to our T-Clock[64].dll
  * \param api reference to our API struct that receives functions
- * \return returns non-zero on error. >0 if internal API failure, <0 if external */
+ * \return returns non-zero on error. greater than 0 if internal API failure, lower than 0 if external */
 int LoadClockAPI(const char* dll_path, TClockAPI* api);
 
 extern TClockAPI api;

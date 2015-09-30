@@ -285,6 +285,7 @@
 			<Add option="-fno-ident" />
 			<Add option="-DWIN2K_COMPAT" />
 			<Add option="-D__MINGW_USE_VC2005_COMPAT" />
+			<Add option="-D__STDC_FORMAT_MACROS" />
 			<Add option="-DWINVER=0x0501" />
 		</Compiler>
 		<Linker>
