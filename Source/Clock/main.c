@@ -6,6 +6,12 @@
 #include <winver.h>
 #include <wtsapi32.h>
 #include <shlobj.h>//SHGetFolderPath
+#ifdef _MSC_VER
+#	include <direct.h>
+#	define chdir _chdir
+#else
+#	include <unistd.h> // chdir
+#endif
 #include "../common/version.h"
 
 HINSTANCE g_instance;
@@ -250,6 +256,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		MessageBox(NULL, "Error loading: T-Clock" ARCH_SUFFIX ".dll", "API error", MB_OK|MB_ICONERROR);
 		return 2;
 	}
+	chdir(api.root); // make sure we've got the right working directory
 	
 	// Make sure we're running Windows 2000 and above
 	if(!api.OS) {

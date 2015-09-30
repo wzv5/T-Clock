@@ -24,14 +24,13 @@ static BOOL m_bJihou, m_bJihouRepeat, m_bJihouBlink;
 
 typedef struct _stPCBEEP {
 	HWND hWnd;
-	char szFname[MAX_BUFF];
 	DWORD dwLoops;
+	char szFname[MAX_PATH];
 } PCBEEP;
 
-static PCBEEP m_pcb;
 static volatile char m_bKillPCBeep = 1;
 
-BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops);
+BOOL PlayWave(HWND hwnd, const char* fname, DWORD dwLoops);
 int PlayMCI(HWND hwnd, int nt);
 void StopWave(void);
 
@@ -226,7 +225,7 @@ void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------
 #include <stdio.h> //--------------------------+++--> Required Here Only for the Open File Stuff:
 //================================================================================================
 //-----+++--> For Computers WithOut Speakers, Play a NoSound (PC Beep) File Through the PC Speaker:
-BOOL PlayNoSound(char* fname, DWORD iLoops)   //-----------------------------------+++-->
+BOOL PlayNoSound(const char* fname, DWORD iLoops)   //-----------------------------------+++-->
 {
 	static const char seps[] = ", \r\n";
 	char* szToken,*nxToken;
@@ -286,31 +285,35 @@ BOOL PlayNoSound(char* fname, DWORD iLoops)   //--------------------------------
 //--+++-->
 unsigned __stdcall PlayNoSoundProc(void* param)
 {
-	PCBEEP* lppcb;
-	lppcb = (PCBEEP*)param;
+	PCBEEP* pcb = (PCBEEP*)param;
 	
-	PlayNoSound(lppcb->szFname, lppcb->dwLoops);
-	SendMessage(lppcb->hWnd, MM_WOM_DONE, 0, 0);
+	PlayNoSound(pcb->szFname, pcb->dwLoops);
+	SendMessage(pcb->hWnd, MM_WOM_DONE, 0, 0);
 	
+	free(pcb);
 	_endthread();
 	return 0;
 }
 //================================================================================================
 //--+++-->
-void PlayNoSoundThread(HWND hWnd, char* fname, DWORD dwLoops)
+void PlayNoSoundThread(HWND hWnd, const char* fname, DWORD dwLoops)
 {
-	strncpy_s(m_pcb.szFname, sizeof(m_pcb.szFname), fname, _TRUNCATE);
-	m_pcb.dwLoops = dwLoops;
-	m_pcb.hWnd = hWnd;
+	PCBEEP* pcb = (PCBEEP*)malloc(sizeof(PCBEEP));
+	if(!pcb)
+		return;
+	pcb->hWnd = hWnd;
+	pcb->dwLoops = dwLoops;
+	strncpy_s(pcb->szFname, sizeof(pcb->szFname), fname, _TRUNCATE);
 	
 	m_bKillPCBeep = 0;
-	_beginthreadex(NULL, 0, PlayNoSoundProc, (void*)&m_pcb, 0, 0);
+	_beginthreadex(NULL, 0, PlayNoSoundProc, pcb, 0, 0);
 }
 //=================================================*
 // ------------------------ Play Selected Alarm File
 //===================================================*
-BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
+BOOL PlayFile(HWND hwnd, const char* fname, DWORD dwLoops)
 {
+	char file[MAX_PATH];
 	if(!fname[0] || fname[0]=='<') return FALSE;
 	if(fname[0]!='/' && fname[0]!='\\' && fname[1]!=':' // no abs path
 	&&(fname[0]!='.' || (fname[1]!='/' && fname[1]!='\\' && (fname[1]!='.' ||  (fname[2]!='/' && fname[2]!='\\'))))) // no relative path (strict relative)
@@ -319,11 +322,11 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 		const size_t tlen=api.root_len;
 		const size_t len=strlen(fname)+1; // incl. terminating null
 		if(len<MAX_PATH-tlen-7){
-			memmove(fname+tlen+7/* <mydir>/waves/ */,fname,len);
-			memcpy(fname,api.root,tlen); /// absolute path is at least required by .pcb / PlayNoSoundThread (not for .wav)
-			memcpy(fname+tlen,"\\waves\\",7);
-			if(api.GetFileAndOption(fname, app, NULL) != 0){
-				memmove(fname,fname+tlen+7,len); // restore relative
+			memcpy(file, api.root, tlen); // absolute path is at least required by .pcb / PlayNoSoundThread (not for .wav)
+			memcpy(file+tlen, "\\waves\\", 7);
+			memcpy(file+tlen+7, fname, len);
+			if(api.GetFileAndOption(file, app, NULL) == 0){
+				fname = file;
 			}
 		}
 	}
@@ -356,7 +359,7 @@ BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops)
 			
 			m_nTrack = -1;
 			if(ext_cmp(fname, "cda") == 0) {
-				char* p;
+				const char* p;
 				p = fname; m_nTrack = 0;
 				while(*p) {
 					if('0' <= *p && *p <= '9') m_nTrack = m_nTrack * 10 + *p - '0';
@@ -434,7 +437,7 @@ int OnMCINotify(HWND hwnd)
 }
 //================================================================================================
 //------------------------------------------------------//----+++--> Load & Play a Wave Audio File:
-BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------------------+++-->
+BOOL PlayWave(HWND hwnd, const char* fname, DWORD dwLoops)   //-----------------------------+++-->
 {
 	MMCKINFO mmckinfoSubchunk;
 	MMCKINFO mmckinfoParent;
@@ -444,7 +447,7 @@ BOOL PlayWave(HWND hwnd, char* fname, DWORD dwLoops)   //-----------------------
 	
 	if(m_hWaveOut != NULL) return FALSE;
 	
-	if((hmmio=mmioOpen(fname, NULL, MMIO_READ|MMIO_ALLOCBUF))==0)
+	if((hmmio=mmioOpen((char*)fname, NULL, MMIO_READ|MMIO_ALLOCBUF))==0)
 		return FALSE;
 		
 	mmckinfoParent.fccType = mmioFOURCC('W', 'A', 'V', 'E');

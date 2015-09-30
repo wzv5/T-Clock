@@ -123,7 +123,12 @@ void EndAlarm();
 void InitAlarm();
 int OnMCINotify(HWND hwnd);
 void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
-BOOL PlayFile(HWND hwnd, char* fname, DWORD dwLoops);
+/** \brief play sound or execute program \p fname
+ * \param[in] hwnd
+ * \param[in] fname sound to be played, or program to be executed. Can be relative to \e TCLOCK/waves/
+ * \param[in] dwLoops number of times to repeat
+ * \return boolean (started to play a sound) */
+BOOL PlayFile(HWND hwnd, const char* fname, DWORD dwLoops);
 
 // alarmday.c
 #define ALARMDAY_OKFLAG 0x80000000
