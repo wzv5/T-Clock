@@ -282,14 +282,17 @@
 			<Add alias="release-64" targets="dll-64;app-64;" />
 		</VirtualTargets>
 		<Compiler>
+			<Add option="-fno-ident" />
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 			<Add option="-fvisibility=hidden" />
-			<Add option="-fno-ident" />
-			<Add option="-DWIN2K_COMPAT" />
-			<Add option="-D__MINGW_USE_VC2005_COMPAT" />
+			<Add option="-D_POSIX=1" />
+			<Add option="-D_POSIX_C_SOURCE=200112L" />
 			<Add option="-D__STDC_FORMAT_MACROS" />
+			<Add option="-D__USE_MINGW_ANSI_STDIO=0" />
+			<Add option="-D__MINGW_USE_VC2005_COMPAT" />
 			<Add option="-DWINVER=0x0501" />
+			<Add option="-DWIN2K_COMPAT" />
 		</Compiler>
 		<Linker>
 			<Add option="-static" />

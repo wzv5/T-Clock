@@ -15,9 +15,9 @@ void GetDayOfYearTitle(char* szTitle, int ivMonths)   //------------------------
 {
 	struct tm today;
 	char szDoY[8];
-	time_t ltime = time(NULL);
+	time_t ts = time(NULL);
 	
-	_localtime64_s(&today, &ltime);
+	localtime_r(&ts, &today);
 //	strftime(szDoY, 8, "%#j", &today); // <--{OutPut}--> Day 95
 	strftime(szDoY, 8, "%j", &today);   // <--{OutPut}--> Day 095
 	

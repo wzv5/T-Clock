@@ -31,10 +31,6 @@
 
 #ifdef __GNUC__
 #	include <inttypes.h>
-#	if __MINGW64_VERSION_MAJOR < 4 // linux is still at 2 or 4 sometimes (4 as of Debian Jessie)
-#		define localtime_s _localtime64_s
-#		define gmtime_s _gmtime64_s
-#	endif
 #	define __pragma(x) // MSVC pragmas, safe to ignore since we use them only to fix MSVC bugs...
 	static const GUID CLSID_Shell = {0x13709620,0xc279,0x11ce,{0xa4,0x9e,0x44,0x45,0x53,0x54,0,1}};
 	static const GUID IID_IShellDispatch4 = {0xefd84b2d,0x4bcf,0x4298,{0xbe,0x25,0xeb,0x54,0x2a,0x59,0xfb,0xda}};
@@ -49,6 +45,8 @@
 #	define wcscasecmp _wcsicmp
 #	define strncasecmp _strnicmp
 #	define wcsncasecmp _wcsnicmp
+#	define localtime_r(tt,tm) (localtime_s((tm),(tt)) ? NULL : (tm))
+#	define gmtime_r(tt,tm) (gmtime_s((tm),(tt)) ? NULL : (tm))
 #	ifndef PRIx64
 #		define PRIx64 "I64x"
 #		define SCNx64 PRIx64
