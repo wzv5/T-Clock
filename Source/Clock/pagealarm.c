@@ -412,7 +412,7 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 void SetDefaultAlarmToDlg(HWND hDlg, int select_only)   //--------------------------------------------+++-->
 {
 	alarm_t as = {0};
-	as.days = 0x7f; // daily
+	as.days = DAYF_DAILY;
 	as.hour = 12;
 	as.iTimes = -1;
 	as.uFlags =  ALRM_ENABLED | ALRM_ONESHOT | ALRM_DIALOG | ALRM_BLINK | ALRM_REPEAT;

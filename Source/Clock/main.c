@@ -6,6 +6,7 @@
 #include <winver.h>
 #include <wtsapi32.h>
 #include <shlobj.h>//SHGetFolderPath
+#include <time.h>
 #ifdef _MSC_VER
 #	include <direct.h>
 #	define chdir _chdir
@@ -26,14 +27,6 @@ HWND	g_hDlgStopWatch;
 HWND	g_hDlgTimerWatch;
 
 HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
-
-/** Make Background of Desktop Icon Text Labels Transparent:
- * (For Windows 2000 Only)
- * UnAvertized EasterEgg Function */
-#ifdef WIN2K_COMPAT
-BOOL g_bTrans2kIcons;
-static void SetDesktopIconTextBk();
-#endif // WIN2K_COMPAT
 
 // used by PageMisc.c and main.c
 const char kSectionImmersiveShell[56+1] = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ImmersiveShell";
@@ -316,10 +309,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if((updated=CheckSettings())<0){
 		return 1;
 	}
-	//--------------+++--> This is For Windows 2000 Only - EasterEgg Function:
-#	ifdef WIN2K_COMPAT
-	g_bTrans2kIcons = api.GetIntEx("Desktop", "Transparent2kIconText", 0);
-#	endif // WIN2K_COMPAT
 	CancelAllTimersOnStartUp();
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
@@ -687,33 +676,20 @@ void InitError(int n)
 //-----------------------------------+++--> Values Above Are Required by Main Timer Function Below:
 void OnTimerMain(HWND hwnd)   //------------------------------------------------------------+++-->
 {
-	static unsigned s_hourLast = 0xFFFFFFFF;
-	static unsigned s_minuteLast;
-	SYSTEMTIME st;
+	time_t ts;
 	
 	OnTimerTimer(hwnd); // timer.c
 	
-	GetLocalTime(&st); // Allow OnTimerAlarm(...) to Fire once Every 60 Seconds
-	if(st.wMinute == s_minuteLast && st.wHour == s_hourLast)
-		return;
-	s_hourLast = st.wHour;
-	s_minuteLast = st.wMinute;
-	
-	OnTimerAlarm(hwnd, &st); // alarm.c
-#	ifdef WIN2K_COMPAT
-	SetDesktopIconTextBk();
-#	endif // WIN2K_COMPAT
+	ts = time(NULL);
+	OnTimerAlarm(hwnd, ts); // alarm.c
 }
 //================================================================================================
 //----------+++--> Make Background of Desktop Icon Text Labels Transparent (For Windows 2000 Only):
 #ifdef WIN2K_COMPAT
-void SetDesktopIconTextBk(void)   //--------------------------------------------------------+++-->
+void SetDesktopIconTextBk(int enable)   //---------------------------------------------------+++-->
 {
 	COLORREF col;
 	HWND hwnd;
-	
-	if(api.OS > TOS_2000)
-		return;
 	
 	hwnd = FindWindow("Progman", "Program Manager");
 	if(!hwnd) return;
@@ -727,7 +703,7 @@ void SetDesktopIconTextBk(void)   //--------------------------------------------
 	}
 	if(!hwnd) return;
 	
-	if(g_bTrans2kIcons) {
+	if(enable) {
 		col = CLR_NONE;
 	} else {
 		if(ListView_GetTextBkColor(hwnd) != CLR_NONE)

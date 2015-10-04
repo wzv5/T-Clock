@@ -275,8 +275,15 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	api.SetInt("Calendar","ViewMonths", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS32,0,0));
 	api.SetInt("Calendar","ViewMonthsPast", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS32,0,0));
 #	ifdef WIN2K_COMPAT
-	g_bTrans2kIcons = IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS);
-	api.SetInt("Desktop","Transparent2kIconText", g_bTrans2kIcons);
+	if(api.OS == TOS_2000) {
+		int value = IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS);
+		SetDesktopIconTextBk(value);
+		api.SetInt("Desktop", "Transparent2kIconText", value);
+		if(value)
+			TimetableAdd(SCHEDID_WIN2K, 30, 30);
+		else
+			TimetableRemove(SCHEDID_WIN2K);
+	}
 #	endif // WIN2K_COMPAT
 	api.SetInt("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
 	api.SetInt("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));

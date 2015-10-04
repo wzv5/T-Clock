@@ -61,7 +61,7 @@ void OnInit(HWND hDlg, unsigned days)
 		f = f << 1;
 	}
 	
-	if((days & 0x7f) == 0x7f) {
+	if(days == DAYF_DAILY) {
 		CheckDlgButton(hDlg, IDC_ALARMDAY0, TRUE);
 		OnEveryDay(hDlg);
 	}

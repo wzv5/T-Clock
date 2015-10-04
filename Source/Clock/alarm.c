@@ -3,9 +3,97 @@
 //--+++--> Sound a wave, a media file, or open a file =============================
 //================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
-#define MAX_ALARM 999999
-static char g_alarmkey[12]="Alarm";
+#include <time.h>
+static char g_alarmkey[12] = "Alarm";
 #define ALARMKEY_OFFSET 5
+
+static Schedule* timetable_begin_ = NULL;
+static Schedule* timetable_end_ = NULL;
+
+static time_t AlarmNextTimestamp();
+static void AlarmGetMSG(dlgmsg_t* msg);
+
+static void TimetableClean() {
+	Schedule* iter = timetable_begin_;
+	timetable_begin_ = timetable_end_ = NULL;
+	
+	while(iter) {
+		Schedule* tmp = iter;
+		iter = iter->next;
+		free(tmp);
+	}
+	return;
+}
+Schedule* TimetableAdd(int id, time_t ts, unsigned data) {
+	Schedule* schedule;
+	schedule = TimetableSearchID(id);
+	if(schedule) {
+		TimetableQueue(schedule, 0);
+	} else {
+		schedule = (Schedule*)malloc(sizeof(Schedule));
+		if(!schedule)
+			return NULL;
+		schedule->id = id;
+		if(ts <= 86400)
+			ts = time(NULL) + ts;
+	}
+	if(ts > 86400)
+		schedule->time = ts;
+	schedule->data = data;
+	TimetableQueue(schedule, 1);
+	return schedule;
+}
+void TimetableRemove(int id) {
+	Schedule* schedule = TimetableSearchID(id);
+	if(schedule) {
+		TimetableQueue(schedule, 0);
+		free(schedule);
+	}
+}
+void TimetableQueue(Schedule* alert, int add) {
+	if(add) {
+		Schedule* iter = timetable_end_;
+		for(;;) {
+			if(!iter) {
+				alert->prev = NULL;
+				alert->next = timetable_begin_;
+				timetable_begin_ = alert;
+				if(alert->next)
+					alert->next->prev = alert;
+				else
+					timetable_end_ = alert;
+				break;
+			}
+			if(alert->time >= iter->time) {
+				alert->prev = iter;
+				alert->next = iter->next;
+				if(alert->prev)
+					alert->prev->next = alert;
+				else
+					timetable_begin_ = alert;
+				if(alert->next)
+					alert->next->prev = alert;
+				else
+					timetable_end_ = alert;
+			}
+			iter = iter->prev;
+		}
+	} else {
+		if(alert->prev)
+			alert->prev->next = alert->next;
+		else
+			timetable_begin_ = alert->next;
+		if(alert->next)
+			alert->next->prev = alert->prev;
+		else
+			timetable_end_ = alert->prev;
+	}
+}
+Schedule* TimetableSearchID(int id) {
+	Schedule* iter = timetable_end_;
+	for(; iter && iter->id!=id; iter=iter->prev);
+	return iter;
+}
 
 static WAVEHDR m_wh;
 static HPSTR m_pData = NULL;
@@ -18,9 +106,7 @@ char g_bPlayingNonstop = 0;
 static BOOL m_bTrack;
 static int m_nTrack;
 
-static int m_maxAlarm = 1;
-static alarm_t* m_pAS = NULL;
-static BOOL m_bJihou, m_bJihouRepeat, m_bJihouBlink;
+static int m_maxAlarm = 0;
 
 typedef struct _stPCBEEP {
 	HWND hWnd;
@@ -34,25 +120,73 @@ BOOL PlayWave(HWND hwnd, const char* fname, DWORD dwLoops);
 int PlayMCI(HWND hwnd, int nt);
 void StopWave(void);
 
-BOOL GetHourlyChime(){
-	return m_bJihou;
+void AlarmChimeEnable(int enable) {
+	if(enable < 0) {
+		int status = api.GetInt("", "Jihou", 0);
+		if(enable == -1) {
+			enable = !status;
+			goto update_and_continue;
+		}
+		enable = status;
+	} else {
+update_and_continue:
+		api.SetInt("", "Jihou", enable);
+	}
+	if(enable) {
+		unsigned data = 0;
+		time_t ts = time(NULL) - 1;
+		ts += 3600 - (ts % 3600);
+		if(api.GetInt("", "JihouRepeat", 0))
+			data |= ALRM_CHIMEHR;
+		if(api.GetInt("", "JihouBlink", 0))
+			data |= ALRM_BLINK;
+		TimetableAdd(SCHEDID_CHIME, ts, data);
+	} else
+		TimetableRemove(SCHEDID_CHIME);
 }
-void SetHourlyChime(BOOL bEnabled){
-	m_bJihou=bEnabled;
-	api.SetInt("","Jihou",m_bJihou);
-}
-char GetAlarmEnabled(int idx){
-	if(idx<0||idx>=m_maxAlarm)
-		return 0;
-	return m_pAS[idx].uFlags&ALRM_ENABLED;
-}
-void SetAlarmEnabled(int idx,char bEnabled){
-	if(idx<0||idx>=m_maxAlarm)
+void AlarmEnable(int idx, int enable) {
+	Schedule* alarm;
+	if(idx < 0 || idx >= m_maxAlarm)
 		return;
-	if(bEnabled) m_pAS[idx].uFlags |= ALRM_ENABLED;
-	else m_pAS[idx].uFlags &= ~ALRM_ENABLED;
-	wsprintf(g_alarmkey+ALARMKEY_OFFSET, "%d", idx+1);
-	api.SetInt(g_alarmkey, "Alarm", m_pAS[idx].uFlags&ALRM_ENABLED);
+	ltoa(idx+1, (g_alarmkey+ALARMKEY_OFFSET), 10);
+	
+	if(enable < 0) {
+		int status = api.GetInt(g_alarmkey, "Alarm", 0);
+		if(enable == -1) {
+			enable = !status;
+			goto update_and_continue;
+		}
+		enable = status;
+		alarm = NULL;
+	} else {
+update_and_continue:
+		api.SetInt(g_alarmkey, "Alarm", enable);
+		alarm = TimetableSearchID(idx);
+	}
+	if(!enable) {
+		if(alarm) {
+			TimetableQueue(alarm, 0);
+			free(alarm);
+		}
+		return;
+	}
+	if(!alarm) {
+		alarm = (Schedule*)malloc(sizeof(Schedule));
+		if(!alarm)
+			return;
+		alarm->time = AlarmNextTimestamp();
+		alarm->id = idx;
+		/// @note : on next backward incompatible change, store a single value including every "flag"
+		alarm->data = 0;
+		if(api.GetInt(g_alarmkey,"Alarm",0)) alarm->data |= ALRM_ENABLED;
+		if(api.GetInt(g_alarmkey,"Once",0)) alarm->data |= ALRM_ONESHOT;
+		if(api.GetInt(g_alarmkey,"12h",0)) alarm->data |= ALRM_12H;
+		if(api.GetInt(g_alarmkey,"ChimeHr",0)) alarm->data |= ALRM_CHIMEHR;
+		if(api.GetInt(g_alarmkey,"Repeat",0)) alarm->data |= ALRM_REPEAT;
+		if(api.GetInt(g_alarmkey,"Blink",0)) alarm->data |= ALRM_BLINK;
+		if(api.GetInt(g_alarmkey,"jrMsgUsed",0)) alarm->data |= ALRM_DIALOG;
+		TimetableQueue(alarm, 1);
+	}
 }
 int GetAlarmNum()
 {
@@ -69,17 +203,63 @@ void SetAlarmNum(int num)
 		num = MAX_ALARM;
 	api.SetInt("", "AlarmNum", num);
 }
+void AlarmGetMSG(dlgmsg_t* msg) {
+	api.GetStr(g_alarmkey, "Name", msg->name, sizeof(msg->name), "");
+	api.GetStr(g_alarmkey, "jrMessage", msg->message, sizeof(msg->message), "");
+	api.GetStr(g_alarmkey, "jrSettings", msg->settings, sizeof(msg->settings), "");
+	
+	if(!msg->name[0]) {
+		int hour = api.GetInt(g_alarmkey, "Hour", 12) % 24;
+		int minute = api.GetInt(g_alarmkey, "Minute", 0);
+		sprintf(msg->name, "%02d:%02d", hour, minute);
+	}
+}
+
+time_t AlarmNextTimestamp() {
+	time_t ts;
+	struct tm tm;
+	int hour, minute, days, dayf;
+	
+	hour = api.GetInt(g_alarmkey, "Hour", 12) % 24;
+	minute = api.GetInt(g_alarmkey, "Minute", 0);
+	days = api.GetInt(g_alarmkey, "Days", DAYF_DAILY);
+	
+	ts = time(NULL);
+	localtime_r(&ts, &tm);
+	dayf = DAYF_FromWDay(tm.tm_wday);
+	
+	if(hour < tm.tm_hour || (hour == tm.tm_hour && minute <= tm.tm_min)) {
+		++tm.tm_mday;
+		dayf <<= 1;
+		if(dayf & DAYF_OVERFLOW)
+			dayf = DAYF_MONDAY;
+	}
+	if(days != DAYF_DAILY) {
+		while(!(days & dayf)) {
+			++tm.tm_mday;
+			dayf <<= 1;
+			if(dayf & DAYF_OVERFLOW)
+				dayf = DAYF_MONDAY;
+		}
+	}
+	tm.tm_hour = hour;
+	tm.tm_min = minute;
+	tm.tm_sec = 0;
+	
+	return mktime(&tm);
+}
 void ReadAlarmFromReg(alarm_t* pAS, int idx)
 {
 	if(idx >= MAX_ALARM)
 		return;
-	wsprintf(g_alarmkey+ALARMKEY_OFFSET, "%d", idx+1);
-	api.GetStr(g_alarmkey, "Name", pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name), "");
+	ltoa(idx+1, (g_alarmkey+ALARMKEY_OFFSET), 10);
+	
 	pAS->hour = api.GetInt(g_alarmkey, "Hour", 12) % 24;
 	pAS->minute = api.GetInt(g_alarmkey, "Minute", 0);
-	pAS->days = api.GetInt(g_alarmkey, "Days", 0x7f);
+	pAS->days = api.GetInt(g_alarmkey, "Days", DAYF_DAILY);
 	pAS->iTimes = api.GetInt(g_alarmkey, "Times", 1);
 	
+	/// @note : on next backward incompatible change, store a single value including every "flag"
 	pAS->uFlags=0;
 	if(api.GetInt(g_alarmkey,"Alarm",0)) pAS->uFlags|=ALRM_ENABLED;
 	if(api.GetInt(g_alarmkey,"Once",0)) pAS->uFlags|=ALRM_ONESHOT;
@@ -91,11 +271,7 @@ void ReadAlarmFromReg(alarm_t* pAS, int idx)
 	
 	api.GetStr(g_alarmkey, "File", pAS->fname, sizeof(pAS->fname), "");
 	
-	api.GetStr(g_alarmkey, "jrMessage", pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message), "");
-	api.GetStr(g_alarmkey, "jrSettings", pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings), "");
-	
-	if(!pAS->dlgmsg.name[0])
-		wsprintf(pAS->dlgmsg.name, "%02d:%02d", pAS->hour, pAS->minute);
+	AlarmGetMSG(&pAS->dlgmsg);
 }
 void SaveAlarmToReg(alarm_t* pAS, int idx)
 {
@@ -136,90 +312,132 @@ int DeleteAlarmFromReg(int idx)
 //----------------------------------------------+++--> Load Configured Alarm Data From Registry:
 void InitAlarm()   //--------------------------------------------------------------------+++-->
 {
+	TimetableClean();
 	m_maxAlarm = GetAlarmNum();
-	if(m_pAS)
-		free(m_pAS);
-	m_pAS = NULL;
 	if(m_maxAlarm > 0) {
 		int i;
-		m_pAS = malloc(sizeof(alarm_t) * m_maxAlarm);
 		for(i=0; i<m_maxAlarm; ++i) {
-			ReadAlarmFromReg(&m_pAS[i],i);
+			AlarmEnable(i, -2);
 		}
 	}
 	
-	m_bJihou = api.GetInt("", "Jihou", FALSE);
-	if(m_bJihou) {
-		m_bJihouRepeat = api.GetInt("", "JihouRepeat", FALSE);
-		m_bJihouBlink = api.GetInt("", "JihouBlink", FALSE);
+	AlarmChimeEnable(-2);
+	// this is for Windows 2000 only - EasterEgg function:
+#	ifdef WIN2K_COMPAT
+	if(api.OS == TOS_2000 && api.GetIntEx("Desktop","Transparent2kIconText",0)) {
+		TimetableAdd(SCHEDID_WIN2K, 30, 30);
 	}
+#	endif // WIN2K_COMPAT
 }
 //================================================================================================
 //---------------------//--------------------------------------+++--> Shut Off the God Damn Siren!:
 void EndAlarm(void)   //--------------------------------------------------------------------+++-->
 {
 	StopFile();
-	if(m_pAS) free(m_pAS); m_pAS = NULL;
+	TimetableClean();
 }
+
 //============================================== This Code Assumes...	===========================
 //-----------------------------------------+++--> 12pm = Noon <--> However (See Below for Details):
-void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st)   // 12am = Midnight --------------------------+++-->
+void OnTimerAlarm(HWND hwnd, time_t time)   // 12am = Midnight --------------------------+++-->
 {
-	int i, rep, fday;
+	union {
+		struct {
+			char fname[MAX_PATH];
+			int repeat;
+			SYSTEMTIME st;
+		} s;
+		dlgmsg_t msg;
+	} u;
+	#define fname_u1 u.s.fname
+	#define repeat_u1 u.s.repeat
+	#define st_u1 u.s.st
+	#define msg_u2 u.msg
+	Schedule* schedule = timetable_begin_;
+	if(!schedule)
+		return;
 	
-	if(st->wDayOfWeek > 0) fday = 1 << (st->wDayOfWeek - 1);
-	else fday = 1 << 6;
-	
-	for(i = 0; i < m_maxAlarm; ++i) {
-		if(!(m_pAS[i].uFlags&ALRM_ENABLED)) continue;
-		
-		if(m_pAS[i].hour == st->wHour && m_pAS[i].minute == st->wMinute && (m_pAS[i].days & fday)) {
-			if(m_pAS[i].uFlags&ALRM_ONESHOT)
-				SetAlarmEnabled(i,0);
-			if(m_pAS[i].uFlags&ALRM_BLINK)
-				PostMessage(g_hwndClock,CLOCKM_BLINK,FALSE,0);
-			if(m_pAS[i].uFlags&ALRM_DIALOG) // From BounceWindow.c
-				ReleaseTheHound(hwnd,m_pAS[i].dlgmsg.name,m_pAS[i].dlgmsg.message,m_pAS[i].dlgmsg.settings);
-			if(m_pAS[i].fname[0]) {
-				if(m_pAS[i].uFlags&ALRM_REPEAT){
-					if(m_pAS[i].iTimes > 1)
-						rep = m_pAS[i].iTimes;
-					else // -1 or 0 (we might change the later one)
-						rep = -1; // until stopped
-				}else if(m_pAS[i].uFlags&ALRM_CHIMEHR){ // chime hour
-					rep = st->wHour;
-					if(rep == 0) rep = 12;
-					else if(rep > 12) rep -= 12;
-					--rep;
-				}else{
-					rep = 0;
+	if(time >= schedule->time) {
+		for(; time >= schedule->time; schedule=timetable_begin_) {
+			if(schedule->id & SCHEDID_START_FLAG_) {
+				switch(schedule->id) {
+				case SCHEDID_CHIME:
+					if(schedule->data & ALRM_BLINK)
+						PostMessage(g_hwndClock, CLOCKM_BLINK, TRUE, 0);
+					api.GetStr("", "JihouFile", fname_u1, sizeof(fname_u1), "");
+					if(fname_u1[0]) {
+						if(schedule->data & ALRM_CHIMEHR) { // chime hour
+							GetLocalTime(&st_u1); // faster than localtime(&time)
+							repeat_u1 = st_u1.wHour;
+							if(repeat_u1 == 0)
+								repeat_u1 = 12;
+							else if(repeat_u1 > 12)
+								repeat_u1 -= 12;
+							--repeat_u1;
+						} else {
+							repeat_u1 = 0;
+						}
+						PlayFile(hwnd, fname_u1, repeat_u1);
+					}
+					schedule->time += 3600;
+					break;
+#				ifdef WIN2K_COMPAT
+				case SCHEDID_WIN2K:
+					SetDesktopIconTextBk(1);
+					schedule->time += schedule->data;
+					break;
+#				endif // WIN2K_COMPAT
+				default:
+					schedule->time = 0;
 				}
-				PlayFile(hwnd, m_pAS[i].fname, rep);
-				#ifndef _DEBUG
-				EmptyWorkingSet(GetCurrentProcess());
-				#endif
-			}
-		}
-	}
-	
-	if(m_bJihou && st->wMinute == 0) {
-		char fname[MAX_PATH];
-		if(m_bJihouBlink) PostMessage(g_hwndClock, CLOCKM_BLINK, TRUE, 0);
-		api.GetStr("", "JihouFile", fname, sizeof(fname), "");
-		if(fname[0]) {
-			if(m_bJihouRepeat) { // chime hour
-				rep = st->wHour;
-				if(rep == 0) rep = 12;
-				else if(rep > 12) rep -= 12;
-				--rep;
 			} else {
-				rep = 0;
+				ltoa(schedule->id+1, (g_alarmkey+ALARMKEY_OFFSET), 10);
+				
+				if(schedule->data & ALRM_BLINK)
+					PostMessage(g_hwndClock,CLOCKM_BLINK,FALSE,0);
+				if(schedule->data & ALRM_DIALOG) { // From BounceWindow.c
+					AlarmGetMSG(&msg_u2);
+					ReleaseTheHound(hwnd, msg_u2.name, msg_u2.message, msg_u2.settings);
+				}
+				api.GetStr(g_alarmkey, "File", fname_u1, sizeof(fname_u1), "");
+				if(fname_u1[0]) {
+					if(schedule->data & ALRM_REPEAT) {
+						repeat_u1 = api.GetInt(g_alarmkey, "Times", 1) - 1;
+						if(repeat_u1 < 0)
+							repeat_u1 = -1;
+					}else if(schedule->data & ALRM_CHIMEHR) { // chime hour
+						GetLocalTime(&st_u1); // faster than localtime(&time)
+						repeat_u1 = st_u1.wHour;
+						if(repeat_u1 == 0)
+							repeat_u1 = 12;
+						else if(repeat_u1 > 12)
+							repeat_u1 -= 12;
+						--repeat_u1;
+					}else
+						repeat_u1 = 0;
+					PlayFile(hwnd, fname_u1, repeat_u1);
+				}
+				if(schedule->data & ALRM_ONESHOT) {
+					api.SetInt(g_alarmkey, "Alarm", 0);
+					schedule->time = 0;
+				} else {
+					schedule->time = AlarmNextTimestamp();
+				}
 			}
-			PlayFile(hwnd, fname, rep);
-			#ifndef _DEBUG
-			EmptyWorkingSet(GetCurrentProcess());
-			#endif
+			TimetableQueue(schedule, 0);
+			if(!schedule->time) {
+				free(schedule);
+				if(!timetable_begin_)
+					break;
+			} else {
+				TimetableQueue(schedule, 1);
+			}
 		}
+		#ifndef _DEBUG
+		if(IsPlaying()) {
+			EmptyWorkingSet(GetCurrentProcess());
+		}
+		#endif
 	}
 }
 #include <stdio.h> //--------------------------+++--> Required Here Only for the Open File Stuff:

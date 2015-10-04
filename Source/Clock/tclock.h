@@ -49,7 +49,10 @@ extern HWND g_hwndSheet;      /**< property sheet window */
 /** frequently used icon handles */
 extern HICON g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 #ifdef WIN2K_COMPAT
-extern BOOL g_bTrans2kIcons;
+/** make background of desktop icon text labels transparent:
+ * (for Windows 2000 only)
+ * UnAdvertized EasterEgg Function */
+void SetDesktopIconTextBk(int enable);
 #endif // WIN2K_COMPAT
 
 /**
@@ -82,35 +85,77 @@ extern char g_bApplyTaskbar;
 void MyPropertySheet(int page);
 BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
 
+// alarm.c
+typedef struct Schedule Schedule;
+struct Schedule {
+	Schedule* prev;
+	Schedule* next;
+	time_t time;
+	int id;
+	unsigned data;
+};
+
+/**
+ * \brief add a schedule to our timetable
+ * \param id schedule ID, should have the \c SCHEDID_START_FLAG_ flag as everything else is used for alarms
+ * \param ts target time_t or time offset from 0 to 86400 (1 day)
+ * \param data schedule specific data (such as ALRM_* flags for hourly chime)
+ * \return pointer to queued schedule or \c NULL on failure
+ * \sa TimetableRemove(), AlarmEnable() */
+Schedule* TimetableAdd(int id, time_t ts, unsigned data);
+void TimetableRemove(int id);
+void TimetableQueue(Schedule* alert, int add);
+Schedule* TimetableSearchID(int id);
+
+enum{
+	SCHEDID_START_FLAG_ = 0x80000000,
+	SCHEDID_CHIME,
+	SCHEDID_UPDATE,
+	SCHEDID_WIN2K,
+};
+
+#define MAX_ALARM 999999
+enum{
+	DAYF_MONDAY   = 0x01, DAYF_TUESDAY = 0x02, DAYF_WEDNESDAY = 0x04,
+	DAYF_THURSDAY = 0x08, DAYF_FRIDAY  = 0x10, DAYF_SATURDAY  = 0x20, DAYF_SUNDAY = 0x40,
+	DAYF_DAILY     = /*0x7f*/ (DAYF_MONDAY | DAYF_TUESDAY | DAYF_WEDNESDAY | DAYF_THURSDAY | DAYF_FRIDAY | DAYF_SATURDAY | DAYF_SUNDAY),
+	DAYF_OVERFLOW  = 0x80,
+};
+#define DAYF(x) (1 << (x))
+#define DAYF_FromWDay(x) (((x) > 0 ? DAYF((x)-1) : DAYF_SUNDAY))
+enum{
+	ALRM_ENABLED =0x00000001,
+	ALRM_ONESHOT =0x00000002,
+	ALRM_12H     =0x00000004,
+	ALRM_CHIMEHR =0x00000010,
+	ALRM_REPEAT  =0x00000020,
+	ALRM_BLINK   =0x00000040,
+	ALRM_DIALOG  =0x00000080,
+};
 typedef struct{
 	char name[TNY_BUFF];
 	char message[512];
 	char settings[TNY_BUFF];
 } dlgmsg_t;
-// alarm.c
-enum{
-	ALRM_ENABLED =0x01,
-	ALRM_ONESHOT =0x02,
-	ALRM_12H     =0x04,
-	ALRM_CHIMEHR =0x10,
-	ALRM_REPEAT  =0x20,
-	ALRM_BLINK   =0x40,
-	ALRM_DIALOG  =0x80,
-};
-typedef struct{
+typedef struct alarm_t {
 	int days;
 	int hour;
 	int minute;
 	int iTimes;
+	dlgmsg_t dlgmsg;
 	unsigned char uFlags;
 	char fname[MAX_PATH];
-	dlgmsg_t dlgmsg;
 } alarm_t;
-BOOL GetHourlyChime();
-void SetHourlyChime(BOOL bEnabled);
 
-char GetAlarmEnabled(int idx);
-void SetAlarmEnabled(int idx,char bEnabled);
+/**
+ * \brief enable / disable alarm
+ * \param enable 1: enable, 0: disable, -1: toggle, -2: read from reg */
+void AlarmEnable(int idx, int enable);
+/**
+ * \brief enable / disable hourly chime
+ * \param enable 1: enable, 0: disable, -1: toggle, -2: read from reg */
+void AlarmChimeEnable(int enable);
+
 int GetAlarmNum();
 void SetAlarmNum(int num);
 void ReadAlarmFromReg(alarm_t* pAS, int idx);
@@ -122,7 +167,7 @@ int IsPlaying();
 void EndAlarm();
 void InitAlarm();
 int OnMCINotify(HWND hwnd);
-void OnTimerAlarm(HWND hwnd, SYSTEMTIME* st);
+void OnTimerAlarm(HWND hwnd, time_t time);
 /** \brief play sound or execute program \p fname
  * \param[in] hwnd
  * \param[in] fname sound to be played, or program to be executed. Can be relative to \e TCLOCK/waves/

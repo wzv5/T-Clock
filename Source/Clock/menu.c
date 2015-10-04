@@ -204,9 +204,9 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		}
 		break;}
 		
-	case IDM_CHIME:{ /// Alarms
-		SetHourlyChime(!GetHourlyChime());
-		break;}
+	case IDM_CHIME: /// Alarms
+		AlarmChimeEnable(-1);
+		break;
 		
 	case IDM_STOPWATCH: /// Timers
 		DialogStopWatch();
@@ -243,7 +243,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		if(wID>=IDM_I_TIMER && wID<IDM_I_TIMER+1000){
 			ToggleTimer(wID-IDM_I_TIMER);
 		}else if(wID>=IDM_I_ALARM && wID<IDM_I_ALARM+1000){
-			SetAlarmEnabled(wID-IDM_I_ALARM,!GetAlarmEnabled(wID-IDM_I_ALARM));
+			AlarmEnable(wID-IDM_I_ALARM, -1);
 		}else if(wID>=IDM_I_MENU && wID<IDM_I_MENU+1000){
 			char key[MAX_PATH];
 			int offset=9;
@@ -275,7 +275,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 	api.GetStr("","JihouFile",buf,MAX_PATH,"");
 	if(buf[0])
 		EnableMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_ENABLED);
-	if(GetHourlyChime()){
+	if(TimetableSearchID(SCHEDID_CHIME)) {
 		CheckMenuItem(hMenu,IDM_CHIME,MF_BYCOMMAND|MF_CHECKED);
 	}
 	count = GetAlarmNum();
