@@ -29,7 +29,6 @@
 			<Add option="/wd4306" />
 		</Compiler>
 		<Linker>
-			<Add option="/pdb:$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).pdb" />
 			<Add library="Advapi32" />
 			<Add library="user32" />
 			<Add library="gdi32" />

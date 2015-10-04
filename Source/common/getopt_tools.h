@@ -1,5 +1,8 @@
 #ifndef GETOPT_TOOLS_H_
 #define GETOPT_TOOLS_H_
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #if !defined( _MSC_VER) && !defined(GETOPT_OVERWRITE)
 #	include <getopt.h>
@@ -66,4 +69,7 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
  * \remark This function must be called repeatedly with the last returned string until it points to a null char */
 const char* PrintIndentedLine(const char* str, int max_line, int indented, int indent);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // GETOPT_TOOLS_H_

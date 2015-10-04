@@ -2,6 +2,9 @@
 #define CLOCK_API_H_
 #include <windows.h>
 #include <stdint.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define CLOCK_API 1
 
@@ -36,7 +39,8 @@ enum TOS {
 	TOS_NEWER	=0x8000, /**< in case we're "outdated" and the curent OS is newer than our known ones \sa TClockAPI::OS */
 };
 
-typedef struct TClockAPI_TAG {
+typedef struct TClockAPI TClockAPI;
+struct TClockAPI {
 	HINSTANCE hInstance; /**< handle to T-Clock.dll */
 /**
  * \brief holds current OS version flags
@@ -263,15 +267,18 @@ typedef struct TClockAPI_TAG {
 	const char* (*T)(int hash);
 	const char* (*Translate)(const char* str);
 	const char* (*TranslateWindow)(HWND hwnd);
-} TClockAPI;
+};
 
 /**
  * \brief load and initialize T-Clock.dll
  * \param dll_path path to our T-Clock[64].dll
  * \param api reference to our API struct that receives functions
- * \return returns non-zero on error. greater than 0 if internal API failure, lower than 0 if external */
+ * \return non-zero on error. greater than 0 if internal API failure, lower than 0 if external */
 int LoadClockAPI(const char* dll_path, TClockAPI* api);
 
 extern TClockAPI api;
 
+#ifdef __cplusplus
+}
+#endif
 #endif // CLOCK_API_H_

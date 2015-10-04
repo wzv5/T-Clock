@@ -1,6 +1,8 @@
-#pragma once
 #ifndef TCLOCK_UTL_H
 #define TCLOCK_UTL_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * \brief checks if current process is in admin group
  * \return boolean */
@@ -97,4 +99,7 @@ int HaveSetTimePermissions();
  * \return created or previous \p hwnd
  * \sa CreateDialogParam() */
 HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const char* lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+#ifdef __cplusplus
+}
+#endif
 #endif // TCLOCK_UTL_H

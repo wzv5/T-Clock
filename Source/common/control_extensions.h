@@ -1,6 +1,9 @@
 #ifndef CONTROL_EXTENSIONS_H_
 #define CONTROL_EXTENSIONS_H_
 #include <windows.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
 	GENERIC
@@ -94,4 +97,7 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam);
  * \return returns 1 if a color was selected */
 int ColorBox_ChooseColor(HWND button);
 
+#ifdef __cplusplus
+}
+#endif
 #endif // CONTROL_EXTENSIONS_H_

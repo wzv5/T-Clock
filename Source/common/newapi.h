@@ -1,6 +1,9 @@
 #ifndef TCLOCK_NEWAPI_H
 #define TCLOCK_NEWAPI_H
 #include <windows.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * \brief unloads all new API functions and removes \c WS_EX_LAYERED from the taskbar of our clock \a hwndClock
@@ -75,4 +78,7 @@ void DrawXPClockHover(HWND hwnd, HDC hdc, RECT* prc);
 		(LRESULT)SNDMSG((hwnd), BCM_SETSHIELD, 0, (LPARAM)fRequired)
 #endif
 
+#ifdef __cplusplus
+}
+#endif
 #endif // TCLOCK_NEWAPI_H

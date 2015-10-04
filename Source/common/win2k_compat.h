@@ -1,6 +1,8 @@
 #ifndef WIN2K_COMPAT_H_
 #define WIN2K_COMPAT_H_
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 #ifdef WIN2K_COMPAT
 
 #include <inttypes.h>
@@ -13,5 +15,7 @@ char* win2k_strtok_s(char* strToken, const char* strDelimit, char** context);
 #define strtok_s win2k_strtok_s
 
 #endif // WIN2K_COMPAT
-
+#ifdef __cplusplus
+}
+#endif
 #endif // WIN2K_COMPAT_H_

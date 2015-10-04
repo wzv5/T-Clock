@@ -8,8 +8,5 @@
 		<Project filename="T-Clock-XPCalendar.cbp">
 			<Depends filename="AutoVersion.cbp" />
 		</Project>
-		<Project filename="T-Clock-Static.cbp">
-			<Depends filename="AutoVersion.cbp" />
-		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>

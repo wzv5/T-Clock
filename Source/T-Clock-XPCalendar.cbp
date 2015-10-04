@@ -12,7 +12,7 @@
 				<Option type="0" />
 				<Option compiler="msvc10" />
 				<Compiler>
-					<Add option="/MD" />
+					<Add option="/MD /D_AFXDLL" />
 					<Add option="/GL" />
 					<Add option="/O2" />
 					<Add option="/DNDEBUG" />
@@ -28,7 +28,7 @@
 				<Option type="0" />
 				<Option compiler="msvc10" />
 				<Compiler>
-					<Add option="/MDd" />
+					<Add option="/MDd /D_AFXDLL" />
 					<Add option="/Zi" />
 					<Add option="/D_DEBUG" />
 				</Compiler>
@@ -47,7 +47,6 @@
 			<Add option="/DWINVER=0x0501" />
 		</Compiler>
 		<Linker>
-			<Add option="/pdb:$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).pdb" />
 			<Add library="User32" />
 			<Add library="Shell32" />
 			<Add library="Advapi32" />

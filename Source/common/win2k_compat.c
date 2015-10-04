@@ -1,7 +1,7 @@
+typedef void MSVC_WARNING_C4206; // "empty" file
+#ifdef WIN2K_COMPAT
 #include "win2k_compat.h"
 #include <errno.h>
-
-#ifdef WIN2K_COMPAT
 
 errno_t win2k_strncpy_s(char* strDest, size_t numberOfElements, const char* strSource, size_t count){
 	(void)count;
