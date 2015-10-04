@@ -52,31 +52,49 @@ void TimetableRemove(int id) {
 }
 void TimetableQueue(Schedule* alert, int add) {
 	if(add) {
-		Schedule* iter = timetable_end_;
-		for(;;) {
-			if(!iter) {
-				alert->prev = NULL;
-				alert->next = timetable_begin_;
+		Schedule* iter = timetable_begin_;
+		if(!iter) {
+			alert->prev = alert->next = NULL;
+add_chain_link:
+			if(alert->prev)
+				alert->prev->next = alert;
+			else
 				timetable_begin_ = alert;
-				if(alert->next)
-					alert->next->prev = alert;
-				else
-					timetable_end_ = alert;
-				break;
+			if(alert->next)
+				alert->next->prev = alert;
+			else
+				timetable_end_ = alert;
+		} else if(alert->time < (iter->time + 43200)) {
+			// forward search (eg. hourly chime, win2k timer)
+			for(;;) {
+				if(alert->time < iter->time) {
+					alert->prev = iter->prev;
+					alert->next = iter;
+					goto add_chain_link;
+				}
+				iter = iter->next;
+				if(!iter) {
+					alert->prev = timetable_end_;
+					alert->next = NULL;
+					goto add_chain_link;
+				}
 			}
-			if(alert->time >= iter->time) {
-				alert->prev = iter;
-				alert->next = iter->next;
-				if(alert->prev)
-					alert->prev->next = alert;
-				else
-					timetable_begin_ = alert;
-				if(alert->next)
-					alert->next->prev = alert;
-				else
-					timetable_end_ = alert;
+		} else {
+			// backward search (any alarm)
+			iter = timetable_end_;
+			for(;;) {
+				if(alert->time >= iter->time) {
+					alert->prev = iter;
+					alert->next = iter->next;
+					goto add_chain_link;
+				}
+				iter = iter->prev;
+				if(!iter) {
+					alert->prev = NULL;
+					alert->next = timetable_begin_;
+					goto add_chain_link;
+				}
 			}
-			iter = iter->prev;
 		}
 	} else {
 		if(alert->prev)
