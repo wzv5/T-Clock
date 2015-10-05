@@ -107,7 +107,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	// NTP data -> FILETIME
 	// seconds since 1900/01/01
 	// + 100 nano-seconds from 1601/01/01 (FILETIME) to 1900/01/01 (NTP)
-	tnew.ftqw = M32x32to64(seconds, 10000000) + 94354848000000000ULL;
+	tnew.ftqw = UInt32x32To64(seconds, 10000000) + 94354848000000000ULL;
 	// + fractions ranging from 0 to MAXUINT(0xFFFFFFFF,4294967295) as rounded up milliseconds
 	tnew.ftqw += (fractions / (429496+1) + 5) / 10 * 10000;
 	// we now have our time with 500 nanosecond precession (as windows can only handle milliseconds)

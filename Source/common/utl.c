@@ -257,21 +257,6 @@ char* MyString(UINT id)
 	LoadStringA(GetModuleHandle(NULL), id, buf, 80);
 	return buf;
 }
-
-//================================================================================================
-//----------------------------------------//--------------------------+++--> 32bit x 32bit = 64bit:
-ULONGLONG M32x32to64(DWORD a, DWORD b)   //-------------------------------------------------+++-->
-{
-	ULARGE_INTEGER ret = {{0}};
-	DWORD* p1, *p2, *p3;
-	p1 = &ret.LowPart;
-	p2 = (DWORD*)((char*)p1 + 2);
-	p3 = (DWORD*)((char*)p2 + 2);
-	*p1 = LOWORD(a) * LOWORD(b);
-	*p2 += LOWORD(a) * HIWORD(b) + HIWORD(a) * LOWORD(b);
-	*p3 += HIWORD(a) * HIWORD(b);
-	return ret.QuadPart;
-}
 /*
 #include <stddef.h>
 void ForceForegroundWindow(HWND hwnd)

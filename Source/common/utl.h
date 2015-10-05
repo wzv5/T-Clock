@@ -48,11 +48,6 @@ void del_title(char* path);
  * \sa SetForegroundWindow(), SetActiveWindow() */
 void ForceForegroundWindow(HWND hwnd);
 /**
- * \brief multiplies two 32bit values and returns 64bit result
- * \param a left side of multiplication
- * \param b right side of multiplication */
-ULONGLONG M32x32to64(DWORD a, DWORD b);
-/**
  * \brief adds a title to a path, eg. "out.exe" to "C:" results "C:/out.exe"
  * \param[in,out] path to manipulate
  * \param[in] title to add (can be relative or absolute)
