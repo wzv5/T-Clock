@@ -57,8 +57,8 @@ struct help {
  * \remark \c help_info[0].opt is currently unused and should be zero.
  * \remark \c help_info[0].params configures the behavior of \p argv0 or replaces it entirely. Set to any \c DH_ARGV* constant
  * \remark \c help_info[0].descr is the usage description after the program name. Eg. <code>[OPTION]... [-T] SOURCE DEST</code>
- * \remark \p Note: argv0 can be \c NULL when \c help_info[0].params points to a valid string
- * \remark \sa help, DH_ARGV, DH_ARGV_SHORT, PrintIndentedLine(), getopt(), getopt_long() */
+ * \remark Note: \p argv0 can be \c NULL when \c help_info[0].params points to a valid string
+ * \sa help, DH_ARGV, DH_ARGV_SHORT, PrintIndentedLine(), getopt(), getopt_long() */
 int DisplayHelp(const char* argv0, const char* short_options, const struct option* long_options, const struct help* help_info, int max_line);
 /** \brief prints a line to \c stdout indented by \p indent with maximum \p max_line characters per line
  * \param str string to output

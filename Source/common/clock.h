@@ -44,7 +44,7 @@ struct TClockAPI {
 	HINSTANCE hInstance; /**< handle to T-Clock.dll */
 /**
  * \brief holds current OS version flags
- * \sa TOS, TOS_2000, TOS_XP, TOS_VISTA, TOS_WIN7, TOS_WIN8, TOS_WIN8_1, TOS_WIN10, TOS_NEWER, TOS_OLDER */
+ * \sa TOS, TOS_2000, TOS_XP, TOS_XP_64, TOS_VISTA, TOS_WIN7, TOS_WIN8, TOS_WIN8_1, TOS_WIN10, TOS_NEWER, TOS_OLDER */
 	unsigned short OS;
 	const char* root; /**< our root folder path w/o ending slash */
 	size_t root_len; /**< length of our root folder path */
