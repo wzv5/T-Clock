@@ -55,6 +55,6 @@ rem compress
 del *.zip *.7z 2>nul
 7z a %xclude% T-Clock.zip .
 7z a %xclude% T-Clock.7z .
-appveyor PushArtifact T-Clock.zip
-appveyor PushArtifact T-Clock.7z
+powershell Push-AppveyorArtifact T-Clock.zip
+powershell Push-AppveyorArtifact T-Clock.7z
 exit /B %errorlevel%
