@@ -18,148 +18,150 @@ LIBDIR =
 LIB = -luser32 -ladvapi32 -lcomctl32 -lgdi32 -lpsapi -lwinhttp
 LDFLAGS = -static -m32
 
-INC_APP = $(INC)
-CFLAGS_APP = $(CFLAGS) -O3 -DNDEBUG
-RESINC_APP = $(RESINC)
-RCFLAGS_APP = $(RCFLAGS)
-LIBDIR_APP = $(LIBDIR)
-LIB_APP = $(LIB)
-LDFLAGS_APP = $(LDFLAGS) -s
-OBJDIR_APP = ..\\.obj\\gcc
-DEP_APP = 
-OUT_APP = ..\\..\\Release\\misc\\Options.exe
+INC_RELEASE = $(INC)
+CFLAGS_RELEASE = $(CFLAGS) -O3 -DNDEBUG
+RESINC_RELEASE = $(RESINC)
+RCFLAGS_RELEASE = $(RCFLAGS)
+LIBDIR_RELEASE = $(LIBDIR)
+LIB_RELEASE = $(LIB)
+LDFLAGS_RELEASE = $(LDFLAGS) -s
+OBJDIR_RELEASE = ..\\.obj\\gcc
+DEP_RELEASE = 
+OUT_RELEASE = ..\\..\\Release\\misc\\Options.exe
 
-INC_APP_DEBUG = $(INC)
-CFLAGS_APP_DEBUG = $(CFLAGS) -Og -g -fno-omit-frame-pointer -D_DEBUG
-RESINC_APP_DEBUG = $(RESINC)
-RCFLAGS_APP_DEBUG = $(RCFLAGS)
-LIBDIR_APP_DEBUG = $(LIBDIR)
-LIB_APP_DEBUG = $(LIB)
-LDFLAGS_APP_DEBUG = $(LDFLAGS)
-OBJDIR_APP_DEBUG = ..\\.obj\\gcc\\dbg
-DEP_APP_DEBUG = 
-OUT_APP_DEBUG = ..\\..\\Debug\\misc\\Options.exe
+INC_DEBUG = $(INC)
+CFLAGS_DEBUG = $(CFLAGS) -Og -g -fno-omit-frame-pointer -D_DEBUG
+RESINC_DEBUG = $(RESINC)
+RCFLAGS_DEBUG = $(RCFLAGS)
+LIBDIR_DEBUG = $(LIBDIR)
+LIB_DEBUG = $(LIB)
+LDFLAGS_DEBUG = $(LDFLAGS)
+OBJDIR_DEBUG = ..\\.obj\\gcc\\dbg
+DEP_DEBUG = 
+OUT_DEBUG = ..\\..\\Debug\\misc\\Options.exe
 
-OBJ_APP = $(OBJDIR_APP)\\__\\options\\update.o \
-	$(OBJDIR_APP)\\__\\options\\resource.o \
-	$(OBJDIR_APP)\\__\\options\\main.o \
-	$(OBJDIR_APP)\\__\\common\\win2k_compat.o \
-	$(OBJDIR_APP)\\__\\common\\utl.o \
-	$(OBJDIR_APP)\\__\\common\\newapi.o \
-	$(OBJDIR_APP)\\__\\common\\messagebox_custom.o \
-	$(OBJDIR_APP)\\__\\common\\getopt_tools.o \
-	$(OBJDIR_APP)\\__\\common\\clock.o
+OBJ_RELEASE = $(OBJDIR_RELEASE)\\__\\options\\update.o \
+	$(OBJDIR_RELEASE)\\__\\options\\resource.o \
+	$(OBJDIR_RELEASE)\\__\\options\\main.o \
+	$(OBJDIR_RELEASE)\\__\\common\\win2k_compat.o \
+	$(OBJDIR_RELEASE)\\__\\common\\utl.o \
+	$(OBJDIR_RELEASE)\\__\\common\\newapi.o \
+	$(OBJDIR_RELEASE)\\__\\common\\messagebox_custom.o \
+	$(OBJDIR_RELEASE)\\__\\common\\getopt_tools.o \
+	$(OBJDIR_RELEASE)\\__\\common\\clock.o
 
-OBJ_APP_DEBUG = $(OBJDIR_APP_DEBUG)\\__\\options\\update.o \
-	$(OBJDIR_APP_DEBUG)\\__\\options\\resource.o \
-	$(OBJDIR_APP_DEBUG)\\__\\options\\main.o \
-	$(OBJDIR_APP_DEBUG)\\__\\common\\win2k_compat.o \
-	$(OBJDIR_APP_DEBUG)\\__\\common\\utl.o \
-	$(OBJDIR_APP_DEBUG)\\__\\common\\newapi.o \
-	$(OBJDIR_APP_DEBUG)\\__\\common\\messagebox_custom.o \
-	$(OBJDIR_APP_DEBUG)\\__\\common\\getopt_tools.o \
-	$(OBJDIR_APP_DEBUG)\\__\\common\\clock.o
+OBJ_DEBUG = $(OBJDIR_DEBUG)\\__\\options\\update.o \
+	$(OBJDIR_DEBUG)\\__\\options\\resource.o \
+	$(OBJDIR_DEBUG)\\__\\options\\main.o \
+	$(OBJDIR_DEBUG)\\__\\common\\win2k_compat.o \
+	$(OBJDIR_DEBUG)\\__\\common\\utl.o \
+	$(OBJDIR_DEBUG)\\__\\common\\newapi.o \
+	$(OBJDIR_DEBUG)\\__\\common\\messagebox_custom.o \
+	$(OBJDIR_DEBUG)\\__\\common\\getopt_tools.o \
+	$(OBJDIR_DEBUG)\\__\\common\\clock.o
 
-all: before_build build_app build_app_debug after_build
+all: before_build build_release build_debug after_build
 
-clean: clean_app clean_app_debug
+clean: clean_release clean_debug
 
 before_build: 
 	../common/AutoVersion --git . ../common/version.h
 
 after_build: 
 
-before_app: 
+before_release: 
 	cmd /c if not exist ..\\..\\Release\\misc md ..\\..\\Release\\misc
-	cmd /c if not exist $(OBJDIR_APP)\\__\\options md $(OBJDIR_APP)\\__\\options
-	cmd /c if not exist $(OBJDIR_APP)\\__\\common md $(OBJDIR_APP)\\__\\common
+	cmd /c if not exist $(OBJDIR_RELEASE)\\__\\options md $(OBJDIR_RELEASE)\\__\\options
+	cmd /c if not exist $(OBJDIR_RELEASE)\\__\\common md $(OBJDIR_RELEASE)\\__\\common
 
-after_app: 
+after_release: 
 
-build_app: before_app out_app after_app
+build_release: before_release out_release after_release
 
-app: before_build build_app after_build
+release: before_build build_release after_build
 
-out_app: before_app $(OBJ_APP) $(DEP_APP)
-	$(LD) $(LIBDIR_APP) -o $(OUT_APP) $(OBJ_APP)  $(LDFLAGS_APP) $(LIB_APP)
+out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
+	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
 
-$(OBJDIR_APP)\\__\\options\\update.o: ..\\options\\update.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\options\\update.c -o $(OBJDIR_APP)\\__\\options\\update.o
+$(OBJDIR_RELEASE)\\__\\options\\update.o: ..\\options\\update.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\options\\update.c -o $(OBJDIR_RELEASE)\\__\\options\\update.o
 
-$(OBJDIR_APP)\\__\\options\\resource.o: ..\\options\\resource.rc
-	$(WINDRES) -i ..\\options\\resource.rc -J rc -o $(OBJDIR_APP)\\__\\options\\resource.o -O coff $(INC_APP)
+$(OBJDIR_RELEASE)\\__\\options\\resource.o: ..\\options\\resource.rc
+	$(WINDRES) -i ..\\options\\resource.rc -J rc -o $(OBJDIR_RELEASE)\\__\\options\\resource.o -O coff $(INC_RELEASE)
 
-$(OBJDIR_APP)\\__\\options\\main.o: ..\\options\\main.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\options\\main.c -o $(OBJDIR_APP)\\__\\options\\main.o
+$(OBJDIR_RELEASE)\\__\\options\\main.o: ..\\options\\main.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\options\\main.c -o $(OBJDIR_RELEASE)\\__\\options\\main.o
 
-$(OBJDIR_APP)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\common\\win2k_compat.c -o $(OBJDIR_APP)\\__\\common\\win2k_compat.o
+$(OBJDIR_RELEASE)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\common\\win2k_compat.c -o $(OBJDIR_RELEASE)\\__\\common\\win2k_compat.o
 
-$(OBJDIR_APP)\\__\\common\\utl.o: ..\\common\\utl.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\common\\utl.c -o $(OBJDIR_APP)\\__\\common\\utl.o
+$(OBJDIR_RELEASE)\\__\\common\\utl.o: ..\\common\\utl.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\common\\utl.c -o $(OBJDIR_RELEASE)\\__\\common\\utl.o
 
-$(OBJDIR_APP)\\__\\common\\newapi.o: ..\\common\\newapi.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\common\\newapi.c -o $(OBJDIR_APP)\\__\\common\\newapi.o
+$(OBJDIR_RELEASE)\\__\\common\\newapi.o: ..\\common\\newapi.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\common\\newapi.c -o $(OBJDIR_RELEASE)\\__\\common\\newapi.o
 
-$(OBJDIR_APP)\\__\\common\\messagebox_custom.o: ..\\common\\messagebox_custom.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\common\\messagebox_custom.c -o $(OBJDIR_APP)\\__\\common\\messagebox_custom.o
+$(OBJDIR_RELEASE)\\__\\common\\messagebox_custom.o: ..\\common\\messagebox_custom.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\common\\messagebox_custom.c -o $(OBJDIR_RELEASE)\\__\\common\\messagebox_custom.o
 
-$(OBJDIR_APP)\\__\\common\\getopt_tools.o: ..\\common\\getopt_tools.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\common\\getopt_tools.c -o $(OBJDIR_APP)\\__\\common\\getopt_tools.o
+$(OBJDIR_RELEASE)\\__\\common\\getopt_tools.o: ..\\common\\getopt_tools.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\common\\getopt_tools.c -o $(OBJDIR_RELEASE)\\__\\common\\getopt_tools.o
 
-$(OBJDIR_APP)\\__\\common\\clock.o: ..\\common\\clock.c
-	$(CC) $(CFLAGS_APP) $(INC_APP) -c ..\\common\\clock.c -o $(OBJDIR_APP)\\__\\common\\clock.o
+$(OBJDIR_RELEASE)\\__\\common\\clock.o: ..\\common\\clock.c
+	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ..\\common\\clock.c -o $(OBJDIR_RELEASE)\\__\\common\\clock.o
 
-clean_app: 
-	cmd /c del /f $(OBJ_APP) $(OUT_APP)
-	cmd /c rd $(OBJDIR_APP)\\__\\options
-	cmd /c rd $(OBJDIR_APP)\\__\\common
+clean_release: 
+	cmd /c del /f $(OBJ_RELEASE) $(OUT_RELEASE)
+	cmd /c rd $(OBJDIR_RELEASE)\\__\\options
+	cmd /c rd $(OBJDIR_RELEASE)\\__\\common
 
-before_app_debug: 
+before_debug: 
 	cmd /c if not exist ..\\..\\Debug\\misc md ..\\..\\Debug\\misc
-	cmd /c if not exist $(OBJDIR_APP_DEBUG)\\__\\options md $(OBJDIR_APP_DEBUG)\\__\\options
-	cmd /c if not exist $(OBJDIR_APP_DEBUG)\\__\\common md $(OBJDIR_APP_DEBUG)\\__\\common
+	cmd /c if not exist $(OBJDIR_DEBUG)\\__\\options md $(OBJDIR_DEBUG)\\__\\options
+	cmd /c if not exist $(OBJDIR_DEBUG)\\__\\common md $(OBJDIR_DEBUG)\\__\\common
 
-after_app_debug: 
+after_debug: 
+	objcopy --only-keep-debug ../../Debug/misc/Options.exe ../../Debug/misc/Options.dbg
+	objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../../Debug/misc/Options.dbg ../../Debug/misc/Options.exe
 
-build_app_debug: before_app_debug out_app_debug after_app_debug
+build_debug: before_debug out_debug after_debug
 
-app_debug: before_build build_app_debug after_build
+debug: before_build build_debug after_build
 
-out_app_debug: before_app_debug $(OBJ_APP_DEBUG) $(DEP_APP_DEBUG)
-	$(LD) $(LIBDIR_APP_DEBUG) -o $(OUT_APP_DEBUG) $(OBJ_APP_DEBUG)  $(LDFLAGS_APP_DEBUG) $(LIB_APP_DEBUG)
+out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
+	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
 
-$(OBJDIR_APP_DEBUG)\\__\\options\\update.o: ..\\options\\update.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\options\\update.c -o $(OBJDIR_APP_DEBUG)\\__\\options\\update.o
+$(OBJDIR_DEBUG)\\__\\options\\update.o: ..\\options\\update.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\options\\update.c -o $(OBJDIR_DEBUG)\\__\\options\\update.o
 
-$(OBJDIR_APP_DEBUG)\\__\\options\\resource.o: ..\\options\\resource.rc
-	$(WINDRES) -i ..\\options\\resource.rc -J rc -o $(OBJDIR_APP_DEBUG)\\__\\options\\resource.o -O coff $(INC_APP_DEBUG)
+$(OBJDIR_DEBUG)\\__\\options\\resource.o: ..\\options\\resource.rc
+	$(WINDRES) -i ..\\options\\resource.rc -J rc -o $(OBJDIR_DEBUG)\\__\\options\\resource.o -O coff $(INC_DEBUG)
 
-$(OBJDIR_APP_DEBUG)\\__\\options\\main.o: ..\\options\\main.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\options\\main.c -o $(OBJDIR_APP_DEBUG)\\__\\options\\main.o
+$(OBJDIR_DEBUG)\\__\\options\\main.o: ..\\options\\main.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\options\\main.c -o $(OBJDIR_DEBUG)\\__\\options\\main.o
 
-$(OBJDIR_APP_DEBUG)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\common\\win2k_compat.c -o $(OBJDIR_APP_DEBUG)\\__\\common\\win2k_compat.o
+$(OBJDIR_DEBUG)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\common\\win2k_compat.c -o $(OBJDIR_DEBUG)\\__\\common\\win2k_compat.o
 
-$(OBJDIR_APP_DEBUG)\\__\\common\\utl.o: ..\\common\\utl.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\common\\utl.c -o $(OBJDIR_APP_DEBUG)\\__\\common\\utl.o
+$(OBJDIR_DEBUG)\\__\\common\\utl.o: ..\\common\\utl.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\common\\utl.c -o $(OBJDIR_DEBUG)\\__\\common\\utl.o
 
-$(OBJDIR_APP_DEBUG)\\__\\common\\newapi.o: ..\\common\\newapi.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\common\\newapi.c -o $(OBJDIR_APP_DEBUG)\\__\\common\\newapi.o
+$(OBJDIR_DEBUG)\\__\\common\\newapi.o: ..\\common\\newapi.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\common\\newapi.c -o $(OBJDIR_DEBUG)\\__\\common\\newapi.o
 
-$(OBJDIR_APP_DEBUG)\\__\\common\\messagebox_custom.o: ..\\common\\messagebox_custom.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\common\\messagebox_custom.c -o $(OBJDIR_APP_DEBUG)\\__\\common\\messagebox_custom.o
+$(OBJDIR_DEBUG)\\__\\common\\messagebox_custom.o: ..\\common\\messagebox_custom.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\common\\messagebox_custom.c -o $(OBJDIR_DEBUG)\\__\\common\\messagebox_custom.o
 
-$(OBJDIR_APP_DEBUG)\\__\\common\\getopt_tools.o: ..\\common\\getopt_tools.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\common\\getopt_tools.c -o $(OBJDIR_APP_DEBUG)\\__\\common\\getopt_tools.o
+$(OBJDIR_DEBUG)\\__\\common\\getopt_tools.o: ..\\common\\getopt_tools.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\common\\getopt_tools.c -o $(OBJDIR_DEBUG)\\__\\common\\getopt_tools.o
 
-$(OBJDIR_APP_DEBUG)\\__\\common\\clock.o: ..\\common\\clock.c
-	$(CC) $(CFLAGS_APP_DEBUG) $(INC_APP_DEBUG) -c ..\\common\\clock.c -o $(OBJDIR_APP_DEBUG)\\__\\common\\clock.o
+$(OBJDIR_DEBUG)\\__\\common\\clock.o: ..\\common\\clock.c
+	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ..\\common\\clock.c -o $(OBJDIR_DEBUG)\\__\\common\\clock.o
 
-clean_app_debug: 
-	cmd /c del /f $(OBJ_APP_DEBUG) $(OUT_APP_DEBUG)
-	cmd /c rd $(OBJDIR_APP_DEBUG)\\__\\options
-	cmd /c rd $(OBJDIR_APP_DEBUG)\\__\\common
+clean_debug: 
+	cmd /c del /f $(OBJ_DEBUG) $(OUT_DEBUG)
+	cmd /c rd $(OBJDIR_DEBUG)\\__\\options
+	cmd /c rd $(OBJDIR_DEBUG)\\__\\common
 
-.PHONY: before_build after_build before_app after_app clean_app before_app_debug after_app_debug clean_app_debug
+.PHONY: before_build after_build before_release after_release clean_release before_debug after_debug clean_debug
 

@@ -33,9 +33,9 @@ FONT 8, "Ms Shell Dlg", 400, 0, 1
 //
 // Icon resources
 //
-IDI_MAIN           ICON           "..\\common\\icons\\cog.ico"
-IDI_UPDATE         ICON           "..\\common\\icons\\arrow-refresh.ico"
-IDI_UPDATE_S       ICON           "..\\common\\icons\\arrow-refresh-small.ico"
+IDI_MAIN           ICON           "../common/icons/cog.ico"
+IDI_UPDATE         ICON           "../common/icons/arrow-refresh.ico"
+IDI_UPDATE_S       ICON           "../common/icons/arrow-refresh-small.ico"
 
 
 

@@ -15,7 +15,7 @@ INC0 =
 CFLAGS0 = -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DWIN2K_COMPAT
 RESINC0 = 
 LIBDIR0 = 
-LIB0 = -ladvapi32 -luser32 -lole32 -lgdi32
+LIB0 = -ladvapi32 -luser32 -lole32 -lgdi32 -lpsapi
 LDFLAGS0 = -static
 
 CC1 = i686-w64-mingw32-gcc
@@ -28,7 +28,7 @@ INC1 =
 CFLAGS1 = -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DWIN2K_COMPAT
 RESINC1 = 
 LIBDIR1 = 
-LIB1 = -ladvapi32 -luser32 -lole32 -lgdi32
+LIB1 = -ladvapi32 -luser32 -lole32 -lgdi32 -lpsapi
 LDFLAGS1 = -static
 
 CC2 = x86_64-w64-mingw32-gcc
@@ -41,7 +41,7 @@ INC2 =
 CFLAGS2 = -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DWIN2K_COMPAT
 RESINC2 = 
 LIBDIR2 = 
-LIB2 = -ladvapi32 -luser32 -lole32 -lgdi32
+LIB2 = -ladvapi32 -luser32 -lole32 -lgdi32 -lpsapi
 LDFLAGS2 = -static
 
 INC_AUTOVERSION = $(INC0)
@@ -82,7 +82,7 @@ CFLAGS_APP = $(CFLAGS1) -O3 -m32 -DNDEBUG
 RESINC_APP = $(RESINC1)
 RCFLAGS_APP = $(RCFLAGS1)
 LIBDIR_APP = $(LIBDIR1)
-LIB_APP = $(LIB1)-lpsapi -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
+LIB_APP = $(LIB1) -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
 LDFLAGS_APP = $(LDFLAGS1) -s -m32
 OBJDIR_APP = .obj
 DEP_APP = 
@@ -104,7 +104,7 @@ CFLAGS_APP_DEBUG = $(CFLAGS1) -m32 -Og -g -fno-omit-frame-pointer -D_DEBUG
 RESINC_APP_DEBUG = $(RESINC1)
 RCFLAGS_APP_DEBUG = $(RCFLAGS1)
 LIBDIR_APP_DEBUG = $(LIBDIR1)
-LIB_APP_DEBUG = $(LIB1)-lpsapi -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
+LIB_APP_DEBUG = $(LIB1) -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
 LDFLAGS_APP_DEBUG = $(LDFLAGS1) -m32
 OBJDIR_APP_DEBUG = .obj\\dbg
 DEP_APP_DEBUG = 
@@ -126,7 +126,7 @@ CFLAGS_APP_64 = $(CFLAGS2) -O3 -m64 -DNDEBUG
 RESINC_APP_64 = $(RESINC2)
 RCFLAGS_APP_64 = $(RCFLAGS2)
 LIBDIR_APP_64 = $(LIBDIR2)
-LIB_APP_64 = $(LIB2)-lpsapi -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
+LIB_APP_64 = $(LIB2) -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
 LDFLAGS_APP_64 = $(LDFLAGS2) -s -m64
 OBJDIR_APP_64 = .obj64
 DEP_APP_64 = 
@@ -148,7 +148,7 @@ CFLAGS_APP_64_DEBUG = $(CFLAGS2) -m64 -Og -g -fno-omit-frame-pointer -D_DEBUG
 RESINC_APP_64_DEBUG = $(RESINC2)
 RCFLAGS_APP_64_DEBUG = $(RCFLAGS2)
 LIBDIR_APP_64_DEBUG = $(LIBDIR2)
-LIB_APP_64_DEBUG = $(LIB2)-lpsapi -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
+LIB_APP_64_DEBUG = $(LIB2) -lcomdlg32 -lshlwapi -lversion -lcomctl32 -lwinmm -lws2_32 -lmpr -luuid -lmsimg32
 LDFLAGS_APP_64_DEBUG = $(LDFLAGS2) -m64
 OBJDIR_APP_64_DEBUG = .obj64\\dbg
 DEP_APP_64_DEBUG = 

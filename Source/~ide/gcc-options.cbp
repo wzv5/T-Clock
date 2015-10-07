@@ -30,6 +30,10 @@
 					<Add option="-fno-omit-frame-pointer" />
 					<Add option="-D_DEBUG" />
 				</Compiler>
+				<ExtraCommands>
+					<Add after="objcopy --only-keep-debug ../../Debug/misc/Options.exe ../../Debug/misc/Options.dbg" />
+					<Add after="objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../../Debug/misc/Options.dbg ../../Debug/misc/Options.exe" />
+				</ExtraCommands>
 			</Target>
 		</Build>
 		<Compiler>
