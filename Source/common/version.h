@@ -1,47 +1,52 @@
-/* Note: to use integer defines as strings, use for example STR(VER_REVISION) */
-#pragma once
 #ifndef AUTOVERSION_H
 #define AUTOVERSION_H
-#	define XSTR(x) #x
-#	define STR(x) XSTR(x)
-/** Version **/
+/* Note: to use integer defines as strings, use STR(), eg. STR(VER_REVISION) */
+#ifndef STR
+#	define STR_(x) #x
+#	define STR(x) STR_(x)
+#endif
+#ifndef L
+#	define L_(x) L##x
+#	define L(x) L_(x)
+#endif
+/**** Version ****/
 #	define VER_MAJOR 2
-#	define VER_MINOR 3
-#	define VER_BUILD 2
-	/* status values: 0=Alpha, 1=Beta, 2=Release Candidate, 3=Release, 4=Release Maintenance */
-#	define VER_STATUS 1
-#	define VER_STATUS_FULL "Beta"
-#	define VER_STATUS_SHORT "b"
-#	define VER_STATUS_GREEK "β"
-#	define VER_REVISION 151
-#	define VER_FULL "2.3.2 Beta"
-#	define VER_SHORT "2.3b2"
-#	define VER_SHORT_DOTS "2.3.2"
-#	define VER_SHORT_GREEK "2.3β2"
-#	define VER_RC_REVISION 2, 3, 2, 151
-#	define VER_RC_STATUS 2, 3, 2, 1
-/** Subversion Information **/
+#	define VER_MINOR 4
+#	define VER_BUILD 0
+	/* status values: 0=Alpha, 1=Beta, 2=RC, 3=Release, 4=Maintenance */
+#	define VER_STATUS 2
+#	define VER_STATUS_FULL "RC"
+#	define VER_STATUS_SHORT "rc"
+#	define VER_STATUS_GREEK "гc"
+#	define VER_REVISION 326
+#	define VER_FULL "2.4.0 RC"
+#	define VER_SHORT "2.4rc0"
+#	define VER_SHORT_DOTS "2.4.0"
+#	define VER_SHORT_GREEK "2.4гc0"
+#	define VER_RC_REVISION 2, 4, 0, 326
+#	define VER_RC_STATUS 2, 4, 0, 2
+/**** Subversion Information ****/
 #	define VER_REVISION_URL "git@github.com:White-Tiger/T-Clock.git"
-#	define VER_REVISION_DATE "2014-11-03 15:18:07 +0000 (Mon, Nov 03 2014)"
-#	define VER_REVISION_HASH "483b3f8"
-#	define VER_REVISION_TAG "v2.3.2#151-beta"
-/** Date/Time **/
-#	define VER_TIMESTAMP 1415229325
-#	define VER_TIME_SEC 25
-#	define VER_TIME_MIN 15
-#	define VER_TIME_HOUR 23
-#	define VER_TIME_DAY 5
-#	define VER_TIME_MONTH 11
-#	define VER_TIME_YEAR 2014
+#	define VER_REVISION_DATE "2015-10-07 14:17:30 +0000 (Wed, Oct 07 2015)"
+#	define VER_REVISION_HASH "563c038"
+#	define VER_REVISION_TAG "v2.4.0#326-rc"
+/**** Date/Time ****/
+#	define VER_TIMESTAMP 1444229197
+#	define VER_TIME_SEC 37
+#	define VER_TIME_MIN 46
+#	define VER_TIME_HOUR 14
+#	define VER_TIME_DAY 7
+#	define VER_TIME_MONTH 10
+#	define VER_TIME_YEAR 2015
 #	define VER_TIME_WDAY 3
-#	define VER_TIME_YDAY 308
+#	define VER_TIME_YDAY 279
 #	define VER_TIME_WDAY_SHORT "Wed"
 #	define VER_TIME_WDAY_FULL "Wednesday"
-#	define VER_TIME_MONTH_SHORT "Nov"
-#	define VER_TIME_MONTH_FULL "November"
-#	define VER_TIME "23:15:25"
-#	define VER_DATE "2014-11-05"
-#	define VER_DATE_LONG "Wed, Nov 05, 2014 23:15:25 UTC"
-#	define VER_DATE_SHORT "2014-11-05 23:15:25 UTC"
-#	define VER_DATE_ISO "2014-11-05T23:15:25Z"
+#	define VER_TIME_MONTH_SHORT "Oct"
+#	define VER_TIME_MONTH_FULL "October"
+#	define VER_TIME "14:46:37"
+#	define VER_DATE "2015-10-07"
+#	define VER_DATE_LONG "Wed, Oct 07, 2015 14:46:37 UTC"
+#	define VER_DATE_SHORT "2015-10-07 14:46:37 UTC"
+#	define VER_DATE_ISO "2015-10-07T14:46:37Z"
 #endif
