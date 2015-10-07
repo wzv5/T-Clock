@@ -8,7 +8,7 @@ clean: TARGET = clean
 clean: all
 
 clock:
-	mingw32-make -f ../Makefile $(TARGET)
+	cd .. && mingw32-make -f Makefile $(TARGET)
 
 options:
 	mingw32-make -f gcc-options.make $(TARGET)

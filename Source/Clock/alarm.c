@@ -29,6 +29,8 @@ Schedule* TimetableAdd(int id, time_t ts, unsigned data) {
 	schedule = TimetableSearchID(id);
 	if(schedule) {
 		TimetableQueue(schedule, 0);
+		if(ts > 86400)
+			schedule->time = ts;
 	} else {
 		schedule = (Schedule*)malloc(sizeof(Schedule));
 		if(!schedule)
@@ -36,9 +38,8 @@ Schedule* TimetableAdd(int id, time_t ts, unsigned data) {
 		schedule->id = id;
 		if(ts <= 86400)
 			ts = time(NULL) + ts;
-	}
-	if(ts > 86400)
 		schedule->time = ts;
+	}
 	schedule->data = data;
 	TimetableQueue(schedule, 1);
 	return schedule;
