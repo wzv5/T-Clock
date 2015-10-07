@@ -698,14 +698,11 @@ bool WriteHeader(const char* filepath,Version &ver)
 	WriteDefineString(fheader,"SHORT_GREEK",ver);
 	WriteDefine(fheader,"RC_REVISION",ver);
 	WriteDefine(fheader,"RC_STATUS",ver);
-	if(g_repo) {
-		fputs("/**** Subversion Information ****/\n",fheader);
-		WriteDefineString(fheader,"REVISION_URL",ver);
-		WriteDefineString(fheader,"REVISION_DATE",ver);
-		WriteDefineString(fheader,"REVISION_HASH",ver);
-		// revision tag
-		WriteDefineString(fheader,"REVISION_TAG",ver);
-	}
+	fputs("/**** Subversion Information ****/\n",fheader);
+	WriteDefineString(fheader,"REVISION_URL",ver);
+	WriteDefineString(fheader,"REVISION_DATE",ver);
+	WriteDefineString(fheader,"REVISION_HASH",ver);
+	WriteDefineString(fheader,"REVISION_TAG",ver);
 	char tmp[64];
 	ver.timestamp = time(NULL);
 	tm* ttm=gmtime(&ver.timestamp);
