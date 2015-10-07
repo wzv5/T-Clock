@@ -330,6 +330,8 @@ int DeleteAlarmFromReg(int idx)
 //----------------------------------------------+++--> Load Configured Alarm Data From Registry:
 void InitAlarm()   //--------------------------------------------------------------------+++-->
 {
+	time_t ts;
+	time_t next_update;
 	TimetableClean();
 	m_maxAlarm = GetAlarmNum();
 	if(m_maxAlarm > 0) {
@@ -346,6 +348,17 @@ void InitAlarm()   //-----------------------------------------------------------
 		TimetableAdd(SCHEDID_WIN2K, 30, 30);
 	}
 #	endif // WIN2K_COMPAT
+	// update check (always added, checks "enabled" on trigger)
+	ts = time(NULL) + 300;
+	next_update = api.GetInt64(NULL, UPDATE_TIMESTAMP, 0);
+	if(!next_update) {
+		next_update = time(NULL) + 86400;
+		api.SetInt64(NULL, UPDATE_TIMESTAMP, next_update);
+	}
+	if(ts > next_update)
+		TimetableAdd(SCHEDID_UPDATE, ts, (unsigned)(ts-next_update));
+	else
+		TimetableAdd(SCHEDID_UPDATE, next_update, 0);
 }
 //================================================================================================
 //---------------------//--------------------------------------+++--> Shut Off the God Damn Siren!:
@@ -398,6 +411,19 @@ void OnTimerAlarm(HWND hwnd, time_t time)   // 12am = Midnight -----------------
 						PlayFile(hwnd, fname_u1, repeat_u1);
 					}
 					schedule->time += 3600;
+					break;
+				case SCHEDID_UPDATE:
+					if(!api.GetInt(NULL, UPDATE_RELEASE, 1)) {
+						schedule->time = 0;
+						break;
+					}
+					schedule->time += 86400;
+					schedule->time -= schedule->data;
+					schedule->data = 0;
+					if(time > schedule->time)
+						schedule->time = time + 86400;
+					api.SetInt64(NULL, UPDATE_TIMESTAMP, schedule->time);
+					api.ShellExecute(NULL, "misc\\Options", "-unotify", NULL, SW_HIDE);
 					break;
 #				ifdef WIN2K_COMPAT
 				case SCHEDID_WIN2K:

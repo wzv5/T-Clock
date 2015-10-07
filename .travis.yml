@@ -44,5 +44,5 @@ deploy:
     tags: true
 
 script:
-- cd Source
-- make -f Makefile.unix
+- cd Source/~ide
+- make

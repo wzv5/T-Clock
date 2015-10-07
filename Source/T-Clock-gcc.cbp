@@ -81,7 +81,6 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-m32" />
-					<Add library="psapi" />
 					<Add library="comdlg32" />
 					<Add library="shlwapi" />
 					<Add library="version" />
@@ -130,7 +129,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="-m32" />
-					<Add library="psapi" />
 					<Add library="comdlg32" />
 					<Add library="shlwapi" />
 					<Add library="version" />
@@ -183,7 +181,6 @@
 				<Linker>
 					<Add option="-s" />
 					<Add option="-m64" />
-					<Add library="psapi" />
 					<Add library="comdlg32" />
 					<Add library="shlwapi" />
 					<Add library="version" />
@@ -232,7 +229,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="-m64" />
-					<Add library="psapi" />
 					<Add library="comdlg32" />
 					<Add library="shlwapi" />
 					<Add library="version" />
@@ -300,6 +296,7 @@
 			<Add library="user32" />
 			<Add library="ole32" />
 			<Add library="gdi32" />
+			<Add library="psapi" />
 		</Linker>
 		<Unit filename="Calendar/DeskCalendar.c">
 			<Option compilerVar="CC" />

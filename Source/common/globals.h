@@ -83,6 +83,10 @@ enum{ // Drop&File enum / registry settings
 	DF_MOVE,
 };
 
+#define UPDATE_TIMESTAMP "UpdT" /**< setting name for 64bit timestamp */
+#define UPDATE_RELEASE   "UpdR" /**< setting name for release */
+#define UPDATE_BETA      "UpdB" /**< setting name for beta */
+
 // messages to send the main/helper app
 #define MAINMFIRST					MAINM_CLOCKINIT
 #define MAINM_CLOCKINIT				(WM_USER)

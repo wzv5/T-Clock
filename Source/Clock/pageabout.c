@@ -38,10 +38,11 @@ INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		WORD id, code;
 		id = LOWORD(wParam);
 		code = HIWORD(wParam);
-		if(id==IDC_ABT_MAILuri) {
+		if(id == IDC_UPDATE) {
+			api.ShellExecute(NULL, "misc\\Options", "-u", hDlg, SW_HIDE); // SW_MINIMIZE is buggy
+		}else if(id == IDC_ABT_MAILuri) {
 			OnLinkClicked(hDlg, id);
-		}
-		if((id==IDC_STARTUP) && ((code==BST_CHECKED) || (code==BST_UNCHECKED))) {
+		}else if((id==IDC_STARTUP) && ((code==BST_CHECKED) || (code==BST_UNCHECKED))) {
 			SendPSChanged(hDlg);
 		}
 		return TRUE;}

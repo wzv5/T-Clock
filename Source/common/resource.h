@@ -317,6 +317,7 @@
 #define IDC_TONIKAKU                    1611
 #define IDC_WATCHWALL                   1612
 #define IDC_STARTUP                     1613
+#define IDC_UPDATE                      1614
 #define IDC_LABTESTSOUND                1801
 #define IDC_TESTSOUND                   1802
 #define IDC_TIMERNAME                   1900

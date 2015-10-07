@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Options (msvc)" />
+		<Option pch_mode="2" />
+		<Option compiler="msvc10" />
+		<Build>
+			<Target title="release">
+				<Option output="../../Release/misc/Options" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../.obj/msvc/" />
+				<Option type="1" />
+				<Option compiler="msvc10" />
+				<Option parameters="-u" />
+				<Compiler>
+					<Add option="/MD /D_AFXDLL" />
+					<Add option="/GL" />
+					<Add option="/O2" />
+					<Add option="/DNDEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/LTCG" />
+				</Linker>
+			</Target>
+			<Target title="debug">
+				<Option output="../../Debug/misc/Options" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../.obj/msvc/dbg/" />
+				<Option type="1" />
+				<Option compiler="msvc10" />
+				<Compiler>
+					<Add option="/MDd /D_AFXDLL" />
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
+				</Compiler>
+				<Linker>
+					<Add option="/debug" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="/D_UNICODE /DUNICODE" />
+			<Add option="/W4" />
+			<Add option="/DWINVER=0x0501" />
+			<Add option="/DPSAPI_VERSION=1" />
+		</Compiler>
+		<Linker>
+			<Add library="user32" />
+			<Add library="advapi32" />
+			<Add library="comctl32" />
+			<Add library="gdi32" />
+			<Add library="psapi" />
+			<Add library="winhttp" />
+		</Linker>
+		<ExtraCommands>
+			<Add before="../common/AutoVersion --git . ../common/version.h" />
+		</ExtraCommands>
+		<Unit filename="../common/clock.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../common/clock.h" />
+		<Unit filename="../common/getopt_tools.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../common/getopt_tools.h" />
+		<Unit filename="../common/globals.h" />
+		<Unit filename="../common/manifest.xml" />
+		<Unit filename="../common/messagebox_custom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../common/messagebox_custom.h" />
+		<Unit filename="../common/newapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../common/newapi.h" />
+		<Unit filename="../common/utl.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../common/utl.h" />
+		<Unit filename="../common/version.h" />
+		<Unit filename="../common/win2k_compat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../common/win2k_compat.h" />
+		<Unit filename="../options/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../options/resource.h" />
+		<Unit filename="../options/resource.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="../options/update.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../options/update.h" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

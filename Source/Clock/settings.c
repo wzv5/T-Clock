@@ -1,7 +1,7 @@
 #include "tclock.h"
 #include "../common/utl.h"
 
-#define CURRENT_VER 2
+#define CURRENT_VER 3
 
 static int ParseSettings();
 static void ConvertSettings();
@@ -79,6 +79,8 @@ int ParseSettings(){
 			}
 			api.SetInt("Format", "Lf", u.entryS);
 			api.SetInt("","Ver",CURRENT_VER);
+			// first time update check (firewall warning etc.)
+			api.ShellExecute(NULL, "misc\\Options", "-unotify", NULL, SW_HIDE);
 			return 1;
 		}
 	}
@@ -92,14 +94,14 @@ int ParseSettings(){
 		/* fall through */
 		
 	case 1: /// v2.3.0#127(dff0300,63ba670#106) T-Clock file structure changed, startup link must be updated.
-		updateflags|=SFORMAT_SILENT;
+		//updateflags|=SFORMAT_SILENT;
 		/* fall through */
 		
 	case 2: /// v2.4.0#000(dff0300,63ba670#106) alarms unified to always use 24h format internally, added distinct 24h format, "new line" format supports switched sides
 		updateflags|=SFORMAT_SILENT;
 		/* fall through */
 		
-//	case CURRENT_VER: // current version
+	case CURRENT_VER: // current version
 		break;
 		
 	default:{
@@ -242,10 +244,12 @@ void ConvertSettings(){
 				}
 			}
 		}}
+		// first time update check (firewall warning etc.)
+		api.ShellExecute(NULL, "misc\\Options", "-unotify", NULL, SW_HIDE);
 		/* fall through */
 		
-//	case CURRENT_VER:
-//		;
+	case CURRENT_VER:
+		;
 	}
 	api.SetInt("","Ver",CURRENT_VER);
 }

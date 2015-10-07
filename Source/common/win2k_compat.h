@@ -5,7 +5,7 @@ extern "C" {
 #endif
 #ifdef WIN2K_COMPAT
 
-#include <inttypes.h>
+#include <stdint.h>
 #include <string.h>
 errno_t win2k_strncpy_s(char* strDest, size_t numberOfElements, const char* strSource, size_t count);
 errno_t win2k_wcsncpy_s(wchar_t* strDest, size_t numberOfElements, const wchar_t* strSource, size_t count);
@@ -14,6 +14,22 @@ errno_t win2k_wcsncpy_s(wchar_t* strDest, size_t numberOfElements, const wchar_t
 char* win2k_strtok_s(char* strToken, const char* strDelimit, char** context);
 #define strtok_s win2k_strtok_s
 
+#include <windows.h>
+#include <commctrl.h>
+BOOL win2k_SetWindowSubclass(HWND hwnd, SUBCLASSPROC pfnSubclass, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+BOOL win2k_GetWindowSubclass(HWND hwnd, SUBCLASSPROC pfnSubclass, UINT_PTR uIdSubclass, DWORD_PTR* pdwRefData);
+BOOL win2k_RemoveWindowSubclass(HWND hwnd, SUBCLASSPROC pfnSubclass, UINT_PTR uIdSubclass);
+typedef LRESULT (WINAPI *DefSubclassProc_ptr)(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+extern DefSubclassProc_ptr win2k_DefSubclassProc;
+#define SetWindowSubclass win2k_SetWindowSubclass
+#define GetWindowSubclass win2k_GetWindowSubclass
+#define RemoveWindowSubclass win2k_RemoveWindowSubclass
+#define DefSubclassProc win2k_DefSubclassProc
+
+void OpportunisticConsole();
+
+#else
+#	define OpportunisticConsole() {FreeConsole();AttachConsole(ATTACH_PARENT_PROCESS);}
 #endif // WIN2K_COMPAT
 #ifdef __cplusplus
 }

@@ -4,6 +4,7 @@
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "globals.h"
 #include "utl.h"
+#include <tlhelp32.h>
 
 int IsRunAsAdmin()
 {
@@ -51,6 +52,22 @@ int IsUserInAdminGroup()
 		CloseHandle(hToken);
 	}
 	return is_admin;
+}
+
+unsigned GetParentProcess(unsigned pid) {
+	unsigned ppid = 0;
+	HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	PROCESSENTRY32 pe32 = {sizeof(PROCESSENTRY32)};
+	if(Process32First(snap,&pe32)) {
+		do {
+			if(pe32.th32ProcessID == pid) {
+				ppid = pe32.th32ParentProcessID;
+				break;
+			}
+		}while(Process32Next(snap,&pe32));
+	}
+	CloseHandle(snap);
+	return ppid;
 }
 //==================================================================================
 //--------------------------------------------------+++--> finds the tray clock hwnd:

@@ -11,6 +11,12 @@ int IsRunAsAdmin();
  * \brief checks if current user is in admin group
  * \return boolean */
 int IsUserInAdminGroup();
+/**
+ * \brief get parent process ID from \c pid
+ * \param pid
+ * \return parent process ID or 0 on failure
+ * \sa GetCurrentProcessId() */
+unsigned GetParentProcess(unsigned pid);
 // clock related
 /**
  * \brief finds the tray clock handle */

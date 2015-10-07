@@ -1,0 +1,14 @@
+.PHONY: all clean clock options
+
+TARGET = 
+
+all: clock options
+
+clean: TARGET = clean
+clean: all
+
+clock:
+	mingw32-make -f ../Makefile $(TARGET)
+
+options:
+	mingw32-make -f gcc-options.make $(TARGET)
