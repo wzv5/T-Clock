@@ -2,12 +2,12 @@ T-Clock Redux
 ==============
 <sup>MinGW</sup> [![Build Status](https://travis-ci.org/White-Tiger/T-Clock.svg?branch=yg-master)](https://travis-ci.org/White-Tiger/T-Clock) <sup>MSVC</sup> [![Build status](https://ci.appveyor.com/api/projects/status/b3qehrl4c8naisx4?svg=true)](https://ci.appveyor.com/project/White-Tiger/t-clock) [![Coverity Status](https://scan.coverity.com/projects/3794/badge.svg)](https://scan.coverity.com/projects/white-tiger-t-clock) <sub>(click picture below for full size)</sub>
 ![clockshowcase](https://cloud.githubusercontent.com/assets/1467733/4608572/71b48156-5283-11e4-960f-b0415b5b7cec.png)  
-**T-Clock Redux** in an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/)  
-with ISO week number support, bug fixes and the ability to use Windows default calendar and ToolTip.
+**T-Clock Redux** is an enhanced fork of [Stoic Joker's T-Clock 2010](http://www.stoicjoker.com/TClock/)  
+with ISO week number support, bug fixes and the ability to use Windows' default calendar and tooltips.
 
-T-Clock *(called TClock)*, originally written by Kazubon in the early 90's, was a popular classic that was on the edge of extinction when Windows started going 64bit. ... Stoic Joker simply chose not to let that happen. And now it's up to us to continue their tale.
+T-Clock *(called TClock)*, originally written by Kazubon in the early 90's, was a popular classic that was on the edge of extinction when Windows started going 64bit. ... Stoic Joker simply chose not to let that happen. And now it's up to us to continue their efforts.
 
-If you don't mind to read lots of text, and want to know more about T-Clock and it's history: [check this page out!](http://greggdeselms.com/tclock.html) *(thanks Gregg)*
+If you don't mind to read lots of text, and want to know more about T-Clock and its history: [check this page out!](http://greggdeselms.com/tclock.html) *(thanks Gregg)*
 
 
 ### Download (binaries)

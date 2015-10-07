@@ -37,7 +37,7 @@ before_deploy:
 deploy:
   provider: releases
   api_key:
-    secure: L9jt2f+8Xg6dBS+63ji4NwpPky3sYfHafxY3p+p+dUx834AQoOlqS3m+QEcfenIuf6el5cUeX4aQV8H+PAxJ+cYlc4BYN87UG5X/zlgvdbq67cenH0dGLJKFlTCM6EgQh3HGtpdSvhTJd+bcVYKgYg1pTGGv4GVhOBCAJGsk7k4=
+    secure: SxspqObGcVCG8bpDS/aHtAYSl30mAiTWl+KcpWBET1rTwqOnnVSU/G86ylFMURpvXams8IT8+ld3m7uqINwnhwmzmIXtdECVI9LKgD7T1cgaZyK03TMzRfnXsW4EnpjVYnfwuYnioom3LH2FdBR3zLJuyxSq8OSrrkSFJ7BqQxM=
   file: Release/T-Clock*.zip
   skip_cleanup: true
   on:
