@@ -32,7 +32,7 @@ addons:
     - wine
 
 before_deploy:
-- cd Source
+- cd ..
 - ./make_ci_release.bat
 deploy:
   provider: releases

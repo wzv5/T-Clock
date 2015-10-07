@@ -32,6 +32,7 @@ exit $?
 :=kkk
 @echo off
 rem start of batch
+if not defined signtool set signtool=signtool
 set "xclude=-xr!*.ini -xr!*.log -xr!*.rpt -x!*.zip -xr!*.pdb -xr!*.exp -xr!*.lib -xr!*.def -xr!*.a -xr!*.manifest"
 if defined TRAVIS_TAG set tag=%TRAVIS_TAG%
 if defined APPVEYOR_REPO_TAG_NAME set tag=%APPVEYOR_REPO_TAG_NAME%
@@ -46,9 +47,9 @@ if not exist .cert.pfx exit /B 666
 popd
 rem sign
 cd ..\Release
-signtool sign /v /f ..\.cert.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll *.exe misc\*.exe misc\*.dll
+%signtool% sign /v /f ..\.cert.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll *.exe misc\*.exe misc\*.dll
 if %errorlevel% neq 0 exit /B %errorlevel%
-rem signtool verify Clock.exe
+rem %signtool% verify Clock.exe
 rem if %errorlevel% neq 0 exit /B %errorlevel%
 rem compress
 del *.zip *.7z 2>nul
