@@ -34,6 +34,7 @@ addons:
 before_deploy:
 - cd ..
 - ./make_ci_release.bat
+- popd
 deploy:
   provider: releases
   api_key:
@@ -45,5 +46,5 @@ deploy:
     tags: true
 
 script:
-- cd Source/~ide
+- pushd src/~ide
 - make
