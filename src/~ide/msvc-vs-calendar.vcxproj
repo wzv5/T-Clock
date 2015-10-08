@@ -97,7 +97,7 @@
     <ClCompile Include="..\common\utl.c" />
     <ClCompile Include="..\common\newapi.c" />
     <ClCompile Include="..\common\win2k_compat.c" />
-    <ClCompile Include="DeskCalendar.c" />
+    <ClCompile Include="..\Calendar\DeskCalendar.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\common\resource.h" />
@@ -108,10 +108,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\common\calendar.inc" />
-    <None Include="calendar.ico" />
+    <None Include="..\Calendar\calendar.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="resource.rc" />
+    <ResourceCompile Include="..\Calendar\resource.rc" />
   </ItemGroup>
   <ItemGroup>
     <Manifest Include="..\common\manifest.xml" />

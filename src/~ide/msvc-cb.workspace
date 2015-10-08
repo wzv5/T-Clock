@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_workspace_file>
+	<Workspace title="T-Clock Redux (msvc)">
+		<Project filename="msvc-cb-autoversion.cbp" />
+		<Project filename="msvc-cb-clock.cbp">
+			<Depends filename="msvc-cb-autoversion.cbp" />
+		</Project>
+		<Project filename="msvc-cb-calendar.cbp">
+			<Depends filename="msvc-cb-clock.cbp" />
+		</Project>
+		<Project filename="msvc-cb-options.cbp">
+			<Depends filename="msvc-cb-clock.cbp" />
+		</Project>
+	</Workspace>
+</CodeBlocks_workspace_file>

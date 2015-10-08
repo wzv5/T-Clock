@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_workspace_file>
 	<Workspace title="T-Clock Redux (gcc)">
-		<Project filename="../T-Clock-gcc.cbp" />
-		<Project filename="gcc-options.cbp" />
+		<Project filename="gcc-clock.cbp" />
+		<Project filename="gcc-options.cbp">
+			<Depends filename="gcc-clock.cbp" />
+		</Project>
 	</Workspace>
 </CodeBlocks_workspace_file>

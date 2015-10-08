@@ -57,7 +57,7 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <GenerateManifest>false</GenerateManifest>
-    <OutDir>..\..\..\$(Configuration)\misc\</OutDir>
+    <OutDir>..\..\$(Configuration)\misc\</OutDir>
     <TargetName Condition="'$(Platform)'=='Win32'">T-Clock</TargetName>
     <TargetName Condition="'$(Platform)'=='x64'">T-Clock64</TargetName>
     <TargetExt>.dll</TargetExt>
@@ -76,7 +76,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <ModuleDefinitionFile>../DLL.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\DLL\DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -86,7 +86,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -104,7 +104,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <ModuleDefinitionFile>../DLL.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\DLL\DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -114,7 +114,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -129,7 +129,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <ModuleDefinitionFile>../DLL.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\DLL\DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -141,7 +141,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -159,7 +159,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
-      <ModuleDefinitionFile>../DLL.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>..\DLL\DLL.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
@@ -171,38 +171,38 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\font.c" />
-    <ClCompile Include="..\format.c" />
-    <ClCompile Include="..\main.c" />
-    <ClCompile Include="..\Tclock.c" />
-    <ClCompile Include="..\..\common\newapi.c" />
-    <ClCompile Include="..\..\common\utl.c" />
-    <ClCompile Include="..\..\common\win2k_compat.c" />
-    <ClCompile Include="..\clock_api.c" />
-    <ClCompile Include="..\clock_color.c" />
-    <ClCompile Include="..\clock_utils.c" />
+    <ClCompile Include="..\DLL\font.c" />
+    <ClCompile Include="..\DLL\format.c" />
+    <ClCompile Include="..\DLL\main.c" />
+    <ClCompile Include="..\DLL\Tclock.c" />
+    <ClCompile Include="..\common\newapi.c" />
+    <ClCompile Include="..\common\utl.c" />
+    <ClCompile Include="..\common\win2k_compat.c" />
+    <ClCompile Include="..\DLL\clock_api.c" />
+    <ClCompile Include="..\DLL\clock_color.c" />
+    <ClCompile Include="..\DLL\clock_utils.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\common\version.h" />
-    <ClInclude Include="..\..\common\resource.h" />
-    <ClInclude Include="..\..\common\globals.h" />
-    <ClInclude Include="..\..\common\clock.h" />
-    <ClInclude Include="..\..\common\newapi.h" />
-    <ClInclude Include="..\..\common\utl.h" />
-    <ClInclude Include="..\..\common\win2k_compat.h" />
-    <ClInclude Include="..\tcdll.h" />
-    <ClInclude Include="..\clock_internal.h" />
+    <ClInclude Include="..\common\version.h" />
+    <ClInclude Include="..\common\resource.h" />
+    <ClInclude Include="..\common\globals.h" />
+    <ClInclude Include="..\common\clock.h" />
+    <ClInclude Include="..\common\newapi.h" />
+    <ClInclude Include="..\common\utl.h" />
+    <ClInclude Include="..\common\win2k_compat.h" />
+    <ClInclude Include="..\DLL\tcdll.h" />
+    <ClInclude Include="..\DLL\clock_internal.h" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Condition="'$(Platform)'=='Win32'" Include="..\version.rc" />
-    <ResourceCompile Condition="'$(Platform)'=='x64'" Include="..\version64.rc" />
+    <ResourceCompile Condition="'$(Platform)'=='Win32'" Include="..\DLL\version.rc" />
+    <ResourceCompile Condition="'$(Platform)'=='x64'" Include="..\DLL\version64.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\..\common\manifest.xml" />
+    <Manifest Include="..\common\manifest.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

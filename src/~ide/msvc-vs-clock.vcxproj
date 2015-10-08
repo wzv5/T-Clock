@@ -57,7 +57,7 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <GenerateManifest>false</GenerateManifest>
-    <OutDir>..\..\..\$(Configuration)\</OutDir>
+    <OutDir>..\..\$(Configuration)\</OutDir>
     <TargetName Condition="'$(Platform)'=='Win32'">Clock</TargetName>
     <TargetName Condition="'$(Platform)'=='x64'">Clock64</TargetName>
     <TargetExt>.exe</TargetExt>
@@ -85,7 +85,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -112,7 +112,7 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -138,7 +138,7 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -167,69 +167,69 @@
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PreBuildEvent>
-      <Command>..\..\common\AutoVersion --git ../../ ../../common/version.h</Command>
+      <Command>..\common\AutoVersion --git ../ ../common/version.h</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\alarm.c" />
-    <ClCompile Include="..\alarmday.c" />
-    <ClCompile Include="..\BounceWind.c" />
-    <ClCompile Include="..\ExitWindows.c" />
-    <ClCompile Include="..\main.c" />
-    <ClCompile Include="..\menu.c" />
-    <ClCompile Include="..\mouse.c" />
-    <ClCompile Include="..\pageabout.c" />
-    <ClCompile Include="..\pagealarm.c" />
-    <ClCompile Include="..\pagecolor.c" />
-    <ClCompile Include="..\pageformat.c" />
-    <ClCompile Include="..\PageHotKey.c" />
-    <ClCompile Include="..\PageMisc.c" />
-    <ClCompile Include="..\PageMouse.c" />
-    <ClCompile Include="..\PageQuicky.c" />
-    <ClCompile Include="..\PageQuickyMenu.c" />
-    <ClCompile Include="..\propsheet.c" />
-    <ClCompile Include="..\SNTP.c" />
-    <ClCompile Include="..\soundselect.c" />
-    <ClCompile Include="..\StopWatch.c" />
-    <ClCompile Include="..\timer.c" />
-    <ClCompile Include="..\settings.c" />
-    <ClCompile Include="..\..\common\clock.c" />
-    <ClCompile Include="..\..\common\control_extensions.c" />
-    <ClCompile Include="..\..\common\newapi.c" />
-    <ClCompile Include="..\..\common\utl.c" />
-    <ClCompile Include="..\..\common\HaveSetTimePerms.c" />
-    <ClCompile Include="..\..\common\win2k_compat.c" />
+    <ClCompile Include="..\Clock\alarm.c" />
+    <ClCompile Include="..\Clock\alarmday.c" />
+    <ClCompile Include="..\Clock\BounceWind.c" />
+    <ClCompile Include="..\Clock\ExitWindows.c" />
+    <ClCompile Include="..\Clock\main.c" />
+    <ClCompile Include="..\Clock\menu.c" />
+    <ClCompile Include="..\Clock\mouse.c" />
+    <ClCompile Include="..\Clock\pageabout.c" />
+    <ClCompile Include="..\Clock\pagealarm.c" />
+    <ClCompile Include="..\Clock\pagecolor.c" />
+    <ClCompile Include="..\Clock\pageformat.c" />
+    <ClCompile Include="..\Clock\PageHotKey.c" />
+    <ClCompile Include="..\Clock\PageMisc.c" />
+    <ClCompile Include="..\Clock\PageMouse.c" />
+    <ClCompile Include="..\Clock\PageQuicky.c" />
+    <ClCompile Include="..\Clock\PageQuickyMenu.c" />
+    <ClCompile Include="..\Clock\propsheet.c" />
+    <ClCompile Include="..\Clock\SNTP.c" />
+    <ClCompile Include="..\Clock\soundselect.c" />
+    <ClCompile Include="..\Clock\StopWatch.c" />
+    <ClCompile Include="..\Clock\timer.c" />
+    <ClCompile Include="..\Clock\settings.c" />
+    <ClCompile Include="..\common\clock.c" />
+    <ClCompile Include="..\common\control_extensions.c" />
+    <ClCompile Include="..\common\newapi.c" />
+    <ClCompile Include="..\common\utl.c" />
+    <ClCompile Include="..\common\HaveSetTimePerms.c" />
+    <ClCompile Include="..\common\win2k_compat.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\common\version.h" />
-    <ClInclude Include="..\..\common\resource.h" />
-    <ClInclude Include="..\..\common\globals.h" />
-    <ClInclude Include="..\..\common\clock.h" />
-    <ClInclude Include="..\..\common\control_extensions.h" />
-    <ClInclude Include="..\..\common\newapi.h" />
-    <ClInclude Include="..\..\common\utl.h" />
-    <ClInclude Include="..\..\common\win2k_compat.h" />
-    <ClInclude Include="..\tclock.h" />
+    <ClInclude Include="..\common\version.h" />
+    <ClInclude Include="..\common\resource.h" />
+    <ClInclude Include="..\common\globals.h" />
+    <ClInclude Include="..\common\clock.h" />
+    <ClInclude Include="..\common\control_extensions.h" />
+    <ClInclude Include="..\common\newapi.h" />
+    <ClInclude Include="..\common\utl.h" />
+    <ClInclude Include="..\common\win2k_compat.h" />
+    <ClInclude Include="..\Clock\tclock.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\common\calendar.inc" />
-    <None Include="..\Clock.ico" />
-    <None Include="..\del.ico" />
-    <None Include="..\JackRussel.bmp" />
-    <None Include="..\Logo.ico" />
-    <None Include="..\PLAY.ico" />
-    <None Include="..\stop.ico" />
+    <None Include="..\common\calendar.inc" />
+    <None Include="..\Clock\Clock.ico" />
+    <None Include="..\Clock\del.ico" />
+    <None Include="..\Clock\JackRussel.bmp" />
+    <None Include="..\Clock\Logo.ico" />
+    <None Include="..\Clock\PLAY.ico" />
+    <None Include="..\Clock\stop.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\tClock.rc" />
-    <ResourceCompile Condition="'$(Platform)'=='Win32'" Include="..\version.rc" />
-    <ResourceCompile Condition="'$(Platform)'=='x64'" Include="..\version64.rc" />
+    <ResourceCompile Include="..\Clock\tClock.rc" />
+    <ResourceCompile Condition="'$(Platform)'=='Win32'" Include="..\Clock\version.rc" />
+    <ResourceCompile Condition="'$(Platform)'=='x64'" Include="..\Clock\version64.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="..\..\common\manifest.xml" />
+    <Manifest Include="..\common\manifest.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\DLL\Win32\Win32.DLL.vcxproj">
+    <ProjectReference Include="msvc-vs-dll.vcxproj">
       <Project>{6e055518-fdc0-4b59-beb8-60a3874c8f76}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>

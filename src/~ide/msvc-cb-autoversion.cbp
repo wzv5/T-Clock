@@ -2,14 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="AutoVersion" />
+		<Option title="AutoVersion (msvc)" />
 		<Option pch_mode="2" />
 		<Option default_target="app-64" />
 		<Option compiler="msvc10" />
 		<Build>
 			<Target title="AutoVersion">
-				<Option output="common/AutoVersion" prefix_auto="1" extension_auto="1" />
-				<Option object_output=".objs/autoversion" />
+				<Option output="../common/AutoVersion" prefix_auto="1" extension_auto="1" />
+				<Option object_output="../.objs/autoversion" />
 				<Option type="1" />
 				<Option compiler="msvc10" />
 				<Option parameters="--git . _testver.h" />
@@ -35,13 +35,13 @@
 			<Add library="shell32" />
 			<Add library="Ole32" />
 		</Linker>
-		<Unit filename="common/autoversion.cpp" />
-		<Unit filename="common/getopt_tools.c">
+		<Unit filename="../common/autoversion.cpp" />
+		<Unit filename="../common/getopt_tools.c">
 			<Option compilerVar="CC" />
 			<Option compile="0" />
 			<Option link="0" />
 		</Unit>
-		<Unit filename="common/getopt_tools.h" />
+		<Unit filename="../common/getopt_tools.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

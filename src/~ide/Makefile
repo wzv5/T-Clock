@@ -8,7 +8,7 @@ clean: TARGET = clean
 clean: all
 
 clock:
-	cd .. && make -f Makefile.unix $(TARGET)
+	make -f linux-clock.make $(TARGET)
 
 options:
 	make -f linux-options.make $(TARGET)
