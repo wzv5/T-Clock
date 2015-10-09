@@ -1,14 +1,36 @@
-.PHONY: all clean clock options
+.PHONY: all clean release debug autoversion dll clock options calendar
 
 TARGET = 
+MAKE = make
+TYPE = linux
 
-all: clock options
+ifeq ($(OS)$(PWD),Windows_NT)
+	MAKE = mingw32-make
+	TYPE = gcc
+endif
+
+all: autoversion dll clock options calendar
 
 clean: TARGET = clean
 clean: all
 
-clock:
-	make -f linux-clock.make $(TARGET)
+release: TARGET = release
+release: all
 
-options:
-	make -f linux-options.make $(TARGET)
+debug: TARGET = debug
+debug: all
+
+autoversion:
+	$(MAKE) -f $(TYPE)-autoversion.make $(TARGET)
+
+dll: autoversion
+	$(MAKE) -f $(TYPE)-dll.make $(TARGET)
+
+clock: dll
+	$(MAKE) -f $(TYPE)-clock.make $(TARGET)
+
+options: dll
+	$(MAKE) -f $(TYPE)-options.make $(TARGET)
+
+calendar: dll
+	$(MAKE) -f $(TYPE)-calendar.make $(TARGET)

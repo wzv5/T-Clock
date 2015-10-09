@@ -57,6 +57,10 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <GenerateManifest>false</GenerateManifest>
+    <IntDir Condition="'$(Platform)'=='Win32'">..\.obj\msvc\</IntDir>
+    <IntDir Condition="'$(Platform)'=='x64'">..\.obj64\msvc\</IntDir>
+    <IntDir Condition="'$(Configuration)'=='Debug'">$(IntDir)dbg\</IntDir>
+    <IntDir>$(IntDir)dll\</IntDir>
     <OutDir>..\..\$(Configuration)\misc\</OutDir>
     <TargetName Condition="'$(Platform)'=='Win32'">T-Clock</TargetName>
     <TargetName Condition="'$(Platform)'=='x64'">T-Clock64</TargetName>

@@ -8,7 +8,7 @@
 		<Build>
 			<Target title="release">
 				<Option output="../../Release/misc/Options" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../.obj/msvc/" />
+				<Option object_output="../.obj/msvc" />
 				<Option type="1" />
 				<Option compiler="msvc10" />
 				<Option parameters="-u" />
@@ -24,7 +24,7 @@
 			</Target>
 			<Target title="debug">
 				<Option output="../../Debug/misc/Options" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../.obj/msvc/dbg/" />
+				<Option object_output="../.obj/msvc/dbg" />
 				<Option type="1" />
 				<Option compiler="msvc10" />
 				<Compiler>

@@ -2,38 +2,33 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="AutoVersion (msvc)" />
+		<Option title="AutoVersion (gcc)" />
 		<Option pch_mode="2" />
-		<Option compiler="msvc10" />
+		<Option compiler="gcc" />
 		<Build>
 			<Target title="release">
 				<Option output="../common/AutoVersion" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../.obj/msvc" />
+				<Option object_output="../.obj/gcc" />
 				<Option type="1" />
-				<Option compiler="msvc10" />
+				<Option compiler="gcc" />
 				<Option parameters="--git . _testver.h" />
-				<Option projectCompilerOptionsRelation="1" />
-				<Option projectLinkerOptionsRelation="1" />
 				<Compiler>
-					<Add option="/MT" />
-					<Add option="/EHc" />
-					<Add option="/EHs" />
-					<Add option="/O1" />
-					<Add option="/W3" />
+					<Add option="-m32" />
+					<Add option="-Os" />
+					<Add option="-DNDEBUG" />
 				</Compiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-m32" />
+					<Add option="-static" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="/W4" />
-			<Add option="/wd4306" />
+			<Add option="-fno-ident" />
+			<Add option="-Wall" />
+			<Add option="-fvisibility=hidden" />
 		</Compiler>
-		<Linker>
-			<Add library="Advapi32" />
-			<Add library="user32" />
-			<Add library="gdi32" />
-			<Add library="shell32" />
-			<Add library="Ole32" />
-		</Linker>
 		<Unit filename="../common/autoversion.cpp" />
 		<Unit filename="../common/getopt_tools.c">
 			<Option compilerVar="CC" />

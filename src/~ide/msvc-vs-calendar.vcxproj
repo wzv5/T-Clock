@@ -36,6 +36,10 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <GenerateManifest>false</GenerateManifest>
+    <IntDir Condition="'$(Platform)'=='Win32'">..\.obj\msvc\</IntDir>
+    <IntDir Condition="'$(Platform)'=='x64'">..\.obj64\msvc\</IntDir>
+    <IntDir Condition="'$(Configuration)'=='Debug'">$(IntDir)dbg\</IntDir>
+    <IntDir>$(IntDir)calendar\</IntDir>
     <OutDir>..\..\$(Configuration)\misc\</OutDir>
     <TargetName>XPCalendar</TargetName>
     <TargetExt>.exe</TargetExt>

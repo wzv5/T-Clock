@@ -1,13 +1,27 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AutoVersion", "msvc-vs-autoversion.vcxproj", "{d0b32449-51ee-4dff-9dc8-248adc6bb405}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Clock", "msvc-vs-clock.vcxproj", "{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6E055518-FDC0-4B59-BEB8-60A3874C8F76} = {6E055518-FDC0-4B59-BEB8-60A3874C8F76}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DLL", "msvc-vs-dll.vcxproj", "{6E055518-FDC0-4B59-BEB8-60A3874C8F76}"
+	ProjectSection(ProjectDependencies) = postProject
+		{d0b32449-51ee-4dff-9dc8-248adc6bb405} = {d0b32449-51ee-4dff-9dc8-248adc6bb405}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Calendar", "msvc-vs-calendar.vcxproj", "{1f5284e0-13ef-11e3-8ffd-0800200c9a66}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6E055518-FDC0-4B59-BEB8-60A3874C8F76} = {6E055518-FDC0-4B59-BEB8-60A3874C8F76}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Options", "msvc-vs-options.vcxproj", "{d8e4853e-40ac-411f-a120-1e6853061222}"
+	ProjectSection(ProjectDependencies) = postProject
+		{6E055518-FDC0-4B59-BEB8-60A3874C8F76} = {6E055518-FDC0-4B59-BEB8-60A3874C8F76}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,6 +31,8 @@ Global
 		Debug|x64 = Debug|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{d0b32449-51ee-4dff-9dc8-248adc6bb405}.Release|x86.ActiveCfg = Release|Win32
+		{d0b32449-51ee-4dff-9dc8-248adc6bb405}.Release|x86.Build.0 = Release|Win32
 		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|x86.ActiveCfg = Release|Win32
 		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|x86.Build.0 = Release|Win32
 		{27EF0E4F-0E60-461B-9BA6-06AA1FF3E066}.Release|x64.ActiveCfg = Release|x64

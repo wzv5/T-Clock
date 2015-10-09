@@ -2,14 +2,14 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="Clock (msvc)" />
+		<Option title="DLL (msvc)" />
 		<Option pch_mode="2" />
 		<Option compiler="msvc10" />
 		<Build>
 			<Target title="release-32">
-				<Option output="../../Release/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Release/misc/T-Clock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../.obj/msvc" />
-				<Option type="0" />
+				<Option type="3" />
 				<Option compiler="msvc10" />
 				<Compiler>
 					<Add option="/MD /D_AFXDLL" />
@@ -22,9 +22,9 @@
 				</Linker>
 			</Target>
 			<Target title="release-64">
-				<Option output="../../Release/Clock64" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Release/misc/T-Clock64" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../.obj64/msvc" />
-				<Option type="0" />
+				<Option type="3" />
 				<Option compiler="microsoft_visual_c_2010_64bit" />
 				<Compiler>
 					<Add option="/MD /D_AFXDLL" />
@@ -37,9 +37,9 @@
 				</Linker>
 			</Target>
 			<Target title="debug-32">
-				<Option output="../../Debug/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Debug/misc/T-Clock" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../.obj/msvc/dbg" />
-				<Option type="0" />
+				<Option type="3" />
 				<Option compiler="msvc10" />
 				<Compiler>
 					<Add option="/MDd /D_AFXDLL" />
@@ -51,9 +51,9 @@
 				</Linker>
 			</Target>
 			<Target title="debug-64">
-				<Option output="../../Debug/Clock64" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Debug/misc/T-Clock64" imp_lib="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).a" def_file="$(TARGET_OUTPUT_DIR)$(TARGET_OUTPUT_BASENAME).def" prefix_auto="1" extension_auto="1" />
 				<Option object_output="../.obj64/msvc/dbg" />
-				<Option type="0" />
+				<Option type="3" />
 				<Option compiler="microsoft_visual_c_2010_64bit" />
 				<Compiler>
 					<Add option="/MDd /D_AFXDLL" />
@@ -73,117 +73,51 @@
 			<Add option="/W4" />
 		</Compiler>
 		<Linker>
+			<Add option="/def:..\DLL\DLL.def" />
 			<Add library="Advapi32" />
 			<Add library="user32" />
 			<Add library="gdi32" />
 			<Add library="shell32" />
 			<Add library="Ole32" />
-			<Add library="Psapi" />
-			<Add library="Comdlg32" />
-			<Add library="shlwapi" />
-			<Add library="Version" />
-			<Add library="comctl32" />
-			<Add library="Winmm" />
-			<Add library="Ws2_32" />
-			<Add library="Mpr" />
-			<Add library="msimg32" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="../common/AutoVersion --git . ../common/version.h" />
 		</ExtraCommands>
-		<Unit filename="../Clock/BounceWind.c">
+		<Unit filename="../DLL/DLL.def" />
+		<Unit filename="../DLL/Tclock.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/ExitWindows.c">
+		<Unit filename="../DLL/clock_api.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/PageHotKey.c">
+		<Unit filename="../DLL/clock_color.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/PageMisc.c">
+		<Unit filename="../DLL/clock_internal.h" />
+		<Unit filename="../DLL/clock_utils.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/PageMouse.c">
+		<Unit filename="../DLL/font.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/PageQuicky.c">
+		<Unit filename="../DLL/format.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/PageQuickyMenu.c">
+		<Unit filename="../DLL/main.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/SNTP.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/StopWatch.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/alarm.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/alarmday.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/guiddef.h" />
-		<Unit filename="../Clock/main.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/menu.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/mouse.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/pageabout.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/pagealarm.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/pagecolor.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/pageformat.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/propsheet.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/settings.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/soundselect.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/tClock.rc">
-			<Option compilerVar="WINDRES" />
-		</Unit>
-		<Unit filename="../Clock/tclock.h" />
-		<Unit filename="../Clock/timer.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../Clock/version.rc">
+		<Unit filename="../DLL/tcdll.h" />
+		<Unit filename="../DLL/version.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="release-32" />
 			<Option target="debug-32" />
 		</Unit>
-		<Unit filename="../Clock/version64.rc">
+		<Unit filename="../DLL/version64.rc">
 			<Option compilerVar="WINDRES" />
 			<Option target="release-64" />
 			<Option target="debug-64" />
 		</Unit>
-		<Unit filename="../common/HaveSetTimePerms.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../common/calendar.inc" />
-		<Unit filename="../common/clock.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Unit filename="../common/clock.h" />
-		<Unit filename="../common/control_extensions.c">
-			<Option compilerVar="CC" />
-		</Unit>
-		<Unit filename="../common/control_extensions.h" />
 		<Unit filename="../common/globals.h" />
 		<Unit filename="../common/manifest.xml" />
 		<Unit filename="../common/newapi.c">

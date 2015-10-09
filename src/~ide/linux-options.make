@@ -15,19 +15,19 @@ INC =
 CFLAGS = -fno-ident -Wall -m32 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -D_UNICODE -DUNICODE -DWIN2K_COMPAT
 RESINC = 
 LIBDIR = -Llib32
-LIB = -luser32 -ladvapi32 -lcomctl32 -lgdi32 -lpsapi -lwinhttp
+LIB = -ladvapi32 -luser32 -lgdi32 -lpsapi -lcomctl32 -lwinhttp
 LDFLAGS = -static -m32
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O3 -DNDEBUG
 RESINC_RELEASE = $(RESINC)
-RCFLAGS_RELEASE = $(RCFLAGS)
+RCFLAGS_RELEASE = 
 LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
 LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ../.obj/gcc
 DEP_RELEASE = 
-OUT_RELEASE = ../../Release/misc/Options
+OUT_RELEASE = ../../Release/misc/Options.exe
 
 INC_DEBUG = $(INC)
 CFLAGS_DEBUG = $(CFLAGS) -g -fno-omit-frame-pointer -D_DEBUG
@@ -38,7 +38,7 @@ LIB_DEBUG = $(LIB)
 LDFLAGS_DEBUG = $(LDFLAGS)
 OBJDIR_DEBUG = ../.obj/gcc/dbg
 DEP_DEBUG = 
-OUT_DEBUG = ../../Debug/misc/Options
+OUT_DEBUG = ../../Debug/misc/Options.exe
 
 OBJ_RELEASE = $(OBJDIR_RELEASE)/__/options/update.o \
 	$(OBJDIR_RELEASE)/__/options/resource.o \
@@ -81,7 +81,7 @@ build_release: before_release out_release after_release
 release: before_build build_release after_build
 
 out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
-	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE).exe $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
+	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
 
 $(OBJDIR_RELEASE)/__/options/update.o: ../options/update.c
 	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../options/update.c -o $(OBJDIR_RELEASE)/__/options/update.o
@@ -129,7 +129,7 @@ build_debug: before_debug out_debug after_debug
 debug: before_build build_debug after_build
 
 out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
-	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG).exe $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
+	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
 
 $(OBJDIR_DEBUG)/__/options/update.o: ../options/update.c
 	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../options/update.c -o $(OBJDIR_DEBUG)/__/options/update.o

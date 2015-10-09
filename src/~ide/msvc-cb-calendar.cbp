@@ -6,9 +6,9 @@
 		<Option pch_mode="2" />
 		<Option compiler="msvc10" />
 		<Build>
-			<Target title="app">
+			<Target title="release">
 				<Option output="../../Release/misc/XPCalendar" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../.obj/" />
+				<Option object_output="../.obj/msvc" />
 				<Option type="0" />
 				<Option compiler="msvc10" />
 				<Compiler>
@@ -22,9 +22,9 @@
 					<Add directory="../../Release/Win32" />
 				</Linker>
 			</Target>
-			<Target title="app debug">
+			<Target title="debug">
 				<Option output="../../Debug/misc/XPCalendar" prefix_auto="1" extension_auto="1" />
-				<Option object_output="../.obj/dbg/" />
+				<Option object_output="../.obj/msvc/dbg" />
 				<Option type="0" />
 				<Option compiler="msvc10" />
 				<Compiler>
@@ -38,10 +38,6 @@
 				</Linker>
 			</Target>
 		</Build>
-		<VirtualTargets>
-			<Add alias="debug" targets="app debug;" />
-			<Add alias="release" targets="app;" />
-		</VirtualTargets>
 		<Compiler>
 			<Add option="/W4" />
 			<Add option="/DWINVER=0x0501" />
