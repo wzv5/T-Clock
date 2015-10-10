@@ -33,7 +33,7 @@ addons:
 
 before_deploy:
 - cd ..
-- ./make_ci_release.bat
+- ./pack_ci_release.bat
 - popd
 deploy:
   provider: releases
