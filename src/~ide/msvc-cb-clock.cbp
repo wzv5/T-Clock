@@ -71,21 +71,24 @@
 		</VirtualTargets>
 		<Compiler>
 			<Add option="/W4" />
+			<Add option="/DWINVER=0x0501" />
+			<Add option="/DPSAPI_VERSION=1" />
 		</Compiler>
 		<Linker>
-			<Add library="Advapi32" />
-			<Add library="user32" />
-			<Add library="gdi32" />
+			<Add library="advapi32" />
 			<Add library="shell32" />
-			<Add library="Ole32" />
-			<Add library="Psapi" />
-			<Add library="Comdlg32" />
+			<Add library="user32" />
+			<Add library="ole32" />
+			<Add library="gdi32" />
+			<Add library="psapi" />
+			<Add library="comdlg32" />
 			<Add library="shlwapi" />
-			<Add library="Version" />
+			<Add library="version" />
 			<Add library="comctl32" />
-			<Add library="Winmm" />
-			<Add library="Ws2_32" />
-			<Add library="Mpr" />
+			<Add library="winmm" />
+			<Add library="ws2_32" />
+			<Add library="mpr" />
+			<Add library="uuid" />
 			<Add library="msimg32" />
 		</Linker>
 		<ExtraCommands>

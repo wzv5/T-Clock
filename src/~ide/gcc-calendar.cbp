@@ -59,9 +59,8 @@
 		<Linker>
 			<Add option="-static" />
 			<Add library="advapi32" />
+			<Add library="shell32" />
 			<Add library="user32" />
-			<Add library="ole32" />
-			<Add library="gdi32" />
 			<Add library="psapi" />
 			<Add library="comctl32" />
 		</Linker>
@@ -79,9 +78,12 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../common/clock.h" />
+		<Unit filename="../common/globals.h" />
+		<Unit filename="../common/manifest.xml" />
 		<Unit filename="../common/newapi.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../common/newapi.h" />
 		<Unit filename="../common/resource.h" />
 		<Unit filename="../common/utl.c">
 			<Option compilerVar="CC" />

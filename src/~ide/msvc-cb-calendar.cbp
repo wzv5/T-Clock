@@ -19,7 +19,6 @@
 				</Compiler>
 				<Linker>
 					<Add option="/LTCG" />
-					<Add directory="../../Release/Win32" />
 				</Linker>
 			</Target>
 			<Target title="debug">
@@ -34,19 +33,20 @@
 				</Compiler>
 				<Linker>
 					<Add option="/debug" />
-					<Add directory="../../Debug/Win32" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="/W4" />
 			<Add option="/DWINVER=0x0501" />
+			<Add option="/DPSAPI_VERSION=1" />
 		</Compiler>
 		<Linker>
-			<Add library="User32" />
-			<Add library="Shell32" />
-			<Add library="Advapi32" />
-			<Add library="Comctl32" />
+			<Add library="advapi32" />
+			<Add library="shell32" />
+			<Add library="user32" />
+			<Add library="psapi" />
+			<Add library="comctl32" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="../common/AutoVersion --git . ../common/version.h" />
@@ -72,6 +72,12 @@
 		<Unit filename="../common/utl.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../common/utl.h" />
+		<Unit filename="../common/version.h" />
+		<Unit filename="../common/win2k_compat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../common/win2k_compat.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

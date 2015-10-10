@@ -56,6 +56,7 @@
 			<Add option="-static" />
 			<Add option="-m32" />
 			<Add library="advapi32" />
+			<Add library="shell32" />
 			<Add library="user32" />
 			<Add library="gdi32" />
 			<Add library="psapi" />
