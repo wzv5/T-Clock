@@ -26,6 +26,7 @@
 			<Add option="/EHc" />
 			<Add option="/EHs" />
 			<Add option="/W4" />
+			<Add option="/wd4706" />
 		</Compiler>
 		<Unit filename="../common/autoversion.cpp" />
 		<Unit filename="../common/getopt_tools.c">

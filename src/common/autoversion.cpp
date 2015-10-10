@@ -2,6 +2,7 @@
 //	Rev: 7109 @ 2011-04-15T11:53:16.901970Z
 //Now released as WTFPL
 #include <stdio.h>
+#include <stdint.h>
 #include <time.h>
 #include <string.h>
 #include <string>
@@ -95,12 +96,12 @@ enum VersionFlags{
 	VER_DIRTY = 0x01,
 };
 struct Version{
-	unsigned char flags_;
-	unsigned char major;
-	unsigned short minor;
-	unsigned short build;
-	unsigned char status;
-	unsigned int revision;
+	uint32_t flags_;
+	uint32_t major;
+	uint32_t minor;
+	uint32_t build;
+	uint32_t status;
+	uint32_t revision;
 	time_t timestamp;
 	string url;
 	string date;
@@ -344,9 +345,9 @@ int main(int argc, char** argv)
 	Version ver = {0};
 	ver.date = "unknown date";
 
-//	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
+//	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	ReadHeader(headerPath, ver);
-//	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
+//	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	unsigned int rev = ver.revision;
 	if(g_repo&REPO_GIT){
 		if(QueryGit(Gitpath,&ver))
@@ -373,7 +374,7 @@ int main(int argc, char** argv)
 //	if(g_repo){ // increase revision because on commit the revision increases :P
 //		++ver.revision; // So we should use the "comming" revision and not the previous (grml... date and time is wrong though :/ )
 //	}
-//	printf("Version: %u.%hu.%hu.%hu #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
+//	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	if(rev!=ver.revision){
 		ver.flags_ |= VER_DIRTY;
 		puts("	- increased revision");
@@ -582,13 +583,13 @@ bool ReadHeader(const char* filepath,Version &ver)
 void PrintDefine(FILE* fp,const char* define,const Version &ver)
 {
 	if(!strcasecmp("MAJOR",define)) {
-		fprintf(fp,"%hu",ver.major);
+		fprintf(fp,"%u",ver.major);
 	}else if(!strcasecmp("MINOR",define)) {
-		fprintf(fp,"%hu",ver.minor);
+		fprintf(fp,"%u",ver.minor);
 	}else if(!strcasecmp("BUILD",define)) {
-		fprintf(fp,"%hu",ver.build);
+		fprintf(fp,"%u",ver.build);
 	}else if(!strcasecmp("STATUS",define)) {
-		fprintf(fp,"%hu",ver.status);
+		fprintf(fp,"%u",ver.status);
 	}else if(!strcasecmp("STATUS_FULL",define)) {
 		fprintf(fp,"%s",STATUS_S[ver.status]);
 	}else if(!strcasecmp("STATUS_SHORT",define)) {
@@ -601,19 +602,19 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	// version strings
 	}else if(!strcasecmp("FULL",define)) {
 		if(STATUS_S[ver.status][0])
-			fprintf(fp,"%hu.%hu.%hu %s",ver.major,ver.minor,ver.build,STATUS_S[ver.status]);
+			fprintf(fp,"%u.%u.%u %s",ver.major,ver.minor,ver.build,STATUS_S[ver.status]);
 		else
-			fprintf(fp,"%hu.%hu.%hu",ver.major,ver.minor,ver.build);
+			fprintf(fp,"%u.%u.%u",ver.major,ver.minor,ver.build);
 	}else if(!strcasecmp("SHORT",define)) {
-		fprintf(fp,"%hu.%hu%s%hu",ver.major,ver.minor,STATUS_SS[ver.status],ver.build);
+		fprintf(fp,"%u.%u%s%u",ver.major,ver.minor,STATUS_SS[ver.status],ver.build);
 	}else if(!strcasecmp("SHORT_DOTS",define)) {
-		fprintf(fp,"%hu.%hu.%hu",ver.major,ver.minor,ver.build);
+		fprintf(fp,"%u.%u.%u",ver.major,ver.minor,ver.build);
 	}else if(!strcasecmp("SHORT_GREEK",define)) {
-		fprintf(fp,"%hu.%hu%s%hu",ver.major,ver.minor,STATUS_SS2[ver.status],ver.build);
+		fprintf(fp,"%u.%u%s%u",ver.major,ver.minor,STATUS_SS2[ver.status],ver.build);
 	}else if(!strcasecmp("RC_REVISION",define)) {
-		fprintf(fp,"%hu, %u, %u, %u",ver.major,ver.minor,ver.build,ver.revision);
+		fprintf(fp,"%u, %u, %u, %u",ver.major,ver.minor,ver.build,ver.revision);
 	}else if(!strcasecmp("RC_STATUS",define)) {
-		fprintf(fp,"%hu, %u, %u, %u",ver.major,ver.minor,ver.build,ver.status);
+		fprintf(fp,"%u, %u, %u, %u",ver.major,ver.minor,ver.build,ver.status);
 	
 	// repository
 	}else if(!strcasecmp("REVISION_URL",define)) {
@@ -623,7 +624,7 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	}else if(!strcasecmp("REVISION_HASH",define)) {
 		fprintf(fp,"%s",ver.revhash.c_str());
 	}else if(!strcasecmp("REVISION_TAG",define)) {
-		fprintf(fp,"v%hu.%hu.%hu#%hu",ver.major,ver.minor,ver.build,ver.revision);
+		fprintf(fp,"v%u.%u.%u#%u",ver.major,ver.minor,ver.build,ver.revision);
 		if(STATUS_S[ver.status][0]){
 			fputc('-',fp);
 			for(const char* c=STATUS_S[ver.status]; *c; ++c){
