@@ -195,7 +195,11 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)data->icon_update);
 		data->icon_update_small = LoadImage(g_instance, MAKEINTRESOURCE(IDI_UPDATE_S), IMAGE_ICON, 0,0, LR_DEFAULTSIZE);
 		data->next_version[0] = api.GetInt(NULL, kValueNextVersion[0], 1);
+		#if VER_STATUS >= 3 // release build, opt-in beta check
 		data->next_version[1] = api.GetInt(NULL, kValueNextVersion[1], 0);
+		#else // non-release build, force beta check
+		data->next_version[1] = 1;
+		#endif
 		SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)data);
 		
 		data->session = WinHttpOpen(L"T-Clock/" L(VER_SHORT_DOTS), WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, WINHTTP_FLAG_ASYNC);
@@ -242,13 +246,11 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 		if(data->next_version[0])
 			update_notify_data_.check[0].state |= BST_CHECKED;
 		// beta check
-		#if VER_STATUS >= 3 // release build, opt-in beta check
 		update_notify_data_.check[1].state = BST_MBC_AUTODISABLE;
 		if(data->next_version[1])
 			update_notify_data_.check[1].state |= BST_CHECKED;
-		#else // non-release build, force beta check
-		data->next_version[1] = 1;
-		update_notify_data_.check[1].state = BST_CHECKED;
+		#if VER_STATUS < 3 // non-release build, forced beta check
+		update_notify_data_.check[1].state &= ~BST_MBC_AUTODISABLE;
 		update_notify_data_.check[1].style = WS_DISABLED;
 		#endif
 		SetWindowLongPtr(hDlg, DWLP_MSGRESULT, (LONG_PTR)&update_notify_data_);
