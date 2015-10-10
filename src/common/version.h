@@ -18,35 +18,35 @@
 #	define VER_STATUS_FULL "RC"
 #	define VER_STATUS_SHORT "rc"
 #	define VER_STATUS_GREEK "гc"
-#	define VER_REVISION 329
+#	define VER_REVISION 340
 #	define VER_FULL "2.4.0 RC"
 #	define VER_SHORT "2.4rc0"
 #	define VER_SHORT_DOTS "2.4.0"
 #	define VER_SHORT_GREEK "2.4гc0"
-#	define VER_RC_REVISION 2, 4, 0, 329
+#	define VER_RC_REVISION 2, 4, 0, 340
 #	define VER_RC_STATUS 2, 4, 0, 2
 /**** Subversion Information ****/
 #	define VER_REVISION_URL "git@github.com:White-Tiger/T-Clock.git"
-#	define VER_REVISION_DATE "2015-10-07 16:31:26 +0000 (Wed, Oct 07 2015)"
-#	define VER_REVISION_HASH "3a626d6"
-#	define VER_REVISION_TAG "v2.4.0#329-rc"
+#	define VER_REVISION_DATE "2015-10-10 17:46:05 +0000 (Sat, Oct 10 2015)"
+#	define VER_REVISION_HASH "9b25bf2"
+#	define VER_REVISION_TAG "v2.4.0#340-rc"
 /**** Date/Time ****/
-#	define VER_TIMESTAMP 1444236527
-#	define VER_TIME_SEC 47
-#	define VER_TIME_MIN 48
-#	define VER_TIME_HOUR 16
-#	define VER_TIME_DAY 7
+#	define VER_TIMESTAMP 1444499352
+#	define VER_TIME_SEC 12
+#	define VER_TIME_MIN 49
+#	define VER_TIME_HOUR 17
+#	define VER_TIME_DAY 10
 #	define VER_TIME_MONTH 10
 #	define VER_TIME_YEAR 2015
-#	define VER_TIME_WDAY 3
-#	define VER_TIME_YDAY 279
-#	define VER_TIME_WDAY_SHORT "Wed"
-#	define VER_TIME_WDAY_FULL "Wednesday"
+#	define VER_TIME_WDAY 6
+#	define VER_TIME_YDAY 282
+#	define VER_TIME_WDAY_SHORT "Sat"
+#	define VER_TIME_WDAY_FULL "Saturday"
 #	define VER_TIME_MONTH_SHORT "Oct"
 #	define VER_TIME_MONTH_FULL "October"
-#	define VER_TIME "16:48:47"
-#	define VER_DATE "2015-10-07"
-#	define VER_DATE_LONG "Wed, Oct 07, 2015 16:48:47 UTC"
-#	define VER_DATE_SHORT "2015-10-07 16:48:47 UTC"
-#	define VER_DATE_ISO "2015-10-07T16:48:47Z"
+#	define VER_TIME "17:49:12"
+#	define VER_DATE "2015-10-10"
+#	define VER_DATE_LONG "Sat, Oct 10, 2015 17:49:12 UTC"
+#	define VER_DATE_SHORT "2015-10-10 17:49:12 UTC"
+#	define VER_DATE_ISO "2015-10-10T17:49:12Z"
 #endif
