@@ -8,8 +8,8 @@
 #include "update.h"
 #include "resource.h"
 
-const wchar_t* kUpdateURL = L"http://rawgit.com/White-Tiger/T-Clock/src/version";
-//const wchar_t* kUpdateURL = L"http://cdn.rawgit.com/White-Tiger/T-Clock/src/version";
+const wchar_t* kUpdateURL = L"http://rawgit.com/White-Tiger/T-Clock/master/src/version";
+//const wchar_t* kUpdateURL = L"http://cdn.rawgit.com/White-Tiger/T-Clock/master/src/version";
 const char* kDownloadURL = "https://github.com/White-Tiger/T-Clock/releases";
 #define UPDATE_BUFFER 2048
 #define WM_DOWNLOAD_RESULT WM_USER /**< 0 if successful, otherwise WINHTTP_CALLBACK_STATUS_* or HTTP status code */
