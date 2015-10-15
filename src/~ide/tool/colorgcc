@@ -1,0 +1,442 @@
+#! /usr/bin/perl -w
+
+#
+# colorgcc
+#
+# $Id: colorgcc,v 1.10 1999/04/29 17:15:52 jamoyers Exp $
+#
+# A wrapper to colorize the output from compilers whose messages
+# match the "gcc" format.
+#
+my $USAGE =
+"Usage:  colorgcc gcc foo.c                  (1st form)
+  or:   colorgcc [options] foo.c            (2nd form, calls gcc)
+  or:   gcc foo.c 2>&1 | colorgcc           (3rd form, reads from STDIN)
+  or:   create a symbolic link named        (4th form, drop-in replacement)
+        'gcc' pointing to colorgcc
+  or:   create a symbolic link named        (5th form)
+        'color-gcc' pointing to colorgcc
+
+eg. when using 'make'
+	colorgcc make                               (1st form)
+	make CXX='colorgcc g++' CC='colorgcc gcc'   (1st form, 5th form)
+	make 2>&1 | colorgcc                        (3rd form)
+
+you can replace 'gcc' with g++, cc, c++, g77, gcj
+or anything gcc like (gcc is just an example here)
+
+
+Notes:
+	colorgcc will only emit color codes if
+	1) STDOUT is a tty.
+	2) \$TERM is not listed in the 'nocolor' option.
+	3) -or- CGCC_FORCE_COLOR is set to 1
+	4) -and- ANSI_COLORS_DISABLED isn't set to 1
+
+v1.4.0
+";
+#
+# The default settings can be overridden with ~/.colorgccrc,
+# /etc/colorgcc/colorgccrc or .colorgccrc in current directory
+# See the comments in the sample .colorgccrc for more information.
+#
+# If colorgcc colorizes the output, the compiler's STDERR will be
+# combined with STDOUT. Otherwise, colorgcc just passes the output from
+# the compiler through without modification.
+#
+# Author: Jamie Moyers <jmoyers@geeks.com>
+# Started: April 20, 1999
+# Licence: GNU Public License
+#
+# Credits:
+#
+#    I got the idea for this from a script called "color_cvs":
+#       color_cvs .03   Adrian Likins <adrian@gimp.org> <adrian@redhat.com>
+#
+#    <seh4@ix.netcom.com> (Scott Harrington)
+#       Much improved handling of compiler command line arguments.
+#       exec compiler when not colorizing to preserve STDOUT, STDERR.
+#       Fixed my STDIN kludge.
+#
+#    <ecarotti@athena.polito.it> (Elias S. G. Carotti)
+#       Corrected handling of text like -DPACKAGE=\"Package\"
+#       Spotted return code bug.
+#
+#    <erwin@erwin.andreasen.org> (Erwin S. Andreasen)
+#    <schurchi@ucsd.edu> (Steve Churchill)
+#       Return code bug fixes.
+#
+#    <rik@kde.org> (Rik Hemsley)
+#       Found STDIN bug.
+#
+# Changes:
+#
+# 1.4.0 Is now easier to use and more flexible
+#       fully backward compatible with Debian/Ubuntu
+#       + ability to call colorgcc directly as `colorgcc <compiler> <args>`
+#       + ability to use colorgcc as a filter
+#       + print usage if called alone
+#       + now also reads from .colorgccrc in current directory
+#       + inherits from higher level configs (local from user from global)
+#       + GCC column number support
+#       + supports linker and make target errors
+#       + implemented missing "note" messages
+#       Settings:
+#          note___Color (fixed)
+#          introFileNameColor (fixed)
+#          introMessageColor (fixed)
+#          introColor sets the two above at once (compatibility)
+#          errorTranslations (fixed)
+#          noteTranslations (new)
+#          ___LineColor (new)
+#          ___ColumnColor (new)
+#          ___NumberColor sets line and column color at once (compatibility)
+#
+# 1.3.2.0-10 merged with Debian/Ubuntu version
+#       can read settings from /etc/colorgcc/colorgccrc
+#       supports custom compilers in colorgccrc
+#       supports compiler arguments in colorgccrc
+#       added direct support for g77, f77 and gcj
+#       added CGCC_FORCE_COLOR environment variable to force colorization
+#       allows localized warnings and errors
+#       fixed UTF-8 output
+#
+# 1.3.2 Better handling of command line arguments to compiler.
+#
+#       If we aren't colorizing output, we just exec the compiler which
+#       preserves the original STDOUT and STDERR.
+#
+#       Removed STDIN kludge. STDIN being passed correctly now.
+#
+# 1.3.1 Added kludge to copy STDIN to the compiler's STDIN.
+#
+# 1.3.0 Now correctly returns (I hope) the return code of the compiler
+#       process as its own.
+#
+# 1.2.1 Applied patch to handle text similar to -DPACKAGE=\"Package\".
+#
+# 1.2.0 Added tty check. If STDOUT is not a tty, don't do color.
+#
+# 1.1.0 Added the "nocolor" option to turn off the color if the terminal type
+#       ($TERM) is listed.
+#
+# 1.0.0 Initial Version
+
+use strict;
+#use warnings; # perl 5.6
+
+use Term::ANSIColor;
+use IPC::Open3;
+
+my(%nocolor, %colors, %compilerPaths, %translations);
+
+sub initDefaults
+{
+    # standard GCC
+    $compilerPaths{"gcc"} = "/usr/bin/gcc";
+    $compilerPaths{"g++"} = "/usr/bin/g++";
+    $compilerPaths{"cc"}  = "/usr/bin/gcc";
+    $compilerPaths{"c++"} = "/usr/bin/g++";
+    $compilerPaths{"g77"} = "/usr/bin/g77";
+    $compilerPaths{"f77"} = "/usr/bin/g77";
+    $compilerPaths{"gcj"} = "/usr/bin/gcj";
+    # cross-platform GCC targeting 32bit Windows
+    $compilerPaths{"i686-w64-mingw32-gcc"} = "/usr/bin/i686-w64-mingw32-gcc";
+    $compilerPaths{"i686-w64-mingw32-g++"} = "/usr/bin/i686-w64-mingw32-g++";
+    $compilerPaths{"i686-w64-mingw32-c++"} = "/usr/bin/i686-w64-mingw32-c++";
+    # cross-platform GCC targeting 64bit Windows
+    $compilerPaths{"x86_64-w64-mingw32-gcc"} = "/usr/bin/x86_64-w64-mingw32-gcc";
+    $compilerPaths{"x86_64-w64-mingw32-g++"} = "/usr/bin/x86_64-w64-mingw32-g++";
+    $compilerPaths{"x86_64-w64-mingw32-c++"} = "/usr/bin/x86_64-w64-mingw32-c++";
+
+    $nocolor{"dumb"} = 1;
+
+    $colors{"srcColor"} = color("cyan");
+    $colors{"identColor"} = color("green");
+    $colors{"introFileNameColor"} = color("blue");
+    $colors{"introMessageColor"}  = color("blue");
+
+    $colors{"warningFileNameColor"} = color("yellow");
+    $colors{"warningLineColor"}     = color("yellow");
+    $colors{"warningColumnColor"}   = color("yellow");
+    $colors{"warningMessageColor"}  = color("yellow");
+
+    $colors{"errorFileNameColor"} = color("bold red");
+    $colors{"errorLineColor"}     = color("bold red");
+    $colors{"errorColumnColor"}   = color("bold red");
+    $colors{"errorMessageColor"}  = color("bold red");
+
+    $colors{"noteFileNameColor"} = color("green");
+    $colors{"noteLineColor"}     = color("green");
+    $colors{"noteColumnColor"}   = color("green");
+    $colors{"noteMessageColor"}  = color("green");
+
+    @{$translations{"warning"}} = ();
+    @{$translations{"error"}}   = ();
+    @{$translations{"note"}}    = ();
+}
+
+sub loadPreferences # Usage: loadPreferences("filename");
+{
+    my($filename) = @_;
+
+    open(PREFS, "<$filename") || return;
+
+    my $gccVersion;
+    my $overrideCompilerPaths = 0;
+
+    while(<PREFS>)
+    {
+        next if (m/^\#.*/);          # It's a comment.
+        next if (!m/(.*):\s*(.*)/);  # It's not of the form "foo: bar".
+
+        my $option = $1;
+        my $value = $2;
+
+        if ($option =~ m/\A(cc|c\+\+|gcc|g\+\+|g77|f77|gcj)\Z/)
+        {
+            $compilerPaths{$option} = $value;
+            $overrideCompilerPaths  = 1;
+        }
+        elsif ($option eq "gccVersion")
+        {
+            $gccVersion = $value;
+        }
+        elsif ($option eq "nocolor")
+        {
+            # The nocolor option lists terminal types, separated by
+            # spaces, not to do color on.
+            foreach my $termtype (split(/\s+/, $value))
+            {
+                $nocolor{$termtype} = 1;
+            }
+        }
+        elsif ($option =~ m/(.+)Translations/)
+        {
+            @{$translations{$1}} = split(/\s+/, $value);
+        }
+        elsif ($option =~ m/Color$/)
+        {
+            my $color = color($value);
+            if ($option eq "introColor") {
+                $colors{"introFileNameColor"} = $color;
+                $colors{"introMessageColor"} = $color;
+            } elsif ($option =~ m/^([^A-Z]+)NumberColor$/) {
+                $colors{$1 . "LineColor"} = $color;
+                $colors{$1 . "ColumnColor"} = $color;
+            } else {
+                $colors{$option} = $color;
+            }
+        }
+        else
+        {
+            # treat unknown options as user defined compilers
+            $compilerPaths{$option} = $value;
+        }
+    }
+    close(PREFS);
+
+    # Append "-<gccVersion>" to user-defined compilerPaths
+    if ($overrideCompilerPaths && $gccVersion) {
+        $compilerPaths{$_} .= "-$gccVersion" foreach (keys %compilerPaths);
+    }
+}
+
+sub srcscan # Usage: srcscan($text, $normalColor)
+{   #    $text -- the text to colorize
+    #    $normalColor -- The escape sequence to use for non-source text.
+
+    # Looks for text between ` and ', and colors it srcColor.
+
+    my($line, $normalColor) = @_;
+    $line = $normalColor . $line;
+
+
+    # This substitute replaces `foo' with `AfooB' where A is the escape
+    # sequence that turns on the the desired source color, and B is the
+    # escape sequence that returns to $normalColor.
+    my($srcon) = color("reset") . $colors{"srcColor"};
+    my($srcoff) = color("reset") . $normalColor;
+    $line =~ s/(\`|\')(.*?)\'/\`$srcon$2$srcoff\'/g;
+
+    # This substitute replaces ‘foo’ with ‘AfooB’ where A is the escape
+    # sequence that turns on the the desired identifier color, and B is the
+    # escape sequence that returns to $normalColor.
+    my($identon) = color("reset") . $colors{"identColor"};
+    my($identoff) = color("reset") . $normalColor;
+    $line =~ s/\‘(.*?)\’/\‘$identon$1$identoff\’/g;
+
+    print($line, color("reset"));
+}
+
+sub translate # Usage: translate($type)
+{   # $type -- either "warning", "error" or "note" (in different languages)
+    # returns English version of $type or "error" when unknown
+    my($type) = @_;
+    my $translation;
+    if ($type eq "warning" || $type eq "error" || $type eq "note") {
+        return $type;
+    }
+    for $translation (@{$translations{"warning"}}) {
+        if ($type eq $translation) {
+            return "warning";
+        }
+    }
+    for $translation (@{$translations{"error"}}) {
+        if ($type eq $translation) {
+            return "error";
+        }
+    }
+    for $translation (@{$translations{"note"}}) {
+        if ($type eq $translation) {
+            return "note";
+        }
+    }
+    return "error";
+}
+
+#
+# Main program
+#
+
+# Set up default values for colors and compilers.
+initDefaults();
+
+# Read the configuration file, if there is one.
+my $configFile = '/etc/colorgcc/colorgccrc';
+if (-f $configFile) {
+    loadPreferences($configFile);
+}
+$configFile = $ENV{"HOME"} . "/.colorgccrc";
+if (-f $configFile) {
+    loadPreferences($configFile);
+}
+$configFile = ".colorgccrc";
+if (-f $configFile) {
+    loadPreferences($configFile);
+}
+
+# Figure out which compiler to invoke based on our program name.
+$0 =~ m%.*/(.*)$%;
+my $progName = $1 || $0;
+my($compiler, $compiler_pid);
+if ($progName eq "colorgcc" || $progName eq "colorgcc.pl") {
+    $compiler = shift @ARGV;
+    if (! $compiler) { # no arguments
+        if (-t STDIN) { # print usage
+            print(STDERR $USAGE);
+            exit 1;
+        } else { # use STDIN
+            open(GCCOUT, "<&STDIN");
+        }
+    } elsif ($compiler =~ m/(^-|\.\w{1,3}$)/) {
+        # first argument is an option or source file, assume gcc
+        unshift @ARGV, $compiler;
+        $compiler = $compilerPaths{"gcc"};
+    }
+} else {
+    $compiler = $compilerPaths{$progName} || ($progName =~ /color-(.+)/ && $compilerPaths{$1}) || $compilerPaths{"gcc"};
+}
+
+if ($compiler) {
+    my @comp_list = split /\s+/, $compiler;
+    $compiler = $comp_list[0];
+    my @comp_args = ( @comp_list[1 .. $#comp_list], @ARGV );
+
+    # Check that we don't reference self
+    die "$compiler is self-referencing"
+        if ( -l $compiler and (stat $compiler)[1] == (stat $0)[1] );
+
+    # Get the terminal type.
+    my $terminal = $ENV{"TERM"} || "dumb";
+
+    # If it's in the list of terminal types not to color, or if
+    # we're writing to something that's not a tty, don't do color.
+    if (! $ENV{"CGCC_FORCE_COLOR"} && (! -t STDOUT || $nocolor{$terminal}))
+    {
+        exec $compiler, @comp_args
+            or die("Couldn't exec");
+    }
+
+    # Keep the pid of the compiler process so we can get its return
+    # code and use that as our return code.
+    $compiler_pid = open3('<&STDIN', \*GCCOUT, \*GCCOUT, $compiler, @comp_args);
+}
+binmode(\*GCCOUT,":bytes");
+binmode(\*STDOUT,":bytes");
+if (-p STDOUT) { # don't buffer output to pipes
+    select((select(STDOUT), $|=1)[0]);
+}
+
+# Colorize the output from the compiler.
+while(<GCCOUT>)
+{
+    my($file, $line, $column, $type, $message);
+    if (m/^(..[^:]*):([0-9]+):(?:([0-9]+):)?(\s*([^:]+):.*)/) # filename:line:[column:] type: message
+    {
+        $file = $1;
+        $line = $2;
+        $column = $3;
+        $message = $4;
+        $type = translate($5);
+        # warning, note, error
+        print($colors{$type . "FileNameColor"}, $file, color("reset"), ":");
+        print($colors{$type . "LineColor"}, $line, color("reset"), ":");
+        if ($column) {
+            print($colors{$type . "ColumnColor"}, $column, color("reset"), ":");
+        }
+        srcscan($message, $colors{$type . "MessageColor"});
+        print("\n");
+    }
+    elsif (m/^\s+\^$/) # position marker
+    {
+        print($colors{"errorMessageColor"}, $_, color("reset"));
+    }
+    elsif (m/^(..[^:]*):(?:([0-9]+):)?(\s+[^:]+)$/) # link error, make (filename:[line:] message)
+    {
+        $file = $1;
+        $line = $2;
+        $message = $3;
+        if ($file =~ m/^make(\[\d+\])?$/) {
+            # don't colorize make's status messages
+            print($_);
+        } else {
+            print($colors{"errorFileNameColor"}, $file, color("reset"), ":");
+            if ($line) {
+                print($colors{"errorLineColor"}, $line, color("reset"), ":");
+            }
+            srcscan($message, $colors{"errorMessageColor"});
+            print("\n");
+        }
+    }
+    elsif (m/^(<command-line>):(\s*([^:]+):.*)/) # special-location: message
+    {
+        $file = $1;
+        $message = $2;
+        $type = translate($3);
+        # warning, note, error
+        print($colors{$type . "FileNameColor"}, $file, color("reset"), ":");
+        srcscan($message, $colors{$type . "MessageColor"});
+        print("\n");
+    }
+    elsif (m/^(..[^:]*):(.+:\s*)$/) # filename: message:
+    {
+        # No line number, treat as an "introductory" line of text.
+        $file = $1;
+        $message = $2;
+        print($colors{"introFileNameColor"}, $file, color("reset"), ":");
+        srcscan($message, $colors{"introMessageColor"});
+        print("\n");
+    }
+    else # Anything else.
+    {
+        # Doesn't seem to be a warning or an error. Print normally.
+        print($_);
+    }
+}
+
+if ($compiler_pid) {
+    # Get the return code of the compiler and exit with that.
+    waitpid($compiler_pid, 0);
+    exit ($? >> 8);
+}

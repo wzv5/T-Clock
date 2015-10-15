@@ -1,0 +1,20 @@
+srcColor: bold cyan
+identColor: green
+
+introFileNameColor: reset
+introMessageColor:  blue
+
+warningFileNameColor: reset
+warningLineColor:     blue
+warningColumnColor:   blue
+warningMessageColor:  yellow
+
+errorFileNameColor: reset
+errorLineColor:     blue
+errorColumnColor:   blue
+errorMessageColor:  bold red
+
+noteFileNameColor: reset
+noteLineColor:     blue
+noteColumnColor:   blue
+noteMessageColor:  green

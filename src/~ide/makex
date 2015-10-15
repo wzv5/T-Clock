@@ -1,0 +1,10 @@
+#!/bin/bash
+set -o pipefail
+make $* 2>&1 | ./tool/colorgcc | tee build.log
+ret=$?;
+if [[ "$1" != "clean" ]];then
+	echo
+	./tool/warn_summary -s0 -wpass build.log
+	./tool/warn_summary -s0 build.log
+fi
+return $ret 2>/dev/null || exit $ret;
