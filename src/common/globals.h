@@ -36,6 +36,11 @@
 	static const GUID IID_IShellDispatch4 = {0xefd84b2d,0x4bcf,0x4298,{0xbe,0x25,0xeb,0x54,0x2a,0x59,0xfb,0xda}};
 	static const GUID CLSID_DragDropHelper = {0x4657278a,0x411b,0x11d2,{0x83,0x9a,0,0xc0,0x4f,0xd9,0x18,0xd0}};
 	static const GUID IID_IDropTargetHelper = {0x4657278b,0x411b,0x11d2,{0x83,0x9a,0,0xc0,0x4f,0xd9,0x18,0xd0}};
+	/* Linux is still at 2 or 4 sometimes (4 as of Debian Jessie) */
+#	if __MINGW64_VERSION_MAJOR < 4
+	/* fix non-conforming 'swprintf' from MSVC without size argument */
+#		define swprintf _snwprintf
+#	endif
 #else
 #	define strdup _strdup
 #	define wcsdup _wcsdup

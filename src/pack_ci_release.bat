@@ -33,7 +33,7 @@ exit $?
 @echo off
 rem start of batch
 if not defined signtool set signtool=signtool
-set "xclude=-xr!*.ini -xr!*.log -xr!*.rpt -x!*.zip -xr!*.pdb -xr!*.exp -xr!*.lib -xr!*.def -xr!*.a -xr!*.manifest"
+set "xclude=-xr!*.ini -xr!*.log -xr!*.rpt -x!*.zip -xr!*.pdb -xr!*.exp -xr!*.lib -xr!*.def -xr!*.a -xr!*.manifest -xr!_*"
 if defined TRAVIS_TAG set tag=%TRAVIS_TAG%
 if defined APPVEYOR_REPO_TAG_NAME set tag=%APPVEYOR_REPO_TAG_NAME%
 rem require tag
