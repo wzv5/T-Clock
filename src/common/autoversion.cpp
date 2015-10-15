@@ -310,11 +310,11 @@ int main(int argc, char** argv)
 	if(!get_define) {
 /// @todo (White-Tiger#1#): aren't both files doin' "nearly" the same?
 		char lockPath[PATH_MAX];
-			memcpy(lockPath,headerPath,sizeof(char)*hlen);
-			memcpy(lockPath+hlen,".lock",sizeof(char)*6);
+			memcpy(lockPath,headerPath,hlen);
+			memcpy(lockPath+hlen,".lock",6);
 		//char incPath[hlen+6];
-		//	memcpy(incPath,headerPath,sizeof(char)*hlen);
-		//	memcpy(incPath+hlen,".inc",sizeof(char)*5);
+		//	memcpy(incPath,headerPath,hlen);
+		//	memcpy(incPath+hlen,".inc",5);
 		if(g_flag&FLAG_POST) {
 			FILE* flock = fopen(lockPath,"rb");
 			if(flock){
@@ -388,7 +388,11 @@ int main(int argc, char** argv)
 bool QueryGit(const char* path,Version* ver)
 {
 	bool found = false;
-	char cwd[PATH_MAX]; getcwd(cwd, sizeof(cwd));
+	char cwd[PATH_MAX];
+	if(!getcwd(cwd, sizeof(cwd))) {
+		puts("failed to retrieve current directory!");
+		return false;
+	}
 	if(chdir(path)){
 		puts("invalid repository path!");
 		return false;
@@ -398,12 +402,12 @@ bool QueryGit(const char* path,Version* ver)
 	git = popen("git rev-list HEAD --count","r");
 	if(git){ /// revision count
 		int error;
-		size_t read = fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+		size_t read = fread(buf,1,(sizeof(buf)-1),git); buf[read]='\0'; error=pclose(git);
 		if(!error && *buf>='0' && *buf<='9'){ // simple error check on command failure
 			ver->revision = atoi(buf);
 			git = popen("git remote -v","r");
 			if(git){ /// url
-				read = fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+				read = fread(buf,1,(sizeof(buf)-1),git); buf[read]='\0'; error=pclose(git);
 				for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'&&*pos!=' '&&*pos!='\t'); ++pos);
 				for(data=pos; *data=='\r'||*data=='\n'||*data==' '||*data=='\t'; ++data);
 				for(pos=data; *pos && (*pos!='\r'&&*pos!='\n'&&*pos!=' '&&*pos!='\t'); ++pos);
@@ -412,7 +416,7 @@ bool QueryGit(const char* path,Version* ver)
 //					git = popen("git log -1 --pretty=%h%n%an%n%at","r"); // short hash, author, timestamp
 					git = popen("git log -1 --pretty=%h%n%at","r"); // short hash, timestamp
 					if(git){ /// shorthash,author,timestamp		SVN date example: 2014-07-01 21:31:24 +0200 (Tue, 01 Jul 2014)
-						read = fread(buf,sizeof(char),4096,git); buf[read]='\0'; error=pclose(git);
+						read = fread(buf,1,(sizeof(buf)-1),git); buf[read]='\0'; error=pclose(git);
 						for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'); ++pos);
 						if(!error && *pos){
 							ver->revhash.assign(buf,pos-buf); ++pos;
@@ -427,7 +431,8 @@ bool QueryGit(const char* path,Version* ver)
 			}
 		}
 	}
-	chdir(cwd);
+	if(chdir(cwd) != 0)
+		puts("warning: change directory failed");
 	return found;
 }
 bool QuerySVN(const char* path,Version* ver)
@@ -437,11 +442,11 @@ bool QuerySVN(const char* path,Version* ver)
 	svncmd.append(path);
 	FILE* svn = popen(svncmd.c_str(), "r");
 	if(svn){
-		size_t attrib_len = 0; char attrib[32] = {0};
-		size_t value_len = 0; char value[128] = {0};
+		size_t attrib_len = 0; char attrib[32];
+		size_t value_len = 0; char value[128];
 		char buf[4097];
 		size_t read;
-		read = fread(buf,sizeof(char),4096,svn); buf[read]='\0';
+		read = fread(buf,1,(sizeof(buf)-1),svn); buf[read]='\0';
 		if(pclose(svn) == 0){
 			for(char* c=buf; *c; ++c) {
 				nextloop:
@@ -497,8 +502,9 @@ bool ReadHeader(const char* filepath,Version &ver)
 		return false;
 	}
 	unsigned cmajor=0,cminor=0,cbuild=0,cstatus=0;
-	char buf[2048] = {0};
-	fread(buf,2048,sizeof(char),fheader);
+	char buf[2048];
+	int read = fread(buf,1,(sizeof(buf)-1),fheader);
+	buf[read] = '\0';
 	fclose(fheader);
 	size_t def_found, def_num=7;const char def[]="define ";
 	size_t attrib_len = 0; char attrib[32] = {0};
