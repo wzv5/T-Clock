@@ -507,8 +507,8 @@ bool ReadHeader(const char* filepath,Version &ver)
 	buf[read] = '\0';
 	fclose(fheader);
 	size_t def_found, def_num=7;const char def[]="define ";
-	size_t attrib_len = 0; char attrib[32] = {0};
-	size_t value_len = 0; char value[64] = {0};
+	size_t attrib_len = 0; char attrib[32];
+	size_t value_len = 0; char value[64];
 	for(char* c=buf; *c; ++c) {
 		nextloop:
 		if(attrib_len>=31) {attrib_len=0; *attrib='\0'; goto nextline;}
@@ -643,7 +643,7 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	
 	// date / time
 	}else if(!strcasecmp("TIMESTAMP",define)) {
-		fprintf(fp,"%lu",ver.timestamp);
+		fprintf(fp,"%lu", (unsigned long)ver.timestamp);
 	
 	
 	}else{
