@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project InitialTargets="BuildInfo" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="UserMacros">
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
+    <DefaultPlatformToolset Condition="'$(DefaultPlatformToolset)' == ''">v100</DefaultPlatformToolset>
   </PropertyGroup>
   <PropertyGroup>
     <RootNamespace>$(ProjectName)</RootNamespace>
     <Keyword>Win32Proj</Keyword>
-    <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
     <!--<PlatformToolset Condition="'$(VisualStudioVersion)' == '10.0'">v100</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '11.0'">v110_xp</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '12.0'">v120_xp</PlatformToolset>
     <PlatformToolset Condition="'$(VisualStudioVersion)' == '14.0'">v140_xp</PlatformToolset>-->
-    <PlatformToolset Condition="'$(PlatformToolset)' == ''">v100</PlatformToolset>
+    <PlatformToolset Condition="'$(PlatformToolset)' == ''">$(DefaultPlatformToolset)</PlatformToolset>
     <IntDir Condition="'$(Platform)'=='Win32'">..\.obj\msvc\</IntDir>
     <IntDir Condition="'$(Platform)'=='x64'">..\.obj64\msvc\</IntDir>
     <IntDir Condition="'$(Configuration)'=='Debug'">$(IntDir)dbg\</IntDir>
@@ -72,4 +72,8 @@
     <Manifest Include="..\common\manifest.xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Target Name="BuildInfo">
+    <Message Text="VisualStudioVersion: $(VisualStudioVersion)" Importance="high" />
+    <Message Text="PlatformToolset: $(PlatformToolset)" Importance="high" />
+  </Target>
 </Project>
