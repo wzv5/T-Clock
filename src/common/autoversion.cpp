@@ -346,7 +346,8 @@ int main(int argc, char** argv)
 	ver.date = "unknown date";
 
 //	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
-	ReadHeader(headerPath, ver);
+	if(!ReadHeader(headerPath, ver))
+		fprintf(stderr, "Error: Couldn't read version file '%s'\n", headerPath);
 //	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	unsigned int rev = ver.revision;
 	if(g_repo&REPO_GIT){
@@ -390,11 +391,11 @@ bool QueryGit(const char* path,Version* ver)
 	bool found = false;
 	char cwd[PATH_MAX];
 	if(!getcwd(cwd, sizeof(cwd))) {
-		puts("failed to retrieve current directory!");
+		fputs("failed to retrieve current directory!", stderr);
 		return false;
 	}
 	if(chdir(path)){
-		puts("invalid repository path!");
+		fputs("invalid repository path!", stderr);
 		return false;
 	}
 	char buf[4097],* pos,* data;
@@ -432,7 +433,7 @@ bool QueryGit(const char* path,Version* ver)
 		}
 	}
 	if(chdir(cwd) != 0)
-		puts("warning: change directory failed");
+		fputs("warning: change directory failed", stderr);
 	return found;
 }
 bool QuerySVN(const char* path,Version* ver)
@@ -497,10 +498,8 @@ bool QuerySVN(const char* path,Version* ver)
 bool ReadHeader(const char* filepath,Version &ver)
 {
 	FILE* fheader = fopen(filepath,"rb");
-	if(!fheader) {
-		printf("Error: Couldn't read version file '%s', creating\n",filepath);
+	if(!fheader)
 		return false;
-	}
 	unsigned cmajor=0,cminor=0,cbuild=0,cstatus=0;
 	char buf[2048];
 	int read = fread(buf,1,(sizeof(buf)-1),fheader);
@@ -647,7 +646,7 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	
 	
 	}else{
-		fprintf(fp,"unknown define: %s\n",define);
+		fprintf(stderr, "unknown define: %s\n", define);
 	}
 }
 void WriteDefine(FILE* fp,const char* define,const Version &ver)
@@ -670,7 +669,7 @@ bool WriteHeader(const char* filepath,Version &ver)
 	}
 	fheader = fopen(filepath,"wb");
 	if(!fheader) {
-		puts("Error: Couldn't open output file.");
+		fputs("Error: Couldn't open output file.", stderr);
 		return false;
 	}
 	fputs("#ifndef AUTOVERSION_H\n",fheader);
