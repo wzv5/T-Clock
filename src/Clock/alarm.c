@@ -390,7 +390,8 @@ void OnTimerAlarm(HWND hwnd, time_t time)   // 12am = Midnight -----------------
 		return;
 	
 	if(time >= schedule->time) {
-		for(; time >= schedule->time; schedule=timetable_begin_) {
+		for(; schedule && time >= schedule->time; schedule=timetable_begin_) {
+			TimetableQueue(schedule, 0);
 			if(schedule->id & SCHEDID_START_FLAG_) {
 				switch(schedule->id) {
 				case SCHEDID_CHIME:
@@ -469,11 +470,8 @@ void OnTimerAlarm(HWND hwnd, time_t time)   // 12am = Midnight -----------------
 					schedule->time = AlarmNextTimestamp();
 				}
 			}
-			TimetableQueue(schedule, 0);
 			if(!schedule->time) {
 				free(schedule);
-				if(!timetable_begin_)
-					break;
 			} else {
 				TimetableQueue(schedule, 1);
 			}
