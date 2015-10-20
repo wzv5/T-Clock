@@ -635,9 +635,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
-		gs_hwndCalendar = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
-//		if(!gs_hwndCalendar)
-//			gs_hwndCalendar = FindWindowEx(NULL,NULL,"Windows.UI.Core.CoreWindow","Date and Time Information");
+		gs_hwndCalendar = NULL; // GetCalendar() falls back to this
+		gs_hwndCalendar = api.GetCalendar();
 		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;

@@ -87,11 +87,13 @@ static void CALLBACK ToggleCalendar_done(HWND hwnd, UINT uMsg, ULONG_PTR dwData,
 void ToggleCalendar(int type)   //---------------------------+++-->
 {
 	HWND calendar = api.GetCalendar();
+	int is_custom = api.GetInt("Calendar", "bCustom", 0);
 	if(calendar){
-		SetForegroundWindow(calendar);
+		if(is_custom)
+			SetForegroundWindow(calendar);
 		return;
 	}
-	if(api.OS >= TOS_VISTA && (!api.GetInt("Calendar","bCustom",0) && type!=1)){
+	if(api.OS >= TOS_VISTA && (!is_custom && type!=1)){
 		// Windows 10 workaround as SendMessage doesn't work any longer (no error given)
 		SendMessageCallback(g_hwndClock, WM_USER+102, 1, 0, ToggleCalendar_done, 0);//1=open, 0=close
 	}else{

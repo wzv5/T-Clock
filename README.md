@@ -55,8 +55,8 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [ ] + improved hotkey support *tbd*
 
 ### Requirements
-* Windows 2000+ (up to Windows 10 as of 2014)
-* [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) *(install both vcredist_x86 + vcredist_x64 on 64bit OS. Alternatively just use our static builds)*
+* Windows 2000+ (up to Windows 10 as of 2014, Win2k requires static builds)
+* [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) (install **both** 32 bit `vcredist_x86` +  64bit `vcredist_x64` **on 64bit** OS. Alternatively just use our \_static builds)
 
 ### Support
 * [Issue Tracker](//github.com/White-Tiger/T-Clock/issues)
