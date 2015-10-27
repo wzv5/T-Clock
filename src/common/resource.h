@@ -303,8 +303,7 @@
 #define IDC_RADSINGLE                   1407 /* group */
 #define IDC_RADDOUBLE                   1408 /* end group */
 #define IDC_MOUSEFUNC                   1411
-#define IDC_LABMOUSEFILE                1412
-#define IDC_MOUSEFILE                   1413
+#define IDC_MOUSEFILE                   1412
 #define IDCB_TOOLTIP                    1414
 #define IDC_TOOLTIP                     1415
 #define IDC_LIST                        1416
