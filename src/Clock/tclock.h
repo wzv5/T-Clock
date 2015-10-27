@@ -23,13 +23,17 @@
 #define IDTIMER_DESKTOPICONSTYLE	6
 
 // for mouse.c and pagemouse.c
-#define MOUSEFUNC_NONE			0
-#define MOUSEFUNC_MENU			1
-#define MOUSEFUNC_TIMER			5
-#define MOUSEFUNC_CLIPBOARD		6
-#define MOUSEFUNC_SCREENSAVER	7
-#define MOUSEFUNC_SHOWCALENDER	8
-#define MOUSEFUNC_SHOWPROPERTY	9
+#define MOUSEFUNC_NONE           0
+#define MOUSEFUNC_MENU           1
+#define MOUSEFUNC_TIMER          5
+#define MOUSEFUNC_CLIPBOARD      6
+#define MOUSEFUNC_SCREENSAVER    7
+#define MOUSEFUNC_SHOWCALENDER   8
+#define MOUSEFUNC_SHOWPROPERTY   9
+
+#define MOUSEFUNCEXTRA_BEGIN     -1
+#define MOUSEFUNCEXTRAFILE_BEGIN -100
+#define MOUSEFUNC_EXEC           -100
 
 // System Global HotKey Identifiers
 #define HOT_WATCH	200

@@ -137,6 +137,17 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 		api.Exec("control", "mmsys.cpl", NULL);
 		break;
 		
+	case IDM_RECYCLEBIN:
+		api.Exec("::{645FF040-5081-101B-9F08-00AA002F954E}", NULL, NULL);
+		break;
+		
+	case IDM_RECYCLEBIN_PURGE:{
+		SHQUERYRBINFO info = {sizeof(info)}; // Windows seriously asks :
+		SHQueryRecycleBin(NULL, &info); // "are you sure to delete all items"
+		if(info.i64NumItems > 0 || api.OS == TOS_2000) // when the recycle bin is actually empty...
+			SHEmptyRecycleBin(g_hwndTClockMain, NULL, 0);
+		break;}
+		
 	case IDM_MAPDRIVE: //----------------------------------+++--> Map Network Drive
 		WNetConnectionDialog(hwnd, RESOURCETYPE_DISK);
 		break;

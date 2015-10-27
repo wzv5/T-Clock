@@ -8,7 +8,7 @@
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 static void OnDestroy();
-static void OnSansho(HWND hDlg, WORD id);
+static void OnFileBrowse(HWND hDlg, WORD id);
 static void InitMouseControls(HWND hDlg);
 
 static const char* m_mouseButton[]={
@@ -35,9 +35,12 @@ static const action_t m_mouseAction[]={
 	{MOUSEFUNC_TIMER,"Timer"},
 	{IDM_TIMEWATCH,"Timer watch"},
 	{MOUSEFUNC_CLIPBOARD,"Copy date/time by format ->"},
+	{MOUSEFUNC_EXEC,"Execute command ->"},
 	{MOUSEFUNC_SCREENSAVER,"Screensaver"},
 	{MOUSEFUNC_SHOWCALENDER,"Calendar"},
 	{MOUSEFUNC_SHOWPROPERTY,"T-Clock Properties"},
+	{IDM_RECYCLEBIN,"Open Recycle Bin"},
+	{IDM_RECYCLEBIN_PURGE,"Empty Recycle Bin"},
 	{IDM_STOPWATCH,"Stopwatch"},
 	{IDM_PROP_ALARM,"Alarms"},
 	{IDM_FWD_DATETIME,"Adjust date/time"},
@@ -119,10 +122,10 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 				ListView_SetItem(hList,&lvItem);
 				
 				++lvItem.iSubItem;
-				if(func==MOUSEFUNC_CLIPBOARD)
+				if(func == MOUSEFUNC_CLIPBOARD || func <= MOUSEFUNCEXTRA_BEGIN)
 					lvItem.pszText = m_pData[button].data[click];
 				else
-					lvItem.pszText="";
+					lvItem.pszText = "";
 				ListView_SetItem(hList,&lvItem);
 				if(button==selButton && click==selClick)
 					ListView_SetItemState(hList,lvItem.iItem,LVIS_FOCUSED|LVIS_SELECTED,0x0F);
@@ -167,14 +170,16 @@ static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //---
 			}
 		}
 	}
+	if(func == MOUSEFUNC_CLIPBOARD || func <= MOUSEFUNCEXTRA_BEGIN){
+		EnableDlgItem(hDlg, IDC_MOUSEFILE, 1);
+		if(!*m_pData[button].data[click] && func == MOUSEFUNC_CLIPBOARD)
+			api.GetStr("Format", "Format", m_pData[button].data[click], MAX_PATH, "");
+	}else
+		EnableDlgItem(hDlg, IDC_MOUSEFILE, 0);
+	EnableDlgItem(hDlg, IDC_MOUSEFILEBROWSE, (func <= MOUSEFUNCEXTRAFILE_BEGIN));
+	SetDlgItemText(hDlg, IDC_MOUSEFILE, m_pData[button].data[click]);
 	if(type!=2)
 		UpdateUIList(hDlg,button,click); // little recursion here, will call UpdateUIControls later on selection change
-	EnableDlgItem(hDlg,IDC_MOUSEFILE,(func==MOUSEFUNC_CLIPBOARD));
-	if(func==MOUSEFUNC_CLIPBOARD){
-		if(!*m_pData[button].data[click])
-			api.GetStr("Format", "Format", m_pData[button].data[click], MAX_PATH, "");
-	}
-	SetDlgItemText(hDlg, IDC_MOUSEFILE, m_pData[button].data[click]);
 	m_bTransition=0; // end transition
 }
 //================================================================================================
@@ -192,7 +197,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		HWND control = (HWND)lParam;
 		WORD id=LOWORD(wParam);
 		WORD code=HIWORD(wParam);
-		/// "Drop files"
+		// "Drop files"
 		if(id == IDC_DROPFILES && code == CBN_SELCHANGE){
 			int iter, sel;
 			sel = ComboBox_GetCurSel(control);
@@ -208,21 +213,20 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		}else if(id==IDC_DROPFILESAPP && code==EN_CHANGE){
 			g_bApplyClock=1;
 			SendPSChanged(hDlg);
-		// drag&drop file chooser
 		}else if(id == IDC_DROPFILESAPPSANSHO){
-			OnSansho(hDlg, id);
-		///  button
+			OnFileBrowse(hDlg, id);
+		//  button
 		}else if(id == IDC_MOUSEBUTTON && code == CBN_SELCHANGE){
 			int button=ComboBox_GetCurSel(control);
 			UpdateUIControls(hDlg,button,-1,0);
-		/// clicks
+		// clicks
 		}else if(id >= IDC_RADSINGLE && id <= IDC_RADDOUBLE){
 			UpdateUIControls(hDlg,-1,id-IDC_RADSINGLE,0);
-		///  Mouse Function
+		//  Mouse Function
 		}else if(id == IDC_MOUSEFUNC && code == CBN_SELCHANGE){
 			UpdateUIControls(hDlg,-1,-1,1);
 			SendPSChanged(hDlg);
-		/// Mouse Function - File
+		// Mouse Function - File
 		}else if(id == IDC_MOUSEFILE && code == EN_CHANGE){
 			int click;
 			int button=ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_MOUSEBUTTON));
@@ -231,6 +235,9 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				Edit_GetText(control, m_pData[button].data[click], MAX_PATH);
 				SendPSChanged(hDlg);
 			}
+		}else if(id == IDC_MOUSEFILEBROWSE){
+			OnFileBrowse(hDlg, id);
+		// tool tip
 		}else if((id==IDC_TOOLTIP && code==EN_CHANGE) || id==IDCB_TOOLTIP){
 			if(id==IDCB_TOOLTIP) EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 			if(!m_bTransition){
@@ -323,7 +330,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 			entry[1]='1'+(char)click;
 			m_pData[button].func[click]=api.GetInt(REG_MOUSE, entry, MOUSEFUNC_NONE);
 			m_pData[button].data[click][0] = '\0'; // clipboard format / execute file
-			if(m_pData[button].func[click]==MOUSEFUNC_CLIPBOARD){
+			if(m_pData[button].func[click] == MOUSEFUNC_CLIPBOARD || m_pData[button].func[click] <= MOUSEFUNCEXTRA_BEGIN){
 				memcpy(entry+2,"Clip",5);
 				api.GetStr(REG_MOUSE, entry, m_pData[button].data[click], MAX_PATH, "");
 				entry[2]='\0';
@@ -393,7 +400,8 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 			entry[1]='1'+(char)click;
 			if(m_pData[button].func[click]){
 				api.SetInt(REG_MOUSE, entry, m_pData[button].func[click]);
-				if(m_pData[button].func[click] == MOUSEFUNC_CLIPBOARD){
+				if(m_pData[button].func[click] == MOUSEFUNC_CLIPBOARD || m_pData[button].func[click] <= MOUSEFUNCEXTRA_BEGIN){
+					/// @note : on next backward incompatible change, rename "Clip" to neutral "Data" or "Ex" and cleanup leftover entries
 					memcpy(entry+2, "Clip", 5);
 					api.SetStr(REG_MOUSE, entry, m_pData[button].data[click]);
 					entry[2] = '\0';
@@ -423,7 +431,13 @@ void OnDestroy()   //-----------------------------------------------------------
 /*--------------------------------------------------
 --------------- Handle File Dropped on Clock Options
 --------------------------------------------------*/
-void OnSansho(HWND hDlg, WORD id)
+/** \brief browse for a file or folder triggered by control \p id
+ * \param hDlg
+ * \param id control id of browse button
+ * \remark \p id - 1 must be an edit control or dropdown that receives the chosen file
+ * \remark When \p id equals \c IDC_DROPFILESAPPSANSHO , it'll browse for either a file or folder depending on current selection in \c IDC_DROPFILES
+ * \sa IDC_DROPFILESAPPSANSHO, IDC_MOUSEFILEBROWSE */
+void OnFileBrowse(HWND hDlg, WORD id)
 {
 	char filter[80], deffile[MAX_PATH], fname[MAX_PATH];
 	
@@ -446,10 +460,8 @@ void OnSansho(HWND hDlg, WORD id)
 	}
 	
 	filter[0]=filter[1]='\0';
-	if(id==IDC_DROPFILESAPPSANSHO) {
-		str0cat(filter,MyString(IDS_PROGRAMFILE));
-		str0cat(filter,"*.exe;*.cmd");
-	}
+	str0cat(filter, MyString(IDS_PROGRAMFILE));
+	str0cat(filter, "*.exe;*.cmd");
 	str0cat(filter,MyString(IDS_ALLFILE));
 	str0cat(filter,"*.*");
 	

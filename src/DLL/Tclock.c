@@ -1333,14 +1333,14 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 void OnCopy(HWND hwnd, LPARAM lParam)
 {
 	SYSTEMTIME t;	HGLOBAL hg;
-	char entry[7], fmt[256], s[FORMAT_MAX_SIZE], *pbuf;
+	char entry[7], fmt[MAX_PATH], s[FORMAT_MAX_SIZE], *pbuf;
 	int beat100;
 	
 	GetDisplayTime(&t, &beat100);
 	entry[0]='0'+(char)LOWORD(lParam);
 	entry[1]='0'+(char)HIWORD(lParam);
 	memcpy(entry+2,"Clip",5);
-	api.GetStr("Mouse",entry,fmt,256,"");
+	api.GetStr(REG_MOUSE, entry, fmt, sizeof(fmt), "");
 	if(!*fmt) strcpy(fmt,m_format);
 	
 	MakeFormat(s, fmt, &t, beat100);

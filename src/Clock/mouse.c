@@ -109,6 +109,7 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 void OnTimerMouse(HWND hwnd)
 {
 	int func=GetMouseFuncNum(m_click_button,m_click);
+	char entry[3+4], data[MAX_PATH];
 	KillTimer(hwnd,IDTIMER_MOUSE);
 	switch(func){
 	case MOUSEFUNC_MENU:{
@@ -129,6 +130,14 @@ void OnTimerMouse(HWND hwnd)
 		break;
 	case MOUSEFUNC_SCREENSAVER:
 		SendMessage(GetDesktopWindow(),WM_SYSCOMMAND,SC_SCREENSAVE,0);
+		break;
+	case MOUSEFUNC_EXEC:
+		entry[0] = '0' + m_click_button;
+		entry[1] = '0' + m_click;
+		memcpy(entry+2, "Clip", 5);
+		api.GetStr(REG_MOUSE, entry, data, sizeof(data), "");
+		if(data[0])
+			api.ExecFile(data, g_hwndClock);
 		break;
 	default:
 		PostMessage(g_hwndTClockMain,WM_COMMAND,func,0);

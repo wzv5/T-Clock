@@ -50,8 +50,12 @@
 #define IDC_TIMERS                      204
 #define IDC_EXITWIN                     205
 #define IDC_ALARMS                      206 /* end group */
+
 #define IDM_VOLUMECONTROL               210 /* never change IDM numbers as they are used by mouse click settings, etc. */
 #define IDM_AUDIOPROP                   211
+#define IDM_RECYCLEBIN                  212
+#define IDM_RECYCLEBIN_PURGE            213
+//#define IDM_RECYCLEBIN_PURGE_FORCE      214
 #define IDM_MAPDRIVE                    220
 #define IDM_DISCONNECT                  221
 #define IDM_QUICKY_WINEXP               230
@@ -296,14 +300,15 @@
 #define IDC_ALARMDAY7                   1357
 #define IDC_DROPFILES                   1401
 #define IDC_LABDROPFILESAPP             1402
-#define IDC_DROPFILESAPP                1403
-#define IDC_DROPFILESAPPSANSHO          1404
+#define IDC_DROPFILESAPP                1403 /* group */
+#define IDC_DROPFILESAPPSANSHO          1404 /* end group */
 #define IDC_LABMOUSEBUTTON              1405
 #define IDC_MOUSEBUTTON                 1406
 #define IDC_RADSINGLE                   1407 /* group */
 #define IDC_RADDOUBLE                   1408 /* end group */
 #define IDC_MOUSEFUNC                   1411
-#define IDC_MOUSEFILE                   1412
+#define IDC_MOUSEFILE                   1412 /* group */
+#define IDC_MOUSEFILEBROWSE             1413 /* end group */
 #define IDCB_TOOLTIP                    1414
 #define IDC_TOOLTIP                     1415
 #define IDC_LIST                        1416
