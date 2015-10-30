@@ -270,32 +270,28 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			break;
 		case LVN_ITEMCHANGED:
 			if(itm->uNewState&LVIS_SELECTED){
-				HWND hList=GetDlgItem(hDlg,IDC_LIST);
-				char szButtonBuf[TNY_BUFF];
-				char szClickBuf[TNY_BUFF];
-				char* szButton;
-				int button;
-				int click;
+				HWND hList = GetDlgItem(hDlg, IDC_LIST);
+				char value[TNY_BUFF];
+				int button, click;
 				LVITEM lvItem;
-				lvItem.mask=LVIF_TEXT;
-				lvItem.iItem=itm->iItem;
-				lvItem.cchTextMax=TNY_BUFF;
-				lvItem.iSubItem=0;
-				lvItem.pszText=szButtonBuf;
-				ListView_GetItem(hList,&lvItem);
-				szButton=lvItem.pszText;
-				lvItem.iSubItem=1;
-				lvItem.pszText=szClickBuf;
-				ListView_GetItem(hList,&lvItem);
+				lvItem.mask = LVIF_TEXT;
+				lvItem.iItem = itm->iItem;
+				lvItem.cchTextMax = sizeof(value);
+				lvItem.pszText = value;
+				lvItem.iSubItem = 0;
+				ListView_GetItem(hList, &lvItem);
 				for(button=0; button<m_mouseButtonCount; ++button){
-					if(strcmp(m_mouseButton[button],szButton)) continue;
-					for(click=0; click<m_mouseClickCount; ++click){
-						if(strcmp(m_mouseClick[click],lvItem.pszText)) continue;
-						UpdateUIControls(hDlg,button,click,2);
-						button=m_mouseButtonCount;
+					if(strcmp(m_mouseButton[button], value) == 0)
 						break;
-					}
 				}
+				lvItem.iSubItem = 1;
+				ListView_GetItem(hList, &lvItem);
+				for(click=0; click<m_mouseClickCount; ++click){
+					if(strcmp(m_mouseClick[click], value) == 0)
+						break;
+				}
+				UpdateUIControls(hDlg, button, click, 2);
+				break;
 			}
 			break;
 		}
@@ -360,7 +356,10 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	lvCol.fmt=LVCFMT_CENTER;
 	lvCol.cx=60;
 	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
-	
+	/* begin 1st column workaround */
+	ListView_InsertColumn(listview, lvCol.iSubItem+1, &lvCol);
+	ListView_DeleteColumn(listview, 0);
+	/* end */
 	++lvCol.iSubItem;
 	lvCol.pszText="Click type";
 	lvCol.fmt=LVCFMT_CENTER;
@@ -369,7 +368,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	++lvCol.iSubItem;
 	lvCol.pszText="Action";
-	lvCol.fmt=LVCFMT_LEFT;
+	lvCol.fmt=LVCFMT_RIGHT;
 	lvCol.cx=160;
 	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
 	
@@ -378,7 +377,6 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	lvCol.fmt=LVCFMT_LEFT;
 	lvCol.cx=151;
 	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
-	ShowWindow(listview,SW_SHOW);
 	m_bTransition=0; // end transition
 	/// select first mouse setup and UpdateMouseClickList
 	UpdateUIControls(hDlg,0,-1,0); // pre-select first mouse button
