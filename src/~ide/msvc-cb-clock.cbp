@@ -127,7 +127,6 @@
 		<Unit filename="../Clock/alarmday.c">
 			<Option compilerVar="CC" />
 		</Unit>
-		<Unit filename="../Clock/guiddef.h" />
 		<Unit filename="../Clock/main.c">
 			<Option compilerVar="CC" />
 		</Unit>

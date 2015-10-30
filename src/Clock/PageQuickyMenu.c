@@ -136,9 +136,9 @@ void BrowseForTargetFile(HWND hBft)   //----------------------------------------
 	
 	ofn.lStructSize  = sizeof(ofn);
 	ofn.hwndOwner    = hBft;
-	ofn.hInstance	 = NULL;
+	ofn.hInstance    = NULL;
 	ofn.lpstrFilter  = Filters;
-	ofn.lpstrFile	 = szFile;
+	ofn.lpstrFile    = szFile;
 	ofn.nMaxFile     = MAX_PATH;
 	ofn.lpstrInitialDir = api.root;
 	ofn.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|OFN_FILEMUSTEXIST;

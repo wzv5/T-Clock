@@ -56,12 +56,12 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 
 ### Requirements
 * Windows 2000+ (up to Windows 10 as of 2014, Win2k requires static builds)
-* [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) (install **both** 32 bit `vcredist_x86` +  64bit `vcredist_x64` **on 64bit** OS. Alternatively just use our \_static builds)
+* [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) (install **both** 32bit `vcredist_x86` +  64bit `vcredist_x64` **on 64bit** OS. Alternatively just use our \_static builds)
 
 ### Support
-* [Issue Tracker](//github.com/White-Tiger/T-Clock/issues)
 * [Forum Topic](http://donationcoder.com/forum/index.php?topic=21944.0)
-* or click on the email in T-Clock's about screen
+* [Issue Tracker](//github.com/White-Tiger/T-Clock/issues)
+* or send a mail to the email address in T-Clock's about screen *(just click on it)*
 
 ### License
 * GPLv2 ? *(license is currently unknown, needs further research)*

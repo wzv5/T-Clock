@@ -12,9 +12,9 @@ struct NTP_Packet { // NTP (Network Time Protocol) Request Packet
 	int root_delay;
 	int root_dispersion;
 	int reference_identifier;
-	__int64 reference_timestamp;
-	__int64 originate_timestamp;
-	__int64 receive_timestamp;
+	int64_t reference_timestamp;
+	int64_t originate_timestamp;
+	int64_t receive_timestamp;
 	int transmit_timestamp_seconds;
 	int transmit_timestamp_fractions;
 };

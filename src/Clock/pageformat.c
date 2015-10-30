@@ -164,6 +164,7 @@ void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
 	if(CHECKS(IDC_MONTH)) CHECKS(IDC_MONTHS) = 0;
 	else if(CHECKS(IDC_MONTHS)) CHECKS(IDC_MONTH) = 0;
 	
+	/// @note : on next backward incompatible change, remove "Custom" key and detect it by comparing "Format" with "CustomFormat". If they match, it's custom
 	for(ival=IDC_AMPM; ival<=IDC_CUSTOM; ++ival) {
 		CHECKS(ival) = (char)api.GetInt("Format", ENTRY(ival), 0);
 	}
