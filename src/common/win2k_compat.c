@@ -6,35 +6,35 @@ typedef void MSVC_WARNING_C4206; // "empty" file
 #include <psapi.h> // GetProcessImageFileName
 
 errno_t win2k_strncpy_s(char* strDest, size_t numberOfElements, const char* strSource, size_t count){
-	(void)count;
-	size_t len_src,len_dst;
-	if(!strDest || !numberOfElements) return EINVAL;
+	size_t len_src;
+	if(!strDest || !numberOfElements)
+		return EINVAL;
 	strDest[0] = '\0';
-	if(!strSource) return EINVAL;
+	if(!strSource)
+		return EINVAL;
 	--numberOfElements;
 	
-	len_src = strlen(strSource);
+	len_src = strnlen(strSource, count);
 	if(len_src > numberOfElements)
 		len_src = numberOfElements;
-	len_dst = strlen(strDest);
-	memcpy(strDest+len_dst, strSource, numberOfElements);
-	strDest[numberOfElements] = '\0';
+	memcpy(strDest, strSource, len_src);
+	strDest[len_src] = '\0';
 	return 0;
 }
 errno_t win2k_wcsncpy_s(wchar_t* strDest, size_t numberOfElements, const wchar_t* strSource, size_t count){
-	(void)count;
-	size_t len_src,len_dst;
-	if(!strDest || !numberOfElements) return EINVAL;
+	size_t len_src;
+	if(!strDest || !numberOfElements)
+		return EINVAL;
 	strDest[0] = '\0';
-	if(!strSource) return EINVAL;
+	if(!strSource)
+		return EINVAL;
 	--numberOfElements;
 	
-	len_src = wcslen(strSource);
+	len_src = wcsnlen(strSource, count);
 	if(len_src > numberOfElements)
 		len_src = numberOfElements;
-	len_dst = wcslen(strDest);
-	memcpy(strDest+len_dst, strSource, numberOfElements*sizeof(wchar_t));
-	strDest[numberOfElements] = '\0';
+	memcpy(strDest, strSource, len_src*sizeof(wchar_t));
+	strDest[len_src] = '\0';
 	return 0;
 }
 char* win2k_strtok_s(char* strToken, const char* strDelimit, char** context){
@@ -73,10 +73,10 @@ DefSubclassProc_ptr win2k_DefSubclassProc;
 static BOOL SubclassInit() {
 	if(!subclass_init_) {
 		HMODULE comctl = GetModuleHandleA("comctl32");
-		pSetWindowSubclass_ = (SetWindowSubclass_ptr)GetProcAddress(comctl, (const char*)410);
-		pGetWindowSubclass_ = (GetWindowSubclass_ptr)GetProcAddress(comctl, (const char*)411);
-		pRemoveWindowSubclass_ = (RemoveWindowSubclass_ptr)GetProcAddress(comctl, (const char*)412);
-		win2k_DefSubclassProc = (DefSubclassProc_ptr)GetProcAddress(comctl, (const char*)413);
+		pSetWindowSubclass_ = (SetWindowSubclass_ptr)GetProcAddress(comctl, (const char*)(intptr_t)410);
+		pGetWindowSubclass_ = (GetWindowSubclass_ptr)GetProcAddress(comctl, (const char*)(intptr_t)411);
+		pRemoveWindowSubclass_ = (RemoveWindowSubclass_ptr)GetProcAddress(comctl, (const char*)(intptr_t)412);
+		win2k_DefSubclassProc = (DefSubclassProc_ptr)GetProcAddress(comctl, (const char*)(intptr_t)413);
 		if(!pSetWindowSubclass_ || !pGetWindowSubclass_ || !pRemoveWindowSubclass_ || !win2k_DefSubclassProc)
 			return 0;
 		subclass_init_ = 1;

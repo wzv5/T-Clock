@@ -345,7 +345,7 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 					msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"Your version: " L(VER_REVISION_TAG) L"	(%i change(s) %hs stable)\n\n", abs(idx), abovebehind);
 					for(idx=0; idx<2; ++idx) {
 						if(version_next[idx]) {
-							msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"%hs:	v%hs#%i\n", kVersionType[idx], version_str[idx], version[idx]);
+							msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"%hs:	v%hs#%u\n", kVersionType[idx], version_str[idx], version[idx]);
 							msg_pos += UpdateCheck_WriteDescription(msg_pos, msg_end-msg_pos, version_text[idx]);
 							if(!idx)
 								msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"\n");
@@ -381,7 +381,7 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			SendMessage(GetDlgItem(hDlg,IDC_PROGRESS), PBM_SETSTATE, PBST_ERROR, 0);
 			switch(wParam) {
 			case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
-				swprintf(text_pos, maxlen, L"got HTTP status: %i", lParam);
+				swprintf(text_pos, maxlen, L"got HTTP status: %i", (int)lParam);
 				break;
 			case WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
 				if(lParam & WINHTTP_CALLBACK_STATUS_FLAG_SECURITY_CHANNEL_ERROR)
