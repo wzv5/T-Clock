@@ -354,6 +354,7 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 	HBITMAP draw_hbmp;
 	RECT draw_rc = {0, 0, 30, 0/*bottom*/};
 	RECT color_rc;
+	HBRUSH oldBrush;
 	
 	(void)wParam;
 	
@@ -372,9 +373,11 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 		col = GetSysColor(COLOR_3DFACE);
 	
 	if(pdis->itemAction & (ODA_DRAWENTIRE|ODA_SELECT)) {
-		draw_dc = CreateCompatibleDC(pdis->hDC);
-		draw_hbmp = CreateCompatibleBitmap(pdis->hDC, draw_rc.right, draw_rc.bottom);
-		SelectBitmap(draw_dc, draw_hbmp);
+		// brush alignment & fix
+		if(pdis->itemAction & ODA_DRAWENTIRE && !(pdis->itemState & ODS_COMBOBOXEDIT)) {
+			SetBrushOrgEx(pdis->hDC, color_rc.left+2, color_rc.top+1, NULL);
+		}else
+			SetBrushOrgEx(pdis->hDC, color_rc.left+1, color_rc.top, NULL);
 		// print sys color names and fill bg
 		if(pdis->itemState & ODS_SELECTED){
 			SetBkColor(pdis->hDC, GetSysColor(COLOR_HIGHLIGHT));
@@ -383,7 +386,7 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 			SetBkColor(pdis->hDC, GetSysColor(COLOR_WINDOW));
 			SetTextColor(pdis->hDC, GetSysColor(COLOR_WINDOWTEXT));
 		}
-		if((int)pdis->itemID < m_syscolor_num)
+		if(pdis->itemID < m_syscolor_num)
 			label = m_syscolor[pdis->itemID].name;
 		else{
 			unsigned color = ((col&0xff)<<16) | (col&0xff00) | ((col&0xff0000)>>16);
@@ -399,7 +402,10 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 		hbr = CreateSolidBrush(col&0x00ffffff);
 		blend.SourceConstantAlpha = 255 - (col>>24);
 		if(blend.SourceConstantAlpha != 255){ // with transparency
-			HBRUSH oldBrush = SelectBrush(pdis->hDC, m_transparent_brush); // mis-aligned on creation
+			draw_dc = CreateCompatibleDC(pdis->hDC);
+			draw_hbmp = CreateCompatibleBitmap(pdis->hDC, draw_rc.right, draw_rc.bottom);
+			SelectBitmap(draw_dc, draw_hbmp);
+			oldBrush = SelectBrush(pdis->hDC, m_transparent_brush);
 //			RoundRect(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom, 8,5);
 			Rectangle(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom);
 			SelectBrush(pdis->hDC, oldBrush);
@@ -408,8 +414,10 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 			Rectangle(draw_dc, draw_rc.left, draw_rc.top, draw_rc.right, draw_rc.bottom);
 			SelectBrush(draw_dc, oldBrush);
 			AlphaBlend(pdis->hDC, color_rc.left,color_rc.top,draw_rc.right,draw_rc.bottom, draw_dc, 0,0,draw_rc.right,draw_rc.bottom, blend);
+			DeleteDC(draw_dc);
+			DeleteObject(draw_hbmp);
 		}else{ // simple draw
-			HBRUSH oldBrush = SelectBrush(pdis->hDC, hbr);
+			oldBrush = SelectBrush(pdis->hDC, hbr);
 //			RoundRect(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom, 8,5);
 			Rectangle(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom);
 			SelectBrush(pdis->hDC, oldBrush);
@@ -417,8 +425,8 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 		DeleteObject(hbr);
 		// "Default" color, draw right side (transparency)
 		if(!pdis->itemID){
-			HBRUSH oldBrush = SelectBrush(pdis->hDC, m_transparent_brush);
-			color_rc.left += draw_rc.right/2;
+			oldBrush = SelectBrush(pdis->hDC, m_transparent_brush);
+			color_rc.left += draw_rc.right/2 + 1;
 //			RoundRect(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom, 8,5);
 			Rectangle(pdis->hDC, color_rc.left, color_rc.top, color_rc.right, color_rc.bottom);
 			SelectBrush(pdis->hDC, oldBrush);
@@ -427,8 +435,6 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 		// draw focus rect / selection
 		if(pdis->itemState & ODS_FOCUS)
 			DrawFocusRect(pdis->hDC, &pdis->rcItem);
-		DeleteDC(draw_dc);
-		DeleteObject(draw_hbmp);
 	}
 	return 1;
 }
