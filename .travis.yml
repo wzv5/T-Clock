@@ -39,6 +39,8 @@ addons:
     project:
       name: White-Tiger/T-Clock
       description: Build submitted via Travis CI
+    notification_email:
+      secure: Guqbi+ipUVfFpkJZsyrzMqmVqFA6dJKnhGau/FB/RcvLWRZD6hdArZlECRe9gQHjTg82gPOqwMjOmLlDQjWEXUua93E3dxTAAkiHVyweocKF2W7bAqhVKD6FB1bwcpA7CV/n5InvqfvFnhp/4J3kyb9qRFGPjaWcUiw7z4fFuqk=
     build_command_prepend: pushd src/~ide && ./makex clean
     build_command: ./makex && popd
     branch_pattern: .*

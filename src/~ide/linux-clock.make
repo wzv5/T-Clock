@@ -88,8 +88,7 @@ OBJDIR_DEBUG_64 = ../.obj64/gcc/dbg
 DEP_DEBUG_64 = 
 OUT_DEBUG_64 = ../../Debug/Clock64.exe
 
-OBJ_RELEASE_32 = $(OBJDIR_RELEASE_32)/__/Clock/soundselect.o \
-	$(OBJDIR_RELEASE_32)/__/Clock/tClock.o \
+OBJ_RELEASE_32 = $(OBJDIR_RELEASE_32)/__/Clock/tClock.o \
 	$(OBJDIR_RELEASE_32)/__/Clock/timer.o \
 	$(OBJDIR_RELEASE_32)/__/common/HaveSetTimePerms.o \
 	$(OBJDIR_RELEASE_32)/__/common/clock.o \
@@ -116,10 +115,10 @@ OBJ_RELEASE_32 = $(OBJDIR_RELEASE_32)/__/Clock/soundselect.o \
 	$(OBJDIR_RELEASE_32)/__/Clock/pagecolor.o \
 	$(OBJDIR_RELEASE_32)/__/Clock/pageformat.o \
 	$(OBJDIR_RELEASE_32)/__/Clock/propsheet.o \
-	$(OBJDIR_RELEASE_32)/__/Clock/settings.o
+	$(OBJDIR_RELEASE_32)/__/Clock/settings.o \
+	$(OBJDIR_RELEASE_32)/__/Clock/soundselect.o
 
-OBJ_RELEASE_64 = $(OBJDIR_RELEASE_64)/__/Clock/soundselect.o \
-	$(OBJDIR_RELEASE_64)/__/Clock/tClock.o \
+OBJ_RELEASE_64 = $(OBJDIR_RELEASE_64)/__/Clock/tClock.o \
 	$(OBJDIR_RELEASE_64)/__/Clock/timer.o \
 	$(OBJDIR_RELEASE_64)/__/common/HaveSetTimePerms.o \
 	$(OBJDIR_RELEASE_64)/__/common/clock.o \
@@ -146,10 +145,10 @@ OBJ_RELEASE_64 = $(OBJDIR_RELEASE_64)/__/Clock/soundselect.o \
 	$(OBJDIR_RELEASE_64)/__/Clock/pagecolor.o \
 	$(OBJDIR_RELEASE_64)/__/Clock/pageformat.o \
 	$(OBJDIR_RELEASE_64)/__/Clock/propsheet.o \
-	$(OBJDIR_RELEASE_64)/__/Clock/settings.o
+	$(OBJDIR_RELEASE_64)/__/Clock/settings.o \
+	$(OBJDIR_RELEASE_64)/__/Clock/soundselect.o
 
-OBJ_DEBUG_32 = $(OBJDIR_DEBUG_32)/__/Clock/soundselect.o \
-	$(OBJDIR_DEBUG_32)/__/Clock/tClock.o \
+OBJ_DEBUG_32 = $(OBJDIR_DEBUG_32)/__/Clock/tClock.o \
 	$(OBJDIR_DEBUG_32)/__/Clock/timer.o \
 	$(OBJDIR_DEBUG_32)/__/common/HaveSetTimePerms.o \
 	$(OBJDIR_DEBUG_32)/__/common/clock.o \
@@ -176,10 +175,10 @@ OBJ_DEBUG_32 = $(OBJDIR_DEBUG_32)/__/Clock/soundselect.o \
 	$(OBJDIR_DEBUG_32)/__/Clock/pagecolor.o \
 	$(OBJDIR_DEBUG_32)/__/Clock/pageformat.o \
 	$(OBJDIR_DEBUG_32)/__/Clock/propsheet.o \
-	$(OBJDIR_DEBUG_32)/__/Clock/settings.o
+	$(OBJDIR_DEBUG_32)/__/Clock/settings.o \
+	$(OBJDIR_DEBUG_32)/__/Clock/soundselect.o
 
-OBJ_DEBUG_64 = $(OBJDIR_DEBUG_64)/__/Clock/soundselect.o \
-	$(OBJDIR_DEBUG_64)/__/Clock/tClock.o \
+OBJ_DEBUG_64 = $(OBJDIR_DEBUG_64)/__/Clock/tClock.o \
 	$(OBJDIR_DEBUG_64)/__/Clock/timer.o \
 	$(OBJDIR_DEBUG_64)/__/common/HaveSetTimePerms.o \
 	$(OBJDIR_DEBUG_64)/__/common/clock.o \
@@ -206,7 +205,8 @@ OBJ_DEBUG_64 = $(OBJDIR_DEBUG_64)/__/Clock/soundselect.o \
 	$(OBJDIR_DEBUG_64)/__/Clock/pagecolor.o \
 	$(OBJDIR_DEBUG_64)/__/Clock/pageformat.o \
 	$(OBJDIR_DEBUG_64)/__/Clock/propsheet.o \
-	$(OBJDIR_DEBUG_64)/__/Clock/settings.o
+	$(OBJDIR_DEBUG_64)/__/Clock/settings.o \
+	$(OBJDIR_DEBUG_64)/__/Clock/soundselect.o
 
 all: before_build build_release_32 build_release_64 build_debug_32 build_debug_64 after_build
 
@@ -230,9 +230,6 @@ release_32: before_build build_release_32 after_build
 
 out_release_32: before_release_32 $(OBJ_RELEASE_32) $(DEP_RELEASE_32)
 	$(LD1) $(LIBDIR_RELEASE_32) -o $(OUT_RELEASE_32) $(OBJ_RELEASE_32)  $(LDFLAGS_RELEASE_32) -mwindows $(LIB_RELEASE_32)
-
-$(OBJDIR_RELEASE_32)/__/Clock/soundselect.o: ../Clock/soundselect.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ../Clock/soundselect.c -o $(OBJDIR_RELEASE_32)/__/Clock/soundselect.o
 
 $(OBJDIR_RELEASE_32)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES1) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_RELEASE_32)/__/Clock/tClock.o -O coff $(INC_RELEASE_32)
@@ -318,6 +315,9 @@ $(OBJDIR_RELEASE_32)/__/Clock/propsheet.o: ../Clock/propsheet.c
 $(OBJDIR_RELEASE_32)/__/Clock/settings.o: ../Clock/settings.c
 	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ../Clock/settings.c -o $(OBJDIR_RELEASE_32)/__/Clock/settings.o
 
+$(OBJDIR_RELEASE_32)/__/Clock/soundselect.o: ../Clock/soundselect.c
+	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ../Clock/soundselect.c -o $(OBJDIR_RELEASE_32)/__/Clock/soundselect.o
+
 clean_release_32: 
 	rm -f $(OBJ_RELEASE_32) $(OUT_RELEASE_32)
 	rm -rf $(OBJDIR_RELEASE_32)/__/Clock
@@ -336,9 +336,6 @@ release_64: before_build build_release_64 after_build
 
 out_release_64: before_release_64 $(OBJ_RELEASE_64) $(DEP_RELEASE_64)
 	$(LD2) $(LIBDIR_RELEASE_64) -o $(OUT_RELEASE_64) $(OBJ_RELEASE_64)  $(LDFLAGS_RELEASE_64) -mwindows $(LIB_RELEASE_64)
-
-$(OBJDIR_RELEASE_64)/__/Clock/soundselect.o: ../Clock/soundselect.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ../Clock/soundselect.c -o $(OBJDIR_RELEASE_64)/__/Clock/soundselect.o
 
 $(OBJDIR_RELEASE_64)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES2) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_RELEASE_64)/__/Clock/tClock.o -O coff $(INC_RELEASE_64)
@@ -424,6 +421,9 @@ $(OBJDIR_RELEASE_64)/__/Clock/propsheet.o: ../Clock/propsheet.c
 $(OBJDIR_RELEASE_64)/__/Clock/settings.o: ../Clock/settings.c
 	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ../Clock/settings.c -o $(OBJDIR_RELEASE_64)/__/Clock/settings.o
 
+$(OBJDIR_RELEASE_64)/__/Clock/soundselect.o: ../Clock/soundselect.c
+	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ../Clock/soundselect.c -o $(OBJDIR_RELEASE_64)/__/Clock/soundselect.o
+
 clean_release_64: 
 	rm -f $(OBJ_RELEASE_64) $(OUT_RELEASE_64)
 	rm -rf $(OBJDIR_RELEASE_64)/__/Clock
@@ -444,9 +444,6 @@ debug_32: before_build build_debug_32 after_build
 
 out_debug_32: before_debug_32 $(OBJ_DEBUG_32) $(DEP_DEBUG_32)
 	$(LD1) $(LIBDIR_DEBUG_32) -o $(OUT_DEBUG_32) $(OBJ_DEBUG_32)  $(LDFLAGS_DEBUG_32) -mwindows $(LIB_DEBUG_32)
-
-$(OBJDIR_DEBUG_32)/__/Clock/soundselect.o: ../Clock/soundselect.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ../Clock/soundselect.c -o $(OBJDIR_DEBUG_32)/__/Clock/soundselect.o
 
 $(OBJDIR_DEBUG_32)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES1) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_DEBUG_32)/__/Clock/tClock.o -O coff $(INC_DEBUG_32)
@@ -532,6 +529,9 @@ $(OBJDIR_DEBUG_32)/__/Clock/propsheet.o: ../Clock/propsheet.c
 $(OBJDIR_DEBUG_32)/__/Clock/settings.o: ../Clock/settings.c
 	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ../Clock/settings.c -o $(OBJDIR_DEBUG_32)/__/Clock/settings.o
 
+$(OBJDIR_DEBUG_32)/__/Clock/soundselect.o: ../Clock/soundselect.c
+	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ../Clock/soundselect.c -o $(OBJDIR_DEBUG_32)/__/Clock/soundselect.o
+
 clean_debug_32: 
 	rm -f $(OBJ_DEBUG_32) $(OUT_DEBUG_32)
 	rm -rf $(OBJDIR_DEBUG_32)/__/Clock
@@ -552,9 +552,6 @@ debug_64: before_build build_debug_64 after_build
 
 out_debug_64: before_debug_64 $(OBJ_DEBUG_64) $(DEP_DEBUG_64)
 	$(LD2) $(LIBDIR_DEBUG_64) -o $(OUT_DEBUG_64) $(OBJ_DEBUG_64)  $(LDFLAGS_DEBUG_64) -mwindows $(LIB_DEBUG_64)
-
-$(OBJDIR_DEBUG_64)/__/Clock/soundselect.o: ../Clock/soundselect.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ../Clock/soundselect.c -o $(OBJDIR_DEBUG_64)/__/Clock/soundselect.o
 
 $(OBJDIR_DEBUG_64)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES2) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_DEBUG_64)/__/Clock/tClock.o -O coff $(INC_DEBUG_64)
@@ -639,6 +636,9 @@ $(OBJDIR_DEBUG_64)/__/Clock/propsheet.o: ../Clock/propsheet.c
 
 $(OBJDIR_DEBUG_64)/__/Clock/settings.o: ../Clock/settings.c
 	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ../Clock/settings.c -o $(OBJDIR_DEBUG_64)/__/Clock/settings.o
+
+$(OBJDIR_DEBUG_64)/__/Clock/soundselect.o: ../Clock/soundselect.c
+	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ../Clock/soundselect.c -o $(OBJDIR_DEBUG_64)/__/Clock/soundselect.o
 
 clean_debug_64: 
 	rm -f $(OBJ_DEBUG_64) $(OUT_DEBUG_64)
