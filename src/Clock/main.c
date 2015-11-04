@@ -20,11 +20,11 @@ TClockAPI api;
 
 // Application Global Window Handles
 HWND	g_hwndTClockMain = NULL;
-HWND	g_hwndClock;
-HWND	g_hwndSheet;
-HWND	g_hDlgTimer;
-HWND	g_hDlgStopWatch;
-HWND	g_hDlgTimerWatch;
+HWND	g_hwndClock = NULL;
+HWND	g_hwndSheet = NULL;
+HWND	g_hDlgTimer = NULL;
+HWND	g_hDlgStopWatch = NULL;
+HWND	g_hDlgTimerWatch = NULL;
 
 HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 
@@ -270,7 +270,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	g_hIconPlay = LoadImage(g_instance, MAKEINTRESOURCE(IDI_PLAY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconStop = LoadImage(g_instance, MAKEINTRESOURCE(IDI_STOP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconDel  = LoadImage(g_instance, MAKEINTRESOURCE(IDI_DEL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
-	g_hwndSheet = g_hDlgTimer = NULL;
 	
 //	FindTrayServer(hwndMain);
 	
@@ -493,6 +492,33 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 		g_hwndTClockMain = NULL;
 	}
 }
+static void InjectClockHook(HWND hwnd) {
+	static DWORD s_restart_ticks = 0;
+	static int s_restart_num = 0;
+	DWORD ticks = GetTickCount();
+	if(ticks - s_restart_ticks < 30000){
+		if(++s_restart_num >= 3){
+			if(api.Message(0,
+					"Multiple Explorer crashes or restarts detected\n"
+					"It's possible that T-Clock is crashing your Explorer,\n"
+					"automated hooking postponed.\n"
+					"\n"
+					"Take precaution and exit T-Clock now?","T-Clock",MB_YESNO,MB_ICONEXCLAMATION) == IDYES) {
+				SendMessage(hwnd, WM_CLOSE, 0, 0);
+				return;
+			}
+			s_restart_ticks = GetTickCount();
+			s_restart_num = 0;
+		}
+	}else{
+		s_restart_ticks = ticks;
+		s_restart_num = 0;
+	}
+	api.Inject(hwnd);
+	#ifndef _DEBUG
+	EmptyWorkingSet(GetCurrentProcess());
+	#endif
+}
 //================================================================================================
 //--------------------------------------------------+++--> The Main Application "Window" Procedure:
 LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam)   //--------+++-->
@@ -500,39 +526,12 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 	switch(message) {
 	case WM_CREATE:
 		InitAlarm();  // initialize alarms
-		SetTimer(hwnd, IDTIMER_HOOK, 50, NULL);
 		SetTimer(hwnd, IDTIMER_MAIN, 1000, NULL);
+		InjectClockHook(hwnd);
 		return 0;
 		
 	case WM_TIMER:
-		if(wParam == IDTIMER_HOOK) {
-			static DWORD s_restart_ticks = 0;
-			static int s_restart_num = 0;
-			DWORD ticks = GetTickCount();
-			KillTimer(hwnd, wParam);
-			if(ticks - s_restart_ticks < 30000){
-				if(++s_restart_num >= 3){
-					if(api.Message(0,
-					"Multiple Explorer crashes or restarts detected\n"
-					"It's possible that T-Clock is crashing your Explorer,\n"
-					"automated hooking postponed.\n"
-					"\n"
-					"Take precaution and exit T-Clock now?","T-Clock",MB_YESNO,MB_ICONEXCLAMATION) == IDYES){
-						SendMessage(hwnd, WM_CLOSE, 0, 0);
-						return 0;
-					}
-					s_restart_ticks = GetTickCount();
-					s_restart_num = 0;
-				}
-			}else{
-				s_restart_ticks = ticks;
-				s_restart_num = 0;
-			}
-			api.Inject(hwnd); // install a hook
-			#ifndef _DEBUG
-			EmptyWorkingSet(GetCurrentProcess());
-			#endif
-		} else if(wParam == IDTIMER_MAIN) OnTimerMain(hwnd);
+		if(wParam == IDTIMER_MAIN) OnTimerMain(hwnd);
 		else if(wParam == IDTIMER_MOUSE) OnTimerMouse(hwnd);
 		return 0;
 		
@@ -541,7 +540,6 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			break;
 		/* fall through */
 	case WM_DESTROY:
-		KillTimer(hwnd, IDTIMER_HOOK);
 		KillTimer(hwnd, IDTIMER_MAIN);
 		if(g_hwndSheet && IsWindow(g_hwndSheet))
 			SendMessage(g_hwndSheet, WM_CLOSE, 0, 0);
@@ -654,7 +652,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		break;
 	default:
 		if(message == g_WM_TaskbarCreated){
-			SetTimer(hwnd, IDTIMER_HOOK, 1000, NULL);
+			InjectClockHook(hwnd);
 		}
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
