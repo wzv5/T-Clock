@@ -35,6 +35,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
 TClockAPI api = {
 	NULL, // hInstance
 	0, // OS
+	10, // desktop_button_size
 	ms_root, // root
 	0, // root_len
 	// base
@@ -171,6 +172,13 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		if(!api.GetTickCount64)
 			api.GetTickCount64 = GetTickCount64_Wrapper;
 	}
+	
+	if(gs_tos >= TOS_WIN10) {
+		api.desktop_button_size = 4+1;
+	} else if(gs_tos >= TOS_WIN8) {
+		api.desktop_button_size = 8;
+	} // default 10
+	
 	if(_api) // NULL if internally called
 		memcpy(_api, &api, sizeof(TClockAPI));
 	return 0;

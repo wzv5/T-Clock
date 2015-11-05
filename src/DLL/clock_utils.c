@@ -59,6 +59,10 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 			moni.rcMonitor.top=moni.rcWork.top+padding;
 		else // bottom
 			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
+		// center small windows within clock dimension when possible
+		GetClientRect(gs_hwndClock, &moni.rcWork);
+		if(wProp < moni.rcWork.right)
+			moni.rcMonitor.left -= ((moni.rcWork.right - wProp)>>1) + api.desktop_button_size;
 	}else if(moni.rcWork.left!=moni.rcMonitor.left || moni.rcWork.right!=moni.rcMonitor.right){ // vertical
 		moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
 		if(moni.rcWork.left!=moni.rcMonitor.left) // left

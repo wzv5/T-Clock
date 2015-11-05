@@ -552,6 +552,20 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 //		PostMessage(g_hwndTClockMain,MAINM_EXIT,0,0);
 	_beginthread(SelfDestruct,0,hwnd);
 }
+static LRESULT CALLBACK HookedTooltip_Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+	(void)dwRefData;
+	
+	switch(uMsg) {
+	case WM_DESTROY:
+		RemoveWindowSubclass(hwnd, HookedTooltip_Proc, uIdSubclass);
+		break;
+	case WM_WINDOWPOSCHANGING: {
+		WINDOWPOS* pwp = (WINDOWPOS*)lParam;
+		pwp->flags |= SWP_NOMOVE;
+		break;}
+	}
+	return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+}
 /*------------------------------------------------
   subclass procedure of the clock
 --------------------------------------------------*/
@@ -631,6 +645,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_TIMER: // Windows uses timer ID 0 to update every minute (tries to stay ~1 sec. close to full minute)
 		if(m_bNoClock) break;
 		return 0;
+	/* start of shared code used by multi-clock winproc
+	Use `gs_hwndClock` to refer to main clock, `hwnd` for triggering window*/
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
@@ -640,7 +656,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
 		if(m_BlinkState){
 			m_BlinkState=BLINK_NONE;
-			InvalidateRect(hwnd, NULL, 1);
+			InvalidateRect(gs_hwndClock, NULL, 1);
 			PostMessage(gs_hwndTClockMain,MAINM_BLINKOFF,0,0);
 			return 0;
 		}
@@ -657,14 +673,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 //		return 0;
 	case WM_MOUSEMOVE:
 		if(!m_TipState){
-			TRACKMOUSEEVENT tme;
-			tme.cbSize=sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags=TME_HOVER|TME_LEAVE;
-			tme.hwndTrack=hwnd;
-			tme.dwHoverTime=HOVER_DEFAULT;
+			TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT)};
+			tme.dwFlags = TME_HOVER|TME_LEAVE;
+			tme.hwndTrack = hwnd;
+			tme.dwHoverTime = HOVER_DEFAULT;
 			m_TipState = TrackMouseEvent(&tme);
-			FillClockBGHover(hwnd);
-			InvalidateRect(hwnd,NULL,0);
+			FillClockBGHover(gs_hwndClock);
+			InvalidateRect(gs_hwndClock, NULL, 0);
 		}
 		return 0;
 	case WM_MOUSEHOVER:
@@ -672,7 +687,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0)){
 			ShowTip(hwnd);//show custom tooltip
 		}else{
-			PostMessage(hwnd, WM_USER+103,1,0);//show system tooltip
+			SendMessage(gs_hwndClock, WM_USER+103,1,0);//show system tooltip
+			if(hwnd != gs_hwndClock) {
+				HWND tooltip = FindWindowEx(NULL, NULL, "ClockTooltipWindow", NULL);
+				if(tooltip) {
+					api.PositionWindow(tooltip, 0);
+					// hook to prevent any non-authorized move
+					// (Windows sometimes moves the tooltip for unknown reason)
+					SetWindowSubclass(tooltip, HookedTooltip_Proc, 0, 0);
+				}
+			}
 		}
 		return 0;
 	case WM_MOUSELEAVE:
@@ -681,13 +705,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 				if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
-					PostMessage(hwnd, WM_USER+103,0,0);//hide system tooltip
+					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
 			}
 			m_TipState = 0;
-			FillClockBG(hwnd);
-			InvalidateRect(hwnd,NULL,0);
+			FillClockBG(gs_hwndClock);
+			InvalidateRect(gs_hwndClock,NULL,0);
 		}
 		return 0;
+	/* end of multi-clock shared code */
 	case WM_NCHITTEST: // original clock uses this message for context menu and hover, etc. and we need our own "handler"
 //		return HTTRANSPARENT; // Windows' clock uses this
 //		return HTCAPTION; // xD
@@ -765,18 +790,15 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 {
 	switch(message){
 	case WM_NCCREATE:{
-		return 1;
-	}
+		return 1; }
 	case WM_CREATE:{
 		SetWindowLongPtr(hwnd, GWLP_ID, 303); // same ID as original clock
 		RegisterDragDrop(hwnd,m_droptarget); // setup DropFiles on sub-clock
-		return 0;
-	}
+		return 0; }
 	case WM_CLOSE:{
 		RevokeDragDrop(hwnd); // kill DropFiles on sub-clock
 		DestroyWindow(hwnd);
-		return 0;
-	}
+		return 0; }
 	case WM_WINDOWPOSCHANGING:{
 		return 0;}
 	case WM_WINDOWPOSCHANGED:
@@ -800,51 +822,16 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
-		return SendMessage(gs_hwndClock,message,wParam,lParam);
-//	case WM_CONTEXTMENU:
-//		PostMessage(g_hwndTClockMain, message, wParam, lParam);
-//		return 0;
 	case WM_MOUSEMOVE:
-		if(!m_TipState){
-			TRACKMOUSEEVENT tme;
-			tme.cbSize=sizeof(TRACKMOUSEEVENT);
-			tme.dwFlags=TME_HOVER|TME_LEAVE;
-			tme.hwndTrack=hwnd;
-			tme.dwHoverTime=HOVER_DEFAULT;
-			m_TipState=1;
-			TrackMouseEvent(&tme);
-			FillClockBGHover(gs_hwndClock);
-			InvalidateRect(gs_hwndClock,NULL,0);
-		}
-		return 0;
 	case WM_MOUSEHOVER:
-		m_TipState=2;
-		if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0)){
-			ShowTip(hwnd);//show custom tooltip
-		}else{
-			SendMessage(gs_hwndClock, WM_USER+103,1,0);//show system tooltip
-		}
-		return 0;
 	case WM_MOUSELEAVE:
-		if(m_TipState){
-			if(m_TipState==2){
-				if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0))
-					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
-				else
-					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
-			}
-			FillClockBG(gs_hwndClock);
-			InvalidateRect(gs_hwndClock,NULL,0);
-		}
-		m_TipState=0;
-		return 0;
+		return WndProc(hwnd, message, wParam, lParam);
 	}
 	return DefWindowProc(hwnd,message,wParam,lParam);
 }
 /*------------------------------------------------
   subclass procedure of the 2nd+ taskbar "worker" area (used to resize and allow own clock)
 --------------------------------------------------*/
-#define SHOW_DESKTOP_BUTTONSIZE 10
 LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message){
@@ -872,9 +859,9 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 				m_multiClock[clock_id].workerRECT.right=pwp->cx;
 				m_multiClock[clock_id].workerRECT.bottom=pwp->cy;
 				if(pwp->cx > pwp->cy){ // horizontal
-					pwp->cx=pwp->cx-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
+					pwp->cx=pwp->cx-m_rcClock.right - api.desktop_button_size;
 				}else{
-					pwp->cy=pwp->cy-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
+					pwp->cy=pwp->cy-m_rcClock.bottom - api.desktop_button_size;
 				}
 			}
 			if(!(pwp->flags&SWP_NOMOVE)){
@@ -884,11 +871,11 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 			cx=m_rcClock.right;
 			cy=m_rcClock.bottom;
 			if(m_multiClock[clock_id].workerRECT.right > m_multiClock[clock_id].workerRECT.bottom){ // horizontal
-				x=m_multiClock[clock_id].workerRECT.left+m_multiClock[clock_id].workerRECT.right-m_rcClock.right-SHOW_DESKTOP_BUTTONSIZE;
+				x=m_multiClock[clock_id].workerRECT.left+m_multiClock[clock_id].workerRECT.right-m_rcClock.right - api.desktop_button_size;
 				y=m_multiClock[clock_id].workerRECT.top+m_BORDER_MARGIN;
 			}else{
 				x=m_multiClock[clock_id].workerRECT.left+m_BORDER_MARGIN;
-				y=m_multiClock[clock_id].workerRECT.top+m_multiClock[clock_id].workerRECT.bottom-m_rcClock.bottom-SHOW_DESKTOP_BUTTONSIZE;
+				y=m_multiClock[clock_id].workerRECT.top+m_multiClock[clock_id].workerRECT.bottom-m_rcClock.bottom - api.desktop_button_size;
 			}
 			SetWindowPos(m_multiClock[clock_id].clock,0,x,y,cx,cy,0);
 			break;
