@@ -82,6 +82,7 @@
 			<Add library="ole32" />
 			<Add library="gdi32" />
 			<Add library="psapi" />
+			<Add library="comctl32" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="../common/AutoVersion --git . ../common/version.h" />

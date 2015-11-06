@@ -44,7 +44,7 @@
   </ImportGroup>
   <ItemDefinitionGroup>
     <Link>
-      <AdditionalDependencies>advapi32.lib;shell32.lib;user32.lib;ole32.lib;gdi32.lib;psapi.lib</AdditionalDependencies>
+      <AdditionalDependencies>advapi32.lib;shell32.lib;user32.lib;ole32.lib;gdi32.lib;psapi.lib;comctl32.lib</AdditionalDependencies>
       <ModuleDefinitionFile>..\DLL\DLL.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
