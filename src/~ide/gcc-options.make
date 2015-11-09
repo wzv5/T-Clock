@@ -5,8 +5,8 @@
 
 WORKDIR = %cd%
 
-CC = i686-w64-mingw32-gcc
-CXX = i686-w64-mingw32-g++
+CC = $(CCACHE) i686-w64-mingw32-gcc
+CXX = $(CCACHE) i686-w64-mingw32-g++
 AR = ar
 LD = i686-w64-mingw32-g++
 WINDRES = windres

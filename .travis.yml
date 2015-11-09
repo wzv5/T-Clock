@@ -1,3 +1,4 @@
+---
 language: c
 
 sudo: false
@@ -8,6 +9,7 @@ env:
   global:
   - AUVER_IF_NOT=${TRAVIS_TAG:-${APPVEYOR_REPO_TAG_NAME}}
   - TRAVIS_COMMIT_MSG="${TRAVIS_COMMIT_MSG:-$(git log --format=%B --no-merges -n1)}"
+  - CCACHE=ccache
   # Coverity hack to disable Coverity by default unless [ci coverity] was specified in commit message
   - TRAVIS_PULL_REQUEST="$((echo $TRAVIS_PULL_REQUEST | grep -q 'false' && echo $TRAVIS_COMMIT_MSG | grep -qE '\[ci cov(erity)?\]') && echo -n false || echo -n true)"
   - secure: "DEXcC9CT8pneavqbNgiAtq1v59E3KZn2AlLYdfhzRa6W2k5lr7yyf+21rCczK1YvMt9hjGkKMMTthU/huHF774t/LK0IEtXAh+HjdiQpRQhiYl7jGT4SD5fSfkMlIwGUtLJixp8I5ny8W/OOCiOf1ARpHyPd1K55WuUyaIwCl6k="
@@ -41,8 +43,12 @@ addons:
       description: Build submitted via Travis CI
     notification_email:
       secure: Guqbi+ipUVfFpkJZsyrzMqmVqFA6dJKnhGau/FB/RcvLWRZD6hdArZlECRe9gQHjTg82gPOqwMjOmLlDQjWEXUua93E3dxTAAkiHVyweocKF2W7bAqhVKD6FB1bwcpA7CV/n5InvqfvFnhp/4J3kyb9qRFGPjaWcUiw7z4fFuqk=
-    build_command_prepend: pushd src/~ide && ./makex clean
-    build_command: ./makex && popd
+    build_command_prepend:
+    - cov-configure --compiler=i686-w64-mingw32-gcc --comptype=gcc --template
+    - cov-configure --compiler=x86_64-w64-mingw32-gcc --comptype=gcc --template
+    - cov-configure --compiler=ccache --comptype=prefix
+    - cd src/~ide && ./makex clean
+    build_command: ./makex
     branch_pattern: ".*"
 
 before_deploy:

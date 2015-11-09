@@ -5,11 +5,11 @@
 
 WORKDIR = %cd%
 
-CC0 = gcc.exe
-CXX0 = g++.exe
-AR0 = ar.exe
-LD0 = g++.exe
-WINDRES0 = windres.exe
+CC0 = $(CCACHE) i686-w64-mingw32-gcc
+CXX0 = $(CCACHE) i686-w64-mingw32-g++
+AR0 = ar
+LD0 = i686-w64-mingw32-g++
+WINDRES0 = windres
 
 INC0 = 
 CFLAGS0 = -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
@@ -18,10 +18,10 @@ LIBDIR0 =
 LIB0 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi
 LDFLAGS0 = -static
 
-CC1 = i686-w64-mingw32-gcc
-CXX1 = i686-w64-mingw32-g++
+CC1 = $(CCACHE) x86_64-w64-mingw32-gcc
+CXX1 = $(CCACHE) x86_64-w64-mingw32-g++
 AR1 = ar
-LD1 = i686-w64-mingw32-g++
+LD1 = x86_64-w64-mingw32-g++
 WINDRES1 = windres
 
 INC1 = 
@@ -31,59 +31,46 @@ LIBDIR1 =
 LIB1 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi
 LDFLAGS1 = -static
 
-CC2 = x86_64-w64-mingw32-gcc
-CXX2 = x86_64-w64-mingw32-g++
-AR2 = ar
-LD2 = x86_64-w64-mingw32-g++
-WINDRES2 = windres
-
-INC2 = 
-CFLAGS2 = -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
-RESINC2 = 
-LIBDIR2 = 
-LIB2 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi
-LDFLAGS2 = -static
-
-INC_RELEASE_32 = $(INC1)
-CFLAGS_RELEASE_32 = $(CFLAGS1) -O3 -m32 -DNDEBUG
-RESINC_RELEASE_32 = $(RESINC1)
-RCFLAGS_RELEASE_32 = 
-LIBDIR_RELEASE_32 = $(LIBDIR1)
-LIB_RELEASE_32 = $(LIB1)
-LDFLAGS_RELEASE_32 = $(LDFLAGS1) -s -m32
+INC_RELEASE_32 = $(INC0)
+CFLAGS_RELEASE_32 = $(CFLAGS0) -O3 -m32 -DNDEBUG
+RESINC_RELEASE_32 = $(RESINC0)
+RCFLAGS_RELEASE_32 = $(RCFLAGS0)
+LIBDIR_RELEASE_32 = $(LIBDIR0)
+LIB_RELEASE_32 = $(LIB0)
+LDFLAGS_RELEASE_32 = $(LDFLAGS0) -s -m32
 OBJDIR_RELEASE_32 = ..\\.obj\\gcc
 DEP_RELEASE_32 = 
 OUT_RELEASE_32 = ..\\..\\Release\\misc\\T-Clock.dll
 
-INC_RELEASE_64 = $(INC2)
-CFLAGS_RELEASE_64 = $(CFLAGS2) -O3 -m64 -DNDEBUG
-RESINC_RELEASE_64 = $(RESINC2)
-RCFLAGS_RELEASE_64 = $(RCFLAGS2)
-LIBDIR_RELEASE_64 = $(LIBDIR2)
-LIB_RELEASE_64 = $(LIB2)
-LDFLAGS_RELEASE_64 = $(LDFLAGS2) -s -m64
+INC_RELEASE_64 = $(INC1)
+CFLAGS_RELEASE_64 = $(CFLAGS1) -O3 -m64 -DNDEBUG
+RESINC_RELEASE_64 = $(RESINC1)
+RCFLAGS_RELEASE_64 = $(RCFLAGS1)
+LIBDIR_RELEASE_64 = $(LIBDIR1)
+LIB_RELEASE_64 = $(LIB1)
+LDFLAGS_RELEASE_64 = $(LDFLAGS1) -s -m64
 OBJDIR_RELEASE_64 = ..\\.obj64\\gcc
 DEP_RELEASE_64 = 
 OUT_RELEASE_64 = ..\\..\\Release\\misc\\T-Clock64.dll
 
-INC_DEBUG_32 = $(INC1)
-CFLAGS_DEBUG_32 = $(CFLAGS1) -m32 -Og -g -fno-omit-frame-pointer -D_DEBUG
-RESINC_DEBUG_32 = $(RESINC1)
-RCFLAGS_DEBUG_32 = $(RCFLAGS1)
-LIBDIR_DEBUG_32 = $(LIBDIR1)
-LIB_DEBUG_32 = $(LIB1)
-LDFLAGS_DEBUG_32 = $(LDFLAGS1) -m32
+INC_DEBUG_32 = $(INC0)
+CFLAGS_DEBUG_32 = $(CFLAGS0) -m32 -Og -g -fno-omit-frame-pointer -D_DEBUG
+RESINC_DEBUG_32 = $(RESINC0)
+RCFLAGS_DEBUG_32 = $(RCFLAGS0)
+LIBDIR_DEBUG_32 = $(LIBDIR0)
+LIB_DEBUG_32 = $(LIB0)
+LDFLAGS_DEBUG_32 = $(LDFLAGS0) -m32
 OBJDIR_DEBUG_32 = ..\\.obj\\gcc\\dbg
 DEP_DEBUG_32 = 
 OUT_DEBUG_32 = ..\\..\\Debug\\misc\\T-Clock.dll
 
-INC_DEBUG_64 = $(INC2)
-CFLAGS_DEBUG_64 = $(CFLAGS2) -m64 -Og -g -fno-omit-frame-pointer -D_DEBUG
-RESINC_DEBUG_64 = $(RESINC2)
-RCFLAGS_DEBUG_64 = $(RCFLAGS2)
-LIBDIR_DEBUG_64 = $(LIBDIR2)
-LIB_DEBUG_64 = $(LIB2)
-LDFLAGS_DEBUG_64 = $(LDFLAGS2) -m64
+INC_DEBUG_64 = $(INC1)
+CFLAGS_DEBUG_64 = $(CFLAGS1) -m64 -Og -g -fno-omit-frame-pointer -D_DEBUG
+RESINC_DEBUG_64 = $(RESINC1)
+RCFLAGS_DEBUG_64 = $(RCFLAGS1)
+LIBDIR_DEBUG_64 = $(LIBDIR1)
+LIB_DEBUG_64 = $(LIB1)
+LDFLAGS_DEBUG_64 = $(LDFLAGS1) -m64
 OBJDIR_DEBUG_64 = ..\\.obj64\\gcc\\dbg
 DEP_DEBUG_64 = 
 OUT_DEBUG_64 = ..\\..\\Debug\\misc\\T-Clock64.dll
@@ -157,40 +144,40 @@ build_release_32: before_release_32 out_release_32 after_release_32
 release_32: before_build build_release_32 after_build
 
 out_release_32: before_release_32 $(OBJ_RELEASE_32) $(DEP_RELEASE_32)
-	$(LD1) -shared $(LIBDIR_RELEASE_32) $(OBJ_RELEASE_32)  -o $(OUT_RELEASE_32) $(LDFLAGS_RELEASE_32) $(LIB_RELEASE_32)
+	$(LD0) -shared $(LIBDIR_RELEASE_32) $(OBJ_RELEASE_32)  -o $(OUT_RELEASE_32) $(LDFLAGS_RELEASE_32) $(LIB_RELEASE_32)
 
 $(OBJDIR_RELEASE_32)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\common\\win2k_compat.c -o $(OBJDIR_RELEASE_32)\\__\\common\\win2k_compat.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\common\\win2k_compat.c -o $(OBJDIR_RELEASE_32)\\__\\common\\win2k_compat.o
 
 $(OBJDIR_RELEASE_32)\\__\\common\\utl.o: ..\\common\\utl.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\common\\utl.c -o $(OBJDIR_RELEASE_32)\\__\\common\\utl.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\common\\utl.c -o $(OBJDIR_RELEASE_32)\\__\\common\\utl.o
 
 $(OBJDIR_RELEASE_32)\\__\\common\\newapi.o: ..\\common\\newapi.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\common\\newapi.c -o $(OBJDIR_RELEASE_32)\\__\\common\\newapi.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\common\\newapi.c -o $(OBJDIR_RELEASE_32)\\__\\common\\newapi.o
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\version.o: ..\\DLL\\version.rc
-	$(WINDRES1) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_RELEASE_32)\\__\\DLL\\version.o -O coff $(INC_RELEASE_32)
+	$(WINDRES0) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_RELEASE_32)\\__\\DLL\\version.o -O coff $(INC_RELEASE_32)
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\main.o: ..\\DLL\\main.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\main.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\main.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\main.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\main.o
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\format.o: ..\\DLL\\format.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\format.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\format.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\format.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\format.o
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\font.o: ..\\DLL\\font.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\font.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\font.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\font.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\font.o
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_utils.o: ..\\DLL\\clock_utils.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_utils.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_utils.o
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_color.o: ..\\DLL\\clock_color.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\clock_color.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_color.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\clock_color.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_color.o
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_api.o: ..\\DLL\\clock_api.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\clock_api.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_api.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\clock_api.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\clock_api.o
 
 $(OBJDIR_RELEASE_32)\\__\\DLL\\Tclock.o: ..\\DLL\\Tclock.c
-	$(CC1) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\Tclock.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\Tclock.o
+	$(CC0) $(CFLAGS_RELEASE_32) $(INC_RELEASE_32) -c ..\\DLL\\Tclock.c -o $(OBJDIR_RELEASE_32)\\__\\DLL\\Tclock.o
 
 clean_release_32: 
 	cmd /c del /f $(OBJ_RELEASE_32) $(OUT_RELEASE_32)
@@ -209,40 +196,40 @@ build_release_64: before_release_64 out_release_64 after_release_64
 release_64: before_build build_release_64 after_build
 
 out_release_64: before_release_64 $(OBJ_RELEASE_64) $(DEP_RELEASE_64)
-	$(LD2) -shared $(LIBDIR_RELEASE_64) $(OBJ_RELEASE_64)  -o $(OUT_RELEASE_64) $(LDFLAGS_RELEASE_64) $(LIB_RELEASE_64)
+	$(LD1) -shared $(LIBDIR_RELEASE_64) $(OBJ_RELEASE_64)  -o $(OUT_RELEASE_64) $(LDFLAGS_RELEASE_64) $(LIB_RELEASE_64)
 
 $(OBJDIR_RELEASE_64)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\common\\win2k_compat.c -o $(OBJDIR_RELEASE_64)\\__\\common\\win2k_compat.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\common\\win2k_compat.c -o $(OBJDIR_RELEASE_64)\\__\\common\\win2k_compat.o
 
 $(OBJDIR_RELEASE_64)\\__\\common\\utl.o: ..\\common\\utl.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\common\\utl.c -o $(OBJDIR_RELEASE_64)\\__\\common\\utl.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\common\\utl.c -o $(OBJDIR_RELEASE_64)\\__\\common\\utl.o
 
 $(OBJDIR_RELEASE_64)\\__\\common\\newapi.o: ..\\common\\newapi.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\common\\newapi.c -o $(OBJDIR_RELEASE_64)\\__\\common\\newapi.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\common\\newapi.c -o $(OBJDIR_RELEASE_64)\\__\\common\\newapi.o
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\version.o: ..\\DLL\\version.rc
-	$(WINDRES2) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_RELEASE_64)\\__\\DLL\\version.o -O coff $(INC_RELEASE_64)
+	$(WINDRES1) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_RELEASE_64)\\__\\DLL\\version.o -O coff $(INC_RELEASE_64)
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\main.o: ..\\DLL\\main.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\main.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\main.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\main.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\main.o
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\format.o: ..\\DLL\\format.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\format.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\format.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\format.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\format.o
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\font.o: ..\\DLL\\font.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\font.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\font.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\font.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\font.o
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_utils.o: ..\\DLL\\clock_utils.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_utils.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_utils.o
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_color.o: ..\\DLL\\clock_color.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\clock_color.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_color.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\clock_color.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_color.o
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_api.o: ..\\DLL\\clock_api.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\clock_api.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_api.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\clock_api.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\clock_api.o
 
 $(OBJDIR_RELEASE_64)\\__\\DLL\\Tclock.o: ..\\DLL\\Tclock.c
-	$(CC2) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\Tclock.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\Tclock.o
+	$(CC1) $(CFLAGS_RELEASE_64) $(INC_RELEASE_64) -c ..\\DLL\\Tclock.c -o $(OBJDIR_RELEASE_64)\\__\\DLL\\Tclock.o
 
 clean_release_64: 
 	cmd /c del /f $(OBJ_RELEASE_64) $(OUT_RELEASE_64)
@@ -263,40 +250,40 @@ build_debug_32: before_debug_32 out_debug_32 after_debug_32
 debug_32: before_build build_debug_32 after_build
 
 out_debug_32: before_debug_32 $(OBJ_DEBUG_32) $(DEP_DEBUG_32)
-	$(LD1) -shared $(LIBDIR_DEBUG_32) $(OBJ_DEBUG_32)  -o $(OUT_DEBUG_32) $(LDFLAGS_DEBUG_32) $(LIB_DEBUG_32)
+	$(LD0) -shared $(LIBDIR_DEBUG_32) $(OBJ_DEBUG_32)  -o $(OUT_DEBUG_32) $(LDFLAGS_DEBUG_32) $(LIB_DEBUG_32)
 
 $(OBJDIR_DEBUG_32)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\common\\win2k_compat.c -o $(OBJDIR_DEBUG_32)\\__\\common\\win2k_compat.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\common\\win2k_compat.c -o $(OBJDIR_DEBUG_32)\\__\\common\\win2k_compat.o
 
 $(OBJDIR_DEBUG_32)\\__\\common\\utl.o: ..\\common\\utl.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\common\\utl.c -o $(OBJDIR_DEBUG_32)\\__\\common\\utl.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\common\\utl.c -o $(OBJDIR_DEBUG_32)\\__\\common\\utl.o
 
 $(OBJDIR_DEBUG_32)\\__\\common\\newapi.o: ..\\common\\newapi.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\common\\newapi.c -o $(OBJDIR_DEBUG_32)\\__\\common\\newapi.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\common\\newapi.c -o $(OBJDIR_DEBUG_32)\\__\\common\\newapi.o
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\version.o: ..\\DLL\\version.rc
-	$(WINDRES1) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_DEBUG_32)\\__\\DLL\\version.o -O coff $(INC_DEBUG_32)
+	$(WINDRES0) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_DEBUG_32)\\__\\DLL\\version.o -O coff $(INC_DEBUG_32)
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\main.o: ..\\DLL\\main.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\main.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\main.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\main.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\main.o
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\format.o: ..\\DLL\\format.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\format.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\format.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\format.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\format.o
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\font.o: ..\\DLL\\font.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\font.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\font.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\font.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\font.o
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_utils.o: ..\\DLL\\clock_utils.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_utils.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_utils.o
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_color.o: ..\\DLL\\clock_color.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\clock_color.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_color.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\clock_color.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_color.o
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_api.o: ..\\DLL\\clock_api.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\clock_api.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_api.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\clock_api.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\clock_api.o
 
 $(OBJDIR_DEBUG_32)\\__\\DLL\\Tclock.o: ..\\DLL\\Tclock.c
-	$(CC1) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\Tclock.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\Tclock.o
+	$(CC0) $(CFLAGS_DEBUG_32) $(INC_DEBUG_32) -c ..\\DLL\\Tclock.c -o $(OBJDIR_DEBUG_32)\\__\\DLL\\Tclock.o
 
 clean_debug_32: 
 	cmd /c del /f $(OBJ_DEBUG_32) $(OUT_DEBUG_32)
@@ -317,40 +304,40 @@ build_debug_64: before_debug_64 out_debug_64 after_debug_64
 debug_64: before_build build_debug_64 after_build
 
 out_debug_64: before_debug_64 $(OBJ_DEBUG_64) $(DEP_DEBUG_64)
-	$(LD2) -shared $(LIBDIR_DEBUG_64) $(OBJ_DEBUG_64)  -o $(OUT_DEBUG_64) $(LDFLAGS_DEBUG_64) $(LIB_DEBUG_64)
+	$(LD1) -shared $(LIBDIR_DEBUG_64) $(OBJ_DEBUG_64)  -o $(OUT_DEBUG_64) $(LDFLAGS_DEBUG_64) $(LIB_DEBUG_64)
 
 $(OBJDIR_DEBUG_64)\\__\\common\\win2k_compat.o: ..\\common\\win2k_compat.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\common\\win2k_compat.c -o $(OBJDIR_DEBUG_64)\\__\\common\\win2k_compat.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\common\\win2k_compat.c -o $(OBJDIR_DEBUG_64)\\__\\common\\win2k_compat.o
 
 $(OBJDIR_DEBUG_64)\\__\\common\\utl.o: ..\\common\\utl.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\common\\utl.c -o $(OBJDIR_DEBUG_64)\\__\\common\\utl.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\common\\utl.c -o $(OBJDIR_DEBUG_64)\\__\\common\\utl.o
 
 $(OBJDIR_DEBUG_64)\\__\\common\\newapi.o: ..\\common\\newapi.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\common\\newapi.c -o $(OBJDIR_DEBUG_64)\\__\\common\\newapi.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\common\\newapi.c -o $(OBJDIR_DEBUG_64)\\__\\common\\newapi.o
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\version.o: ..\\DLL\\version.rc
-	$(WINDRES2) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_DEBUG_64)\\__\\DLL\\version.o -O coff $(INC_DEBUG_64)
+	$(WINDRES1) -i ..\\DLL\\version.rc -J rc -o $(OBJDIR_DEBUG_64)\\__\\DLL\\version.o -O coff $(INC_DEBUG_64)
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\main.o: ..\\DLL\\main.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\main.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\main.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\main.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\main.o
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\format.o: ..\\DLL\\format.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\format.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\format.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\format.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\format.o
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\font.o: ..\\DLL\\font.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\font.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\font.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\font.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\font.o
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_utils.o: ..\\DLL\\clock_utils.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_utils.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\clock_utils.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_utils.o
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_color.o: ..\\DLL\\clock_color.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\clock_color.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_color.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\clock_color.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_color.o
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_api.o: ..\\DLL\\clock_api.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\clock_api.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_api.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\clock_api.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\clock_api.o
 
 $(OBJDIR_DEBUG_64)\\__\\DLL\\Tclock.o: ..\\DLL\\Tclock.c
-	$(CC2) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\Tclock.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\Tclock.o
+	$(CC1) $(CFLAGS_DEBUG_64) $(INC_DEBUG_64) -c ..\\DLL\\Tclock.c -o $(OBJDIR_DEBUG_64)\\__\\DLL\\Tclock.o
 
 clean_debug_64: 
 	cmd /c del /f $(OBJ_DEBUG_64) $(OUT_DEBUG_64)
