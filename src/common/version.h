@@ -18,35 +18,35 @@
 #	define VER_STATUS_FULL "RC"
 #	define VER_STATUS_SHORT "rc"
 #	define VER_STATUS_GREEK "гc"
-#	define VER_REVISION 351
+#	define VER_REVISION 369
 #	define VER_FULL "2.4.0 RC"
 #	define VER_SHORT "2.4rc0"
 #	define VER_SHORT_DOTS "2.4.0"
 #	define VER_SHORT_GREEK "2.4гc0"
-#	define VER_RC_REVISION 2, 4, 0, 351
+#	define VER_RC_REVISION 2, 4, 0, 369
 #	define VER_RC_STATUS 2, 4, 0, 2
 /**** Subversion Information ****/
 #	define VER_REVISION_URL "git@github.com:White-Tiger/T-Clock.git"
-#	define VER_REVISION_DATE "2015-10-19 15:45:03 +0000 (Mon, Oct 19 2015)"
-#	define VER_REVISION_HASH "2d6f529"
-#	define VER_REVISION_TAG "v2.4.0#351-rc"
+#	define VER_REVISION_DATE "2015-11-13 15:42:08 +0000 (Fri, Nov 13 2015)"
+#	define VER_REVISION_HASH "c7353c4"
+#	define VER_REVISION_TAG "v2.4.0#369-rc"
 /**** Date/Time ****/
-#	define VER_TIMESTAMP 1445277262
-#	define VER_TIME_SEC 22
-#	define VER_TIME_MIN 54
-#	define VER_TIME_HOUR 17
-#	define VER_TIME_DAY 19
-#	define VER_TIME_MONTH 10
+#	define VER_TIMESTAMP 1447429391
+#	define VER_TIME_SEC 11
+#	define VER_TIME_MIN 43
+#	define VER_TIME_HOUR 15
+#	define VER_TIME_DAY 13
+#	define VER_TIME_MONTH 11
 #	define VER_TIME_YEAR 2015
-#	define VER_TIME_WDAY 1
-#	define VER_TIME_YDAY 291
-#	define VER_TIME_WDAY_SHORT "Mon"
-#	define VER_TIME_WDAY_FULL "Monday"
-#	define VER_TIME_MONTH_SHORT "Oct"
-#	define VER_TIME_MONTH_FULL "October"
-#	define VER_TIME "17:54:22"
-#	define VER_DATE "2015-10-19"
-#	define VER_DATE_LONG "Mon, Oct 19, 2015 17:54:22 UTC"
-#	define VER_DATE_SHORT "2015-10-19 17:54:22 UTC"
-#	define VER_DATE_ISO "2015-10-19T17:54:22Z"
+#	define VER_TIME_WDAY 5
+#	define VER_TIME_YDAY 316
+#	define VER_TIME_WDAY_SHORT "Fri"
+#	define VER_TIME_WDAY_FULL "Friday"
+#	define VER_TIME_MONTH_SHORT "Nov"
+#	define VER_TIME_MONTH_FULL "November"
+#	define VER_TIME "15:43:11"
+#	define VER_DATE "2015-11-13"
+#	define VER_DATE_LONG "Fri, Nov 13, 2015 15:43:11 UTC"
+#	define VER_DATE_SHORT "2015-11-13 15:43:11 UTC"
+#	define VER_DATE_ISO "2015-11-13T15:43:11Z"
 #endif

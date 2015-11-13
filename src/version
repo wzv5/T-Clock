@@ -1,4 +1,10 @@
-57|351
+57|369
 2.1.0|2.4.0
 |(first release)
-|(current pre-release)
+|! fixed major bug in static builds
+! fixed issue #10 (Win10 calendar not closing on 2nd click)
+! fixed "copy to clipboard" mouse action UI (didn't save changes)
++ added new mouse-click-actions: empty/open recycle bin, execute command
++ multi-monitor support extended for standard tooltip
+* UI: colorbox and mouse click action adjustments
+- removed hooking delay (lets see how it goes)
