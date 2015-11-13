@@ -84,7 +84,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			*out++='\n';
 		}
 		/// for testing
-		else if(*fmt == 'S' && fmt[1] == 'S' && fmt[2] == 'S') {
+		else if(*fmt == 'S' && fmt[1] == 'S' && (fmt[2] == 'S' || fmt[2] == 's')) {
 			fmt += 3;
 			out += api.WriteFormatNum(out, (int)pt->wSecond, 2, 0);
 			*out++ = '.';

@@ -332,7 +332,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		#define MSGFLT_ADD 1
 		#define MSGFLT_REMOVE 2
 		typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message,DWORD dwFlag);
-		ChangeWindowMessageFilter_t ChangeWindowMessageFilter=(ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandle("User32"),"ChangeWindowMessageFilter");
+		ChangeWindowMessageFilter_t ChangeWindowMessageFilter=(ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandle("user32"), "ChangeWindowMessageFilter");
 		if(ChangeWindowMessageFilter){
 			int msgid;
 			ChangeWindowMessageFilter(g_WM_TaskbarCreated,MSGFLT_ADD);
