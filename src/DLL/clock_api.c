@@ -33,7 +33,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 #define ClockAPI(func) Clock_##func,
 TClockAPI api = {
-	NULL, // hInstance
+	NULL, // hInstance (set in DllMain())
 	0, // OS
 	10, // desktop_button_size
 	ms_root, // root
