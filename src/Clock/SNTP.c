@@ -19,11 +19,6 @@ struct NTP_Packet { // NTP (Network Time Protocol) Request Packet
 	int transmit_timestamp_fractions;
 };
 
-// PageHotKey.c
-extern hotkey_t* tchk;
-extern WNDPROC OldEditClassProc;
-LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 static const char m_subkey[] = "SNTP";
 static char m_flags;
 static DWORD m_dwTickCountOnSend = 0;
@@ -373,20 +368,6 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	GetDlgItemText(hDlg, IDCBX_SYNCSOUND, szSound, MAX_PATH);
 	api.SetStr(m_subkey, "Sound", szSound);
 	
-	if(tchk[0].bValid) { // Synchronize System Clock With Remote Time Server
-		RegisterHotKey(g_hwndTClockMain, HOT_TSYNC, tchk[0].fsMod, tchk[0].vk);
-	} else {						// I'm Calling This One Mouser's HotKey...
-		tchk[0].vk = 0;		   // I'm Not Explaining It You Either Already
-		tchk[0].fsMod = 0;	  // Understand Why or You're Not Going Too...
-		strcpy(tchk[0].szText, "None");
-		UnregisterHotKey(g_hwndTClockMain, HOT_TSYNC);
-	}
-	api.SetInt("HotKeys\\HK5", "bValid", tchk[0].bValid);
-	api.SetInt("HotKeys\\HK5", "fsMod",  tchk[0].fsMod);
-	api.SetStr("HotKeys\\HK5", "szText", tchk[0].szText);
-	api.SetInt("HotKeys\\HK5", "vk",  tchk[0].vk);
-	
-	
 	ComboBox_GetText(hServer, szServer, sizeof(szServer));
 	api.SetStr(m_subkey, "Server", szServer);
 	
@@ -478,10 +459,6 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 			OkaySave(hDlg);
 			/* fall through */
 		case IDCANCEL:
-			if(tchk) {
-				free(tchk);   // Free, and...? (Crash Unless You Include the Next Line)
-				tchk = NULL; //<--+++--> Thank You Don Beusee for reminding me to do this.
-			}
 			DestroyWindow(hDlg);
 			return TRUE;
 		}
@@ -545,18 +522,6 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, 1);
 		m_flags |= SNTPF_MESSAGE;
 	}
-	
-	// Load & Display the Configured Synchronization HotKey:
-	tchk = (hotkey_t*)malloc(sizeof(hotkey_t));
-	tchk[0].bValid = api.GetIntEx("HotKeys\\HK5", "bValid", 0);
-	api.GetStrEx("HotKeys\\HK5", "szText", tchk[0].szText, TNY_BUFF, "None");
-	tchk[0].fsMod = api.GetIntEx("HotKeys\\HK5", "fsMod", 0);
-	tchk[0].vk = api.GetIntEx("HotKeys\\HK5", "vk", 0);
-	
-	SetDlgItemText(hDlg, IDCE_SYNCHOTKEY, tchk[0].szText);
-	
-	// Subclass the Edit Controls
-	OldEditClassProc  = SubclassWindow(GetDlgItem(hDlg,IDCE_SYNCHOTKEY), SubClassEditProc);
 	
 	// init listview
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);

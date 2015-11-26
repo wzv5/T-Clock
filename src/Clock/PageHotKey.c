@@ -1,243 +1,129 @@
 // Created by Stoic Joker: Tuesday, 03/30/2010 @ 10:27:12pm
 #include "tclock.h"
 
-hotkey_t* tchk = NULL;
+/// @note (White-Tiger#1#11/26/15): don't forget multimedia keys such as "mute volume" as they weren't directly supported by T-Clock nor are supported by HOTKEY_CLASS ...
 
-static BOOL bReset;
-static BOOL bHaveKey;
-static BOOL bFirstTime;
-static UINT uLastKey;
-char szHotKeySubKey[] = "HotKeys";
-WNDPROC OldEditClassProc; // Default Procedure for Edit Controls
+static char szHotKeySubKey[] = "HotKeys";
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
+
+hotkey_t GetHotkey(int idx) {
+	char subkey[TNY_BUFF];
+	hotkey_t hotkey;
+	
+	wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, idx);
+	hotkey.fsMod = api.GetInt(subkey, "fsMod", 0);
+	hotkey.vk = api.GetInt(subkey, "vk", 0);
+	return hotkey;
+}
+void SetHotkey(int idx, hotkey_t hotkey) {
+	char subkey[TNY_BUFF];
+	wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, idx);
+	if(hotkey.vk){
+		api.SetInt(subkey, "fsMod", hotkey.fsMod);
+		api.SetInt(subkey, "vk", hotkey.vk);
+		/// @note (White-Tiger#1#11/26/15): on next backward incompatible change, remove this and cleanup leftovers
+		api.SetInt(subkey, "bValid", 1);
+		api.SetStr(subkey, "szText", "?");
+	} else {
+		api.DelKey(subkey);
+	}
+}
+
+// HOTKEY_CLASS translation list
+const uint8_t kHotkeyBox_ExKeys[][3] = {
+	// key , "normal" , "extended" (HOTKEYF_EXT)
+	{VK_LEFT, VK_NUMPAD4, VK_LEFT},
+	{VK_RIGHT, VK_NUMPAD6, VK_RIGHT},
+	{VK_UP, VK_NUMPAD8, VK_UP},
+	{VK_DOWN, VK_NUMPAD2, VK_DOWN},
+	{VK_INSERT, VK_NUMPAD0, VK_INSERT},
+	{VK_END, VK_NUMPAD1, VK_END},
+	{VK_NEXT, VK_NUMPAD3, VK_NEXT},
+	// <VK_NUMPAD5>
+	{VK_HOME, VK_NUMPAD7, VK_HOME},
+	{VK_PRIOR, VK_NUMPAD9, VK_PRIOR},
+	{VK_DIVIDE, VK_DIVIDE, VK_DIVIDE}, // some weird key without HOTKEYF_EXT
+};
+
+void HotkeyBox_Init(HWND hDlg, int idx) {
+	HWND control;
+	hotkey_t hk = GetHotkey(idx);
+	
+	control = GetDlgItem(hDlg, (HOTKEY_BEGIN+idx));
+	SendMessage(control, HKM_SETRULES, HKCOMB_NONE, (HOTKEYF_CONTROL|HOTKEYF_SHIFT));
+	HotkeyBox_SetValue(control, hk);
+	
+	control = GetDlgItem(hDlg, (HOTKEY_BTN_BEGIN+idx));
+	EnableWindow(control, 0);
+}
+
+hotkey_t HotkeyBox_GetValue(HWND box) {
+	int i;
+	hotkey_t hotkey;
+	uint8_t flags = 0;
+	hotkey.word = SendMessage(box, HKM_GETHOTKEY, 0, 0);
+	if(hotkey.fsMod & HOTKEYF_SHIFT)
+		flags |= MOD_SHIFT;
+	if(hotkey.fsMod & HOTKEYF_CONTROL)
+		flags |= MOD_CONTROL;
+	if(hotkey.fsMod & HOTKEYF_ALT)
+		flags |= MOD_ALT;
+	for(i=0; i<_countof(kHotkeyBox_ExKeys); ++i) {
+		if(hotkey.vk == kHotkeyBox_ExKeys[i][0]) {
+			hotkey.vk = kHotkeyBox_ExKeys[i][ (hotkey.fsMod & HOTKEYF_EXT ? 2 : 1) ];
+			hotkey.fsMod &= ~hotkey.fsMod;
+			break;
+		}
+	}
+	hotkey.fsMod = flags;
+	return hotkey;
+}
+void HotkeyBox_SetValue(HWND box, hotkey_t hotkey) {
+	int i;
+	uint8_t flags = 0;
+	if(hotkey.fsMod & MOD_SHIFT)
+		flags |= HOTKEYF_SHIFT;
+	if(hotkey.fsMod & MOD_CONTROL)
+		flags |= HOTKEYF_CONTROL;
+	if(hotkey.fsMod & MOD_ALT)
+		flags |= HOTKEYF_ALT;
+	for(i=0; i<_countof(kHotkeyBox_ExKeys); ++i) {
+		if(hotkey.vk == kHotkeyBox_ExKeys[i][2]) {
+			hotkey.vk = kHotkeyBox_ExKeys[i][0];
+			flags |= HOTKEYF_EXT;
+			break;
+		}
+		if(hotkey.vk == kHotkeyBox_ExKeys[i][1]) {
+			hotkey.vk = kHotkeyBox_ExKeys[i][0];
+			break;
+		}
+	}
+	hotkey.fsMod = flags;
+	SendMessage(box, HKM_SETHOTKEY, hotkey.word, 0);
+}
+
 //================================================================================================
 //-----------------------------------------------+++--> Save the New HotKey Configuration Settings:
-void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
+static void OnApply(HWND hDlg)   //---------------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF] = {0};
 	int i;
+	hotkey_t hotkey;
 	
-	if(tchk[0].bValid) { // Add/Edit Active Timers
-		RegisterHotKey(g_hwndTClockMain, HOT_TIMER, tchk[0].fsMod, tchk[0].vk);
-	} else {
-		tchk[0].vk = 0;
-		tchk[0].fsMod = 0;
-		strcpy(tchk[0].szText, "None");
-		UnregisterHotKey(g_hwndTClockMain, HOT_TIMER);
-	}
-	
-	if(tchk[1].bValid) { // Display StopWatch
-		RegisterHotKey(g_hwndTClockMain, HOT_STOPW, tchk[1].fsMod, tchk[1].vk);
-	} else {
-		tchk[1].vk = 0;
-		tchk[1].fsMod = 0;
-		strcpy(tchk[1].szText, "None");
-		UnregisterHotKey(g_hwndTClockMain, HOT_STOPW);
-	}
-	
-	if(tchk[2].bValid) { // Display Watched (and active) Timers
-		RegisterHotKey(g_hwndTClockMain, HOT_WATCH, tchk[2].fsMod, tchk[2].vk);
-	} else {
-		tchk[2].vk = 0;
-		tchk[2].fsMod = 0;
-		strcpy(tchk[2].szText, "None");
-		UnregisterHotKey(g_hwndTClockMain, HOT_WATCH);
-	}
-	
-	if(tchk[3].bValid) { // Display Watched (and active) Timers
-		RegisterHotKey(g_hwndTClockMain, HOT_PROPR, tchk[3].fsMod, tchk[3].vk);
-	} else {
-		tchk[3].vk = 0;
-		tchk[3].fsMod = 0;
-		strcpy(tchk[3].szText, "None");
-		UnregisterHotKey(g_hwndTClockMain, HOT_PROPR);
-	}
-	
-	if(tchk[4].bValid) { // Display Watched (and active) Timers
-		RegisterHotKey(g_hwndTClockMain, HOT_CALEN, tchk[4].fsMod, tchk[4].vk);
-	} else {
-		tchk[4].vk = 0;
-		tchk[4].fsMod = 0;
-		strcpy(tchk[4].szText, "None");
-		UnregisterHotKey(g_hwndTClockMain, HOT_CALEN);
-	}
-	///////////////////////////////////////////////////////////////////////////////////
-	for(i = 0; i <= 4; i++) {
-		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
-		api.SetInt(subkey, "bValid", tchk[i].bValid);
-		api.SetInt(subkey, "fsMod",  tchk[i].fsMod);
-		api.SetStr(subkey, "szText", tchk[i].szText);
-		api.SetInt(subkey, "vk",  tchk[i].vk);
-	}
-	//////////////////////////////////////////////////////////////////////////////////
-	bFirstTime = FALSE; // DO NOT Let Property Sheet Manager Fire OnApply(...) Twice!
-	EnableDlgItem(hDlg, IDCE_HK_ADD,  FALSE);
-	EnableDlgItem(hDlg, IDCE_HK_STOP, FALSE);
-	EnableDlgItem(hDlg, IDCE_HK_TIME, FALSE);
-	EnableDlgItem(hDlg, IDCE_HK_PROP, FALSE);
-	EnableDlgItem(hDlg, IDCE_HK_CALN, FALSE);
-	EnableDlgItem(hDlg, IDCB_HK_ADD,  TRUE);
-	EnableDlgItem(hDlg, IDCB_HK_STOP, TRUE);
-	EnableDlgItem(hDlg, IDCB_HK_TIME, TRUE);
-	EnableDlgItem(hDlg, IDCB_HK_PROP, TRUE);
-	EnableDlgItem(hDlg, IDCB_HK_CALN, TRUE);
-}
-//================================================================================================
-//-------------------------------------------+++--> Display the HotKey Combination Pressed by User:
-BOOL ShowHotKey(HWND hWnd, int iCtrlID, char* szKey, BOOL bMod, BOOL bFnKey, BOOL bEnd)
-{
-	static char szHotKey[TNY_BUFF] = {0};
-	char szTmp[TNY_BUFF];
-	
-	(void)bMod;
-	
-	Edit_GetText(hWnd, szTmp, TNY_BUFF);
-	if(strcasecmp("None", szTmp)) { // None = Zero Input - Clear Display.
-		wnsprintf(szHotKey,sizeof(szHotKey)-1, "%s + %s", szTmp, szKey); // HotKey = X + Y
-		Edit_SetText(hWnd, szHotKey); //-+> Display the Key(s) Pressed.
-		bHaveKey = bEnd; // Beginning & End Confirmed, Combo Save-able
-		bFnKey = FALSE; //---------+++--> This IS NOT Just an F'n Key!
-	} else {
-		Edit_SetText(hWnd, szKey); // Have the First (begin) Key, or,
-		bHaveKey = bFnKey; // This Allows the F'n Keys to Work Alone.
-	}
-	if(bHaveKey && bFnKey && bEnd) { //-+> This IS Just an F'n Key...
-		strncpy_s(tchk[iCtrlID].szText, sizeof(tchk[iCtrlID].szText), szKey, _TRUNCATE);
-	} else { //--+++--> This is a HotKey Combo...
-		strncpy_s(tchk[iCtrlID].szText, sizeof(tchk[iCtrlID].szText), szHotKey, _TRUNCATE);
-	}
-	
-	return TRUE;
-}
-//===============================================================================================
-//--------------------------+++--> Edit Control Subclass Procedure to Catch/Record HotKey Strokes:
-LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)   //-+++-->
-{
-	char szKeyTmp[TNY_BUFF];
-	int iCtrlID;
-	
-	switch(uMsg) {
-	case WM_GETDLGCODE:
-		return DLGC_WANTMESSAGE;
+	for(i=0; i < HOTKEY_NUM; ++i) {
+		hotkey = HotkeyBox_GetValue(GetDlgItem(hDlg,(HOTKEY_BEGIN+i)));
+		SetHotkey(i, hotkey);
 		
-	case WM_CHAR: // This is Required to Block (Direct Access)
-		return TRUE; //-+> Keyboard Input to the Edit Control.
-		
-	case WM_KEYDOWN: //-------------+++--> Looping is Forbidden!
-		if((UINT)wParam == uLastKey) return TRUE; //-+> By This.
-		if((UINT)wParam == VK_LWIN || (UINT)wParam == VK_RWIN) {
-			return TRUE; // Block Acceptance of the Windows Keys
-		} //-+> as Their Behavior is (reserved) Unpredictable...
-		iCtrlID = (GetDlgCtrlID(hWnd) - 1026); // Edit Control=X
-		if((tchk[iCtrlID].fsMod == MOD_SHIFT) && // Translation:
-		   (((UINT)wParam <= VK_DIVIDE) || // Prevent User From
-			((UINT)wParam >= VK_NUMLOCK))) { // Selecting any of
-			bReset = TRUE; // the Dangerous Key Combinations
-		} //----------//------//------------//-----------+++-->
-		if(bReset) { //------//------------//-----------+++-->
-			tchk[iCtrlID].bValid = FALSE; //-----------+++-->
-			Edit_SetText(hWnd, "None"); ///-----------+++-->
-			bReset = FALSE;
-		}
-		if((wParam >= VK_SHIFT) && (wParam <= VK_MENU)) {
-			if(wParam == VK_CONTROL) {
-				tchk[iCtrlID].fsMod = MOD_CONTROL;
-			}
-			
-			else if(wParam == VK_SHIFT) {
-				if(tchk[iCtrlID].fsMod)
-					tchk[iCtrlID].fsMod |= MOD_SHIFT;
-				else
-					tchk[iCtrlID].fsMod = MOD_SHIFT;
-			}
-			
-			else if(wParam == VK_MENU) {
-				if(tchk[iCtrlID].fsMod)
-					tchk[iCtrlID].fsMod |= MOD_ALT;
-				else
-					tchk[iCtrlID].fsMod = MOD_ALT;
-			}
-			
-			if(!GetKeyNameText((LONG)lParam, szKeyTmp, sizeof(szKeyTmp)))
-				szKeyTmp[0] = '\0';
-			ShowHotKey(hWnd, iCtrlID, szKeyTmp, TRUE, FALSE, FALSE);
-		}
-		//-++-> VK_F1 = 0x70 (112) - VK_F24 = 0x87 (135)
-		else if((wParam >= VK_F1) && (wParam <= VK_F24)) {
-			tchk[iCtrlID].vk = (UINT)wParam;
-			if(!GetKeyNameText((LONG)lParam, szKeyTmp, sizeof(szKeyTmp)))
-				szKeyTmp[0] = '\0';
-			ShowHotKey(hWnd, iCtrlID, szKeyTmp, FALSE, TRUE, TRUE);
-		}
-		
-		else { //-+> Oh Shit! ...Sombody Hit the AnyKey!!!
-			tchk[iCtrlID].vk = (UINT)wParam;
-			if(!GetKeyNameText((LONG)lParam, szKeyTmp, sizeof(szKeyTmp)))
-				szKeyTmp[0] = '\0';
-			ShowHotKey(hWnd, iCtrlID, szKeyTmp, FALSE, FALSE, TRUE);
-		}
-		uLastKey = (UINT)wParam; //-+> Check for This on Next Loop, To Break Loop!
-		return TRUE; //-------------------------------+++--> End of Case WM_KEYDOWN:
-//==================================================================================
-	case WM_KEYUP:
-		uLastKey = 0; //-//-------+++--> Clear the Slate.
-		if(!bHaveKey) { // IF Key Record Failed, Go Dark.
-			iCtrlID = (GetDlgCtrlID(hWnd) - 1026);
-			strcpy(tchk[iCtrlID].szText, "None");
-			tchk[iCtrlID].bValid = FALSE;
-			Edit_SetText(hWnd, "None");
-			tchk[iCtrlID].fsMod = 0;
-			tchk[iCtrlID].vk = 0;
-		} else { // ELSE Offer to Save New Key Combination.
-			bReset = TRUE;
-			iCtrlID = (GetDlgCtrlID(hWnd) - 1026);
-			tchk[iCtrlID].bValid = TRUE;
-			SendPSChanged(GetParent(hWnd));
-		} return TRUE; //-------------------------------+++--> End of Case WM_KEYUP:
-//==================================================================================
+		EnableDlgItem(hDlg, (HOTKEY_BTN_BEGIN+i), 0);
 	}
-	//-------------------+++--> Let Windows Handle What We Forget to...
-	return CallWindowProc(OldEditClassProc, hWnd, uMsg, wParam, lParam);
 }
 //================================================================================================
 //-------------------------------//---------------------------+++--> Initialize the HotKeys Dialog:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF] = {0};
 	int i;
 	
-	bFirstTime = TRUE;
-	tchk = (hotkey_t*)malloc(sizeof(hotkey_t) * 5);
-	for(i=0; i <= 4; i++) {
-		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
-		tchk[i].bValid = api.GetInt(subkey, "bValid", 0);
-//		api.GetStrEx(subkey, "szText", tchk[i].szText, GEN_BUFF, "None");
-		api.GetStrEx(subkey, "szText", tchk[i].szText, TNY_BUFF, "None");
-		tchk[i].fsMod = api.GetInt(subkey, "fsMod", 0);
-		tchk[i].vk = api.GetInt(subkey, "vk", 0);
-	}
-	
-	SetDlgItemText(hDlg, IDCE_HK_ADD, tchk[0].szText);
-	SetDlgItemText(hDlg, IDCE_HK_STOP, tchk[1].szText);
-	SetDlgItemText(hDlg, IDCE_HK_TIME, tchk[2].szText);
-	SetDlgItemText(hDlg, IDCE_HK_PROP, tchk[3].szText);
-	SetDlgItemText(hDlg, IDCE_HK_CALN, tchk[4].szText);
-	
-	// Subclass the Edit Controls
-	OldEditClassProc  = SubclassWindow(GetDlgItem(hDlg,IDCE_HK_ADD), SubClassEditProc);
-	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_STOP), SubClassEditProc);
-	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_TIME), SubClassEditProc);
-	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_PROP), SubClassEditProc);
-	SubclassWindow(GetDlgItem(hDlg,IDCE_HK_CALN), SubClassEditProc);
-//==================================================================================
-}
-//================================================================================================
-//----------------------------------//---------------+++--> Free TCHOTKEY Structure Memory on Exit:
-static void OnDestroy()   //-------------------------------------------------------+++-->
-{
-	if(tchk) {
-		free(tchk);   // Free, and...? (Crash Unless You Include the Next Line)
-		tchk = NULL; //<--+++--> Thank You Don Beusee for reminding me to do this.
+	for(i=0; i < HOTKEY_NUM; ++i) {
+		HotkeyBox_Init(hDlg, i);
 	}
 }
 //================================================================================================
@@ -249,90 +135,45 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		OnInit(hDlg);
 		return TRUE;
 	case WM_DESTROY:
-		OnDestroy();
 		break;
-		
-	case WM_NOTIFY:
-		switch(((NMHDR*)lParam)->code) {
-		case PSN_APPLY: // Because the Second Time You Try to Register the
-			if(bFirstTime) OnApply(hDlg); //-+> Same HotKey is an Error...
+	case WM_NOTIFY:{
+		PSHNOTIFY* notify = (PSHNOTIFY*)lParam;
+		switch(notify->hdr.code) {
+		case PSN_QUERYINITIALFOCUS:
+			SetWindowLongPtr(hDlg, DWLP_MSGRESULT, (LONG_PTR)GetDlgItem(hDlg,-1/*first static*/));
 			break;
-			
-		} return TRUE;
-		
-	case WM_COMMAND: {
-		WORD id, code;
-		id = LOWORD(wParam);
-		code = HIWORD(wParam);
-		
-		if(code == EN_KILLFOCUS) { //--++-> Add This After Bugg Found By:
-			if(!tchk[(id - 1026)].bValid) { // ewemoa - DonationCoder.com
-				SetDlgItemText(hDlg, id, "None");  // Burn the HotKet on
-				tchk[(id - 1026)].bValid = FALSE; // Input Focus Failure
-				bReset = TRUE;
-			} return TRUE;
+		case PSN_SETACTIVE:
+			RegisterHotkeys(g_hwndTClockMain, 0);
+			break;
+		case PSN_RESET: // in case page was active and dialog closes
+		case PSN_KILLACTIVE:
+			RegisterHotkeys(g_hwndTClockMain, 1);
+			break;
+		case PSN_APPLY:
+			OnApply(hDlg);
+			RegisterHotkeys(g_hwndTClockMain, 2); // PSN_KILLACTIVE is called first on "OK"
+			break;
 		}
+		return TRUE;}
+	
+	case WM_COMMAND: {
+		int idx;
+		WORD id = LOWORD(wParam);
+//		WORD code = HIWORD(wParam);
 		
 		switch(id) {
-		case IDCB_HK_ADD:
-			EnableDlgItem(hDlg, IDCE_HK_ADD, TRUE);
-			EnableDlgItem(hDlg, IDCB_HK_ADD, FALSE);
-			SetDlgItemText(hDlg, IDCE_HK_ADD, "None");
-			SetFocus(GetDlgItem(hDlg, IDCE_HK_ADD));
-			tchk[0].bValid = FALSE; // Required to Clear/Remove HotKey
-			SendPSChanged(hDlg);
-			tchk[0].fsMod = 0;
-			tchk[0].vk = 0;
-			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-			break;
-			
-		case IDCB_HK_STOP:
-			EnableDlgItem(hDlg, IDCE_HK_STOP, TRUE);
-			EnableDlgItem(hDlg, IDCB_HK_STOP, FALSE);
-			SetDlgItemText(hDlg, IDCE_HK_STOP, "None");
-			SetFocus(GetDlgItem(hDlg, IDCE_HK_STOP));
-			tchk[1].bValid = FALSE; // Required to Clear/Remove HotKey
-			SendPSChanged(hDlg);
-			tchk[1].fsMod = 0;
-			tchk[1].vk = 0;
-			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-			break;
-			
-		case IDCB_HK_TIME:
-			EnableDlgItem(hDlg, IDCE_HK_TIME, TRUE);
-			EnableDlgItem(hDlg, IDCB_HK_TIME, FALSE);
-			SetDlgItemText(hDlg, IDCE_HK_TIME, "None");
-			SetFocus(GetDlgItem(hDlg, IDCE_HK_TIME));
-			tchk[2].bValid = FALSE; // Required to Clear/Remove HotKey
-			SendPSChanged(hDlg);
-			tchk[2].fsMod = 0;
-			tchk[2].vk = 0;
-			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-			break;
-			
-		case IDCB_HK_PROP:
-			EnableDlgItem(hDlg, IDCE_HK_PROP, TRUE);
-			EnableDlgItem(hDlg, IDCB_HK_PROP, FALSE);
-			SetDlgItemText(hDlg, IDCE_HK_PROP, "None");
-			SetFocus(GetDlgItem(hDlg, IDCE_HK_PROP));
-			tchk[3].bValid = FALSE; // Required to Clear/Remove HotKey
-			SendPSChanged(hDlg);
-			tchk[3].fsMod = 0;
-			tchk[3].vk = 0;
-			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-			break;
-			
-		case IDCB_HK_CALN:
-			EnableDlgItem(hDlg, IDCE_HK_CALN, TRUE);
-			EnableDlgItem(hDlg, IDCB_HK_CALN, FALSE);
-			SetDlgItemText(hDlg, IDCE_HK_CALN, "None");
-			SetFocus(GetDlgItem(hDlg, IDCE_HK_CALN));
-			tchk[4].bValid = FALSE; // Required to Clear/Remove HotKey
-			SendPSChanged(hDlg);
-			tchk[4].fsMod = 0;
-			tchk[4].vk = 0;
-			bFirstTime = TRUE; // This Will Allow (boo-boo) Re-Do's
-			break;
+		default:
+			if(id >= HOTKEY_BEGIN && id <= HOTKEY_END) {
+				idx = (id - HOTKEY_BEGIN);
+				EnableDlgItem(hDlg, (HOTKEY_BTN_BEGIN+idx), 1);
+				SendPSChanged(hDlg);
+			} else if(id >= HOTKEY_BTN_BEGIN && id <= HOTKEY_BTN_END) {
+				idx = (id - HOTKEY_BTN_BEGIN);
+				HWND control = GetDlgItem(hDlg, (HOTKEY_BEGIN+idx));
+				EnableWindow((HWND)lParam, 0);
+				HotkeyBox_SetValue(control, GetHotkey(idx));
+				SetFocus(control);
+			}
 		}
 		return TRUE;}
 	}
@@ -340,26 +181,16 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 }
 //================================================================================================
 //----------------------------------+++--> Retrieve HotKey Configuration Information From Registry:
-void GetHotKeyInfo(HWND hWnd)
-{
-	char subkey[TNY_BUFF] = {0};
+void RegisterHotkeys(HWND hwnd, int want_register) {
 	int i;
 	
-	hotkey_t* hk = (hotkey_t*)malloc(sizeof(hotkey_t) * 6);
-	if(!hk) return;
-	
-	for(i = 0; i <= 5; i++) {
-		wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, i);
-		hk[i].bValid = api.GetIntEx(subkey, "bValid", 0);
-		hk[i].fsMod = api.GetIntEx(subkey, "fsMod", 0);
-		hk[i].vk = api.GetIntEx(subkey, "vk", 0);
+	for(i=0; i < HOTKEY_NUM; ++i) {
+		if(want_register != 1)
+			UnregisterHotKey(hwnd, (HOTKEY_BEGIN+i));
+		if(want_register) {
+			hotkey_t hk = GetHotkey(i);
+			if(hk.vk)
+				RegisterHotKey(hwnd, (HOTKEY_BEGIN+i), hk.fsMod, hk.vk);
+		}
 	}
-	
-	if(hk[0].bValid) RegisterHotKey(hWnd, HOT_TIMER, hk[0].fsMod, hk[0].vk); // Add/Edit Timer
-	if(hk[1].bValid) RegisterHotKey(hWnd, HOT_STOPW, hk[1].fsMod, hk[1].vk); // StopWatch Dialog
-	if(hk[2].bValid) RegisterHotKey(hWnd, HOT_WATCH, hk[2].fsMod, hk[2].vk); // Timer Watch List
-	if(hk[3].bValid) RegisterHotKey(hWnd, HOT_PROPR, hk[3].fsMod, hk[3].vk); // T-Clock Properties
-	if(hk[4].bValid) RegisterHotKey(hWnd, HOT_CALEN, hk[4].fsMod, hk[4].vk); // T-Clock Calendar
-	if(hk[5].bValid) RegisterHotKey(hWnd, HOT_TSYNC, hk[5].fsMod, hk[5].vk); // Synchronize Time
-	free(hk);
 }

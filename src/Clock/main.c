@@ -350,7 +350,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// This Checks for First Instance Startup Options
 	ProcessCommandLine(hwndMain,lpCmdLine);
 	
-	GetHotKeyInfo(hwndMain);
+	RegisterHotkeys(hwndMain, 1);
 	
 	if(api.OS > TOS_2000) {
 		if(api.GetInt("Desktop", "MonOffOnLock", 0))
@@ -370,12 +370,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 	}
 	
-	UnregisterHotKey(hwndMain, HOT_TIMER);
-	UnregisterHotKey(hwndMain, HOT_WATCH);
-	UnregisterHotKey(hwndMain, HOT_STOPW);
-	UnregisterHotKey(hwndMain, HOT_PROPR);
-	UnregisterHotKey(hwndMain, HOT_CALEN);
-	UnregisterHotKey(hwndMain, HOT_TSYNC);
+	RegisterHotkeys(hwndMain, 0);
 	
 	UnregisterSession(hwndMain);
 	
@@ -590,28 +585,33 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 			return 0;}
 	case WM_HOTKEY: // Feature Requested From eweoma at DonationCoder.com
 		switch(wParam) { // And a Damn Fine Request it Was... :-)
-		case HOT_WATCH:
-			PostMessage(hwnd, WM_COMMAND, IDM_TIMEWATCH, 0);
-			return 0;
-			
-		case HOT_TIMER:
+		case HK_TIMER_ADD:
 			PostMessage(hwnd, WM_COMMAND, IDM_TIMER, 0);
 			return 0;
 			
-		case HOT_STOPW:
+		case HK_TIMER_WATCH:
+			PostMessage(hwnd, WM_COMMAND, IDM_TIMEWATCH, 0);
+			return 0;
+			
+		case HK_STOPWATCH:
 			PostMessage(hwnd, WM_COMMAND, IDM_STOPWATCH, 0);
 			return 0;
 			
-		case HOT_PROPR:
+		case HK_SETTINGS:
 			PostMessage(hwnd, WM_COMMAND, IDM_SHOWPROP, 0);
 			return 0;
 			
-		case HOT_CALEN:
+		case HK_CALENDAR:
 			PostMessage(hwnd, WM_COMMAND, IDM_SHOWCALENDER, 0);
 			return 0;
 			
-		case HOT_TSYNC:
-			SyncTimeNow();
+		case HK_SNTP:
+			if(HaveSetTimePermissions()) {
+				SyncTimeNow();
+			} else {
+//				api.ExecElevated(GetClockExe(), "/UAC /Sync", NULL);
+				PostMessage(hwnd, WM_COMMAND, IDM_SNTP, 0);
+			}
 			return 0;
 			
 		} return 0;

@@ -34,14 +34,6 @@
 #define MOUSEFUNCEXTRAFILE_BEGIN -100
 #define MOUSEFUNC_EXEC           -100
 
-// System Global HotKey Identifiers
-#define HOT_WATCH	200
-#define HOT_TIMER	210
-#define HOT_STOPW	220
-#define HOT_PROPR	230
-#define HOT_CALEN	240
-#define HOT_TSYNC	250
-
 //--+++--> main.c - Application Global Values:
 extern HWND g_hwndTClockMain; /**< our main window for hotkeys, menus and sounds */
 extern HWND g_hwndClock;      /**< the clock hwnd */
@@ -237,7 +229,24 @@ BOOL ReBoot();
 BOOL LogOff();
 
 // PageHotKey.c
-void GetHotKeyInfo(HWND hWnd);
+typedef union {
+	struct {
+		uint8_t vk;
+		uint8_t fsMod;
+	};
+	uint16_t word;
+} hotkey_t;
+hotkey_t GetHotkey(int idx);
+void SetHotkey(int idx, hotkey_t hotkey);
+void HotkeyBox_Init(HWND hDlg, int idx);
+hotkey_t HotkeyBox_GetValue(HWND box);
+void HotkeyBox_SetValue(HWND box, hotkey_t hotkey);
+/**
+ * \brief (un-)registers hotkeys
+ * \param hwnd target hotkey window
+ * \param want_register \c 0 to remove them, \c 1 to add them, \c 2 for re-registration
+ * \sa RegisterHotKey(), UnregisterHotKey() */     
+void RegisterHotkeys(HWND hwnd, int want_register);
 
 // SNTP.c
 void SyncTimeNow();
@@ -252,10 +261,3 @@ BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus);
 #define EnableDlgItem(hDlg,id,b) EnableWindow(GetDlgItem((hDlg),(id)),(b))
 #define ShowDlgItem(hDlg,id,b) ShowWindow(GetDlgItem((hDlg),(id)),(b)?SW_SHOW:SW_HIDE)
 
-//----------------//--------------+++--> HotKey Configuration,
-typedef struct { //--+++--> Manipulation, & Storage Structure.
-	UINT vk;
-	UINT fsMod;
-	BOOL bValid;
-	char szText[TNY_BUFF];
-} hotkey_t;

@@ -136,17 +136,26 @@
 //#define IDC_SW_STOP                     1024
 #define IDC_SW_RESET                    1024
 #define IDC_SW_EXPORT                   1025 /* end group */
-#define IDCE_SYNCHOTKEY                 1026
-#define IDCE_HK_ADD                     1026
-#define IDCE_HK_STOP                    1027
-#define IDCE_HK_TIME                    1028
-#define IDCE_HK_PROP                    1029
-#define IDCE_HK_CALN                    1030
-#define IDCB_HK_ADD                     1032
-#define IDCB_HK_STOP                    1033
-#define IDCB_HK_TIME                    1034
-#define IDCB_HK_PROP                    1035
-#define IDCB_HK_CALN                    1036
+
+// HotKeys
+#define HOTKEY_BEGIN         HK_TIMER_ADD
+#define HK_TIMER_ADD     0 /* group */
+#define HK_STOPWATCH     1
+#define HK_TIMER_WATCH   2
+#define HK_SETTINGS      3
+#define HK_CALENDAR      4
+#define HK_SNTP          5 /* end group */
+#define HOTKEY_END           HK_SNTP
+#define HOTKEY_NUM           (1 + HOTKEY_END - HOTKEY_BEGIN)
+#define HOTKEY_BTN_BEGIN     1000
+#define HOTKEY_BTN_END       (HOTKEY_BTN_BEGIN + HOTKEY_NUM - 1)
+#define IDC_HK_TIMER_ADD_B   (HOTKEY_BTN_BEGIN + HK_TIMER_ADD)
+#define IDC_HK_STOPWATCH_B   (HOTKEY_BTN_BEGIN + HK_STOPWATCH)
+#define IDC_HK_TIMER_WATCH_B (HOTKEY_BTN_BEGIN + HK_TIMER_WATCH)
+#define IDC_HK_SETTINGS_B    (HOTKEY_BTN_BEGIN + HK_SETTINGS)
+#define IDC_HK_CALENDAR_B    (HOTKEY_BTN_BEGIN + HK_CALENDAR)
+#define IDC_HK_SNTP_B        (HOTKEY_BTN_BEGIN + HK_SNTP)
+
 #define IDCB_DELSERVER                  1037
 #define IDCBX_NTPSERVER                 1038
 #define IDCB_SYNCNOW                    1039
@@ -154,7 +163,6 @@
 #define IDCB_SYNCSOUNDBROWSE            1041
 #define IDCBX_SNTPLOG                   1042
 #define IDCBX_SNTPMESSAGE               1043
-#define IDCB_HK_SNTP                    1045
 #define IDCB_CLEAR                      1046
 
 #define IDCB_MSG_ALARM                  1051
@@ -249,7 +257,7 @@
 #define IDC_ZERO                        1214
 #define IDC_CUSTOM                      1215 /* end groupG, end groupA */
 #define FORMAT_END                      IDC_CUSTOM
-#define FORMAT_NUM                      /*15*/1+FORMAT_END-FORMAT_BEGIN
+#define FORMAT_NUM                      /*15*/(1 + FORMAT_END - FORMAT_BEGIN)
 #define IDC_FORMAT                      1216
 #define IDC_FORMAT_LNK                  1217
 #define IDC_AMSYMBOL                    1251
@@ -358,7 +366,7 @@
 #define IDC_CAL_TRAIL                   2121
 #define IDC_CAL_TRAIL_BTN               2122 /* end group */
 #define CALENDAR_COLOR_END              IDC_CAL_TRAIL_BTN
-#define CALENDAR_COLOR_NUM              ((1+CALENDAR_COLOR_END-CALENDAR_COLOR_BEGIN)/2)
+#define CALENDAR_COLOR_NUM              ((1 + CALENDAR_COLOR_END - CALENDAR_COLOR_BEGIN) / 2)
 
 #define IDC_SWE_EXPORT                  2100
 #define IDC_SWE_TOTAL                   2101
