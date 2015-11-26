@@ -42,13 +42,12 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		PageHotKeyProc, PageMiscProc,
 	};
 	if(!g_hwndSheet || (g_hwndSheet != (HWND)(intptr_t)1 && !IsWindow(g_hwndSheet))) {
-		#define PROPERTY_NUM sizeof(PageProc)/sizeof(DLGPROC)
-		PROPSHEETPAGE psp[PROPERTY_NUM];
-		PROPSHEETHEADER psh={sizeof(PROPSHEETHEADER)};
+		#define PROPERTY_NUM _countof(PageProc)
+		PROPSHEETPAGE psp[PROPERTY_NUM] = {{0}};
+		PROPSHEETHEADER psh = {sizeof(PROPSHEETHEADER)};
 		int i;
 		// Allocate Clean Memory for Each Page
 		for(i=0; i<PROPERTY_NUM; ++i) {
-			memset(&psp[i], 0, sizeof(PROPSHEETPAGE));
 			psp[i].dwSize = sizeof(PROPSHEETPAGE);
 			psp[i].hInstance = g_instance;
 			psp[i].pfnDlgProc = PageProc[i];

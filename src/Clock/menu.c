@@ -274,7 +274,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 			SyncTimeNow();
 		} else if(!justElevated){
 			if(api.ExecElevated(GetClockExe(),"/UAC /Sync",NULL) != 0){
-				MessageBox(0,"T-Clock must be elevated to set your system time,\nbut elevation was cancled", "Time Sync Failed", MB_OK|MB_ICONERROR);
+				MessageBox(0,"T-Clock must be elevated to set your system time,\nbut elevation was canceled", "Time Sync Failed", MB_OK|MB_ICONERROR);
 			}
 		}
 		break;}

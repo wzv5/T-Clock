@@ -222,7 +222,7 @@ struct TClockAPI {
  * \param params = \c NULL (optional program arguments)
  * \param parent = \c NULL (parent window)
  * \param show = \c SW_SHOWNORMAL
- * \return -1 on failure, 0 on success,1 if user cancled
+ * \return -1 on failure, 0 on success,1 if user canceled
  * \sa ShellExecute(), ShellExecuteEx(), Exec() */
 	int (*ShellExecute)(const char* method, const char* app, const char* params, HWND parent, int show);
 /**
@@ -230,20 +230,20 @@ struct TClockAPI {
  * \param app path to run
  * \param params = \c NULL (optional program arguments)
  * \param parent = \c NULL (parent window)
- * \return -1 on failure, 0 on success, 1 if user cancled
+ * \return -1 on failure, 0 on success, 1 if user canceled
  * \sa ExecElevated(), ExecFile(), ShellExecute() */
 	int (*Exec)(const char* app, const char* params, HWND parent);
 /**
  * \brief starts an application elevated (displays UAC dialog when required)
- * \return -1 on failure, 0 on success, 1 if user cancled
+ * \return -1 on failure, 0 on success, 1 if user canceled
  * \remarks this function is mainly for Vista+, though even Win2000 shows an user logon screen
  * \sa Exec(), ExecFile(), ShellExecute() */
 	int (*ExecElevated)(const char* app, const char* params, HWND parent);
 /**
  * \brief opens a file or starts an application
- * \param command full commandline with filename and optional arguments
+ * \param command full command-line with file-name and optional arguments
  * \param parent = \c NULL (parent window)
- * \return -1 on failure, 0 on success, 1 if user cancled
+ * \return -1 on failure, 0 on success, 1 if user canceled
  * \remark makes use of \c GetFileAndOption() internally and thus same rules apply for \p command
  * \sa Exec(), ExecElevated(), ShellExecute(), GetFileAndOption() */
 	int (*ExecFile)(const char* command, HWND parent);

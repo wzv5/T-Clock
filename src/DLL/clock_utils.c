@@ -514,7 +514,7 @@ int Clock_ShellExecute(const char* method, const char* app, const char* params, 
 		sei.nShow = show;
 		if(ShellExecuteEx(&sei))
 			return 0;
-		if(GetLastError()==ERROR_CANCELLED){ // UAC dialog user cancled
+		if(GetLastError()==ERROR_CANCELLED){ // UAC dialog user canceled
 			return 1;
 		}
 	}
