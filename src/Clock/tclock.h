@@ -233,7 +233,7 @@ typedef union {
 	struct {
 		uint8_t vk;
 		uint8_t fsMod;
-	};
+	} key;
 	uint16_t word;
 } hotkey_t;
 hotkey_t GetHotkey(int idx);

@@ -11,16 +11,16 @@ hotkey_t GetHotkey(int idx) {
 	hotkey_t hotkey;
 	
 	wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, idx);
-	hotkey.fsMod = api.GetInt(subkey, "fsMod", 0);
-	hotkey.vk = api.GetInt(subkey, "vk", 0);
+	hotkey.key.fsMod = (uint8_t)api.GetInt(subkey, "fsMod", 0);
+	hotkey.key.vk = (uint8_t)api.GetInt(subkey, "vk", 0);
 	return hotkey;
 }
 void SetHotkey(int idx, hotkey_t hotkey) {
 	char subkey[TNY_BUFF];
 	wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, idx);
-	if(hotkey.vk){
-		api.SetInt(subkey, "fsMod", hotkey.fsMod);
-		api.SetInt(subkey, "vk", hotkey.vk);
+	if(hotkey.key.vk){
+		api.SetInt(subkey, "fsMod", hotkey.key.fsMod);
+		api.SetInt(subkey, "vk", hotkey.key.vk);
 		/// @note (White-Tiger#1#11/26/15): on next backward incompatible change, remove this and cleanup leftovers
 		api.SetInt(subkey, "bValid", 1);
 		api.SetStr(subkey, "szText", "?");
@@ -61,44 +61,44 @@ hotkey_t HotkeyBox_GetValue(HWND box) {
 	int i;
 	hotkey_t hotkey;
 	uint8_t flags = 0;
-	hotkey.word = SendMessage(box, HKM_GETHOTKEY, 0, 0);
-	if(hotkey.fsMod & HOTKEYF_SHIFT)
+	hotkey.word = (uint16_t)SendMessage(box, HKM_GETHOTKEY, 0, 0);
+	if(hotkey.key.fsMod & HOTKEYF_SHIFT)
 		flags |= MOD_SHIFT;
-	if(hotkey.fsMod & HOTKEYF_CONTROL)
+	if(hotkey.key.fsMod & HOTKEYF_CONTROL)
 		flags |= MOD_CONTROL;
-	if(hotkey.fsMod & HOTKEYF_ALT)
+	if(hotkey.key.fsMod & HOTKEYF_ALT)
 		flags |= MOD_ALT;
 	for(i=0; i<_countof(kHotkeyBox_ExKeys); ++i) {
-		if(hotkey.vk == kHotkeyBox_ExKeys[i][0]) {
-			hotkey.vk = kHotkeyBox_ExKeys[i][ (hotkey.fsMod & HOTKEYF_EXT ? 2 : 1) ];
-			hotkey.fsMod &= ~hotkey.fsMod;
+		if(hotkey.key.vk == kHotkeyBox_ExKeys[i][0]) {
+			hotkey.key.vk = kHotkeyBox_ExKeys[i][ (hotkey.key.fsMod & HOTKEYF_EXT ? 2 : 1) ];
+			hotkey.key.fsMod &= ~hotkey.key.fsMod;
 			break;
 		}
 	}
-	hotkey.fsMod = flags;
+	hotkey.key.fsMod = flags;
 	return hotkey;
 }
 void HotkeyBox_SetValue(HWND box, hotkey_t hotkey) {
 	int i;
 	uint8_t flags = 0;
-	if(hotkey.fsMod & MOD_SHIFT)
+	if(hotkey.key.fsMod & MOD_SHIFT)
 		flags |= HOTKEYF_SHIFT;
-	if(hotkey.fsMod & MOD_CONTROL)
+	if(hotkey.key.fsMod & MOD_CONTROL)
 		flags |= HOTKEYF_CONTROL;
-	if(hotkey.fsMod & MOD_ALT)
+	if(hotkey.key.fsMod & MOD_ALT)
 		flags |= HOTKEYF_ALT;
 	for(i=0; i<_countof(kHotkeyBox_ExKeys); ++i) {
-		if(hotkey.vk == kHotkeyBox_ExKeys[i][2]) {
-			hotkey.vk = kHotkeyBox_ExKeys[i][0];
+		if(hotkey.key.vk == kHotkeyBox_ExKeys[i][2]) {
+			hotkey.key.vk = kHotkeyBox_ExKeys[i][0];
 			flags |= HOTKEYF_EXT;
 			break;
 		}
-		if(hotkey.vk == kHotkeyBox_ExKeys[i][1]) {
-			hotkey.vk = kHotkeyBox_ExKeys[i][0];
+		if(hotkey.key.vk == kHotkeyBox_ExKeys[i][1]) {
+			hotkey.key.vk = kHotkeyBox_ExKeys[i][0];
 			break;
 		}
 	}
-	hotkey.fsMod = flags;
+	hotkey.key.fsMod = flags;
 	SendMessage(box, HKM_SETHOTKEY, hotkey.word, 0);
 }
 
@@ -168,8 +168,9 @@ INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				EnableDlgItem(hDlg, (HOTKEY_BTN_BEGIN+idx), 1);
 				SendPSChanged(hDlg);
 			} else if(id >= HOTKEY_BTN_BEGIN && id <= HOTKEY_BTN_END) {
+				HWND control;
 				idx = (id - HOTKEY_BTN_BEGIN);
-				HWND control = GetDlgItem(hDlg, (HOTKEY_BEGIN+idx));
+				control = GetDlgItem(hDlg, (HOTKEY_BEGIN+idx));
 				EnableWindow((HWND)lParam, 0);
 				HotkeyBox_SetValue(control, GetHotkey(idx));
 				SetFocus(control);
@@ -189,8 +190,8 @@ void RegisterHotkeys(HWND hwnd, int want_register) {
 			UnregisterHotKey(hwnd, (HOTKEY_BEGIN+i));
 		if(want_register) {
 			hotkey_t hk = GetHotkey(i);
-			if(hk.vk)
-				RegisterHotKey(hwnd, (HOTKEY_BEGIN+i), hk.fsMod, hk.vk);
+			if(hk.key.vk)
+				RegisterHotKey(hwnd, (HOTKEY_BEGIN+i), hk.key.fsMod, hk.key.vk);
 		}
 	}
 }
