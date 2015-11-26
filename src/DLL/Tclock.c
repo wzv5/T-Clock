@@ -18,7 +18,7 @@ void InitClock(HWND hwnd);
 void EndClock(HWND hwnd);
 int DestroyClock();
 int UpdateClock(HWND hwnd, HFONT fnt);
-int UpdateClockSize(HWND hwnd);
+int UpdateClockSize();
 LRESULT OnCalcRect(HWND hwnd);
 void InitDaylightTimeTransition(void);
 void OnCopy(HWND hwnd, LPARAM lParam);
@@ -516,7 +516,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	SendMessage(hwnd, CLOCKM_REFRESHCLOCK, 0, 0); // reads settings and creates clock
 	SendMessage(hwnd, CLOCKM_REFRESHTASKBAR, 0, 0);
 	if(!m_color_start) // fixes display issue when clock has same size as T-Clock (Win7 + default settings)
-		UpdateClockSize(hwnd);
+		UpdateClockSize();
 }
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 static void SelfDestruct(void* hwnd)
@@ -603,7 +603,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
 		if(m_bNoClock) break;
 		if(!(pwp->flags&SWP_NOSIZE)){
-			UpdateClockSize(hwnd);
+			UpdateClockSize();
 			pwp->cx=m_rcClock.right;
 			pwp->cy=m_rcClock.bottom;
 		}
@@ -614,9 +614,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_THEMECHANGED:
 		if(message == WM_THEMECHANGED) {
 			ReloadXPClockTheme(hwnd);
-			FillClockBG(hwnd);
+			FillClockBG();
 			if(m_TipState) // draws on-top
-				FillClockBGHover(hwnd);
+				FillClockBGHover();
 		}
 		/* fall through */
 	case WM_SYSCOLORCHANGE:
@@ -678,7 +678,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 			tme.hwndTrack = hwnd;
 			tme.dwHoverTime = HOVER_DEFAULT;
 			m_TipState = TrackMouseEvent(&tme);
-			FillClockBGHover(gs_hwndClock);
+			FillClockBGHover();
 			InvalidateRect(gs_hwndClock, NULL, 0);
 		}
 		return 0;
@@ -708,7 +708,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
 			}
 			m_TipState = 0;
-			FillClockBG(gs_hwndClock);
+			FillClockBG();
 			InvalidateRect(gs_hwndClock,NULL,0);
 		}
 		return 0;
@@ -1187,7 +1187,7 @@ int UpdateClock(HWND hwnd, HFONT fnt)
 	SetWindowPos(hwnd, HWND_TOP, 0,0, m_rcClock.right+1, m_rcClock.bottom, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOMOVE|SWP_NOCOPYBITS);
 	return 1;
 }
-int UpdateClockSize(HWND hwnd)
+int UpdateClockSize()
 {
 	static BITMAPINFO bmi={{sizeof(BITMAPINFO),0,0,1,32,BI_RGB},};
 	HBITMAP hbm;
@@ -1207,7 +1207,7 @@ int UpdateClockSize(HWND hwnd)
 	m_colorBG_end=m_colorBG_start+(m_rcClock.right*m_rcClock.bottom);
 	if(!m_oldbmpB) m_oldbmpB=SelectObject(m_hdcClockBG,hbm);
 	else DeleteObject(SelectObject(m_hdcClockBG,hbm));
-	FillClockBG(hwnd);
+	FillClockBG();
 	CalculateClockTextPosition();
 	SubsSendResize();
 	return 1;
