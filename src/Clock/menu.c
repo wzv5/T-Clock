@@ -92,8 +92,9 @@ void ToggleDesk()   //----------------------------------------------------------
 }
 //================================================================================================
 //-----------------------------------------------------+++--> T-Clock Menu Command Message Handler:
-void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------+++-->
+LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //----------------------------------+++-->
 {
+	WORD wID = LOWORD(wParam);
 	switch(wID) {
 	case IDM_REFRESHTCLOCK: //-----+++--> RePaint & Size the T-Clock Display Window
 		RefreshUs();
@@ -250,6 +251,23 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 	case IDM_TIMEWATCHRESET:
 		WatchTimer(1); // Shelter All the Homeless Timers.
 		break;
+	case IDM_SNTP:{
+		WORD action = HIWORD(wParam);
+		switch(action){
+		case 0:
+			NetTimeConfigDialog(0);
+			break;
+		case 1:
+			if(HaveSetTimePermissions()){
+				NetTimeConfigDialog(0);
+				return 1;
+			} else {
+				if(IsWindow(g_hDlgSNTP))
+					SendMessage(g_hDlgSNTP, WM_CLOSE, 1, 0); // close Window but safe changes
+			}
+			return 0;
+		}
+		break;}
 	default:
 		if(wID>=IDM_I_TIMER && wID<IDM_I_TIMER+1000){
 			ToggleTimer(wID-IDM_I_TIMER);
@@ -274,7 +292,7 @@ void OnTClockCommand(HWND hwnd, WORD wID)   //----------------------------------
 			OutputDebugString(buf);}
 		#endif // _DEBUG
 	}
-	return;
+	return 0;
 }
 //====================================================================
 //----------+++--> Enumerate & display setup alarms incl. hourly chime:

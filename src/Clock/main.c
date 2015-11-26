@@ -25,6 +25,7 @@ HWND	g_hwndSheet = NULL;
 HWND	g_hDlgTimer = NULL;
 HWND	g_hDlgStopWatch = NULL;
 HWND	g_hDlgTimerWatch = NULL;
+HWND	g_hDlgSNTP = NULL;
 
 HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 
@@ -362,6 +363,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if(!(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg))
 		&& !(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg))
 		&& !(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg))
+		&& !(g_hDlgSNTP && IsWindow(g_hDlgSNTP) && IsDialogMessage(g_hDlgSNTP,&msg))
 		&& !(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,&msg))){
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
@@ -445,7 +447,13 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
 				p += 3;
 			} else if(strncasecmp(p, "SyncOpt", 7) == 0) {
-				NetTimeConfigDialog(justElevated);
+				if(HaveSetTimePermissions()){
+					if(!SendMessage(hwndMain, WM_COMMAND, MAKEWPARAM(IDM_SNTP,1), 0)){
+						NetTimeConfigDialog(justElevated);
+					}
+				}else{
+					SendMessage(hwndMain, WM_COMMAND, IDM_SNTP, 0);
+				}
 				p += 7;
 			} else if(strncasecmp(p, "Sync", 4) == 0) {
 				p += 4;
@@ -474,19 +482,39 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 	}
 	
 	if(g_hwndTClockMain != hwndMain){
-		int timeout = 100; /**< timeout in 1/10th seconds to allow sounds up to 10 seconds before terminating */
+		const DWORD kTimeout = 10000;
+		const DWORD kStartTicks = GetTickCount();
+		DWORD timeout;
 		MSG msg;
 		msg.message = 0;
-		while(IsPlaying() && --timeout){
-			while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
-				if(msg.message==WM_QUIT)
-					break;
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-			if(msg.message==WM_QUIT)
+		for(;;){
+			int have_ui = IsWindow(g_hwndSheet) || IsWindow(g_hDlgTimer) || IsWindow(g_hDlgTimerWatch) || IsWindow(g_hDlgSNTP) || IsWindow(g_hDlgStopWatch);
+			if(have_ui)
+				timeout = INFINITE;
+			else if(IsPlaying())
+				timeout = 200;
+			else
 				break;
-			Sleep(100);
+			MsgWaitForMultipleObjectsEx(0, NULL, timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+			while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
+				if(msg.message == WM_QUIT)
+					break;
+				if(!(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg))
+				&& !(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg))
+				&& !(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg))
+				&& !(g_hDlgSNTP && IsWindow(g_hDlgSNTP) && IsDialogMessage(g_hDlgSNTP,&msg))
+				&& !(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,&msg))){
+					TranslateMessage(&msg);
+					DispatchMessage(&msg);
+				}
+			}
+			if(msg.message == WM_QUIT)
+				break;
+			if(!have_ui) {
+				DWORD elapsed = GetTickCount() - kStartTicks;
+				if(elapsed >= kTimeout)
+					break;
+			}
 		}
 		DestroyWindow(g_hwndTClockMain);
 		g_hwndTClockMain = NULL;
@@ -626,8 +654,7 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 		
 	// context menu
 	case WM_COMMAND:
-		OnTClockCommand(hwnd, LOWORD(wParam)); // menu.c
-		return 0;
+		return OnTClockCommand(hwnd, wParam); // menu.c
 		
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:

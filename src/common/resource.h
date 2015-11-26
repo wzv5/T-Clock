@@ -77,6 +77,7 @@
 #define IDM_TIMEWATCH                   287
 #define IDM_TIMEWATCHRESET              288
 #define IDM_EXIT                        289
+#define IDM_SNTP                        290
 // stopwatch
 #define IDM_STOPWATCH_START             321
 #define IDM_STOPWATCH_STOP              322

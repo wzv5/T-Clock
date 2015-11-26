@@ -25,7 +25,6 @@ extern WNDPROC OldEditClassProc;
 LRESULT APIENTRY SubClassEditProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static const char m_subkey[] = "SNTP";
-static HWND m_dlg = NULL;
 static char m_flags;
 static DWORD m_dwTickCountOnSend = 0;
 
@@ -70,13 +69,13 @@ void Log(const char* msg)   //--------------------------------------------------
 		_lclose(hf);
 	}
 	
-	if(m_dlg) { // IF Configure NTP Server is Open, Display Results in Sync History.
+	if(g_hDlgSNTP) { // IF Configure NTP Server is Open, Display Results in Sync History.
 		LVITEM lvItem; //-----+++--> Even if Activity is Not Saved to the Log File.
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
 		lvItem.iItem = 0; //-----+++--> Which Puts the Most Recent Info on Top.
 		lvItem.pszText = logmsg;
-		ListView_InsertItem(GetDlgItem(m_dlg,IDC_LIST), &lvItem);
+		ListView_InsertItem(GetDlgItem(g_hDlgSNTP,IDC_LIST), &lvItem);
 	}
 	
 	if(m_flags&SNTPF_MESSAGE) {
@@ -308,7 +307,7 @@ void SyncTimeNow()
 	SOCKET sock;
 	int retval;
 	
-	if(!m_dlg) {
+	if(!g_hDlgSNTP) {
 		m_flags = 0;
 		if(api.GetIntEx(m_subkey, "SaveLog", 0))
 			m_flags |= SNTPF_LOG;
@@ -319,7 +318,8 @@ void SyncTimeNow()
 	if(!server[0]) {
 		wsprintf(szErr, "No SNTP Server Specified!");
 		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
-		if(!m_dlg) NetTimeConfigDialog(0);
+		if(!g_hDlgSNTP)
+			NetTimeConfigDialog(0);
 		return;
 	}
 	
@@ -355,7 +355,7 @@ and add your username to "Change the system time"). I don't know of any specific
 //--------------------------------//---------------------+++--> Open the SNTP Configuration Dialog:
 void NetTimeConfigDialog(int justElevated)   //---------------------------------------------------------+++-->
 {
-	DialogBoxParam(NULL, MAKEINTRESOURCE(IDD_SNTPCONFIG), g_hwndTClockMain, DlgProcSNTPConfig, (LPARAM)justElevated);
+	CreateDialogParamOnce(&g_hDlgSNTP, 0, MAKEINTRESOURCE(IDD_SNTPCONFIG), NULL, DlgProcSNTPConfig, (LPARAM)justElevated);
 }
 //================================================================================================
 //--------------------------//--+++--> Save Network Time Server Configuration Settings to Registry:
@@ -419,24 +419,26 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 {
 	switch(msg)  {
 	case WM_INITDIALOG:
-		m_dlg = hDlg;
 		OnInit(hDlg);
 		if(lParam) // justElevated
 			PostMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDCB_SYNCNOW,BN_CLICKED), (LPARAM)GetDlgItem(hDlg,IDCB_SYNCNOW));
 		return TRUE;
 	case WM_DESTROY:
-		m_dlg = NULL;
+		g_hDlgSNTP = NULL;
+		break;
+	case WM_CLOSE:
+		if(!lParam && wParam == 1)
+			OkaySave(hDlg);
 		break;
 		
 	case WM_COMMAND:
 		switch(LOWORD(wParam))  {
 		case IDCB_SYNCNOW:{
-			OkaySave(hDlg);
 			if(m_flags&SNTPF_UAC){
-				if(api.ExecElevated(GetClockExe(),"/UAC /SyncOpt",hDlg) == 0)
-					EndDialog(hDlg, 2);
+				api.ExecElevated(GetClockExe(),"/UAC /SyncOpt",hDlg);
 				return TRUE;
 			}
+			OkaySave(hDlg);
 			SyncTimeNow();
 			return TRUE;}
 			
@@ -480,7 +482,7 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 				free(tchk);   // Free, and...? (Crash Unless You Include the Next Line)
 				tchk = NULL; //<--+++--> Thank You Don Beusee for reminding me to do this.
 			}
-			EndDialog(hDlg, 1);
+			DestroyWindow(hDlg);
 			return TRUE;
 		}
 	}

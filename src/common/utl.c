@@ -380,11 +380,14 @@ void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcS
 	}
 }// */
 
-HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance,const char* lpTemplateName,HWND hWndParent,DLGPROC lpDialogFunc,LPARAM dwInitParam) {
+HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const char* lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
+	const HWND pending = (HWND)(intptr_t)1;
 	HWND hwnd_ = *hwnd;
-	if(!hwnd_ || (hwnd_ != (HWND)(intptr_t)1 && !IsWindow(hwnd_))){
-		*hwnd = (HWND)(intptr_t)1;
+	if(!hwnd_ || (hwnd_ != pending && !IsWindow(hwnd_))){
+		*hwnd = pending;
 		*hwnd = CreateDialogParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+	} else if(hwnd_ != pending) {
+		SetActiveWindow(hwnd_);
 	}
 	return *hwnd;
 }

@@ -48,6 +48,7 @@ extern HWND g_hwndClock;      /**< the clock hwnd */
 extern HWND g_hDlgTimer;      /**< timer dialog handle */
 extern HWND g_hDlgStopWatch;  /**< stopwatch dialog handle */
 extern HWND g_hDlgTimerWatch; /**< timer watch dialog handle */
+extern HWND g_hDlgSNTP;       /**< SNTP options dialog handle */
 extern HWND g_hwndSheet;      /**< property sheet window */
 /** frequently used icon handles */
 extern HICON g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
@@ -196,7 +197,7 @@ BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname);
 void InitFormat();
 
 // menu.c
-void OnTClockCommand(HWND hwnd, WORD wID);
+LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam);
 void OnContextMenu(HWND hwnd, int xPos, int yPos);
 
 // mouse.c
