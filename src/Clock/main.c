@@ -452,13 +452,7 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 				p += 7;
 			} else if(strncasecmp(p, "Sync", 4) == 0) {
 				p += 4;
-				if(HaveSetTimePermissions()){
-					SyncTimeNow();
-				} else if(!justElevated){
-					if(api.ExecElevated(GetClockExe(),"/UAC /Sync",NULL) != 0){
-						MessageBox(0,"T-Clock must be elevated to set your system time,\nbut elevation was cancled", "Time Sync Failed", MB_OK|MB_ICONERROR);
-					}
-				}
+				SendMessage(hwndMain, WM_COMMAND, MAKEWPARAM(IDM_SNTP_SYNC,justElevated), 0);
 				if(g_hwndTClockMain == hwndMain)
 					SendMessage(hwndMain, MAINM_EXIT, 0, 0);
 			} else if(strncmp(p, "Wc", 2) == 0) { // Win10 calendar "restore"

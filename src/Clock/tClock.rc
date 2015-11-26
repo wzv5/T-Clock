@@ -71,6 +71,8 @@ BEGIN
             MENUITEM "Command Prompt",              IDM_QUICKY_DOS,0,0
             MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "T-Clock Calendar",            IDM_SHOWCALENDER,0,0
+            MENUITEM "Time Sync (SNTP) options",    IDM_SNTP,0,0
+            MENUITEM "Synchronize time",            IDM_SNTP_SYNC,0,0
             MENUITEM "",0,MFT_SEPARATOR,0
             MENUITEM "Empty Recycle Bin",           IDM_QUICKY_EMPTYRB,0,0
         END

@@ -43,6 +43,8 @@ static const action_t m_mouseAction[]={
 	{IDM_RECYCLEBIN_PURGE,"Empty Recycle Bin"},
 	{IDM_STOPWATCH,"Stopwatch"},
 	{IDM_PROP_ALARM,"Alarms"},
+	{IDM_SNTP,"Time Sync (SNTP) options"},
+	{IDM_SNTP_SYNC,"Synchronize time"},
 	{IDM_FWD_DATETIME,"Adjust date/time"},
 	{IDM_DATETIME_EX,"Adjust date/time ex"},
 	{IDM_FWD_STACKED,"Show windows stacked"},

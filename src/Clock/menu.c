@@ -268,6 +268,16 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 			return 0;
 		}
 		break;}
+	case IDM_SNTP_SYNC:{
+		WORD justElevated = HIWORD(wParam);
+		if(HaveSetTimePermissions()){
+			SyncTimeNow();
+		} else if(!justElevated){
+			if(api.ExecElevated(GetClockExe(),"/UAC /Sync",NULL) != 0){
+				MessageBox(0,"T-Clock must be elevated to set your system time,\nbut elevation was cancled", "Time Sync Failed", MB_OK|MB_ICONERROR);
+			}
+		}
+		break;}
 	default:
 		if(wID>=IDM_I_TIMER && wID<IDM_I_TIMER+1000){
 			ToggleTimer(wID-IDM_I_TIMER);
