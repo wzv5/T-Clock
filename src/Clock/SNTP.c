@@ -499,6 +499,12 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		ComboBox_AddString(hServer,"oceania.pool.ntp.org");
 		ComboBox_AddString(hServer,"south-america.pool.ntp.org");
 		ComboBox_AddString(hServer,"africa.pool.ntp.org");
+		ComboBox_AddString(hServer,"time1.google.com");
+		ComboBox_AddString(hServer,"time2.google.com");
+		ComboBox_AddString(hServer,"time3.google.com");
+		ComboBox_AddString(hServer,"time4.google.com");
+		ComboBox_AddString(hServer,"time.nist.gov");
+		ComboBox_AddString(hServer,"time.windows.com");
 	}
 	if(!str[0])
 		strcpy(str,"pool.ntp.org");
