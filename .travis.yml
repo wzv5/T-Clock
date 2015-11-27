@@ -9,9 +9,9 @@ env:
   global:
   - AUVER_IF_NOT=${TRAVIS_TAG:-${APPVEYOR_REPO_TAG_NAME}}
   - TRAVIS_COMMIT_MSG="${TRAVIS_COMMIT_MSG:-$(git log --format=%B --no-merges -n1)}"
-  - CCACHE=ccache
+  #- CCACHE=ccache
   # Coverity hack to disable Coverity by default unless [ci coverity] was specified in commit message
-  - TRAVIS_PULL_REQUEST="$((echo $TRAVIS_PULL_REQUEST | grep -q 'false' && echo $TRAVIS_COMMIT_MSG | grep -qE '\[ci cov(erity)?\]') && echo -n false || echo -n true)"
+  - TRAVIS_PULL_REQUEST="$((echo $TRAVIS_PULL_REQUEST | grep -q 'false' && echo $TRAVIS_COMMIT_MSG | grep -qE '\[ci (scan|cov(erity)?)\]') && echo -n false || echo -n true)"
   - secure: "DEXcC9CT8pneavqbNgiAtq1v59E3KZn2AlLYdfhzRa6W2k5lr7yyf+21rCczK1YvMt9hjGkKMMTthU/huHF774t/LK0IEtXAh+HjdiQpRQhiYl7jGT4SD5fSfkMlIwGUtLJixp8I5ny8W/OOCiOf1ARpHyPd1K55WuUyaIwCl6k="
   # certificate for tag releases
   - secure: nEd22lqGEnA0FSLfsoS/NwTWTqYcAPUMjM5QyJDkxWm1jXb3AScfQKhoLV+Mb1TbZIOpCQNHFUx2mVMCHQyRtx3MlkDiNyFwt9D5VWiF8tNWUS4hX0XHI6NnW5UYqqGtuXZNwNvWBIJqDhOJH6fkUfD+fjG3ANKSQX1K+Of3PZY=
@@ -38,7 +38,7 @@ addons:
     - autoconf
     - libcurl4-openssl-dev
     # testing
-    - wine
+    #- wine
   coverity_scan:
     project:
       name: White-Tiger/T-Clock
@@ -46,9 +46,10 @@ addons:
     notification_email:
       secure: Guqbi+ipUVfFpkJZsyrzMqmVqFA6dJKnhGau/FB/RcvLWRZD6hdArZlECRe9gQHjTg82gPOqwMjOmLlDQjWEXUua93E3dxTAAkiHVyweocKF2W7bAqhVKD6FB1bwcpA7CV/n5InvqfvFnhp/4J3kyb9qRFGPjaWcUiw7z4fFuqk=
     build_command_prepend: |
+      which ccache
+      which i686-w64-mingw32-gcc
       cov-configure --compiler=i686-w64-mingw32-gcc --comptype=gcc --template
       cov-configure --compiler=x86_64-w64-mingw32-gcc --comptype=gcc --template
-      cov-configure --compiler=ccache --comptype=prefix
       ccache --clear
       cd src/~ide && ./makex clean
     build_command: ./makex
@@ -68,6 +69,7 @@ deploy:
   on:
     tags: true
 
-script:
+before_script:
 - pushd src/~ide
+script:
 - ./makex
