@@ -1,10 +1,9 @@
-57|369
+57|384
 2.1.0|2.4.0
 |(first release)
-|! fixed major bug in static builds
-! fixed issue #10 (Win10 calendar not closing on 2nd click)
-! fixed "copy to clipboard" mouse action UI (didn't save changes)
-+ added new mouse-click-actions: empty/open recycle bin, execute command
-+ multi-monitor support extended for standard tooltip
-* UI: colorbox and mouse click action adjustments
-- removed hooking delay (lets see how it goes)
+|another release-candidate / beta is out
+! fixed issue #14 (Calender opens at the lower-CENTER of the screen)
+! fixed "TIME" format not properly refreshing once a second
+* added SNTP options to menu and mouse actions
+* slightly improved hotkey UI by using Windows' common controls
+* some minor Coverity fixes
