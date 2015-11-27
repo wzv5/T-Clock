@@ -569,10 +569,10 @@ bool ReadHeader(const char* filepath,Version &ver)
 					ver.timestamp = atoi(value);
 				}
 			}
+			/* fall through */
 		default:
 			goto nextline;
 		}
-		continue;
 		nextline:
 		for(; *c && *c!='\n'; ++c);
 		for(; *c=='\r'||*c=='\n'||*c==' '||*c=='\t'; ++c);

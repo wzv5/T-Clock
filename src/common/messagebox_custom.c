@@ -177,9 +177,14 @@ static LRESULT CALLBACK MessageBoxCustom_Proc(HWND hwnd, UINT uMsg, WPARAM wPara
 static HHOOK hook_ = NULL;
 static LRESULT CALLBACK MessageBoxCustom_Hook(int nCode, WPARAM wParam, LPARAM lParam) {
 	if(nCode == HCBT_CREATEWND) {
+		MsgData* data;
 		UnhookWindowsHookEx(hook_);
 		hook_ = NULL;
-		SetWindowSubclass((HWND)wParam, MessageBoxCustom_Proc, 0, (DWORD_PTR)calloc(1, sizeof(MsgData)));
+		data = (MsgData*)calloc(1, sizeof(MsgData));
+		if(!data || !SetWindowSubclass((HWND)wParam, MessageBoxCustom_Proc, 0, (DWORD_PTR)data)) {
+			free(data);
+			PostMessage((HWND)wParam, WM_CLOSE, 0, 0);
+		}
 	}
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
