@@ -508,22 +508,27 @@ bool ReadHeader(const char* filepath,Version &ver)
 	size_t def_found, def_num=7;const char def[]="define ";
 	size_t attrib_len = 0; char attrib[32];
 	size_t value_len = 0; char value[64];
-	for(char* c=buf; *c; ++c) {
-		nextloop:
-		if(attrib_len>=31) {attrib_len=0; *attrib='\0'; goto nextline;}
-		switch(*c) {
-		case '#':
+	char* c = buf;
+	while(*c) {
+		if(attrib_len >= 31) {
+			attrib_len = 0; attrib[0] = '\0';
+			goto nextline;
+		}
+		if(*c == '#') {
 			for(++c; *c==' '||*c=='\t'; ++c);
 			for(def_found=0; *c&&*c==def[def_found]; c++,def_found++);
-			if(def_found != def_num) goto nextline;
-			attrib_len=0; *attrib='\0';
+			if(def_found != def_num)
+				goto nextline;
+			attrib_len = 0; attrib[0] = '\0';
 			for(; *c && *c!=' ' && *c!='\n'; attrib[attrib_len++]=*c++);
-			if(*c == '\n') goto nextline;
+			if(*c == '\n')
+				goto nextline;
 			attrib[attrib_len] = '\0';
 			for(++c; *c==' '||*c=='\t'; ++c);
 			value_len = 0; *value = '\0';
 			for(; *c && *c!='\n'; ++c) {
-				if(value_len>=63) break;
+				if(value_len >= 63)
+					break;
 				value[value_len++] = *c;
 			}
 			if(*c == '\n') {
@@ -569,15 +574,10 @@ bool ReadHeader(const char* filepath,Version &ver)
 					ver.timestamp = atoi(value);
 				}
 			}
-			/* fall through */
-		default:
-			goto nextline;
 		}
 		nextline:
 		for(; *c && *c!='\n'; ++c);
 		for(; *c=='\r'||*c=='\n'||*c==' '||*c=='\t'; ++c);
-		if(!*c) break;
-		goto nextloop;
 	}
 	ver.flags_=0;
 	if(cmajor!=ver.major || cminor!=ver.minor || cbuild!=ver.build || cstatus!=ver.status) {
