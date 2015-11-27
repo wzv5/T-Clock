@@ -51,7 +51,7 @@ addons:
       cov-configure --compiler=i686-w64-mingw32-gcc --comptype=gcc --template
       cov-configure --compiler=x86_64-w64-mingw32-gcc --comptype=gcc --template
       ccache --clear
-      cd src/~ide && ./makex clean
+      ./makex clean
     build_command: ./makex
     branch_pattern: ".*"
 
@@ -69,7 +69,7 @@ deploy:
   on:
     tags: true
 
-before_script:
+before_script: # also before Coverity
 - pushd src/~ide
 script:
 - ./makex
