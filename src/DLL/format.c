@@ -526,6 +526,10 @@ DWORD FindFormat(const char* fmt)
 			fmt++;
 			ret |= FORMAT_SECOND;
 		}
+		else if(*fmt == 'T' && strncmp(fmt, "TIME", 4) == 0) {
+			fmt += 4;
+			ret |= FORMAT_SECOND;
+		}
 		
 		else if(*fmt == '@' && fmt[1] == '@' && fmt[2] == '@') {
 			fmt += 3;
