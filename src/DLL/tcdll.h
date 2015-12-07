@@ -28,15 +28,15 @@ void FillClockBG();
 void FillClockBGHover();
 
 // font.c
-HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic, int angle, BYTE guality);
+HFONT CreateMyFont(const wchar_t* fontname, int fontsize, LONG weight, LONG italic, int angle, BYTE guality);
 
 //#pragma once
 //extern char szTZone[]; //---+++--> TimeZone String Buffer, Also Used (as External) in Format.c
 
 // FORMAT.C
-void InitFormat(const char* section, SYSTEMTIME* lt);
+void InitFormat(const wchar_t* section, SYSTEMTIME* lt);
 #define FORMAT_MAX_SIZE 1024
-unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, int beat100);
+unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME* pt, int beat100);
 #define FORMAT_SECOND    0x0001
 #define FORMAT_SYSINFO   0x0002
 #define FORMAT_BEAT1     0x0004
@@ -46,6 +46,6 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 #define FORMAT_MOTHERBRD 0x0040
 #define FORMAT_PERMON    0x0080
 #define FORMAT_NET       0x0100
-DWORD FindFormat(const char* fmt);
+DWORD FindFormat(const wchar_t* fmt);
 
 #endif // INC_TCDLL_H

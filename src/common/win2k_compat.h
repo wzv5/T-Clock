@@ -12,7 +12,9 @@ errno_t win2k_wcsncpy_s(wchar_t* strDest, size_t numberOfElements, const wchar_t
 #define strncpy_s win2k_strncpy_s
 #define wcsncpy_s win2k_wcsncpy_s
 char* win2k_strtok_s(char* strToken, const char* strDelimit, char** context);
+wchar_t* win2k_wcstok_s(wchar_t* strToken, const wchar_t* strDelimit, wchar_t** context);
 #define strtok_s win2k_strtok_s
+#define wcstok_s win2k_wcstok_s
 
 #include <windows.h>
 #include <commctrl.h>

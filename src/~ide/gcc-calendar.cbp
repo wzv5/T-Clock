@@ -43,6 +43,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-D_UNICODE -DUNICODE" />
 			<Add option="-fno-ident" />
 			<Add option="-Wall" />
 			<Add option="-std=c99" />

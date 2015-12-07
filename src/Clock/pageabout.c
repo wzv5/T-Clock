@@ -39,7 +39,7 @@ INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		id = LOWORD(wParam);
 		code = HIWORD(wParam);
 		if(id == IDC_UPDATE) {
-			api.ShellExecute(NULL, "misc\\Options", "-u", hDlg, SW_HIDE); // SW_MINIMIZE is buggy
+			api.ShellExecute(NULL, L"misc\\Options", L"-u", hDlg, SW_HIDE); // SW_MINIMIZE is buggy
 		}else if(id == IDC_ABT_MAILuri) {
 			OnLinkClicked(hDlg, id);
 		}else if((id==IDC_STARTUP) && ((code==BST_CHECKED) || (code==BST_UNCHECKED))) {
@@ -57,7 +57,7 @@ INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 //--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
-	char path[MAX_PATH];
+	wchar_t path[MAX_PATH];
 	int controlid;
 	LOGFONT logft;
 	HFONT hftBold;
@@ -80,7 +80,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	LinkControl_Setup(GetDlgItem(hDlg,IDC_ABT_WEBuri), LCF_SIMPLE, NULL);
 	LinkControl_Setup(GetDlgItem(hDlg,IDC_ABT_MAILuri), LCF_NOTIFYONLY, NULL);
 	
-	CheckDlgButton(hDlg,IDC_STARTUP,GetStartupFile(hDlg,path));
+	CheckDlgButton(hDlg, IDC_STARTUP, GetStartupFile(hDlg,path));
 }
 /*--------------------------------------------------
   "Apply" button ----------------- IS NOT USED HERE!
@@ -97,9 +97,9 @@ void OnApply(HWND hDlg)
 --------------------------------------------------*/
 void OnLinkClicked(HWND hDlg, UINT id)
 {
-	char str[128];
-	strcpy(str, "mailto:");
+	wchar_t str[128];
+	wcscpy(str, L"mailto:");
 	GetDlgItemText(hDlg, id, str+7, 64);
-	strcat(str, "?subject=About "); strcat(str, ABT_TITLE);
+	wcscat(str, L"?subject=About "); wcscat(str, ABT_TITLE);
 	api.Exec(str, NULL, hDlg);
 }

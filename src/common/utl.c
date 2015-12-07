@@ -78,10 +78,10 @@ HWND FindClock()   //---------------------------------------------------------++
 	// find the clock window
 	HWND hwndChild;
 	for(hwndChild=GetWindow(hwndBar,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
-		GetClassNameA(hwndChild,classname,sizeof(classname));
+		GetClassNameA(hwndChild, classname, _countof(classname));
 		if(!strcmp(classname,"TrayNotifyWnd")) {
 			for(hwndChild=GetWindow(hwndChild,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
-				GetClassNameA(hwndChild,classname,sizeof(classname));
+				GetClassNameA(hwndChild, classname, _countof(classname));
 				if(!strcmp(classname,"TrayClockWClass"))
 					return hwndChild;
 			}
@@ -112,6 +112,17 @@ int atox(const char* p)
 	}
 	return r;
 }
+int wtox(const wchar_t* p)
+{
+	int r = 0;
+	for(; *p; ++p) {
+		if('0' <= *p && *p <= '9') r=(r<<4) + *p-'0';
+		else if('A' <= *p && *p <= 'F') r=(r<<4) + *p-('A'-10);
+		else if('a' <= *p && *p <= 'f') r=(r<<4) + *p-('a'-10);
+		else break;
+	}
+	return r;
+}
 
 int _24hTo12h(int hour){
 	hour %= 24;
@@ -129,74 +140,74 @@ int _12hTo24h(int hour, int pm){
 	return hour;
 }
 
-void add_title(char* path, const char* title)
+void add_title(wchar_t* path, const wchar_t* title)
 {
-	char* p=path;
+	wchar_t* p = path;
 	if(*path && (!*title || title[1]!=':')){ // not absolute device path
-		if(*title == '\\') { // absolute path
-			if(*p && p[1]==':') p+=2;
+		if(title[0]=='\\' || title[0]=='/') { // absolute path
+			if(p[0] && p[1]==':') p += 2;
 		}else{ // relative path
-			for(; *p; p=CharNextA(p)) {
-				if((*p=='\\' || *p=='/') && !p[1]) {
+			for(; p[0]; ++p) {
+				if((p[0]=='\\' || p[0]=='/') && !p[1]) {
 					break;
 				}
 			}
-			*p++='\\';
+			*p++ = '\\';
 		}
 	}
-	while(*title) *p++=*title++;
-	*p='\0';
+	while(*title) *p++ = *title++;
+	*p = '\0';
 }
 
-void del_title(char* path)
+void del_title(wchar_t* path)
 {
-	char* p,* ep;
+	wchar_t* p,* ep;
 	
-	for(p=ep=path; *p; p=CharNextA(p)) {
-		if(*p=='\\' || *p=='/') {
-			if(p>path && p[-1]==':') ep=p+1;
-			else ep=p;
+	for(p=ep=path; p[0]; ++p) {
+		if(p[0]=='\\' || p[0]=='/') {
+			if(p>path && p[-1]==':') ep = p+1;
+			else ep = p;
 		}
 	}
-	*ep='\0';
+	*ep = '\0';
 }
 
-void get_title(char* dst, const char* path)
+void get_title(wchar_t* dst, const wchar_t* path)
 {
-	const char* p,* ep;
+	const wchar_t* p,* ep;
 	
-	for(p=ep=path; *p; p=CharNextA(p)) {
-		if(*p=='\\' || *p=='/') {
-			if(!*CharNextA(p)) break;
-			if(p>path && p[-1]==':') ep=p+1;
-			else ep=p;
+	for(p=ep=path; p[0]; ++p) {
+		if(p[0]=='\\' || p[0]=='/') {
+			if(!*++p) break;
+			if(p>path && p[-1]==':') ep = p+1;
+			else ep = p;
 		}
 	}
 	
-	if(*ep == '\\' || *ep == '/') ++ep;
+	if(ep[0]=='\\' || ep[0]=='/') ++ep;
 	
-	while(*ep) *dst++=*ep++;
+	while(*ep) *dst++ = *ep++;
 	if(dst[-1]=='\\' || dst[-1]=='/')
 		--dst;
-	*dst='\0';
+	*dst = '\0';
 }
 
-int ext_cmp(const char* fname, const char* ext)
+int ext_cmp(const wchar_t* fname, const wchar_t* ext)
 {
-	const char* p, *sp;
+	const wchar_t* p, *sp;
 	
-	sp=NULL;
-	for(p=fname; *p; p=CharNextA(p)) {
-		if(*p=='.') sp=p;
-		else if(*p=='\\' || *p=='/') sp=NULL;
+	sp = NULL;
+	for(p=fname; p[0]; ++p) {
+		if(p[0]=='.') sp = p;
+		else if(p[0]=='\\' || p[0]=='/') sp = NULL;
 	}
 	
-	if(!sp) sp=p;
-	if(*sp=='.') ++sp;
+	if(!sp) sp = p;
+	if(sp[0]=='.') ++sp;
 	
-	for(;*sp||*ext; ++sp,++ext) {
-		if(toupper(*sp)!=toupper(*ext))
-			return (toupper(*sp)-toupper(*ext));
+	for(; sp[0]||ext[0]; ++sp,++ext) {
+		if(toupper(sp[0])!=toupper(ext[0]))
+			return (toupper(sp[0]) - toupper(ext[0]));
 	}
 	return 0;
 }
@@ -253,25 +264,25 @@ void parsechar(char* dst, char* src, char ch, int n)
 	}
 }// */
 
-void str0cat(char* list, const char* str)
+void str0cat(wchar_t* list, const wchar_t* str)
 {
 	if(list[0]||list[1]){ // find last string pair
 		for(; list[0]||list[1]; ++list);
 		++list;
 	}
 	for(; *str; *list++=*str++); // append new string
-	list[0]=list[1]='\0'; // end string & pair
+	list[0] = list[1] = '\0'; // end string & pair
 }
 
 /*---------------------------------------------
 --------------------- returns a resource string
 ---------------------------------------------*/
-char* MyString(UINT id)
+wchar_t* MyString(UINT id)
 {
-	static char buf[80];
+	static wchar_t buf[80];
 	
 	*buf = '\0';
-	LoadStringA(GetModuleHandle(NULL), id, buf, 80);
+	LoadString(GetModuleHandle(NULL), id, buf, _countof(buf));
 	return buf;
 }
 /*
@@ -380,12 +391,12 @@ void TileBlt(HDC hdcDest, int xDest, int yDest, int cxDest, int cyDest, HDC hdcS
 	}
 }// */
 
-HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const char* lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
+HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const wchar_t* lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam) {
 	const HWND pending = (HWND)(intptr_t)1;
 	HWND hwnd_ = *hwnd;
 	if(!hwnd_ || (hwnd_ != pending && !IsWindow(hwnd_))){
 		*hwnd = pending;
-		*hwnd = CreateDialogParamA(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
+		*hwnd = CreateDialogParam(hInstance, lpTemplateName, hWndParent, lpDialogFunc, dwInitParam);
 	} else if(hwnd_ != pending) {
 		SetActiveWindow(hwnd_);
 	}

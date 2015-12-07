@@ -19,6 +19,7 @@
 #include <wspiapi.h> // for Windows 2000 mainly
 #include <windows.h>  // Required by the fact it runs on Windows.
 #include <windowsx.h>// usability macros: Edit_*, ComboBox_*, SubclassWindow, etc.
+#include <tchar.h>
 
 #ifndef ComboBox_SetDroppedWidth
 #	define ComboBox_SetDroppedWidth(hwndCtl, width) ((int)(DWORD)SNDMSG((hwndCtl),CB_SETDROPPEDWIDTH,(WPARAM)(int)(width),(LPARAM)0))
@@ -47,9 +48,7 @@
 #	define ltoa _ltoa
 #	define inline __inline
 #	define strcasecmp _stricmp
-#	define wcscasecmp _wcsicmp
 #	define strncasecmp _strnicmp
-#	define wcsncasecmp _wcsnicmp
 #	define localtime_r(tt,tm) (localtime_s((tm),(tt)) ? NULL : (tm))
 #	define gmtime_r(tt,tm) (gmtime_s((tm),(tt)) ? NULL : (tm))
 #	ifndef PRIx64
@@ -57,29 +56,31 @@
 #		define SCNx64 PRIx64
 #	endif
 #endif // __GNUC__
+#define wcscasecmp _wcsicmp
+#define wcsncasecmp _wcsnicmp
 
-#define ARCH_SUFFIX_32 ""
-#define ARCH_SUFFIX_64 "64"
+#define ARCH_SUFFIX_32 L""
+#define ARCH_SUFFIX_64 L"64"
 #ifndef _WIN64
 #	define ARCH_SUFFIX ARCH_SUFFIX_32
-#	define TCLOCK_SUFFIX ""
+#	define TCLOCK_SUFFIX L""
 #else
 #	define ARCH_SUFFIX ARCH_SUFFIX_64
-#	define TCLOCK_SUFFIX " x64"
+#	define TCLOCK_SUFFIX L" x64"
 #endif // _WIN64
 
-#define ABT_TITLE "T-Clock Redux" TCLOCK_SUFFIX " - " VER_SHORT_DOTS " build " STR(VER_REVISION)
-#define ABT_TCLOCK "T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux tries to continue Stoic Joker's efforts."
-#define CONF_START "T-Clock Redux" TCLOCK_SUFFIX
-#define CONF_START_OLD "Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
+#define ABT_TITLE L"T-Clock Redux" TCLOCK_SUFFIX L" - " L(VER_SHORT_DOTS) L" build " L(STR(VER_REVISION))
+#define ABT_TCLOCK L"T-Clock 2010 is Stoic Joker's rewrite of their code which allows it to run on Windows XP and up. While he removed some of T-Clock's previous functionality. He felt this makes it a more \"Administrator Friendly\" application as it no longer required elevated privileges to run.\n\nT-Clock Redux tries to continue Stoic Joker's efforts."
+#define CONF_START L"T-Clock Redux" TCLOCK_SUFFIX
+#define CONF_START_OLD L"Stoic Joker's T-Clock 2010" TCLOCK_SUFFIX
 
-#define TC_TOOLTIP "\"T-Clock\"\\nLDATE"
+#define TC_TOOLTIP L"\"T-Clock\"\\nLDATE"
 
 extern HINSTANCE g_instance;
 #include "clock.h"
 #include "win2k_compat.h"
 
-#define REG_MOUSE "Mouse"
+#define REG_MOUSE L"Mouse"
 enum{ // Drop&File enum / registry settings
 	DF_NONE=0,
 	DF_RECYCLE, // default
@@ -88,9 +89,9 @@ enum{ // Drop&File enum / registry settings
 	DF_MOVE,
 };
 
-#define UPDATE_TIMESTAMP "UpdT" /**< setting name for 64bit timestamp */
-#define UPDATE_RELEASE   "UpdR" /**< setting name for release */
-#define UPDATE_BETA      "UpdB" /**< setting name for beta */
+#define UPDATE_TIMESTAMP L"UpdT" /**< setting name for 64bit timestamp */
+#define UPDATE_RELEASE   L"UpdR" /**< setting name for release */
+#define UPDATE_BETA      L"UpdB" /**< setting name for beta */
 
 // messages to send the main/helper app
 #define MAINMFIRST					MAINM_CLOCKINIT
@@ -130,7 +131,7 @@ enum{ // Drop&File enum / registry settings
 #define CLEARTYPE_NATURAL_QUALITY	6
 
 // own defines to suppress warning C4306 in Windows' API
-#define LPSTR_TEXTCALLBACK_nowarn ((LPSTR)(intptr_t)-1L)
+#define LPSTR_TEXTCALLBACK_nowarn ((LPTSTR)(intptr_t)-1L)
 #define HWND_BROADCAST_nowarn ((HWND)(intptr_t)0xffff)
 #define HWND_TOPMOST_nowarn ((HWND)(intptr_t)-1)
 #define HWND_NOTOPMOST_nowarn ((HWND)(intptr_t)-2)

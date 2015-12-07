@@ -37,6 +37,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-D_UNICODE -DUNICODE" />
 			<Add option="-fno-ident" />
 			<Add option="-Wall" />
 			<Add option="-m32" />
@@ -48,8 +49,6 @@
 			<Add option="-D__MINGW_USE_VC2005_COMPAT" />
 			<Add option="-DWINVER=0x0501" />
 			<Add option="-DPSAPI_VERSION=1" />
-			<Add option="-D_UNICODE" />
-			<Add option="-DUNICODE" />
 			<Add option="-DWIN2K_COMPAT" />
 		</Compiler>
 		<Linker>

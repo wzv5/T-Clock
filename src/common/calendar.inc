@@ -1,13 +1,13 @@
 typedef struct{
-	const char* reg;
+	const wchar_t* reg;
 	char mcsc;
 } CalendarColor;
 
 const CalendarColor g_calendar_color[CALENDAR_COLOR_NUM] = {
-	{"COuterBG", MCSC_BACKGROUND},
-	{"CFore", MCSC_TEXT},
-	{"CBack", MCSC_MONTHBK},
-	{"CTitle", MCSC_TITLETEXT},
-	{"CTitleBG", MCSC_TITLEBK},
-	{"CTrail", MCSC_TRAILINGTEXT},
+	{L"COuterBG", MCSC_BACKGROUND},
+	{L"CFore", MCSC_TEXT},
+	{L"CBack", MCSC_MONTHBK},
+	{L"CTitle", MCSC_TITLETEXT},
+	{L"CTitleBG", MCSC_TITLEBK},
+	{L"CTrail", MCSC_TRAILINGTEXT},
 };

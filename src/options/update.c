@@ -10,7 +10,7 @@
 
 const wchar_t* kUpdateURL = L"http://rawgit.com/White-Tiger/T-Clock/master/src/version";
 //const wchar_t* kUpdateURL = L"http://cdn.rawgit.com/White-Tiger/T-Clock/master/src/version";
-const char* kDownloadURL = "https://github.com/White-Tiger/T-Clock/releases";
+const wchar_t* kDownloadURL = L"https://github.com/White-Tiger/T-Clock/releases";
 #define UPDATE_BUFFER 2048
 #define WM_DOWNLOAD_RESULT WM_USER /**< 0 if successful, otherwise WINHTTP_CALLBACK_STATUS_* or HTTP status code */
 
@@ -165,7 +165,7 @@ void CALLBACK HttpProgress(HINTERNET hInternet, DWORD_PTR userdata, unsigned lon
 }
 
 static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	const char* kValueNextVersion[2] = {UPDATE_RELEASE, UPDATE_BETA};
+	const wchar_t* kValueNextVersion[2] = {UPDATE_RELEASE, UPDATE_BETA};
 	const char* kVersionType[2] = {"Release", "Beta"};
 	UpdateData* data;
 	int child_id;
@@ -331,7 +331,7 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			}
 			if(version_next[0] || version_next[1]) {
 				if(data->type != UPDATE_SILENT) {
-					char* abovebehind;
+					wchar_t* abovebehind;
 					wchar_t* msg,* msg_pos,* msg_end;
 					msg = msg_pos = (wchar_t*)malloc((512*UPDATE_BUFFER) * sizeof(msg[0]));
 					msg_end = msg + UPDATE_BUFFER;
@@ -341,8 +341,8 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 					}
 					ShowWindow(hDlg, SW_HIDE);
 					idx = version[0]-VER_REVISION;
-					abovebehind = (idx<0 ? "above" : "behind");
-					msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"Your version: " L(VER_REVISION_TAG) L"	(%i change(s) %hs stable)\n\n", abs(idx), abovebehind);
+					abovebehind = (idx<0 ? L"above" : L"behind");
+					msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"Your version: " L(VER_REVISION_TAG) L"	(%i change(s) %s stable)\n\n", abs(idx), abovebehind);
 					for(idx=0; idx<2; ++idx) {
 						if(version_next[idx]) {
 							msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"%hs:	v%hs#%u\n", kVersionType[idx], version_str[idx], version[idx]);

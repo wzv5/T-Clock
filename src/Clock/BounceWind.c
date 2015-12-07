@@ -22,7 +22,7 @@ static INT_PTR CALLBACK AlarmMsgProc(HWND, UINT, WPARAM, LPARAM);
 
 static void BounceWindow(HWND hwnd,const RECT* rc);
 static void CenterDoggie(HWND hwnd,const RECT* rc);
-static void ParseSettings(char* data);
+static void ParseSettings(wchar_t* data);
 
 #define ID_DOGGIE 2419
 
@@ -63,8 +63,8 @@ INT_PTR CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				
 				m_iSpeed = GetDlgItemInt(hDlg, IDC_ALRMMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
 				m_iDelta = GetDlgItemInt(hDlg, IDC_ALRMMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
-				GetDlgItemText(hDlg, IDC_ALRMMSG_CAPT, dlg->name, sizeof(dlg->name));
-				GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg->message, sizeof(dlg->message));
+				GetDlgItemText(hDlg, IDC_ALRMMSG_CAPT, dlg->name, _countof(dlg->name));
+				GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg->message, _countof(dlg->message));
 				m_flags=0;
 				if(IsDlgButtonChecked(hDlg,IDC_ALRMMSG_RAND)) m_flags|=BFLAG_RAND;
 				if(IsDlgButtonChecked(hDlg,IDC_ALRMMSG_TOPMOST)) m_flags|=BFLAG_TOPMOST;
@@ -189,8 +189,8 @@ void OnOK(HWND hDlg)   //----------------------------------------------------+++
 	
 	m_iSpeed = GetDlgItemInt(hDlg, IDC_ALRMMSG_SPEED, NULL, TRUE); // SetTimer->Milliseconds
 	m_iDelta = GetDlgItemInt(hDlg, IDC_ALRMMSG_DELTA, NULL, TRUE); // Move X Pixels per Loop
-//	GetDlgItemText(hDlg, IDC_ALRMMSG_CAPT, dlg->name, sizeof(dlg->name));
-	GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg->message, sizeof(dlg->message));
+//	GetDlgItemText(hDlg, IDC_ALRMMSG_CAPT, dlg->name, _countof(dlg->name));
+	GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg->message, _countof(dlg->message));
 	
 	m_flags=0;
 	if(IsDlgButtonChecked(hDlg,IDC_ALRMMSG_RAND)) m_flags|=BFLAG_RAND;
@@ -198,47 +198,47 @@ void OnOK(HWND hDlg)   //----------------------------------------------------+++
 	
 	if(m_iSkew < 1) m_iSkew = 1; // Divide by Zero = Bad...
 	
-	wsprintf(dlg->settings, "%i,%i,%i,%i,%i,%hu", m_iBounce, m_iSkew, m_iPaws, m_iSpeed, m_iDelta, m_flags);
+	wsprintf(dlg->settings, L"%i,%i,%i,%i,%i,%hu", m_iBounce, m_iSkew, m_iPaws, m_iSpeed, m_iDelta, m_flags);
 }
 //--------------------------------------------------------//--------//-------+++-->
 //----------------------------+++--> Parse the Dialoggie Settings Out of the String:
-void ParseSettings(char* data)   //------------------------------------------+++-->
+void ParseSettings(wchar_t* data)   //------------------------------------------+++-->
 {
-	const char seps[] = ",";
-	char* szToken, *nxToken;
+	const wchar_t seps[] = L",";
+	wchar_t* szToken, *nxToken;
 	int i=0;
 	
-	if(!*data)
-		strcpy(data,"0,4,3,90,42,3"); // last one is "flags" BFLAG_RAND|BFLAG_TOPMOST = 3
+	if(!data[0])
+		wcscpy(data, L"0,4,3,90,42,3"); // last one is "flags" BFLAG_RAND|BFLAG_TOPMOST = 3
 		//			 0,1,2, 3, 4,5
 	
-	szToken = strtok_s(data, seps, &nxToken);
+	szToken = wcstok_s(data, seps, &nxToken);
 	while(szToken != NULL) {
 		switch(i++) {
 		case 0:
-			m_iBounce = atoi(szToken);
+			m_iBounce = _wtoi(szToken);
 			break;
 		case 1:
-			m_iSkew = atoi(szToken);
+			m_iSkew = _wtoi(szToken);
 			break;
 		case 2:
-			m_iPaws = atoi(szToken);
+			m_iPaws = _wtoi(szToken);
 			break;
 		case 3:
-			m_iSpeed = atoi(szToken);
+			m_iSpeed = _wtoi(szToken);
 			break;
 		case 4:
-			m_iDelta = atoi(szToken);
+			m_iDelta = _wtoi(szToken);
 			break;
 		case 5: // flags
-			m_flags = (unsigned char)atoi(szToken);
+			m_flags = (unsigned char)_wtoi(szToken);
 			break;
 		}
-		szToken = strtok_s(NULL, seps, &nxToken);
+		szToken = wcstok_s(NULL, seps, &nxToken);
 	}
 }
 
-static char* m_caption=NULL;
+static wchar_t* m_caption = NULL;
 //---------------------------------------------------------------------------+++-->
 //------------------------------------------+++--> Ricochet Doggie Window Procedure:
 VOID CALLBACK DoggieProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)   //
@@ -265,30 +265,30 @@ VOID CALLBACK DoggieProc(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)  
 
 
 typedef struct{
-	char* title;
-	char* msg;
+	wchar_t* title;
+	wchar_t* msg;
 	HWND hwnd;
 } bounce_t;
 static void __cdecl MessageThread(void* param){
-	bounce_t* data=(bounce_t*)param;
+	bounce_t* data = (bounce_t*)param;
 	if(!*data->msg){
 		time_t tt = time(NULL);
 		free(data->msg);
-		data->msg=malloc(128);
+		data->msg = malloc(128 * sizeof data->msg[0]);
 		if(data->msg)
-			strftime(data->msg,128,"Your alarm expired on\n%A %H:%M",localtime(&tt));
+			wcsftime(data->msg, 128, L"Your alarm expired on\n%A %H:%M", localtime(&tt));
 	}
 	api.Message(NULL, data->msg, data->title, MB_OK|(m_flags&BFLAG_TOPMOST?MB_SYSTEMMODAL:0),MB_OK);
 	KillTimer(data->hwnd, ID_DOGGIE);
-	m_caption=NULL;
+	m_caption = NULL;
 	free(data->msg);
 	free(data->title);
 	free(data);
-	PostMessage(g_hwndClock,CLOCKM_BLINKOFF,0,0);
+	PostMessage(g_hwndClock, CLOCKM_BLINKOFF, 0, 0);
 }
 //---------------------------------------------------------------------------+++-->
 //-------------------------------------------+++--> The Alarm Just Let the Dogz Out:
-void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* settings)
+void ReleaseTheHound(HWND hwnd, const wchar_t* title, const wchar_t* text, wchar_t* settings)
 {
 	bounce_t* data;
 	m_iScreenW = GetSystemMetrics(SM_CXSCREEN);
@@ -316,10 +316,10 @@ void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* setti
 	SetTimer(hwnd, ID_DOGGIE, m_iSpeed, DoggieProc);
 	if(m_iSpeed < 10) m_iSpeed = 10; // Required to Ensure Paws.
 	// our notify
-	data=(bounce_t*)malloc(sizeof(bounce_t));
-	data->title=strdup(title);
-	data->msg=strdup(text);
-	data->hwnd=hwnd;
-	m_caption=data->title;
+	data = (bounce_t*)malloc(sizeof(bounce_t));
+	data->title = wcsdup(title);
+	data->msg = wcsdup(text);
+	data->hwnd = hwnd;
+	m_caption = data->title;
 	_beginthread(MessageThread,0,data); // frees data
 }

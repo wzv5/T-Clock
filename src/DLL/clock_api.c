@@ -8,12 +8,11 @@
 #	pragma data_seg(".shared")
 #endif
 // shared variables must be initialized
-SHARED char ms_root[MAX_PATH] = {0}; /**< \sa TClockAPI::root */
-SHARED size_t ms_root_len = 0; /**< \sa TClockAPI::root_len */
+SHARED wchar_t ms_root[MAX_PATH] = {0}; /**< \sa TClockAPI::root */
+SHARED uint16_t ms_root_len = 0; /**< \sa TClockAPI::root_len */
 SHARED REGSAM ms_reg_fullaccess = KEY_ALL_ACCESS | KEY_WOW64_64KEY;
 SHARED REGSAM ms_reg_read = KEY_READ | KEY_WOW64_64KEY;
-SHARED char ms_bIniSetting = 0;
-SHARED char ms_inifile[MAX_PATH] = {0};
+SHARED wchar_t ms_inifile[MAX_PATH] = {0};
 
 SHARED HWND gs_hwndTClockMain = NULL;
 SHARED HWND gs_hwndClock = NULL;
@@ -38,6 +37,7 @@ TClockAPI api = {
 	10, // desktop_button_size
 	ms_root, // root
 	0, // root_len
+	0, // root_size
 	// base
 	ClockAPI(Inject)
 	ClockAPI(InjectFinalize)
@@ -81,14 +81,71 @@ TClockAPI api = {
 //	ClockAPI(TranslateWindow)
 };
 
+static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
+	typedef struct UTF16file {
+		wchar_t bom;
+		wchar_t data[1];
+	} UTF16file;
+	char* in_data;
+	UTF16file* out;
+	FILE* in_fp,* out_fp;
+	size_t out_len, len;
+	wchar_t out_name[MAX_PATH];
+	
+	in_fp = _wfopen(in_name, L"r+b");
+	if(in_fp) {
+		wchar_t bom = fgetwc(in_fp);
+		if(bom != 0xfeff && bom != 0xfffe) {
+			in_data = (char*)malloc(file_size + 1);
+			out = (UTF16file*)malloc((file_size * sizeof(wchar_t) * 2) + sizeof(wchar_t)*2);
+			if(in_data && out) {
+				out->bom = 0xfeff;
+				rewind(in_fp);
+				fread(in_data, 1, file_size, in_fp);
+				if(file_size && !IsTextUnicode(in_data,file_size,NULL)) {
+					in_data[file_size] = '\0';
+					out_len = MultiByteToWideChar(CP_ACP, 0, in_data, file_size, out->data, file_size*2);
+					if(!out_len)
+						Clock_Message(NULL, L"MultiByteToWideChar() failed, INI might be damaged", L"T-Clock", MB_ICONERROR, MB_ICONERROR);
+					out->data[out_len] = '\0';
+				} else { // already Unicode, just assume little endian
+					memcpy(out->data, in_data, file_size);
+					out_len = file_size / sizeof(wchar_t);
+				}
+				len = wcslen(in_name);
+				memcpy(out_name, in_name, (len*sizeof(wchar_t)));
+				if(len < MAX_PATH - 4) {
+					wcscpy(out_name+len, L".tmp");
+				} else {
+					out_name[len-1] = '$';
+				}
+				out_fp = _wfopen(out_name, L"wb");
+				fclose(in_fp);
+				if(out_fp) {
+					++out_len;
+					out_len ^= fwrite(out, sizeof(wchar_t), out_len, out_fp);
+					fclose(out_fp);
+					if(!out_len) {
+						_wunlink(in_name);
+						_wrename(out_name, in_name);
+					}
+				}
+			}
+			free(out);
+			free(in_data);
+			if(!in_data || !out)
+				return 2;
+		}
+	}
+	return 0;
+}
 
 DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
-	const char* kConfigName = "\\T-Clock.ini";
-	char own_path[sizeof(ms_root)];
+	const wchar_t* kConfigName = L"\\T-Clock.ini";
+	wchar_t own_path[_countof(ms_root)];
 	OSVERSIONINFO osvi = {sizeof(OSVERSIONINFO)};
 	HANDLE api_mutex;
-//	typedef DWORD (WINAPI* GetLongPathName_t)(char* lpszShortPath,char* lpszLongPath,DWORD cchBuffer);
-//	GetLongPathName_t pGetLongPathName=(GetLongPathName_t)GetProcAddress(GetModuleHandle("kernel32"),"GetLongPathNameA");
+	struct _stat st;
 	
 	if(version != CLOCK_API)
 		return -1;
@@ -104,21 +161,12 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		return -3;
 	}
 	if(!ms_root_len){ // initialize once. (only use ms_/gs_ variables!!!)
-		GetModuleFileName(api.hInstance, own_path, sizeof(own_path));
-//		if(pGetLongPathName)
-//			pGetLongPathName(own_path,ms_root,MAX_PATH);
-//		else
-//			strncpy_s(ms_root,MAX_PATH,own_path,_TRUNCATE);
-		GetLongPathName(own_path, ms_root, sizeof(ms_root));
+		GetModuleFileName(api.hInstance, own_path, _countof(own_path));
+		GetLongPathName(own_path, ms_root, _countof(ms_root));
 		del_title(ms_root); del_title(ms_root);
-		ms_root_len = strlen(ms_root);
-		DBGOUT("root: %s\n",ms_root);
+		ms_root_len = (uint16_t)wcslen(ms_root);
+		DBGOUT("root: %s\n", ms_root);
 		
-		memcpy(ms_inifile, ms_root, ms_root_len+1);
-		strcat(ms_inifile, kConfigName);
-		if(Clock_PathExists(ms_inifile)){
-			ms_bIniSetting = 1;
-		}
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
 		if(GetVersionEx(&osvi)){
 			switch(osvi.dwMajorVersion){
@@ -154,9 +202,23 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 				gs_tos=TOS_NEWER;
 			}
 		}
-		if(gs_tos < TOS_XP_64) { // Win2000 fix
+		
+		if(gs_tos < TOS_XP_64) { // Win2000/XP 32bit fix
 			ms_reg_fullaccess &= ~KEY_WOW64_64KEY;
 			ms_reg_read &= ~KEY_WOW64_64KEY;
+		}
+		
+		memcpy(ms_inifile, ms_root, (ms_root_len+1)*sizeof(ms_root[0]));
+		wcscat(ms_inifile, kConfigName);
+		if(_wstat(ms_inifile,&st) != -1) {
+			switch(ForceUTF_16(ms_inifile,st.st_size)) {
+			case 0:
+				break;
+			default:
+				return -4;
+			}
+		} else {
+			ms_inifile[0] = '\0';
 		}
 	}
 	ReleaseMutex(api_mutex);
@@ -167,8 +229,9 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 	
 	api.OS = gs_tos;
 	api.root_len = ms_root_len;
+	api.root_size = (ms_root_len+1) * sizeof(ms_root[0]);
 	if(gs_tos >= TOS_VISTA){
-		api.GetTickCount64 = (GetTickCount64_t)GetProcAddress(GetModuleHandle("kernel32"),"GetTickCount64");
+		api.GetTickCount64 = (GetTickCount64_t)GetProcAddress(GetModuleHandle(L"kernel32"), "GetTickCount64");
 		if(!api.GetTickCount64)
 			api.GetTickCount64 = GetTickCount64_Wrapper;
 	}
@@ -192,15 +255,15 @@ void Clock_Inject(HWND hwnd)
 	hwndClock = FindClock();
 	gs_hwndTClockMain = hwnd;
 	if(gs_hwndClock && IsWindow(gs_hwndClock) && gs_hwndClock==hwndClock){
-		PostMessage(gs_hwndTClockMain,MAINM_CLOCKINIT,0,(LPARAM)gs_hwndClock);
+		SendMessage(gs_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)gs_hwndClock);
 		return; // already hooked / old instance
 	}
 	gs_hwndClock = NULL;
 	
 	// find the taskbar
-	hwndBar = FindWindow("Shell_TrayWnd", NULL);
+	hwndBar = FindWindowA("Shell_TrayWnd", NULL);
 	if(!hwndBar) {
-		SendMessage(hwnd, MAINM_ERROR, 0, 1);
+		SendMessage(gs_hwndTClockMain, MAINM_ERROR, 0, 1);
 		return;
 	}
 	
@@ -208,14 +271,14 @@ void Clock_Inject(HWND hwnd)
 	dwThreadId = GetWindowThreadProcessId(hwndBar, NULL);
 	
 	if(!dwThreadId) {
-		SendMessage(hwnd, MAINM_ERROR, 0, 2);
+		SendMessage(gs_hwndTClockMain, MAINM_ERROR, 0, 2);
 		return;
 	}
 	
 	// install an hook to thread of taskbar
 	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, CallWndProc, api.hInstance, dwThreadId);
 	if(!m_hhook) {
-		SendMessage(hwnd, MAINM_ERROR, 0, 3);
+		SendMessage(gs_hwndTClockMain, MAINM_ERROR, 0, 3);
 		return;
 	}
 	
@@ -238,7 +301,7 @@ void Clock_Exit()
 {
 	Clock_InjectFinalize(); // uninstall hook helper if any
 	if(gs_hwndClock && IsWindow(gs_hwndClock)){
-		HWND hwnd = FindWindow("Shell_TrayWnd",NULL);
+		HWND hwnd = FindWindowA("Shell_TrayWnd",NULL);
 		SendMessage(gs_hwndClock,WM_COMMAND,IDM_EXIT,0); // kill our clock
 		PostMessage(gs_hwndClock,WM_TIMER,0,0); // refresh Windows' clock
 		gs_hwndClock = NULL;

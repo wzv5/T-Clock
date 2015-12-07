@@ -49,20 +49,20 @@ INT_PTR CALLBACK AlarmDayProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 //===================================================*
 void OnInit(HWND hDlg, unsigned days)
 {
-	int i, f;
-	char s[80];
-	f = 1;
-	for(i = 0; i < 7; i++) {
+	int day, flag;
+	wchar_t str[80];
+	flag = 1;
+	for(day=0; day<7; ++day) {
 		GetLocaleInfo(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-					  LOCALE_SDAYNAME1+i, s, 80);
-		SetDlgItemText(hDlg, IDC_ALARMDAY1 + i, s);
-		if(days & f)
-			CheckDlgButton(hDlg, IDC_ALARMDAY1 + i, TRUE);
-		f = f << 1;
+					  LOCALE_SDAYNAME1+day, str, _countof(str));
+		SetDlgItemText(hDlg, IDC_ALARMDAY1+day, str);
+		if(days & flag)
+			CheckDlgButton(hDlg, IDC_ALARMDAY1+day, 1);
+		flag <<= 1;
 	}
 	
 	if(days == DAYF_DAILY) {
-		CheckDlgButton(hDlg, IDC_ALARMDAY0, TRUE);
+		CheckDlgButton(hDlg, IDC_ALARMDAY0, 1);
 		OnEveryDay(hDlg);
 	}
 }

@@ -58,9 +58,9 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		psh.dwFlags = PSH_USEHICON | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
 		psh.hInstance = g_instance;
 		psh.hIcon = g_hIconTClock;
-		psh.pszCaption = "T-Clock Redux";
+		psh.pszCaption = L"T-Clock Redux";
 		psh.nPages = PROPERTY_NUM;
-		psh.nStartPage = (page==-1?m_startpage:page);
+		psh.nStartPage = (page==-1 ? m_startpage : page);
 		psh.ppsp = psp;
 		psh.pfnCallback = PropSheetProc;
 		// show it !
@@ -156,20 +156,20 @@ LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 /*------------------------------------------------
    select file
 --------------------------------------------------*/
-BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile)
+BOOL SelectMyFile(HWND hDlg, const wchar_t* filter, DWORD nFilterIndex, const wchar_t* deffile, wchar_t* retfile)
 {
-	char fname[MAX_PATH], ftitle[MAX_PATH], initdir[MAX_PATH];
+	wchar_t fname[MAX_PATH], ftitle[MAX_PATH], initdir[MAX_PATH];
 	OPENFILENAME ofn = {sizeof(OPENFILENAME)};
 	BOOL r;
 	
-	memcpy(initdir, api.root, api.root_len+1);
+	memcpy(initdir, api.root, api.root_size);
 	if(deffile[0]) {
 		WIN32_FIND_DATA fd;
 		HANDLE hfind;
 		hfind = FindFirstFile(deffile, &fd);
 		if(hfind != INVALID_HANDLE_VALUE) {
 			FindClose(hfind);
-			strncpy_s(initdir,sizeof(initdir),deffile,_TRUNCATE);
+			wcsncpy_s(initdir, _countof(initdir), deffile,_TRUNCATE);
 			del_title(initdir);
 		}
 	}
@@ -189,7 +189,7 @@ BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char*
 	r = GetOpenFileName(&ofn);
 	if(!r) return r;
 	
-	strcpy(retfile, ofn.lpstrFile);
+	wcscpy(retfile, ofn.lpstrFile);
 	
 	return r;
 }

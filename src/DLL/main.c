@@ -28,7 +28,7 @@ LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)   //------
 	CWPSTRUCT* pcwps = (CWPSTRUCT*)lParam;
 	if(nCode >= 0 && pcwps && pcwps->hwnd) { // if this message is sent to the clock
 		char classname[80];
-		if(!gs_hwndClock && GetClassName(pcwps->hwnd, classname, 80) && !strcmp(classname, "TrayClockWClass")) {
+		if(!gs_hwndClock && GetClassNameA(pcwps->hwnd, classname, 80) && !strcmp(classname, "TrayClockWClass")) {
 			InitClock(pcwps->hwnd); // initialize  cf. wndproc.c
 			PostMessage(gs_hwndTClockMain,MAINM_CLOCKINIT,0,(LPARAM)pcwps->hwnd);
 		}

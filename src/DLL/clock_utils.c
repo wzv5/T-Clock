@@ -2,18 +2,18 @@
 #include "clock_internal.h"
 #include <sys/stat.h>
 
-static const char m_regkey[] = "Software\\Stoic Joker's\\T-Clock 2010"; /**< our registry key root */
-static const size_t m_regkey_size = sizeof(m_regkey); /**< size of \c m_regkey incl. trailing null \sa m_regkey */
-static const char kInvalidKey[] = "\1\b";
+static const wchar_t m_regkey[] = L"Software\\Stoic Joker's\\T-Clock 2010"; /**< our registry key root */
+static const size_t m_regkey_size = _countof(m_regkey); /**< size of \c m_regkey incl. trailing null \sa m_regkey */
+static const wchar_t kInvalidKey[] = L"\1\b";
 
 // misc
 
 HWND Clock_GetCalendar()
 {
-	HWND hwnd = FindWindowEx(NULL,NULL,"ClockFlyoutWindow",NULL);
+	HWND hwnd = FindWindowExA(NULL,NULL,"ClockFlyoutWindow",NULL);
 	if(hwnd)
 		return hwnd;
-	hwnd = FindWindowEx(NULL, NULL, "Windows.UI.Core.CoreWindow", "Date and Time Information");
+	hwnd = FindWindowExA(NULL, NULL, "Windows.UI.Core.CoreWindow", "Date and Time Information");
 	if(hwnd){ // starts "invisible" full-size and becomes re-sized/moved and "visible" later
 		union{
 			RECT rc;
@@ -27,7 +27,7 @@ HWND Clock_GetCalendar()
 	return gs_hwndCalendar;
 }
 
-int Clock_Message(HWND parent, const char* msg, const char* title, UINT uType, UINT uBeep)
+int Clock_Message(HWND parent, const wchar_t* msg, const wchar_t* title, UINT uType, UINT uBeep)
 {
 	MSGBOXPARAMS mbp = {sizeof(MSGBOXPARAMS)};
 	mbp.hwndOwner = parent;
@@ -77,7 +77,7 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 			moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
 	}else{ // autohide taskbar
 		MONITORINFO taskbarMoni;
-		HWND taskbar=FindWindow("Shell_TrayWnd",NULL);
+		HWND taskbar = FindWindowA("Shell_TrayWnd", NULL);
 		RECT taskbarRC;
 		int tbW,tbH;
 		if(!taskbar)
@@ -111,17 +111,17 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 #ifndef S_ISDIR
 #	define S_ISDIR(mode) (mode&S_IFDIR)
 #endif // S_ISDIR
-char Clock_PathExists(const char* path){
-	struct stat st;
-	if(stat(path,&st)==-1) return 0;
+int Clock_PathExists(const wchar_t* path){
+	struct _stat st;
+	if(_wstat(path, &st)==-1) return 0;
 	return S_ISDIR(st.st_mode)?2:1;
 }
 
-int Clock_GetFileAndOption(const char* command, char* app, char* params) {
+int Clock_GetFileAndOption(const wchar_t* command, wchar_t* app, wchar_t* params) {
 	int invalid_path = 0;
-	const char* offset_params = NULL;
-	const char* offset = command;
-	char* out = app;
+	const wchar_t* offset_params = NULL;
+	const wchar_t* offset = command;
+	wchar_t* out = app;
 	
 	for(;;) {
 		if(*offset <= ' ') { // any non-printable char, incl. null
@@ -130,7 +130,7 @@ int Clock_GetFileAndOption(const char* command, char* app, char* params) {
 				offset_params = offset;
 			}else{
 				if(offset-command <= MAX_PATH-5){
-					memcpy(out, ".exe", 5);
+					wcscpy(out, L".exe");
 					if(Clock_PathExists(app) == 1)
 						offset_params = offset;
 					*out = '\0';
@@ -149,7 +149,7 @@ int Clock_GetFileAndOption(const char* command, char* app, char* params) {
 	}
 	if(!offset_params){ // no valid file found
 		invalid_path = 1;
-		offset_params = strchr(command, ' ');
+		offset_params = wcschr(command, ' ');
 		if(!offset_params) // entire command
 			offset_params = offset;
 	}
@@ -157,7 +157,7 @@ int Clock_GetFileAndOption(const char* command, char* app, char* params) {
 	
 	if(params){
 		for(; *offset_params == ' ';  ++offset_params);
-		strcpy(params, offset_params);
+		wcscpy(params, offset_params);
 	}
 	return invalid_path;
 }
@@ -168,12 +168,12 @@ int Clock_GetFileAndOption(const char* command, char* app, char* params) {
 #	undef RegDeleteKeyEx
 #endif // RegDeleteKeyEx
 #define RegDeleteKeyEx MyRegDeleteKeyEx
-static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,char* lpSubKey,REGSAM samDesired,DWORD Reserved){
-	typedef LONG (WINAPI* RegDeleteKeyEx_t)(HKEY hKey,char* lpSubKey,REGSAM samDesired,DWORD Reserved);
+static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,wchar_t* lpSubKey,REGSAM samDesired,DWORD Reserved){
+	typedef LONG (WINAPI* RegDeleteKeyEx_t)(HKEY hKey,wchar_t* lpSubKey,REGSAM samDesired,DWORD Reserved);
 	static RegDeleteKeyEx_t pRegDeleteKeyEx=NULL;
 	if(gs_tos >= TOS_XP_64){
 		if(!pRegDeleteKeyEx)
-			pRegDeleteKeyEx=(RegDeleteKeyEx_t)GetProcAddress(GetModuleHandle("Advapi32"),"RegDeleteKeyExA");
+			pRegDeleteKeyEx = (RegDeleteKeyEx_t)GetProcAddress(GetModuleHandle(L"advapi32"), "RegDeleteKeyExW");
 		if(pRegDeleteKeyEx)
 			return pRegDeleteKeyEx(hKey,lpSubKey,samDesired,Reserved);
 	}
@@ -186,9 +186,9 @@ static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,char* lpSubKey,REGSAM samDesired,D
  * \param[in] section
  * \return boolean
  * \remarks call once for every Get/Set* function and before using \c m_inifile
- * \sa m_regkey, ms_bIniSetting, m_inifile */
-static int PrepareMyRegKey_(char key[80], const char* section) {
-	size_t section_len = (section ? strlen(section)+1 : 0);
+ * \sa m_regkey, m_inifile */
+static int PrepareMyRegKey_(wchar_t key[80], const wchar_t* section) {
+	size_t section_len = (section ? wcslen(section)+1 : 0);
 	
 	if(m_regkey_size+section_len > 80){
 		#ifdef _DEBUG
@@ -197,28 +197,28 @@ static int PrepareMyRegKey_(char key[80], const char* section) {
 		return 0;
 	}
 	
-	if(ms_bIniSetting){
+	if(ms_inifile[0]){
 		if(section_len > 1)
-			memcpy(key, section, section_len);
+			memcpy(key, section, section_len*sizeof(wchar_t));
 		else
-			memcpy(key, "Main", 5);
+			wcscpy(key, L"Main");
 		return 1;
 	}
 
-	memcpy(key, m_regkey, m_regkey_size);
+	memcpy(key, m_regkey, m_regkey_size*sizeof(wchar_t));
 	if(section_len > 1){
 		key[m_regkey_size-1] = '\\';
-		memcpy(key+m_regkey_size, section, section_len);
+		memcpy(key+m_regkey_size, section, section_len*sizeof(wchar_t));
 	}
 	return 1;
 }
 
-int Clock_GetInt(const char* section, const char* entry, int defval) {
-	char key[80];
+int Clock_GetInt(const wchar_t* section, const wchar_t* entry, int defval) {
+	wchar_t key[80];
 	HKEY hkey;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting) {
+		if(ms_inifile[0]) {
 			return GetPrivateProfileInt(key, entry, defval, ms_inifile);
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
@@ -233,16 +233,16 @@ int Clock_GetInt(const char* section, const char* entry, int defval) {
 	return defval;
 }
 
-int64_t Clock_GetInt64(const char* section, const char* entry, int64_t defval) {
-	char key[80];
+int64_t Clock_GetInt64(const wchar_t* section, const wchar_t* entry, int64_t defval) {
+	wchar_t key[80];
 	HKEY hkey;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting) {
-			char s[16+1]; // max: 19+1+1(decimal), 16+1(hexadecimal)
-			int ret = GetPrivateProfileString(key, entry, "", s, sizeof(s), ms_inifile);
+		if(ms_inifile[0]) {
+			wchar_t s[16+1]; // max: 19+1+1(decimal), 16+1(hexadecimal)
+			int ret = GetPrivateProfileString(key, entry, L"", s, _countof(s), ms_inifile);
 			if(ret)
-				sscanf(s, "%" SCNx64, &defval);
+				swscanf(s, _T("%") _T(SCNx64), &defval);
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
 				int64_t val;
@@ -256,16 +256,16 @@ int64_t Clock_GetInt64(const char* section, const char* entry, int64_t defval) {
 	return defval;
 }
 
-int Clock_GetIntEx(const char* section, const char* entry, int defval) {
-	char key[80];
+int Clock_GetIntEx(const wchar_t* section, const wchar_t* entry, int defval) {
+	wchar_t key[80];
 	HKEY hkey;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting) {
-			char val[20];
-			GetPrivateProfileString(key, entry, kInvalidKey, val, sizeof(val), ms_inifile);
+		if(ms_inifile[0]) {
+			wchar_t val[20];
+			GetPrivateProfileString(key, entry, kInvalidKey, val, _countof(val), ms_inifile);
 			if(val[0] != kInvalidKey[0] || val[1] != kInvalidKey[1])
-				defval = atoi(val);
+				defval = _wtoi(val);
 			else
 				Clock_SetInt(section, entry, defval);
 		} else {
@@ -275,7 +275,7 @@ int Clock_GetIntEx(const char* section, const char* entry, int defval) {
 				if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&val,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
 					defval = val;
 				}else{
-					Clock_SetInt(section,entry,defval);
+					Clock_SetInt(section, entry, defval);
 				}
 				RegCloseKey(hkey);
 			}
@@ -284,7 +284,7 @@ int Clock_GetIntEx(const char* section, const char* entry, int defval) {
 	return defval;
 }
 
-int Clock_GetSystemInt(HKEY rootkey, const char* section, const char* entry, int defval) {
+int Clock_GetSystemInt(HKEY rootkey, const wchar_t* section, const wchar_t* entry, int defval) {
 	HKEY hkey;
 	
 	if(RegOpenKeyEx(rootkey,section,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
@@ -297,20 +297,20 @@ int Clock_GetSystemInt(HKEY rootkey, const char* section, const char* entry, int
 	return defval;
 }
 
-int Clock_GetStr(const char* section, const char* entry, char* val, int len, const char* defval) {
-	char key[80];
+int Clock_GetStr(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
+	wchar_t key[80];
 	HKEY hkey;
 	DWORD regtype, size;
 	int ret = -1;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting) {
+		if(ms_inifile[0]) {
 			ret = GetPrivateProfileString(key, entry, defval, val, len, ms_inifile);
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-				size = len;
+				size = len * sizeof(val[0]);
 				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
-					ret = size;
+					ret = size / sizeof(val[0]);
 					if(ret) --ret;
 				}
 				RegCloseKey(hkey);
@@ -318,30 +318,30 @@ int Clock_GetStr(const char* section, const char* entry, char* val, int len, con
 		}
 	}
 	if(ret == -1){
-		if((ret=(int)strlen(defval)) <= len){
-			strcpy(val, defval);
+		if((ret=(int)wcslen(defval)) <= len){
+			wcscpy(val, defval);
 		}else ret = 0;
 	}
 	if(!ret) val[0] = '\0';
 	return ret;
 }
 
-int Clock_GetStrEx(const char* section, const char* entry, char* val, int len, const char* defval) {
-	char key[80];
+int Clock_GetStrEx(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
+	wchar_t key[80];
 	HKEY hkey;
 	DWORD regtype, size;
 	int ret = -1;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting) {
+		if(ms_inifile[0]) {
 			ret = GetPrivateProfileString(key, entry, kInvalidKey, val, len, ms_inifile);
 			if(val[0] == kInvalidKey[0] && val[1] == kInvalidKey[1])
 				ret = -1;
 		} else {
 			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-				size = len;
+				size = len * sizeof(val[0]);
 				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
-					ret = size;
+					ret = size / sizeof(val[0]);
 					if(ret) --ret;
 				}
 				RegCloseKey(hkey);
@@ -349,46 +349,46 @@ int Clock_GetStrEx(const char* section, const char* entry, char* val, int len, c
 		}
 	}
 	if(ret == -1){
-		if((ret=(int)strlen(defval)) <= len){
+		if((ret=(int)wcslen(defval)) <= len){
 			Clock_SetStr(section, entry, defval);
-			strcpy(val, defval);
+			wcscpy(val, defval);
 		}else ret = 0;
 	}
 	if(!ret) val[0] = '\0';
 	return ret;
 }
 
-int Clock_GetSystemStr(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval) {
+int Clock_GetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
 	HKEY hkey;
 	DWORD regtype, size;
 	int ret = -1;
 	
 	if(RegOpenKeyEx(rootkey,section,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-		size = len;
+		size = len * sizeof(val[0]);
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
-			ret = size;
+			ret = size / sizeof(val[0]);
 			if(ret) --ret;
 		}
 		RegCloseKey(hkey);
 	}
 	if(ret == -1) {
-		if((ret=(int)strlen(defval)) <= len){
-			strcpy(val, defval);
+		if((ret=(int)wcslen(defval)) <= len){
+			wcscpy(val, defval);
 		}else ret = 0;
 	}
 	if(!ret) val[0] = '\0';
 	return ret;
 }
 
-int Clock_SetInt(const char* section, const char* entry, int val) {
-	char key[80];
+int Clock_SetInt(const wchar_t* section, const wchar_t* entry, int val) {
+	wchar_t key[80];
 	HKEY hkey;
 	int ret = 0;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting) {
-			char s[20];
-			wsprintf(s, "%d", val);
+		if(ms_inifile[0]) {
+			wchar_t s[20];
+			wsprintf(s, L"%d", val);
 			return WritePrivateProfileString(key, entry, s, ms_inifile);
 		} else {
 			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
@@ -402,15 +402,15 @@ int Clock_SetInt(const char* section, const char* entry, int val) {
 	return ret;
 }
 
-int Clock_SetInt64(const char* section, const char* entry, int64_t val) {
-	char key[80];
+int Clock_SetInt64(const wchar_t* section, const wchar_t* entry, int64_t val) {
+	wchar_t key[80];
 	HKEY hkey;
 	int ret = 0;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting) {
-			char s[16+1]; // max: 19+1+1(decimal), 16+1(hexadecimal)
-			wsprintf(s, "%" PRIx64, val);
+		if(ms_inifile[0]) {
+			wchar_t s[16+1]; // max: 19+1+1(decimal), 16+1(hexadecimal)
+			wsprintf(s, _T("%") _T(PRIx64), val);
 			return WritePrivateProfileString(key, entry, s, ms_inifile);
 		} else {
 			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
@@ -424,7 +424,7 @@ int Clock_SetInt64(const char* section, const char* entry, int64_t val) {
 	return ret;
 }
 
-int Clock_SetSystemInt(HKEY rootkey, const char* section, const char* entry, int val) {
+int Clock_SetSystemInt(HKEY rootkey, const wchar_t* section, const wchar_t* entry, int val) {
 	HKEY hkey;
 	int ret = 0;
 	
@@ -437,17 +437,17 @@ int Clock_SetSystemInt(HKEY rootkey, const char* section, const char* entry, int
 	return ret;
 }
 
-int Clock_SetStr(const char* section, const char* entry, const char* val) {
-	char key[80];
+int Clock_SetStr(const wchar_t* section, const wchar_t* entry, const wchar_t* val) {
+	wchar_t key[80];
 	HKEY hkey;
 	int ret = 0;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting)
+		if(ms_inifile[0])
 			return WritePrivateProfileString(key, entry, val, ms_inifile);
 		
 		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (const BYTE*)val, (DWORD)strlen(val)) == ERROR_SUCCESS) {
+			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (const BYTE*)val, (DWORD)(wcslen(val)*sizeof(val[0])+sizeof(val[0]))) == ERROR_SUCCESS) {
 				ret = 1;
 			}
 			RegCloseKey(hkey);
@@ -456,12 +456,12 @@ int Clock_SetStr(const char* section, const char* entry, const char* val) {
 	return ret;
 }
 
-int Clock_SetSystemStr(HKEY rootkey, const char* section, const char* entry, const char* val) {
+int Clock_SetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entry, const wchar_t* val) {
 	HKEY hkey;
 	int ret = 0;
 	
 	if(RegCreateKeyEx(rootkey,section,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-		if(RegSetValueEx(hkey, entry, 0, REG_SZ, (const BYTE*)val, (DWORD)strlen(val)) == ERROR_SUCCESS) {
+		if(RegSetValueEx(hkey, entry, 0, REG_SZ, (const BYTE*)val, (DWORD)(wcslen(val)*sizeof(val[0])+sizeof(val[0]))) == ERROR_SUCCESS) {
 			ret = 1;
 		}
 		RegCloseKey(hkey);
@@ -469,13 +469,13 @@ int Clock_SetSystemStr(HKEY rootkey, const char* section, const char* entry, con
 	return ret;
 }
 
-int Clock_DelValue(const char* section, const char* entry) {
-	char key[80];
+int Clock_DelValue(const wchar_t* section, const wchar_t* entry) {
+	wchar_t key[80];
 	HKEY hkey;
 	int ret = 0;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_bIniSetting)
+		if(ms_inifile[0])
 			return WritePrivateProfileString(key, entry, NULL, ms_inifile);
 		
 		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_fullaccess,&hkey) == ERROR_SUCCESS) {
@@ -487,7 +487,7 @@ int Clock_DelValue(const char* section, const char* entry) {
 	return ret;
 }
 
-int Clock_DelSystemValue(HKEY rootkey, const char* section, const char* entry) {
+int Clock_DelSystemValue(HKEY rootkey, const wchar_t* section, const wchar_t* entry) {
 	HKEY hkey;
 	int ret = 0;
 	if(RegOpenKeyEx(rootkey,section,0,ms_reg_fullaccess,&hkey) == ERROR_SUCCESS) {
@@ -498,19 +498,19 @@ int Clock_DelSystemValue(HKEY rootkey, const char* section, const char* entry) {
 	return ret;
 }
 
-int Clock_DelKey(const char* section) {
-	char key[80];
+int Clock_DelKey(const wchar_t* section) {
+	wchar_t key[80];
 	
 	if(!PrepareMyRegKey_(key,section))
 		return 0;
-	if(ms_bIniSetting)
+	if(ms_inifile[0])
 		return WritePrivateProfileString(key, NULL, NULL, ms_inifile);
 	return RegDeleteKeyEx(HKEY_CURRENT_USER,key,KEY_WOW64_64KEY,0) == ERROR_SUCCESS;
 }
 
 // exec
 
-int Clock_ShellExecute(const char* method, const char* app, const char* params, HWND parent, int show) {
+int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show) {
 	if(*app){
 		SHELLEXECUTEINFO sei = {sizeof(sei)};
 		sei.hwnd = parent;
@@ -526,15 +526,15 @@ int Clock_ShellExecute(const char* method, const char* app, const char* params, 
 	}
 	return -1;
 }
-int Clock_Exec(const char* app, const char* params, HWND parent) {
+int Clock_Exec(const wchar_t* app, const wchar_t* params, HWND parent) {
 	return Clock_ShellExecute(NULL,app,params,parent,SW_SHOWNORMAL);
 }
-int Clock_ExecElevated(const char* app, const char* params, HWND parent)
+int Clock_ExecElevated(const wchar_t* app, const wchar_t* params, HWND parent)
 {
-	return Clock_ShellExecute("runas",app,params,parent,SW_SHOWNORMAL);
+	return Clock_ShellExecute(L"runas", app, params, parent, SW_SHOWNORMAL);
 }
-int Clock_ExecFile(const char* command, HWND parent) {
-	char app[MAX_PATH], params[MAX_PATH];
+int Clock_ExecFile(const wchar_t* command, HWND parent) {
+	wchar_t app[MAX_PATH], params[MAX_PATH];
 	if(!command[0])
 		return -1;
 	// if(parent) SetForegroundWindow(parent);
@@ -544,9 +544,9 @@ int Clock_ExecFile(const char* command, HWND parent) {
 
 // format stuff
 
-char Clock_GetFormat(const char** offset, int* minimum, int* padding) {
-	char specifier;
-	const char* pos = *offset;
+wchar_t Clock_GetFormat(const wchar_t** offset, int* minimum, int* padding) {
+	wchar_t specifier;
+	const wchar_t* pos = *offset;
 	int pad = 0;
 	int min = 0;
 	// padding
@@ -564,9 +564,9 @@ char Clock_GetFormat(const char** offset, int* minimum, int* padding) {
 	*minimum = min;
 	return specifier;
 }
-int Clock_WriteFormatNum(char* buffer, int number, int minimum, int padding) {
-	char* out = buffer;
-	char negative = '\0';
+int Clock_WriteFormatNum(wchar_t* buffer, int number, int minimum, int padding) {
+	wchar_t* out = buffer;
+	wchar_t negative = '\0';
 	int num, nums = 1;
 	if(number < 0){
 		number = -number;
@@ -586,7 +586,7 @@ int Clock_WriteFormatNum(char* buffer, int number, int minimum, int padding) {
 	for(; minimum>0; --minimum)
 		*out++ = '0';
 	// write number
-	ltoa(number, out, 10);
+	_ltow(number, out, 10);
 	out += nums;
 	return (int)(out - buffer);
 }

@@ -14,7 +14,7 @@ HINSTANCE g_instance;
 TClockAPI api;
 
 
-int main(int argc,char* argv[]) {
+int main(int argc, char* argv[]) {
 	static const char* short_options = "hu::";
 	static struct option long_options[] = {
 		// basic
@@ -56,7 +56,7 @@ int main(int argc,char* argv[]) {
 	
 	g_instance = GetModuleHandle(NULL);
 	InitCommonControlsEx(&icex);
-	if(LoadClockAPI("T-Clock" ARCH_SUFFIX, &api)) {
+	if(LoadClockAPI(L"T-Clock" ARCH_SUFFIX, &api)) {
 		puts("failed to load T-Clock.dll");
 		return 2;
 	}

@@ -7,69 +7,69 @@
 #include "tcdll.h"
 
 static WORD m_codepage = CP_ACP;
-static char m_MonthShort[11], m_MonthLong[31];
-static char m_DayOfWeekShort[11], m_DayOfWeekLong[31];
-static char* m_DayOfWeekEng[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
-static char* m_MonthEng[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
-static char m_AM[10], m_PM[10];
-static char m_EraStr[11];
+static wchar_t m_MonthShort[11], m_MonthLong[31];
+static wchar_t m_DayOfWeekShort[11], m_DayOfWeekLong[31];
+static wchar_t* m_DayOfWeekEng[7] = { L"Sun", L"Mon", L"Tue", L"Wed", L"Thu", L"Fri", L"Sat" };
+static wchar_t* m_MonthEng[12] = { L"Jan", L"Feb", L"Mar", L"Apr", L"May", L"Jun", L"Jul", L"Aug", L"Sep", L"Oct", L"Nov", L"Dec" };
+static wchar_t m_AM[10], m_PM[10];
+static wchar_t m_EraStr[11];
 static int m_AltYear;
 
 extern char g_bHourZero;
 
 //================================================================================================
 //---------------------------------//+++--> load Localized Strings for Month, Day, & AM/PM Symbols:
-void InitFormat(const char* section, SYSTEMTIME* lt)   //--------------------------------------------------------+++-->
+void InitFormat(const wchar_t* section, SYSTEMTIME* lt)   //--------------------------------------------------------+++-->
 {
-	char year[6];
+	wchar_t year[6];
 	int i, ilang, ioptcal;
 	
-	ilang = api.GetInt(section, "Locale", GetUserDefaultLangID());
+	ilang = api.GetInt(section, L"Locale", GetUserDefaultLangID());
 	
-	GetLocaleInfo(ilang, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&m_codepage, sizeof(m_codepage));
+	GetLocaleInfo(ilang, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (wchar_t*)&m_codepage, sizeof(m_codepage));
 	if(!IsValidCodePage(m_codepage)) m_codepage=CP_ACP;
 	
 	i = lt->wDayOfWeek; i--; if(i < 0) i = 6;
 	
-	GetLocaleInfo(ilang, LOCALE_SABBREVDAYNAME1 + i, m_DayOfWeekShort, sizeof(m_DayOfWeekShort));
-//	GetLocaleInfo(ilang, LOCALE_SSHORTESTDAYNAME1 + i, DayOfWeekShort, sizeof(DayOfWeekShort)); // Vista+
-	GetLocaleInfo(ilang, LOCALE_SDAYNAME1 + i, m_DayOfWeekLong, sizeof(m_DayOfWeekLong));
+	GetLocaleInfo(ilang, LOCALE_SABBREVDAYNAME1 + i, m_DayOfWeekShort, _countof(m_DayOfWeekShort));
+//	GetLocaleInfo(ilang, LOCALE_SSHORTESTDAYNAME1 + i, DayOfWeekShort, _countof(DayOfWeekShort)); // Vista+
+	GetLocaleInfo(ilang, LOCALE_SDAYNAME1 + i, m_DayOfWeekLong, _countof(m_DayOfWeekLong));
 	
 	i = lt->wMonth; i--;
-	GetLocaleInfo(ilang, LOCALE_SABBREVMONTHNAME1 + i, m_MonthShort, sizeof(m_MonthShort));
-	GetLocaleInfo(ilang, LOCALE_SMONTHNAME1 + i, m_MonthLong, sizeof(m_MonthLong));
+	GetLocaleInfo(ilang, LOCALE_SABBREVMONTHNAME1 + i, m_MonthShort, _countof(m_MonthShort));
+	GetLocaleInfo(ilang, LOCALE_SMONTHNAME1 + i, m_MonthLong, _countof(m_MonthLong));
 	
-	api.GetStr(section, "AMsymbol", m_AM, sizeof(m_AM), "");
+	api.GetStr(section, L"AMsymbol", m_AM, _countof(m_AM), L"");
 	if(!*m_AM){
-		GetLocaleInfo(ilang, LOCALE_S1159, m_AM, sizeof(m_AM));
-		if(!*m_AM) strcpy(m_AM,"AM");
+		GetLocaleInfo(ilang, LOCALE_S1159, m_AM, _countof(m_AM));
+		if(!m_AM[0]) wcscpy(m_AM, L"AM");
 	}
-	api.GetStr(section, "PMsymbol", m_PM, sizeof(m_PM), "");
+	api.GetStr(section, L"PMsymbol", m_PM, _countof(m_PM), L"");
 	if(!*m_PM){
-		GetLocaleInfo(ilang, LOCALE_S2359, m_PM, sizeof(m_PM));
-		if(!*m_PM) strcpy(m_PM,"PM");
+		GetLocaleInfo(ilang, LOCALE_S2359, m_PM, _countof(m_PM));
+		if(!m_PM[0]) wcscpy(m_PM, L"PM");
 	}
 	
 	m_AltYear = -1;
 	
-	if(!GetLocaleInfo(ilang, LOCALE_IOPTIONALCALENDAR|LOCALE_RETURN_NUMBER, (LPSTR)&ioptcal, sizeof(ioptcal)))
+	if(!GetLocaleInfo(ilang, LOCALE_IOPTIONALCALENDAR|LOCALE_RETURN_NUMBER, (wchar_t*)&ioptcal, sizeof(ioptcal)))
 		ioptcal = 0;
 	
 	if(ioptcal < 3) ilang = LANG_USER_DEFAULT;
 	
-	if(!GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, "gg", m_EraStr, sizeof(m_EraStr)))
-		*m_EraStr='\0';
+	if(!GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, L"gg", m_EraStr, _countof(m_EraStr)))
+		*m_EraStr = '\0';
 	
-	if(GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, "yyyy", year, sizeof(year)))
-		m_AltYear=atoi(year);
+	if(GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, L"yyyy", year, _countof(year)))
+		m_AltYear = _wtoi(year);
 }
 //================================================================================================
 //-------------+++--> Format T-Clock's OutPut String From Current Date, Time, & System Information:
-unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, int beat100)   //------------------+++-->
+unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME* pt, int beat100)   //------------------+++-->
 {
-	const char* bufend = buf+FORMAT_MAX_SIZE;
-	const char* pos;
-	char* out = buf;
+	const wchar_t* bufend = buf+FORMAT_MAX_SIZE;
+	const wchar_t* pos;
+	wchar_t* out = buf;
 	ULONGLONG TickCount = 0;
 	
 	while(*fmt) {
@@ -115,13 +115,13 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			} else {
 				if(fmt[1] == 'm') {
 					fmt += 2;
-					*out++ = (char)((int)pt->wMonth / 10) + '0';
+					*out++ = (wchar_t)((int)pt->wMonth / 10) + '0';
 				} else {
 					++fmt;
 					if(pt->wMonth > 9)
-						*out++ = (char)((int)pt->wMonth / 10) + '0';
+						*out++ = (wchar_t)((int)pt->wMonth / 10) + '0';
 				}
-				*out++ = (char)((int)pt->wMonth % 10) + '0';
+				*out++ = (wchar_t)((int)pt->wMonth % 10) + '0';
 			}
 		} else if(*fmt == 'a' && fmt[1] == 'a' && fmt[2] == 'a') {
 			if(*(fmt + 3) == 'a') {
@@ -147,13 +147,13 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			}else{
 				if(fmt[1]=='d') {
 					fmt+=2;
-					*out++ = (char)((int)pt->wDay / 10) + '0';
+					*out++ = (wchar_t)((int)pt->wDay / 10) + '0';
 				}else{
 					++fmt;
 					if(pt->wDay > 9)
-						*out++ = (char)((int)pt->wDay / 10) + '0';
+						*out++ = (wchar_t)((int)pt->wDay / 10) + '0';
 				}
-				*out++ = (char)((int)pt->wDay % 10) + '0';
+				*out++ = (wchar_t)((int)pt->wDay % 10) + '0';
 			}
 		} else if(*fmt=='h') {
 			int hour = pt->wHour;
@@ -163,23 +163,23 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 				hour = 12;
 			if(fmt[1] == 'h') {
 				fmt += 2;
-				*out++ = (char)(hour / 10) + '0';
+				*out++ = (wchar_t)(hour / 10) + '0';
 			} else {
 				++fmt;
 				if(hour > 9)
-					*out++ = (char)(hour / 10) + '0';
+					*out++ = (wchar_t)(hour / 10) + '0';
 			}
-			*out++ = (char)(hour % 10) + '0';
+			*out++ = (wchar_t)(hour % 10) + '0';
 		} else if(*fmt=='H') {
 			if(fmt[1] == 'H') {
 				fmt += 2;
-				*out++ = (char)(pt->wHour / 10) + '0';
+				*out++ = (wchar_t)(pt->wHour / 10) + '0';
 			} else {
 				++fmt;
 				if(pt->wHour > 9)
-					*out++ = (char)(pt->wHour / 10) + '0';
+					*out++ = (wchar_t)(pt->wHour / 10) + '0';
 			}
-			*out++ = (char)(pt->wHour % 10) + '0';
+			*out++ = (wchar_t)(pt->wHour % 10) + '0';
 		} else if((*fmt=='w'||*fmt=='W') && (fmt[1]=='+'||fmt[1]=='-')) {
 			char is_12h = (*fmt == 'w');
 			char is_negative = (*++fmt == '-');
@@ -197,28 +197,28 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 				if(!hour && !g_bHourZero)
 					hour = 12;
 			}
-			*out++ = (char)(hour / 10) + '0';
-			*out++ = (char)(hour % 10) + '0';
+			*out++ = (wchar_t)(hour / 10) + '0';
+			*out++ = (wchar_t)(hour % 10) + '0';
 		} else if(*fmt == 'n') {
 			if(fmt[1] == 'n') {
 				fmt += 2;
-				*out++ = (char)((int)pt->wMinute / 10) + '0';
+				*out++ = (wchar_t)((int)pt->wMinute / 10) + '0';
 			} else {
 				++fmt;
 				if(pt->wMinute > 9)
-					*out++ = (char)((int)pt->wMinute / 10) + '0';
+					*out++ = (wchar_t)((int)pt->wMinute / 10) + '0';
 			}
-			*out++ = (char)((int)pt->wMinute % 10) + '0';
+			*out++ = (wchar_t)((int)pt->wMinute % 10) + '0';
 		} else if(*fmt == 's') {
 			if(fmt[1] == 's') {
 				fmt += 2;
-				*out++ = (char)((int)pt->wSecond / 10) + '0';
+				*out++ = (wchar_t)((int)pt->wSecond / 10) + '0';
 			} else {
 				++fmt;
 				if(pt->wSecond > 9)
-					*out++ = (char)((int)pt->wSecond / 10) + '0';
+					*out++ = (wchar_t)((int)pt->wSecond / 10) + '0';
 			}
-			*out++ = (char)((int)pt->wSecond % 10) + '0';
+			*out++ = (wchar_t)((int)pt->wSecond % 10) + '0';
 		} else if(*fmt == 't' && fmt[1] == 't') {
 			fmt += 2;
 			if(pt->wHour < 12) pos = m_AM; else pos = m_PM;
@@ -244,16 +244,16 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		else if(*fmt == '@' && fmt[1] == '@' && fmt[2] == '@') {
 			fmt += 3;
 			*out++ = '@';
-			*out++ = (char)(beat100 / 10000) + '0';
-			*out++ = (char)((beat100 % 10000) / 1000) + '0';
-			*out++ = (char)((beat100 % 1000) / 100) + '0';
+			*out++ = (wchar_t)(beat100 / 10000) + '0';
+			*out++ = (wchar_t)((beat100 % 10000) / 1000) + '0';
+			*out++ = (wchar_t)((beat100 % 1000) / 100) + '0';
 			if(*fmt=='.' && fmt[1]=='@') {
 				fmt += 2;
 				*out++ = '.';
-				*out++ = (char)((beat100 % 100) / 10) + '0';
+				*out++ = (wchar_t)((beat100 % 100) / 10) + '0';
 				if(*fmt=='@'){
 					++fmt;
-					*out++ = (char)((beat100 % 10)) + '0';
+					*out++ = (wchar_t)((beat100 % 10)) + '0';
 				}
 			}
 		}
@@ -265,42 +265,41 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 				n = 1; while(n < m_AltYear) n *= 10;
 			}
 			for(;;) {
-				*out++ = (char)((m_AltYear % n) / (n/10)) + '0';
+				*out++ = (wchar_t)((m_AltYear % n) / (n/10)) + '0';
 				if(n == 10) break;
 				n /= 10;
 			}
 		} else if(*fmt == 'g') {
 			for(pos=m_EraStr; *pos&&*fmt=='g'; ){
-				char* p2 = CharNextExA(m_codepage, pos, 0);
-				while(pos != p2) *out++ = *pos++;
+				*out++ = *pos++;
 				++fmt;
 			}
 			while(*fmt == 'g') fmt++;
 		}
 		
-		else if(*fmt == 'L' && strncmp(fmt, "LDATE", 5) == 0) {
+		else if(*fmt == 'L' && wcsncmp(fmt, L"LDATE", 5) == 0) {
 			GetDateFormat(LOCALE_USER_DEFAULT,
 						  DATE_LONGDATE, pt, NULL, out, (int)(bufend-out));
 			for(; *out; ++out);
 			fmt += 5;
 		}
 		
-		else if(*fmt == 'D' && strncmp(fmt, "DATE", 4) == 0) {
+		else if(*fmt == 'D' && wcsncmp(fmt, L"DATE", 4) == 0) {
 			GetDateFormat(LOCALE_USER_DEFAULT,
 						  DATE_SHORTDATE, pt, NULL, out, (int)(bufend-out));
 			for(; *out; ++out);
 			fmt += 4;
 		}
 		
-		else if(*fmt == 'T' && strncmp(fmt, "TIME", 4) == 0) {
+		else if(*fmt == 'T' && wcsncmp(fmt, L"TIME", 4) == 0) {
 			GetTimeFormat(LOCALE_USER_DEFAULT,
 						  0, pt, NULL, out, (int)(bufend-out));
 			for(; *out; ++out);
 			fmt += 4;
 		} else if(*fmt == 'S') { // uptime
 			int width, padding, num;
-			const char* old_fmt = ++fmt;
-			char specifier = api.GetFormat(&fmt, &width, &padding);
+			const wchar_t* old_fmt = ++fmt;
+			wchar_t specifier = api.GetFormat(&fmt, &width, &padding);
 			if(!TickCount) TickCount = api.GetTickCount64();
 			switch(specifier){
 			case 'd'://days
@@ -344,10 +343,10 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			localtime_r(&ts, &tmnow);
 			++fmt;
 			if(*fmt == 's') { // Week-Of-Year Starts Sunday
-				out += strftime(out, bufend-out, "%U", &tmnow);
+				out += wcsftime(out, bufend-out, L"%U", &tmnow);
 				++fmt;
 			} else if(*fmt == 'm') { // Week-Of-Year Starts Monday
-				out += strftime(out, bufend-out, "%W", &tmnow);
+				out += wcsftime(out, bufend-out, L"%W", &tmnow);
 				++fmt;
 			} else if(*fmt == 'i') { // ISO-8601 week (1st version by henriko.se, 2nd by White-Tiger)
 				int wday,borderdays,week;
@@ -376,14 +375,14 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 					}
 					break;
 				}
-				out += wsprintf(out,"%d",week);
+				out += wsprintf(out, L"%d", week);
 				++fmt;
 			} else if(*fmt == 'u') {
 				int week = 1 + (tmnow.tm_yday + 6 - tmnow.tm_wday) / 7;
-				out += wsprintf(out,"%d",week);
+				out += wsprintf(out, L"%d", week);
 				++fmt;
 			} else if(*fmt == 'w') { // SWN (Simple Week Number)
-				out += wsprintf(out,"%d",1 + tmnow.tm_yday / 7);
+				out += wsprintf(out, L"%d", 1 + tmnow.tm_yday / 7);
 				++fmt;
 			}
 		}
@@ -392,7 +391,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		else if(*fmt == 'J' && *(fmt + 1) == 'D') {
 			double y, M, d, h, m, s, bc, JD;
 			struct tm Julian;
-			int id, is, i=0;
+			int id, is, i;
 			char* szJulian;
 			time_t UTC = time(NULL);
 			
@@ -417,68 +416,67 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			JD += 0.5;
 			
 			szJulian = _fcvt(JD, 4, &id, &is); // Make it a String
-			while(*szJulian) {
+			for(i=0; szJulian[0]; ++i) {
 				if(i == id) { //--//-++-> id = Decimal Point Precision/Position
 					*out++ = '.'; // ReInsert the Decimal Point Where it Belongs.
 				} else {
 					*out++ = *szJulian++; //--+++--> Done!
 				}
-				i++;
 			}
 			fmt +=2;
 		}
 //================================================================================================
 //======================================= ORDINAL DATE Code =======================================
 		else if(*fmt == 'O' && *(fmt + 1) == 'D') { //--------+++--> Ordinal Date UTC:
-			char szOD[16] = {0};
+			wchar_t szOD[16] = {0};
 			struct tm today;
 			time_t UTC = time(NULL);
-			char* od;
+			wchar_t* od;
 			
 			gmtime_r(&UTC, &today);
-			strftime(szOD, 16, "%Y-%j", &today);
+			wcsftime(szOD, 16, L"%Y-%j", &today);
 			od = szOD;
 			while(*od) *out++ = *od++;
 			fmt +=2;
 		}
 		//==========================================================================
 		else if(*fmt == 'O' && *(fmt + 1) == 'd') { //------+++--> Ordinal Date Local:
-			char szOD[16] = {0};
+			wchar_t szOD[16] = {0};
 			struct tm today;
 			time_t ts = time(NULL);
-			char* od;
+			wchar_t* od;
 			
 			localtime_r(&ts, &today);
-			strftime(szOD, 16, "%Y-%j", &today);
+			wcsftime(szOD, 16, L"%Y-%j", &today);
 			od = szOD;
 			while(*od) *out++ = *od++;
 			fmt +=2;
 		}
 		//==========================================================================
-		else if(*fmt == 'D' && strncmp(fmt, "DOY", 3) == 0) { //--+++--> Day-Of-Year:
-			char szDoy[8] = {0};
+		else if(*fmt == 'D' && wcsncmp(fmt, L"DOY", 3) == 0) { //--+++--> Day-Of-Year:
+			wchar_t szDoy[8] = {0};
 			struct tm today;
 			time_t ts = time(NULL);
-			char* doy;
+			wchar_t* doy;
 			
 			localtime_r(&ts, &today);
-			strftime(szDoy, 8, "%j", &today);
+			wcsftime(szDoy, 8, L"%j", &today);
 			doy = szDoy;
 			while(*doy) *out++ = *doy++;
 			fmt +=3;
 		}
 		//==========================================================================
-		else if(*fmt == 'P' && strncmp(fmt, "POSIX", 5) == 0) { //-> Posix/Unix Time:
-			char szPosix[16] = {0}; // This will Give the Number of Seconds That Have
-			char* posix; //--+++--> Elapsed Since the Unix Epoch: 1970-01-01 00:00:00
+		else if(*fmt == 'P' && wcsncmp(fmt, L"POSIX", 5) == 0) { //-> Posix/Unix Time:
+			wchar_t szPosix[16] = {0}; // This will Give the Number of Seconds That Have
+			wchar_t* posix; //--+++--> Elapsed Since the Unix Epoch: 1970-01-01 00:00:00
 			
-			wsprintf(szPosix, "%ld", time(NULL));
+			wsprintf(szPosix, L"%ld", time(NULL));
 			posix = szPosix;
 			while(*posix) *out++ = *posix++;
 			fmt +=5;
 		}
 		//==========================================================================
-		else if(*fmt == 'T' && strncmp(fmt, "TZN", 3) == 0) { //--++-> TimeZone Name:
+		else if(*fmt == 'T' && wcsncmp(fmt, L"TZN", 3) == 0) { //--++-> TimeZone Name:
 			#ifndef __GNUC__ /* forces us to link with msvcr100 */
 			char szTZName[TZNAME_MAX] = {0};
 			size_t lRet;
@@ -487,9 +485,9 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 			
 			_get_daylight(&iDST);
 			if(iDST) {
-				_get_tzname(&lRet, szTZName, TZNAME_MAX, 1);
+				_get_tzname(&lRet, szTZName, _countof(szTZName), 1);
 			} else {
-				_get_tzname(&lRet, szTZName, TZNAME_MAX, 0);
+				_get_tzname(&lRet, szTZName, _countof(szTZName), 0);
 			}
 			
 			tzn = szTZName;
@@ -499,7 +497,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 		}
 //=================================================================================================
 		else {
-			for(pos=CharNext(fmt); fmt!=pos; )  *out++=*fmt++;
+			*out++ = *fmt++;
 		}
 	}
 	*out='\0';
@@ -509,7 +507,7 @@ unsigned MakeFormat(char buf[FORMAT_MAX_SIZE], const char* fmt, SYSTEMTIME* pt, 
 /*--------------------------------------------------
 --------------------------------------- Check Format
 --------------------------------------------------*/
-DWORD FindFormat(const char* fmt)
+DWORD FindFormat(const wchar_t* fmt)
 {
 	DWORD ret = 0;
 	
@@ -526,7 +524,7 @@ DWORD FindFormat(const char* fmt)
 			fmt++;
 			ret |= FORMAT_SECOND;
 		}
-		else if(*fmt == 'T' && strncmp(fmt, "TIME", 4) == 0) {
+		else if(*fmt == 'T' && wcsncmp(fmt, L"TIME", 4) == 0) {
 			fmt += 4;
 			ret |= FORMAT_SECOND;
 		}
@@ -539,7 +537,7 @@ DWORD FindFormat(const char* fmt)
 			} else ret |= FORMAT_BEAT1;
 		}
 		
-		else fmt = CharNext(fmt);
+		else ++fmt;
 	}
 	return ret;
 }

@@ -5,7 +5,7 @@
 	GENERIC
 */
 
-void ComboBox_AddStringOnce(HWND box, const char* str, int select)
+void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select)
 {
 	int sel;
 	if(!str[0]){
@@ -32,11 +32,11 @@ static HCURSOR m_cursor_hand;
 static WNDPROC m_proc_static;
 static LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 typedef struct{
-	const char* target;
+	const wchar_t* target;
 	unsigned char flags;
 } link_data;
 
-void LinkControl_Setup(HWND link_control, unsigned char flags, const char* target) {
+void LinkControl_Setup(HWND link_control, unsigned char flags, const wchar_t* target) {
 	link_data* data;
 	if(GetWindowLongPtr(link_control, GWLP_USERDATA))
 		return;
@@ -92,32 +92,28 @@ LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		return TRUE;
 //	case WM_RBUTTONDOWN:
 	case WM_LBUTTONDOWN:{
-		char str[MAX_PATH];
-		char* offset;
+		wchar_t str[MAX_PATH];
+		wchar_t* offset;
 		link_data* data = (link_data*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 		HWND parent = GetParent(hwnd);
 		if(data->flags != LCF_NOTIFYONLY){
 			str[0] = '\0';
 			offset = str;
 			if(data->flags & LCF_HTTP){
-				memcpy(offset, "http://", 7);
-				offset += 7;
+				offset += wsprintf(offset, L"http://");
 			}else if(data->flags & LCF_HTTPS){
-				memcpy(offset, "https://", 8);
-				offset += 8;
+				offset += wsprintf(offset, L"https://");
 			}else if(data->flags & LCF_MAIL){
-				memcpy(offset, "mailto:", 7);
-				offset += 7;
+				offset += wsprintf(offset, L"mailto:");
 			}else if(data->flags & LCF_RELATIVE){
-				memcpy(offset, api.root, api.root_len);
-				offset += api.root_len;
+				offset += wsprintf(offset, api.root);
 				*offset++ = '\\';
 			}
 			
 			if(data->target){
-				strncpy_s(offset, (sizeof(str)-(offset-str)), data->target, _TRUNCATE);
+				wcsncpy_s(offset, (_countof(str)-(offset-str)), data->target, _TRUNCATE);
 			}else{
-				GetWindowText(hwnd, offset, (int)(sizeof(str)-(offset-str)));
+				GetWindowText(hwnd, offset, (int)(_countof(str)-(offset-str)));
 			}
 			
 			if(str[0]){
@@ -149,25 +145,25 @@ static HBRUSH m_transparent_brush;
 
 typedef struct {
 	COLORREF col;
-	const char* name;
+	const wchar_t* name;
 } syscolor_t;
 static const syscolor_t m_syscolor[]={
-	{TCOLOR_DEFAULT,"Default"},
-	{TCOLOR_TRANSPARENT,"Transparent"},
-	{TCOLOR_THEME,"Theme color"},
-	{TCOLOR_THEME_DARK,"Theme color (dark)"},
-	{TCOLOR_THEME_ALPHA,"Theme color w/ alpha"},
+	{TCOLOR_DEFAULT,L"Default"},
+	{TCOLOR_TRANSPARENT,L"Transparent"},
+	{TCOLOR_THEME,L"Theme color"},
+	{TCOLOR_THEME_DARK,L"Theme color (dark)"},
+	{TCOLOR_THEME_ALPHA,L"Theme color w/ alpha"},
 //	{TCOLOR_THEME_BG,"Theme bg color"},
 	
-	{COLOR_3DFACE,"3DFACE"},
-	{COLOR_3DSHADOW,"3DSHADOW"},
-	{COLOR_3DHILIGHT,"3DHILIGHT"},
-	{COLOR_BTNTEXT,"BTNTEXT"},
-	{COLOR_WINDOWTEXT,"WINDOWTEXT"},
-	{COLOR_INFOTEXT,"INFOTEXT"},
-	{COLOR_INFOBK,"INFOBK"},
+	{COLOR_3DFACE,L"3DFACE"},
+	{COLOR_3DSHADOW,L"3DSHADOW"},
+	{COLOR_3DHILIGHT,L"3DHILIGHT"},
+	{COLOR_BTNTEXT,L"BTNTEXT"},
+	{COLOR_WINDOWTEXT,L"WINDOWTEXT"},
+	{COLOR_INFOTEXT,L"INFOTEXT"},
+	{COLOR_INFOBK,L"INFOBK"},
 };
-static const size_t m_syscolor_num = sizeof(m_syscolor)/sizeof(syscolor_t);
+static const size_t m_syscolor_num = _countof(m_syscolor);
 static const COLORREF m_basecolor[]={
 	0x00000080, 0x00008000, 0x00800000,
 	0x00008080, 0x00800080, 0x00808000,
@@ -175,8 +171,8 @@ static const COLORREF m_basecolor[]={
 	0x0000FFFF, 0x00FF00FF, 0x00FFFF00,
 	0x00FFFFFF, 0x00C0C0C0, 0x00808080, 0x00000000,
 };
-static const size_t m_basecolor_num = sizeof(m_basecolor)/sizeof(COLORREF);
-static const size_t m_colorstotal = sizeof(m_syscolor)/sizeof(syscolor_t)+sizeof(m_basecolor)/sizeof(COLORREF);
+static const size_t m_basecolor_num = _countof(m_basecolor);
+static const size_t m_colorstotal = _countof(m_syscolor) + _countof(m_basecolor);
 
 static COLORREF m_usercolors[16] = {
 	0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF, 0xFFFFFF,0xFFFFFF,0xFFFFFF,0xFFFFFF,
@@ -347,8 +343,8 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 	COLORREF col;
 	TEXTMETRIC tm;
 	int vert_pos;
-	char hexcolor[8];
-	const char* label;
+	wchar_t hexcolor[8];
+	const wchar_t* label;
 	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 0, 0};
 	HDC draw_dc;
 	HBITMAP draw_hbmp;
@@ -390,13 +386,13 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 			label = m_syscolor[pdis->itemID].name;
 		else{
 			unsigned color = ((col&0xff)<<16) | (col&0xff00) | ((col&0xff0000)>>16);
-			sprintf(hexcolor, "#%06x", color);
+			wsprintf(hexcolor, L"#%06x", color);
 			label = hexcolor;
 		}
 		GetTextMetrics(pdis->hDC, &tm);
 		vert_pos = (pdis->rcItem.bottom - pdis->rcItem.top - tm.tmHeight)/2;
 		ExtTextOut(pdis->hDC, pdis->rcItem.left + 34, pdis->rcItem.top + vert_pos, ETO_CLIPPED|ETO_OPAQUE, &pdis->rcItem,
-				label, (int)strlen(label), NULL);
+				label, (int)wcslen(label), NULL);
 		
 		// draw color
 		hbr = CreateSolidBrush(col&0x00ffffff);

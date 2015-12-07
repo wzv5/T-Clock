@@ -123,9 +123,9 @@ INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		// Message Window Options
 		case IDCB_MSG_ALARM:{
 			dlgmsg_t dlg;
-			GetDlgItemText(hDlg, IDC_COMBOALARM, dlg.name, sizeof(dlg.name));
-			GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg.message, sizeof(dlg.message));
-			GetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, dlg.settings, sizeof(dlg.settings));
+			GetDlgItemText(hDlg, IDC_COMBOALARM, dlg.name, _countof(dlg.name));
+			GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg.message, _countof(dlg.message));
+			GetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, dlg.settings, _countof(dlg.settings));
 			if(BounceWindOptions(hDlg,&dlg)){
 				SetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, dlg.settings);
 				SetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, dlg.message);
@@ -207,7 +207,7 @@ void OnInit(HWND hDlg)
 	HWND file_boxes[2];
 	#define file_cb file_boxes[0]
 	#define file_hourly_cb file_boxes[1]
-	char tmp[MAX_PATH];
+	wchar_t tmp[MAX_PATH];
 	int i, count;
 	file_cb = GetDlgItem(hDlg, IDC_FILEALARM);
 	file_hourly_cb = GetDlgItem(hDlg, IDC_FILEJIHOU);
@@ -233,16 +233,16 @@ void OnInit(HWND hDlg)
 	}
 	
 	CheckDlgButton(hDlg, IDC_JIHOU,
-				   api.GetInt("", "Jihou", FALSE));
+				   api.GetInt(L"", L"Jihou", 0));
 				   
-	api.GetStr("", "JihouFile", tmp, sizeof(tmp), "Clock.wav");
+	api.GetStr(L"", L"JihouFile", tmp, _countof(tmp), L"Clock.wav");
 	ComboBox_SetText(file_hourly_cb, tmp);
 	
 	CheckDlgButton(hDlg, IDC_REPEATJIHOU,
-				   api.GetInt("", "JihouRepeat", FALSE));
+				   api.GetInt(L"", L"JihouRepeat", 0));
 				   
 	CheckDlgButton(hDlg, IDC_BLINKJIHOU,
-				   api.GetInt("", "JihouBlink", FALSE));
+				   api.GetInt(L"", L"JihouBlink", 0));
 				   
 	OnAlarmJihou(hDlg, IDC_JIHOU);
 	
@@ -281,13 +281,13 @@ void OnDeinit(HWND hDlg)
 void OnApply(HWND hDlg)
 {
 	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
-	char file[1024];
+	wchar_t file[MAX_PATH];
 	int i, count, n_alarm;
 	alarm_t* pAS;
 	
 	if(m_curAlarm < 0) {
-		char name[sizeof(pAS->dlgmsg.name)];
-		ComboBox_GetText(alarm_cb, name, sizeof(pAS->dlgmsg.name));
+		wchar_t name[_countof(pAS->dlgmsg.name)];
+		ComboBox_GetText(alarm_cb, name, _countof(name));
 		if(name[0]) {
 			pAS = malloc(sizeof(alarm_t));
 			if(pAS) {
@@ -296,7 +296,7 @@ void OnApply(HWND hDlg)
 				ComboBox_SetItemData(alarm_cb, i, pAS);
 				m_curAlarm = i;
 				ComboBox_SetCurSel(alarm_cb, i);
-				EnableDlgItem(hDlg, IDC_DELALARM, TRUE);
+				EnableDlgItem(hDlg, IDC_DELALARM, 1);
 			}
 		}
 	} else if(m_curAlarm) {
@@ -314,15 +314,15 @@ void OnApply(HWND hDlg)
 	// delete remaining
 	for(; DeleteAlarmFromReg(n_alarm)==0; ++n_alarm);
 	
-	api.SetInt("", "Jihou",
+	api.SetInt(L"", L"Jihou",
 				 IsDlgButtonChecked(hDlg, IDC_JIHOU));
 				 
-	GetDlgItemText(hDlg, IDC_FILEJIHOU, file, sizeof(file));
-	api.SetStr("", "JihouFile", file);
+	GetDlgItemText(hDlg, IDC_FILEJIHOU, file, _countof(file));
+	api.SetStr(L"", L"JihouFile", file);
 	
-	api.SetInt("", "JihouRepeat",
+	api.SetInt(L"", L"JihouRepeat",
 				 IsDlgButtonChecked(hDlg, IDC_REPEATJIHOU));
-	api.SetInt("", "JihouBlink",
+	api.SetInt(L"", L"JihouBlink",
 				 IsDlgButtonChecked(hDlg, IDC_BLINKJIHOU));
 				 
 	InitAlarm(); // alarm.c
@@ -332,18 +332,18 @@ void OnApply(HWND hDlg)
 void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------------+++-->
 {
 	if(m_curAlarm > 0){ // update alarm name in combobox
-		size_t oldlen=strlen(pAS->dlgmsg.name), newlen;
-		char name[sizeof(pAS->dlgmsg.name)];
-		newlen=GetDlgItemText(hDlg, IDC_COMBOALARM, name, sizeof(name));
-		if(newlen!=oldlen || memcmp(name,pAS->dlgmsg.name,newlen)){
-			HWND combo=GetDlgItem(hDlg,IDC_COMBOALARM);
-			ComboBox_DeleteString(combo,m_curAlarm);
-			ComboBox_InsertString(combo,m_curAlarm,name);
-			ComboBox_SetItemData(combo,m_curAlarm,pAS);
-			memcpy(pAS->dlgmsg.name,name,sizeof(pAS->dlgmsg.name));
+		size_t oldlen = wcslen(pAS->dlgmsg.name), newlen;
+		wchar_t name[_countof(pAS->dlgmsg.name)];
+		newlen = GetDlgItemText(hDlg, IDC_COMBOALARM, name, _countof(name));
+		if(newlen != oldlen || wcscmp(name,pAS->dlgmsg.name)){
+			HWND combo = GetDlgItem(hDlg, IDC_COMBOALARM);
+			ComboBox_DeleteString(combo, m_curAlarm);
+			ComboBox_InsertString(combo, m_curAlarm, name);
+			ComboBox_SetItemData(combo, m_curAlarm, pAS);
+			memcpy(pAS->dlgmsg.name, name, newlen * sizeof pAS->dlgmsg.name[0]);
 		}
 	}else
-		GetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name, sizeof(pAS->dlgmsg.name));
+		GetDlgItemText(hDlg, IDC_COMBOALARM, pAS->dlgmsg.name, _countof(pAS->dlgmsg.name));
 	
 	pAS->iTimes = GetDlgItemInt(hDlg,IDC_REPEATIMES,NULL,1);
 	
@@ -364,8 +364,8 @@ void GetAlarmFromDlg(HWND hDlg, alarm_t* pAS)   //------------------------------
 	
 	GetDlgItemText(hDlg, IDC_FILEALARM, pAS->fname, MAX_PATH);
 	
-	GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message, sizeof(pAS->dlgmsg.message));
-	GetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings, sizeof(pAS->dlgmsg.settings));
+	GetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message, _countof(pAS->dlgmsg.message));
+	GetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings, _countof(pAS->dlgmsg.settings));
 }
 //================================================================================================
 //-------------------------------------------------+++--> Load Dialog With Settings for This Alarm:
@@ -416,11 +416,11 @@ void SetDefaultAlarmToDlg(HWND hDlg, int select_only)   //----------------------
 	as.hour = 12;
 	as.iTimes = -1;
 	as.uFlags =  ALRM_ENABLED | ALRM_ONESHOT | ALRM_DIALOG | ALRM_BLINK | ALRM_REPEAT;
-	if(api.GetInt("Format","Hour12",1)) // if user prefers 12h format (his clock is 12h)
+	if(api.GetInt(L"Format",L"Hour12",1)) // if user prefers 12h format (his clock is 12h)
 		as.uFlags |= ALRM_12H;
 	if(select_only)
 		as.uFlags ^= ALRM_ENABLED;
-	strcpy(as.fname, "Alarm.wav");
+	wcscpy(as.fname, L"Alarm.wav");
 	SetAlarmToDlg(hDlg, &as);
 	EnableDlgItem(hDlg, IDC_DELALARM, FALSE);
 	if(select_only){
@@ -444,8 +444,8 @@ void OnChangeAlarm(HWND hDlg)
 		return;
 //	if(index == 0 && m_curAlarm == -1){
 	if(m_curAlarm == -1){
-		char name[sizeof(pAS->dlgmsg.name)];
-		ComboBox_GetText(alarm_cb, name, sizeof(pAS->dlgmsg.name));
+		wchar_t name[_countof(pAS->dlgmsg.name)];
+		ComboBox_GetText(alarm_cb, name, _countof(name));
 		if(name[0]) {
 			pAS = malloc(sizeof(alarm_t));
 			if(pAS) {
@@ -487,14 +487,14 @@ void OnDropDownAlarm(HWND hDlg)
 {
 	HWND alarm_cb = GetDlgItem(hDlg, IDC_COMBOALARM);
 	alarm_t* pAS;
-	char name[sizeof(pAS->dlgmsg.name)];
+	wchar_t name[_countof(pAS->dlgmsg.name)];
 	
 	if(m_curAlarm <= 0)
 		return;
 	pAS = (alarm_t*)ComboBox_GetItemData(alarm_cb, m_curAlarm);
-	ComboBox_GetText(alarm_cb, name, sizeof(pAS->dlgmsg.name));
-	if(name[0] && strcmp(name, pAS->dlgmsg.name)) {
-		strcpy(pAS->dlgmsg.name, name);
+	ComboBox_GetText(alarm_cb, name, _countof(pAS->dlgmsg.name));
+	if(name[0] && wcscmp(name, pAS->dlgmsg.name)) {
+		wcscpy(pAS->dlgmsg.name, name);
 		ComboBox_DeleteString(alarm_cb, m_curAlarm);
 		ComboBox_InsertString(alarm_cb, m_curAlarm, name);
 		ComboBox_SetItemData(alarm_cb, m_curAlarm, pAS);
@@ -574,8 +574,8 @@ void OnMsgAlarm(HWND hDlg, WORD id)   //-------------------------------------+++
 --------------------------------------------------*/
 void OnSanshoAlarm(HWND hDlg, WORD id)
 {
-	char deffile[MAX_PATH], fname[MAX_PATH];
-	GetDlgItemText(hDlg, id - 1, deffile, MAX_PATH);
+	wchar_t deffile[MAX_PATH], fname[MAX_PATH];
+	GetDlgItemText(hDlg, id - 1, deffile, _countof(deffile));
 	
 	StopTest(hDlg);
 	
@@ -593,10 +593,11 @@ void On12Hour(HWND hDlg, int bOnChange)
 {
 	int b12h = IsDlgButtonChecked(hDlg, IDC_12HOURALARM);
 	int h, u, l;
-	char hour[5];
-	Edit_GetText(GetDlgItem(hDlg,IDC_HOURALARM),hour,5);
-	h=atoi(hour);
-	if(h>23) h=0;
+	wchar_t hour[5];
+	Edit_GetText(GetDlgItem(hDlg,IDC_HOURALARM), hour, _countof(hour));
+	h = _wtoi(hour);
+	if(h > 23)
+		h=0;
 	
 	if(b12h){
 //		if(IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK)){
@@ -651,22 +652,22 @@ void OnDelAlarm(HWND hDlg)
 --------------------------------------------------*/
 void OnFileChange(HWND hDlg, WORD id)
 {
-	char fname[MAX_PATH];
-	int enable=0;
+	wchar_t fname[MAX_PATH];
+	int enable = 0;
 	int control;
-	GetDlgItemText(hDlg,id,fname,MAX_PATH);
+	GetDlgItemText(hDlg, id, fname, _countof(fname));
 	if(IsWindowEnabled(GetDlgItem(hDlg,id)) && *fname!='<' && *fname){
-		enable=1;
+		enable = 1;
 	}
 	for(control=id+4; control>id+1; --control) // IDC_FILEALARM+2 -> IDC_REPEATALARM, IDC_FILEJIHOU+2 -> IDC_REPEATJIHOU
 		EnableDlgItem(hDlg,control,enable);
 	if(enable){
-		enable=IsMMFile(fname);
+		enable = IsMMFile(fname);
 		EnableDlgItem(hDlg,id+4,enable); // IDC_REPEATALARM, IDC_REPEATJIHOU
 	}
 	if(id==IDC_FILEALARM){
 		EnableDlgItem(hDlg,IDC_CHIMEALARM,enable);
-		enable=enable&&IsDlgButtonChecked(hDlg,IDC_REPEATALARM); // IsMMFile(fname)
+		enable = enable&&IsDlgButtonChecked(hDlg,IDC_REPEATALARM); // IsMMFile(fname)
 		for(control=IDC_REPEATIMES; control<=IDC_SPINTIMES; ++control) // IDC_FILEALARM+2 -> IDC_REPEATALARM, IDC_FILEJIHOU+2 -> IDC_REPEATJIHOU
 			EnableDlgItem(hDlg,control,enable);
 	}
@@ -677,10 +678,11 @@ void OnFileChange(HWND hDlg, WORD id)
 --------------------------------------------------*/
 void OnTest(HWND hDlg, WORD id, DWORD loops)
 {
-	char fname[MAX_PATH];
+	wchar_t fname[MAX_PATH];
 	
-	GetDlgItemText(hDlg, id - 3, fname, MAX_PATH);
-	if(!*fname) return;
+	GetDlgItemText(hDlg, id - 3, fname, _countof(fname));
+	if(!fname[0])
+		return;
 	
 	if((HICON)SendDlgItemMessage(hDlg,id,BM_GETIMAGE,IMAGE_ICON,0) == g_hIconPlay) {
 		if(PlayFile(hDlg,fname,loops)) {
@@ -702,44 +704,45 @@ void StopTest(HWND hDlg)
 //========================================*
 void FormatTimeText(HWND hDlg, WORD idc)
 {
-	char txt[5];
-	char txt2[5];
+	wchar_t txt[5];
+	wchar_t txt2[5];
 	int iTxt;
 	
-	m_bTransition=1; // start transition
+	m_bTransition = 1; // start transition
 	
-	if(idc==IDC_MINUTEALARM){
-		HWND edit=GetDlgItem(hDlg,IDC_MINUTEALARM);
-		Edit_GetText(edit,txt,5);
-		iTxt=atoi(txt);
-		if(iTxt>59) iTxt=0;
+	if(idc == IDC_MINUTEALARM){
+		HWND edit = GetDlgItem(hDlg, IDC_MINUTEALARM);
+		Edit_GetText(edit, txt, _countof(txt));
+		iTxt = _wtoi(txt);
+		if(iTxt>59)
+			iTxt = 0;
 		
-		wsprintf(txt2, "%02d", iTxt);
-		if(strcmp(txt2,txt)){
+		wsprintf(txt2, L"%02d", iTxt);
+		if(wcscmp(txt2,txt)){
 			Edit_SetText(edit,txt2);
 			Edit_SetSel(edit,2,2);
 		}
 	}else{
-		int b12h=IsDlgButtonChecked(hDlg, IDC_12HOURALARM);
-		HWND edit=GetDlgItem(hDlg,IDC_HOURALARM);
-		Edit_GetText(edit,txt,5);
-		iTxt=atoi(txt);
+		int b12h = IsDlgButtonChecked(hDlg, IDC_12HOURALARM);
+		HWND edit = GetDlgItem(hDlg,IDC_HOURALARM);
+		Edit_GetText(edit, txt, _countof(txt));
+		iTxt = _wtoi(txt);
 		if(b12h){
-			if(iTxt>12) iTxt=12; // 12am / 12pm
-			wsprintf(txt2, "%d", iTxt);
+			if(iTxt>12) iTxt = 12; // 12am / 12pm
+			wsprintf(txt2, L"%d", iTxt);
 		}else{
-			if(iTxt>23) iTxt=0;
-			wsprintf(txt2, "%02d", iTxt);
+			if(iTxt>23) iTxt = 0;
+			wsprintf(txt2, L"%02d", iTxt);
 			CheckDlgButton(hDlg,IDC_AMPM_CHECK,iTxt>=12);
 		}
-		if(strcmp(txt2,txt)){
-			Edit_SetText(edit,txt2);
-			Edit_SetSel(edit,2,2);
+		if(wcscmp(txt2,txt)){
+			Edit_SetText(edit, txt2);
+			Edit_SetSel(edit, 2 ,2);
 		}
 	}
 	UpdateAMPMDisplay(hDlg);
 	
-	m_bTransition=0; // end transition
+	m_bTransition = 0; // end transition
 }
 //=============================*
 // -- Toggle Display of AM or PM
@@ -747,18 +750,18 @@ void FormatTimeText(HWND hDlg, WORD idc)
 //================================*
 void UpdateAMPMDisplay(HWND hDlg)
 {
-	char time[5];
-	int hour,min;
+	wchar_t time[5];
+	int hour, min;
 	
-	GetDlgItemText(hDlg, IDC_HOURALARM, time, 5);
-	hour = atoi(time);
+	GetDlgItemText(hDlg, IDC_HOURALARM, time, _countof(time));
+	hour = _wtoi(time);
 	if(IsDlgButtonChecked(hDlg,IDC_12HOURALARM))
 		hour = _12hTo24h(hour, IsDlgButtonChecked(hDlg,IDC_AMPM_CHECK));
-	GetDlgItemText(hDlg, IDC_MINUTEALARM, time, 5);
-	min = atoi(time);
+	GetDlgItemText(hDlg, IDC_MINUTEALARM, time, _countof(time));
+	min = _wtoi(time);
 	
 	if(hour<12)
-		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (!hour&&!min?"midnight":"AM"));
+		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (!hour&&!min ? L"midnight" : L"AM"));
 	else
-		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (hour==12&&!min?"noon":"PM"));
+		SetDlgItemText(hDlg, IDC_AMPM_DISPLAY, (hour==12&&!min ? L"noon" : L"PM"));
 }

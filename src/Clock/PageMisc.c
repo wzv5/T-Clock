@@ -11,15 +11,15 @@ static void OnApply(HWND hDlg);
 
 #include "../common/calendar.inc"
 typedef struct{
-	const char* name;
+	const wchar_t* name;
 	COLORREF color[CALENDAR_COLOR_NUM];
 } CalendarPreset;
 
 #define CALENDAR_PRESETS 3
 static CalendarPreset m_calendar_preset[CALENDAR_PRESETS] = {
-	{"Preset: default", {0}},
-	{"Preset: high contrast", {0x000000, 0xFFFFFF, 0x000000, 0x000000, 0xF28E28, 0xEB00DD}},
-	{"Preset: theme colored", {TCOLOR(TCOLOR_THEME), 0x000000, TCOLOR(TCOLOR_THEME), 0x000000, 0x808080, 0x808080}},
+	{L"Preset: default", {0}},
+	{L"Preset: high contrast", {0x000000, 0xFFFFFF, 0x000000, 0x000000, 0xF28E28, 0xEB00DD}},
+	{L"Preset: theme colored", {TCOLOR(TCOLOR_THEME), 0x000000, TCOLOR(TCOLOR_THEME), 0x000000, 0x808080, 0x808080}},
 };
 static char m_calendar_dirty;
 
@@ -34,7 +34,7 @@ static INT_PTR CALLBACK DlgProcCalendarColors(HWND hDlg, UINT msg, WPARAM wParam
 		for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
 			unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
 			colors[idx].hwnd = GetDlgItem(hDlg, color_id);
-			colors[idx].color = api.GetInt("Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
+			colors[idx].color = api.GetInt(L"Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
 			m_calendar_preset[0].color[idx] = (COLORREF)MonthCal_GetColor(calendar, g_calendar_color[idx].mcsc);
 			if(colors[idx].color != TCOLOR(TCOLOR_DEFAULT)){
 				m_calendar_dirty |= (1<<idx);
@@ -44,7 +44,7 @@ static INT_PTR CALLBACK DlgProcCalendarColors(HWND hDlg, UINT msg, WPARAM wParam
 		ColorBox_Setup(colors, 6);
 		for(idx=0; idx<CALENDAR_PRESETS; ++idx)
 			ComboBox_AddString(preset_cb, m_calendar_preset[idx].name);
-		ComboBox_AddString(preset_cb, "custom colors");
+		ComboBox_AddString(preset_cb, L"custom colors");
 		m_calendar_dirty ^= 1; // toggle bit to force refresh
 		SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDC_CAL_OUTER,CBN_SELCHANGE), (LPARAM)GetDlgItem(hDlg,IDC_CAL_OUTER));
 		return TRUE;}
@@ -106,7 +106,7 @@ static INT_PTR CALLBACK DlgProcCalendarColors(HWND hDlg, UINT msg, WPARAM wParam
 			for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
 				unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
 				HWND color_cb = GetDlgItem(hDlg, color_id);
-				api.SetInt("Calendar", g_calendar_color[idx].reg, ColorBox_GetColorRaw(color_cb));
+				api.SetInt(L"Calendar", g_calendar_color[idx].reg, ColorBox_GetColorRaw(color_cb));
 			}}
 			/* fall through */
 		case IDCANCEL:
@@ -182,20 +182,20 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
  * \remark \e iFirstWeekOfYear should be either 0-2
  * \remark \e iFirstDayOfWeek ranges from 0-6, starting on Monday
  * \sa SetInternational() */
-int GetInternationalInt(const char* entry)
+int GetInternationalInt(const wchar_t* entry)
 {
-	char val[8];
-	api.GetSystemStr(HKEY_CURRENT_USER, "Control Panel\\International", entry, val, sizeof(val), "");
-	return atoi(val);
+	wchar_t val[8];
+	api.GetSystemStr(HKEY_CURRENT_USER, L"Control Panel\\International", entry, val, _countof(val), L"");
+	return _wtoi(val);
 }
 /**
  * \brief writes to <code>HKCR/Control Panel/International</code>; international user settings
  * \param entry entry to write, such as \e iFirstWeekOfYear, \e iFirstDayOfWeek
  * \param val new value
  * \sa GetInternationalInt() */
-void SetInternational(const char* entry, const char* val)
+void SetInternational(const wchar_t* entry, const wchar_t* val)
 {
-	api.SetSystemStr(HKEY_CURRENT_USER, "Control Panel\\International", entry, val);
+	api.SetSystemStr(HKEY_CURRENT_USER, L"Control Panel\\International", entry, val);
 }
 //================================================================================================
 //--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
@@ -204,7 +204,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	HWND week_cb = GetDlgItem(hDlg, IDC_FIRSTWEEK);
 	HWND day_cb = GetDlgItem(hDlg, IDC_FIRSTDAY);
 	UINT iter;
-	if(api.OS >= TOS_VISTA && !api.GetIntEx("Calendar","bCustom",0)){
+	if(api.OS >= TOS_VISTA && !api.GetIntEx(L"Calendar",L"bCustom",0)){
 		for(iter=GROUP_CALENDAR; iter<=GROUP_CALENDAR_END; ++iter) EnableDlgItem(hDlg,iter,0);
 		CheckDlgButton(hDlg,IDCB_USECALENDAR, 0);
 	}else CheckDlgButton(hDlg,IDCB_USECALENDAR, 1);
@@ -214,33 +214,33 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	}else
 		EnableDlgItem(hDlg, IDC_OLDCALENDAR, 0);
 	/// on Calendar defaults change, also update the Calendar itself to stay sync!
-	CheckDlgButton(hDlg, IDCB_SHOW_DOY, api.GetIntEx("Calendar","ShowDayOfYear",1));
-	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, api.GetIntEx("Calendar","ShowWeekNums",0));
-	CheckDlgButton(hDlg, IDCB_CLOSECAL, api.GetIntEx("Calendar","CloseCalendar",1));
-	CheckDlgButton(hDlg, IDCB_CALTOPMOST, api.GetIntEx("Calendar","CalendarTopMost",0));
+	CheckDlgButton(hDlg, IDCB_SHOW_DOY, api.GetIntEx(L"Calendar",L"ShowDayOfYear",1));
+	CheckDlgButton(hDlg, IDCB_SHOWWEEKNUMS, api.GetIntEx(L"Calendar",L"ShowWeekNums",0));
+	CheckDlgButton(hDlg, IDCB_CLOSECAL, api.GetIntEx(L"Calendar",L"CloseCalendar",1));
+	CheckDlgButton(hDlg, IDCB_CALTOPMOST, api.GetIntEx(L"Calendar",L"CalendarTopMost",0));
 #	ifdef WIN2K_COMPAT
-	CheckDlgButton(hDlg, IDCB_TRANS2KICONS, api.GetInt("Desktop","Transparent2kIconText",0));
+	CheckDlgButton(hDlg, IDCB_TRANS2KICONS, api.GetInt(L"Desktop",L"Transparent2kIconText",0));
 #	endif // WIN2K_COMPAT
-	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, api.GetInt("Desktop","MonOffOnLock",0));
-	CheckDlgButton(hDlg, IDCB_MULTIMON, api.GetInt("Desktop","Multimon",1));
+	CheckDlgButton(hDlg, IDCB_MONOFF_ONLOCK, api.GetInt(L"Desktop",L"MonOffOnLock",0));
+	CheckDlgButton(hDlg, IDCB_MULTIMON, api.GetInt(L"Desktop",L"Multimon",1));
 	
 	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETRANGE32,1,12);
-	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS32,0,api.GetInt("Calendar","ViewMonths",3));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_SETPOS32,0,api.GetInt(L"Calendar",L"ViewMonths",3));
 	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETRANGE32,0,2);
-	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,api.GetInt("Calendar","ViewMonthsPast",1));
+	SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_SETPOS32,0,api.GetInt(L"Calendar",L"ViewMonthsPast",1));
 	
-	ComboBox_AddString(week_cb, "week containing January 1 (USA)");
-	ComboBox_AddString(week_cb, "first full week");
-	ComboBox_AddString(week_cb, "first week with four days (EU)");
-	ComboBox_SetCurSel(week_cb, GetInternationalInt("iFirstWeekOfYear"));
-	ComboBox_AddString(day_cb, "Monday");
-	ComboBox_AddString(day_cb, "Tuesday");
-	ComboBox_AddString(day_cb, "Wednesday");
-	ComboBox_AddString(day_cb, "Thursday");
-	ComboBox_AddString(day_cb, "Friday");
-	ComboBox_AddString(day_cb, "Saturday");
-	ComboBox_AddString(day_cb, "Sunday");
-	ComboBox_SetCurSel(day_cb, GetInternationalInt("iFirstDayOfWeek"));
+	ComboBox_AddString(week_cb, L"week containing January 1 (USA)");
+	ComboBox_AddString(week_cb, L"first full week");
+	ComboBox_AddString(week_cb, L"first week with four days (EU)");
+	ComboBox_SetCurSel(week_cb, GetInternationalInt(L"iFirstWeekOfYear"));
+	ComboBox_AddString(day_cb, L"Monday");
+	ComboBox_AddString(day_cb, L"Tuesday");
+	ComboBox_AddString(day_cb, L"Wednesday");
+	ComboBox_AddString(day_cb, L"Thursday");
+	ComboBox_AddString(day_cb, L"Friday");
+	ComboBox_AddString(day_cb, L"Saturday");
+	ComboBox_AddString(day_cb, L"Sunday");
+	ComboBox_SetCurSel(day_cb, GetInternationalInt(L"iFirstDayOfWeek"));
 	
 	if(api.OS > TOS_2000) {
 		for(iter=IDCB_TRANS2KICONS_GRP; iter<=IDCB_TRANS2KICONS; ++iter)
@@ -261,37 +261,35 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 //-------------------------//-----------------------------+++--> Save Current Settings to Registry:
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
-	union{
-		short i;
-		char str[2];
-	} intstr;
-	char bRefresh = ((unsigned)api.GetInt("Desktop","Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
+	wchar_t str[2];
+	char bRefresh = ((unsigned)api.GetInt(L"Desktop",L"Multimon",1) != IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
-	api.SetInt("Calendar","bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
-	api.SetInt("Calendar","CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));
-	api.SetInt("Calendar","ShowWeekNums", IsDlgButtonChecked(hDlg,IDCB_SHOWWEEKNUMS));
-	api.SetInt("Calendar","ShowDayOfYear", IsDlgButtonChecked(hDlg,IDCB_SHOW_DOY));
-	api.SetInt("Calendar","CalendarTopMost", IsDlgButtonChecked(hDlg,IDCB_CALTOPMOST));
-	api.SetInt("Calendar","ViewMonths", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS32,0,0));
-	api.SetInt("Calendar","ViewMonthsPast", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS32,0,0));
+	api.SetInt(L"Calendar", L"bCustom", IsDlgButtonChecked(hDlg,IDCB_USECALENDAR));
+	api.SetInt(L"Calendar", L"CloseCalendar", IsDlgButtonChecked(hDlg,IDCB_CLOSECAL));
+	api.SetInt(L"Calendar", L"ShowWeekNums", IsDlgButtonChecked(hDlg,IDCB_SHOWWEEKNUMS));
+	api.SetInt(L"Calendar", L"ShowDayOfYear", IsDlgButtonChecked(hDlg,IDCB_SHOW_DOY));
+	api.SetInt(L"Calendar", L"CalendarTopMost", IsDlgButtonChecked(hDlg,IDCB_CALTOPMOST));
+	api.SetInt(L"Calendar", L"ViewMonths", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHSPIN,UDM_GETPOS32,0,0));
+	api.SetInt(L"Calendar", L"ViewMonthsPast", (int)SendDlgItemMessage(hDlg,IDC_CALMONTHPASTSPIN,UDM_GETPOS32,0,0));
 #	ifdef WIN2K_COMPAT
 	if(api.OS == TOS_2000) {
 		int value = IsDlgButtonChecked(hDlg,IDCB_TRANS2KICONS);
 		SetDesktopIconTextBk(value);
-		api.SetInt("Desktop", "Transparent2kIconText", value);
+		api.SetInt(L"Desktop", L"Transparent2kIconText", value);
 		if(value)
 			TimetableAdd(SCHEDID_WIN2K, 30, 30);
 		else
 			TimetableRemove(SCHEDID_WIN2K);
 	}
 #	endif // WIN2K_COMPAT
-	api.SetInt("Desktop","MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
-	api.SetInt("Desktop","Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
+	api.SetInt(L"Desktop", L"MonOffOnLock", IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK));
+	api.SetInt(L"Desktop", L"Multimon", IsDlgButtonChecked(hDlg,IDCB_MULTIMON));
 	
-	intstr.i = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTWEEK));
-	SetInternational("iFirstWeekOfYear", intstr.str);
-	intstr.i = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTDAY));
-	SetInternational("iFirstDayOfWeek", intstr.str);
+	str[1] = '\0';
+	str[0] = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTWEEK));
+	SetInternational(L"iFirstWeekOfYear", str);
+	str[0] = '0' + (char)ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_FIRSTDAY));
+	SetInternational(L"iFirstDayOfWeek", str);
 	
 	if(api.OS >= TOS_XP) { // This feature requires XP+
 		BOOL enabled=IsDlgButtonChecked(hDlg, IDCB_MONOFF_ONLOCK);
@@ -304,7 +302,7 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	if(api.OS >= TOS_WIN10){
 		int old_calendar = api.GetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 0);
 		if((int)IsDlgButtonChecked(hDlg, IDC_OLDCALENDAR) != old_calendar){
-			char param[5] = "/Wc0";
+			wchar_t param[5] = L"/Wc0";
 			if(!old_calendar)
 				param[3] = '1';
 			if(api.ExecElevated(GetClockExe(), param, NULL) == 1)

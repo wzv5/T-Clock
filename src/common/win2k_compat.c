@@ -37,10 +37,33 @@ errno_t win2k_wcsncpy_s(wchar_t* strDest, size_t numberOfElements, const wchar_t
 	strDest[len_src] = '\0';
 	return 0;
 }
+
 char* win2k_strtok_s(char* strToken, const char* strDelimit, char** context){
 	char* ret;
 	char* pos;
 	const char* delim;
+	if(!strDelimit || !context || (!*context&&!strToken)){
+		_set_errno(EINVAL);
+		return NULL;
+	}
+	if(strToken)
+		*context = strToken;
+	for(pos=*context; *pos; ++pos){
+		for(delim=strDelimit; *delim && *pos!=*delim; ++delim);
+		if(*delim) break;
+	}
+	_set_errno(0);
+	if(!*pos)
+		return NULL;
+	*pos = '\0';
+	ret = *context;
+	*context = pos+1;
+	return ret;
+}
+wchar_t* win2k_wcstok_s(wchar_t* strToken, const wchar_t* strDelimit, wchar_t** context){
+	wchar_t* ret;
+	wchar_t* pos;
+	const wchar_t* delim;
 	if(!strDelimit || !context || (!*context&&!strToken)){
 		_set_errno(EINVAL);
 		return NULL;

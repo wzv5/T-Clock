@@ -41,12 +41,12 @@ enum{
 	SFORMAT_FEATURE		=0x0010,
 	SFORMAT_TEXTPOSITION=0x0020,
 };
-static const char* SFORMAT[]={
-	"different",//SFORMAT_BASIC
-	"more efficient",//SFORMAT_EFFICIENT
-	"using less memory",//SFORMAT_LESSMEM
-	"more feature rich",//SFORMAT_FEATURE
-	"positioning text differently",//SFORMAT_TEXTPOSITION
+static const wchar_t* SFORMAT[]={
+	L"different",//SFORMAT_BASIC
+	L"more efficient",//SFORMAT_EFFICIENT
+	L"using less memory",//SFORMAT_LESSMEM
+	L"more feature rich",//SFORMAT_FEATURE
+	L"positioning text differently",//SFORMAT_TEXTPOSITION
 };
 
 enum{
@@ -55,25 +55,25 @@ enum{
 	SCOMPAT_FORMATALL	=0x0002,
 	SCOMPAT_TIMERS		=0x0004,
 };
-static const char* SCOMPAT[]={
-	"some clock text options",
-	"all clock text options",
-	"your timers",
+static const wchar_t* SCOMPAT[]={
+	L"some clock text options",
+	L"all clock text options",
+	L"your timers",
 };
 
 int ParseSettings(){
-	char msg[1024];
+	wchar_t msg[1024];
 	int updateflags = SFORMAT_NONE;
 	int compatibilityflags = SCOMPAT_NONE;
-	VERSION ver = api.GetInt("", "Ver", 0);
+	VERSION ver = api.GetInt(L"", L"Ver", 0);
 	
-//	api.SetStr(NULL, "ExePath", api.root);
-	api.GetStr("Clock", "Font", msg, 80, "");
+//	api.SetStr(NULL, L"ExePath", api.root);
+	api.GetStr(L"Clock", L"Font", msg, 80, L"");
 	/// new installation?
 	if(!*msg) {
 		NONCLIENTMETRICS metrics = {sizeof(NONCLIENTMETRICS)};
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(metrics), &metrics, 0);
-		api.SetStr("Clock", "Font", metrics.lfCaptionFont.lfFaceName);
+		api.SetStr(L"Clock", L"Font", metrics.lfCaptionFont.lfFaceName);
 		
 		if(ver == 0){ // very likely a new installation
 			FirstTimeSetup(FRESH);
@@ -102,11 +102,11 @@ int ParseSettings(){
 		
 	default:{
 		int ans = MessageBox(NULL,
-							"Seems like you've been using a newer version.\n"
-							"Some settings might not be readable\n"
-							"by this older version and you could loose them.\n"
-							"\n"
-							"Run this version anyway?","T-Clock downgraded?",MB_OKCANCEL|MB_ICONINFORMATION);
+							L"Seems like you've been using a newer version.\n"
+							L"Some settings might not be readable\n"
+							L"by this older version and you could loose them.\n"
+							L"\n"
+							L"Run this version anyway?", L"T-Clock downgraded?", MB_OKCANCEL|MB_ICONINFORMATION);
 		if(ans != IDOK)
 			return -1;
 		ConvertSettings(ver); // should do nothing, just downgrade our version number
@@ -119,28 +119,28 @@ int ParseSettings(){
 		int ans;
 		if(updateflags!=SFORMAT_SILENT){
 			int flags;
-			char* pos = msg;
+			wchar_t* pos = msg;
 			pos += wsprintf(pos,
-							"T-Clock stores now some of its settings differently.\n"
-							"Don't worry though, we'll convert your settings\n"
-							"to the new format and nothing should get lost.\n"
-							"\n"
-							"The new format is simply:");
+							L"T-Clock stores now some of its settings differently.\n"
+							L"Don't worry though, we'll convert your settings\n"
+							L"to the new format and nothing should get lost.\n"
+							L"\n"
+							L"The new format is simply:");
 			for(flags=updateflags>>1/*ignore SFORMAT_SILENT*/,ans=0; flags; flags>>=1,++ans){
 				if(flags&1)
-					pos += wsprintf(pos,"\n	+ %s",SFORMAT[ans]);
+					pos += wsprintf(pos, L"\n	+ %s", SFORMAT[ans]);
 			}
 			if(compatibilityflags){
-				pos += wsprintf(pos,"\n\n"
-								"If you want to go back to an old version later on,\n"
-								"you could/will lose: (be warned)");
+				pos += wsprintf(pos,L"\n\n"
+								L"If you want to go back to an old version later on,\n"
+								L"you could/will lose: (be warned)");
 				for(flags=compatibilityflags,ans=0; flags; flags>>=1,++ans){
 					if(flags&1)
-						pos+=wsprintf(pos,"\n	- %s",SCOMPAT[ans]);
+						pos += wsprintf(pos, L"\n	- %s", SCOMPAT[ans]);
 				}
 			}
-			pos += wsprintf(pos,"\n\nRun T-Clock and convert settings now?");
-			ans = MessageBox(NULL,msg,"You've just updated T-Clock",MB_OKCANCEL|MB_ICONINFORMATION);
+			pos += wsprintf(pos, L"\n\nRun T-Clock and convert settings now?");
+			ans = MessageBox(NULL, msg, L"You've just updated T-Clock", MB_OKCANCEL|MB_ICONINFORMATION);
 		}else // silent update
 			ans = IDOK;
 		if(ans != IDOK)
@@ -152,7 +152,7 @@ int ParseSettings(){
 }
 
 void ConvertSettings(VERSION ver) {
-	char buf[MAX_PATH];
+	wchar_t buf[MAX_PATH];
 	int idx, idx2;
 	size_t len;
 	
@@ -160,24 +160,24 @@ void ConvertSettings(VERSION ver) {
 	case FRESH:
 	case _2_2_0:
 		// update font rotate (from none,left,right to 0-360 angle)
-		api.GetStr("Clock", "FontRotateDirection", buf, sizeof(buf), "");
+		api.GetStr(L"Clock", L"FontRotateDirection", buf, _countof(buf), L"");
 		switch(*buf){
-		case 'L': api.SetInt("Clock", "Angle", 90); break;
-		case 'R': api.SetInt("Clock", "Angle", 270); break;
+		case 'L': api.SetInt(L"Clock", L"Angle", 90); break;
+		case 'R': api.SetInt(L"Clock", L"Angle", 270); break;
 		}
-		api.DelValue("Clock","FontRotateDirection");
+		api.DelValue(L"Clock", L"FontRotateDirection");
 		// Reset text position; we now center text automatically (and it's relative to that, not the upper area)
 		// All settings were supposed to be one-off converts, not repeating if "Ver" resets, but that wouldn't work here
-		api.SetInt("Clock", "ClockHeight", 0);
-		api.SetInt("Clock", "ClockWidth", 0);
-		api.SetInt("Clock", "HorizPos", 0);
-		api.SetInt("Clock", "VertPos", 0);
+		api.SetInt(L"Clock", L"ClockHeight", 0);
+		api.SetInt(L"Clock", L"ClockWidth", 0);
+		api.SetInt(L"Clock", L"HorizPos", 0);
+		api.SetInt(L"Clock", L"VertPos", 0);
 		// remove "ID" from "Timers" as no longer used
-		len = wsprintf(buf, "Timers\\Timer");
-		idx2 = api.GetInt("Timers","NumberOfTimers",0);
+		len = wsprintf(buf, L"Timers\\Timer");
+		idx2 = api.GetInt(L"Timers", L"NumberOfTimers",0);
 		for(idx=0; idx<idx2; ){
-			wsprintf(buf+len, "%d", ++idx);
-			api.DelValue(buf, "ID");
+			wsprintf(buf+len, L"%d", ++idx);
+			api.DelValue(buf, L"ID");
 		}
 		/* fall through */
 		
@@ -191,30 +191,30 @@ void ConvertSettings(VERSION ver) {
 	case _2_4_0:{
 		int is12h, hour;
 		// convert alarms to use 24h format
-		len = wsprintf(buf, "Alarm");
+		len = wsprintf(buf, L"Alarm");
 		idx2 = GetAlarmNum();
 		for(idx=0; idx<idx2; ){
-			wsprintf(buf+len, "%d", ++idx);
-			is12h = api.GetInt(buf, "Hour12", 0);
+			wsprintf(buf+len, L"%d", ++idx);
+			is12h = api.GetInt(buf, L"Hour12", 0);
 			if(is12h){ // convert to 24h format
-				hour = api.GetInt(buf, "Hour", 12);
-				api.SetInt(buf, "Hour", _12hTo24h(hour,api.GetInt(buf,"PM",0)));
-				api.SetInt(buf, "12h", is12h);
+				hour = api.GetInt(buf, L"Hour", 12);
+				api.SetInt(buf, L"Hour", _12hTo24h(hour,api.GetInt(buf,L"PM",0)));
+				api.SetInt(buf, L"12h", is12h);
 			}
-			api.DelValue(buf, "Hour12");
-			api.DelValue(buf, "PM");
+			api.DelValue(buf, L"Hour12");
+			api.DelValue(buf, L"PM");
 		}
 		// make sure "new line" format was set to one or zero
 		/// @note : on next backward incompatible change, remove "Kaigyo" key and this "if"
-		if(api.GetInt("Format", "Lf", -1) == -1)
-			api.SetInt("Format", "Lf", (api.GetInt("Format","Kaigyo",0) ? BST_CHECKED : BST_UNCHECKED));
+		if(api.GetInt(L"Format", L"Lf", -1) == -1)
+			api.SetInt(L"Format", L"Lf", (api.GetInt(L"Format",L"Kaigyo",0) ? BST_CHECKED : BST_UNCHECKED));
 		// convert old 12h switch - h/w(±) -> HH/W
-		if(!api.GetInt("Format","Hour12",1)){
+		if(!api.GetInt(L"Format",L"Hour12",1)){
 			char converted = 0;
-			char fmt[MAX_FORMAT];
+			wchar_t fmt[MAX_FORMAT];
 			size_t fmtlen;
-			char* pos;
-			fmtlen = api.GetStr("Format", "CustomFormat", fmt, MAX_FORMAT, "");
+			wchar_t* pos;
+			fmtlen = api.GetStr(L"Format", L"CustomFormat", fmt, _countof(fmt), L"");
 			for(pos=fmt; *pos; ){
 				if(pos[0] == '"') {
 					do{
@@ -226,7 +226,7 @@ void ConvertSettings(VERSION ver) {
 				if(pos[0] == 'S'){ // only format that also includes "h"
 					int width, padding;
 					++pos;
-					api.GetFormat((const char**)&pos, &width, &padding);
+					api.GetFormat((const wchar_t**)&pos, &width, &padding);
 					continue;
 				}
 				if(pos[0] == 'h'){
@@ -238,7 +238,7 @@ void ConvertSettings(VERSION ver) {
 					}else if(fmtlen+1 < MAX_FORMAT){
 						++pos;
 						++fmtlen; // we also copy null char
-						memmove(pos+1, pos, fmtlen-(pos-fmt));
+						memmove(pos+1, pos, ((fmtlen-(pos-fmt)) * sizeof pos[0]));
 						*pos = 'H';
 					}
 				}else if(pos[0] == 'w' && (pos[1]=='+'||pos[1]=='-')){
@@ -248,9 +248,9 @@ void ConvertSettings(VERSION ver) {
 				++pos;
 			}
 			if(converted){
-				api.SetStr("Format", "CustomFormat", fmt);
-				if(api.GetInt("Format", "Custom", 0)){
-					api.SetStr("Format", "Format", fmt);
+				api.SetStr(L"Format", L"CustomFormat", fmt);
+				if(api.GetInt(L"Format", L"Custom", 0)){
+					api.SetStr(L"Format", L"Format", fmt);
 				}
 			}
 		}}
@@ -264,39 +264,43 @@ void ConvertSettings(VERSION ver) {
 
 void FirstTimeSetup(VERSION from_version) {
 	union{
-		unsigned short entryS;
-		char entry[3];
+		uint32_t entryU;
+		wchar_t entry[3];
 	} u;
+	const int bits = (8*sizeof(u.entry[0])); // 16
+	HWND hwnd;
+	RECT rc;
+	
 	switch(from_version) {
 	case FRESH:
 		u.entry[2] = '\0';
-		u.entryS = '0'|('1'<<8); // left, 1 click
+		u.entryU = '0' | ('1'<<bits); // left, 1 click
 		api.SetInt(REG_MOUSE, u.entry, MOUSEFUNC_SHOWCALENDER);
-		u.entryS = '1'|('1'<<8); // right, 1 click
+		u.entryU = '1' | ('1'<<bits); // right, 1 click
 		api.SetInt(REG_MOUSE, u.entry, MOUSEFUNC_MENU);
-		u.entryS = '2'|('1'<<8); // middle, 1 click
+		u.entryU = '2' | ('1'<<bits); // middle, 1 click
 		api.SetInt(REG_MOUSE, u.entry, IDM_STOPWATCH);
 		
-		u.entryS = (api.OS >= TOS_VISTA ? BST_INDETERMINATE : BST_UNCHECKED);
-		if(!u.entryS) { /// @todo : XP: measure taskbar height to choose font size and or multiline/singleline (small vs "normal" taskbar)
-			HWND hwnd = FindWindow("Shell_TrayWnd", NULL);
+		u.entryU = (api.OS >= TOS_VISTA ? BST_INDETERMINATE : BST_UNCHECKED);
+		if(!u.entryU) { /// @todo : XP: measure taskbar height to choose font size and or multiline/singleline (small vs "normal" taskbar)
+			hwnd = FindWindowA("Shell_TrayWnd", NULL);
 			if(hwnd) {
-				RECT rc; GetClientRect(hwnd, &rc);
+				GetClientRect(hwnd, &rc);
 				if(rc.bottom > rc.right) // vertical taskbar
-					u.entryS = BST_CHECKED;
+					u.entryU = BST_CHECKED;
 			}
 		}
-		api.SetInt("Format", "Lf", u.entryS);
+		api.SetInt(L"Format", L"Lf", u.entryU);
 		/* fall through */
 	case _2_2_0:
 	case _2_3_0:
 		/* fall through */
 	case _2_4_0:
 		// first time update check (firewall warning etc.)
-		api.ShellExecute(NULL, "misc\\Options", "-unotify", NULL, SW_HIDE);
+		api.ShellExecute(NULL, L"misc\\Options", L"-unotify", NULL, SW_HIDE);
 		/* fall through */
 	case CURRENT:
 		break;
 	}
-	api.SetInt("", "Ver", CURRENT);
+	api.SetInt(L"", L"Ver", CURRENT);
 }

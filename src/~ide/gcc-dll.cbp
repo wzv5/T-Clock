@@ -82,6 +82,7 @@
 			<Add alias="release" targets="release-64;release-32;" />
 		</VirtualTargets>
 		<Compiler>
+			<Add option="-D_UNICODE -DUNICODE" />
 			<Add option="-fno-ident" />
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
@@ -96,6 +97,7 @@
 			<Add option="-DWIN2K_COMPAT" />
 		</Compiler>
 		<Linker>
+			<Add option="-municode" />
 			<Add option="-static" />
 			<Add library="advapi32" />
 			<Add library="shell32" />

@@ -79,17 +79,17 @@ union{
 } m_colBG;
 #define ColorUpdate(col,colBG) do{\
 	COLORREF oldbg;\
-	m_col.ref=api.GetColor(col,0);\
-	oldbg=m_colBG.ref;\
-	m_colBG.ref=api.GetColor(colBG,1);\
-	if(m_colBG.ref!=oldbg)\
+	m_col.ref = api.GetColor(col, 0);\
+	oldbg = m_colBG.ref;\
+	m_colBG.ref = api.GetColor(colBG, 1);\
+	if(m_colBG.ref != oldbg)\
 		FillClockBG();\
 	} __pragma(warning(suppress:4127)) while(0)
 /// misc variables
 int m_TipState=0;
 HWND m_TipHwnd = NULL;
 TOOLINFO m_TipInfo;
-char m_format[256];
+wchar_t m_format[256];
 SYSTEMTIME m_LastTime={0};
 int m_bDispSecond = 0;
 int m_nDispBeat = 0;
@@ -121,67 +121,64 @@ typedef struct{
 ///------------------------------------------------------+++--> drag&drop helper:
 static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 {
-	char fname[MAX_PATH], sname[MAX_PATH];
-	char app[MAX_PATH];
-	char* buf,* pos;
+	wchar_t fname[MAX_PATH];
+	wchar_t app[MAX_PATH];
+	wchar_t* buf,* pos;
 	int i, num;
 	STGMEDIUM med;
 	if(self->dropobj->lpVtbl->GetData(self->dropobj,&m_mydropfmt,&med) != S_OK)
 		return;
 	
-	num=DragQueryFile(med.hGlobal, (UINT)-1, NULL, 0);
-	if(num<=0)
+	num = DragQueryFile(med.hGlobal, (UINT)-1, NULL, 0);
+	if(num <= 0)
 		return;
-	buf=malloc(num*MAX_PATH);
+	buf = malloc(MAX_PATH * sizeof(buf[0]) * num);
 	if(!buf)
 		return;
-	pos=buf;
+	pos = buf;
 	for(i=0; i<num; ++i) {
-		DragQueryFile(med.hGlobal,i,fname,sizeof(fname));
-		if(self->type==DF_RECYCLE || self->type==DF_COPY || self->type==DF_MOVE) {
-			strcpy(pos,fname);
-			pos+=strlen(pos)+1;
-		} else if(self->type==DF_OPEN) {
-			if(num>1)
-				GetShortPathName(fname,sname,sizeof(sname));
+		DragQueryFile(med.hGlobal, i, fname, _countof(fname));
+		if(self->type == DF_RECYCLE || self->type == DF_COPY || self->type == DF_MOVE) {
+			wcscpy(pos, fname);
+			pos += wcslen(pos)+1;
+		} else if(self->type == DF_OPEN) {
+			if(num > 1)
+				GetShortPathName(fname, pos, _countof(fname));
 			else
-				strcpy(sname,fname);
-			strcpy(pos,sname);
-			pos+=strlen(pos);
-			if(num>1 && i<num-1)
-				*pos++=' ';
+				wcscpy(pos, fname);
+			pos += wcslen(pos);
+			if(num > 1 && i < (num-1))
+				*pos++ = L' ';
 		}
 	}
-	*pos='\0';
+	*pos = '\0';
 	
-	num=api.GetStr(REG_MOUSE, "DropFilesApp",app,sizeof(app),"");
+	num = api.GetStr(REG_MOUSE, L"DropFilesApp", app, _countof(app), L"");
 	
-	if(self->type==DF_RECYCLE || self->type==DF_COPY || self->type==DF_MOVE) {
-		SHFILEOPSTRUCT shfos={0};
+	if(self->type == DF_RECYCLE || self->type == DF_COPY || self->type == DF_MOVE) {
+		SHFILEOPSTRUCT shfos = {0};
 		shfos.hwnd = NULL;
 		shfos.pFrom = buf;
 		shfos.fFlags = FOF_ALLOWUNDO|FOF_NOCONFIRMATION;
 		switch(self->type){
 		case DF_COPY:
-			shfos.wFunc=FO_COPY;
-			shfos.pTo=app;
+			shfos.wFunc = FO_COPY;
+			shfos.pTo = app;
 			break;
 		case DF_MOVE:
-			shfos.wFunc=FO_MOVE;
-			shfos.pTo=app;
+			shfos.wFunc = FO_MOVE;
+			shfos.pTo = app;
 			break;
 		default: // DF_RECYCLE:
-			shfos.wFunc=FO_DELETE;
+			shfos.wFunc = FO_DELETE;
 			break;
 		}
 		SHFileOperation(&shfos);
-	} else if(self->type==DF_OPEN) {
-		char* command=malloc(2+num+(pos-buf));
+	} else if(self->type == DF_OPEN) {
+		wchar_t* command = malloc((2+num+(pos-buf)) * sizeof(wchar_t));
 		if(command){
-			memcpy(command,app,num);
-			command[num]=' ';
-			memcpy(command+num+1,buf,(pos-buf)+1);
-			api.ExecFile(command,NULL);
+			wsprintf(command, L"%s %s", app, buf);
+			api.ExecFile(command, NULL);
 			free(command);
 		}
 	}
@@ -360,25 +357,25 @@ static void MyDragDrop_Enable(IDropTarget* myobj, int bEnable){
 	self->disabled=!bEnable;
 	free(self->szTarget); self->szTarget=NULL;
 	if(bEnable){
-		self->type=(char)api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE);
+		self->type = (char)api.GetInt(REG_MOUSE, L"DropFiles", DF_RECYCLE);
 		switch(self->type){
 		case DF_NONE:
-			self->disabled=1;
+			self->disabled = 1;
 			break;
 		case DF_RECYCLE:
-			self->szTarget=wcsdup(L"Recycle Bin");
+			self->szTarget = wcsdup(L"Recycle Bin");
 			break;
 		default:{
-			char app[MAX_PATH];
-			int num=api.GetStr(REG_MOUSE,"DropFilesApp",app,sizeof(app),"");
-			if(!num){
-				self->disabled=1;
+			wchar_t app[MAX_PATH];
+			int size = api.GetStr(REG_MOUSE, L"DropFilesApp", app, _countof(app), L"");
+			if(!size){
+				self->disabled = 1;
 			}else{
-				get_title(app,app); // get only exe/folder name
-				num=(int)strlen(app)+1;
-				self->szTarget=malloc(sizeof(wchar_t)*num);
+				get_title(app, app); // get only exe/folder name
+				size = (int)(wcslen(app)+1) * sizeof(self->szTarget[0]);
+				self->szTarget = malloc(size);
 				if(self->szTarget)
-					MultiByteToWideChar(CP_ACP,0,app,num,self->szTarget,num);
+					memcpy(self->szTarget, app, size);
 			}
 			break;}
 		}
@@ -392,17 +389,18 @@ void CreateTip(HWND hwnd)   //--------------------------------------------------
 //	hwndTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX|TTS_BALLOON,
 	m_TipHwnd = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
 							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,api.hInstance,NULL);
-	if(!m_TipHwnd) return;
-	memset(&m_TipInfo,0,sizeof(TOOLINFO));
+	if(!m_TipHwnd)
+		return;
+	memset(&m_TipInfo, 0, sizeof(TOOLINFO));
 	m_TipInfo.cbSize = sizeof(TOOLINFO);
 	m_TipInfo.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_TRANSPARENT;
 	m_TipInfo.hwnd = hwnd;
 	m_TipInfo.uId = (UINT_PTR)hwnd;
 	m_TipInfo.lpszText = LPSTR_TEXTCALLBACK_nowarn;
 	
-	SendMessage(m_TipHwnd,TTM_ADDTOOL,0,(LPARAM)&m_TipInfo);
-	SendMessage(m_TipHwnd,TTM_SETMAXTIPWIDTH,0,300);
-	SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(0x7FFF,0x7FFF));
+	SendMessage(m_TipHwnd, TTM_ADDTOOL, 0, (LPARAM)&m_TipInfo);
+	SendMessage(m_TipHwnd, TTM_SETMAXTIPWIDTH, 0, 300);
+	SendMessage(m_TipHwnd, TTM_TRACKPOSITION, 0, MAKELPARAM(0x7FFF,0x7FFF));
 }
 void DestroyTip()
 {
@@ -451,18 +449,18 @@ void SubsCreate(){
 	int clock_id;
 	if(m_multiClocks || !m_bMultimon) return;
 	// loop all secondary taskbars
-	hwndBar=FindWindowEx(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
+	hwndBar=FindWindowExA(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
 	while(hwndBar){
 		hwndChild = GetWindow(hwndBar,GW_CHILD);
 		while(hwndChild){
-			GetClassName(hwndChild,classname,sizeof(classname));
+			GetClassNameA(hwndChild, classname, _countof(classname));
 			if(!strcmp(classname,"WorkerW")){
 				if(m_multiClocks==MAX_MULTIMON_CLOCKS)
 					break;
 				for(clock_id=0; clock_id<m_multiClocks && hwndChild!=m_multiClock[clock_id].worker; ++clock_id); // try to find existing
 				if(clock_id==m_multiClocks){ // new
 					if(!m_multiClockClass){
-						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX),CS_PARENTDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,"SecondaryTrayClockWClass",NULL};
+						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX),CS_PARENTDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,L"SecondaryTrayClockWClass",NULL};
 						wndclass.hCursor = LoadCursor(NULL,IDC_ARROW);
 						wndclass.hInstance = api.hInstance;
 						m_multiClockClass = RegisterClassEx(&wndclass);
@@ -481,7 +479,7 @@ void SubsCreate(){
 			}
 			hwndChild = GetWindow(hwndChild,GW_HWNDNEXT);
 		}
-		hwndBar = FindWindowEx(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
+		hwndBar = FindWindowExA(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
 	}
 }
 HMODULE m_hself;
@@ -491,7 +489,7 @@ int SetupClockAPI(int version, TClockAPI* api); // clock_api.c
 void InitClock(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
 	gs_hwndClock = hwnd;
-	m_hself=LoadLibrary("T-Clock" ARCH_SUFFIX);
+	m_hself=LoadLibrary(L"T-Clock" ARCH_SUFFIX);
 	SetupClockAPI(CLOCK_API, NULL); // initialize API
 	GetClientRect(hwnd,&m_rcClock); // use original clock size until we've loaded our settings
 	{//"top" margin detection // 2px Win8 default (Vista+)
@@ -684,12 +682,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		return 0;
 	case WM_MOUSEHOVER:
 		m_TipState = 2;
-		if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0)){
+		if(api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0)){
 			ShowTip(hwnd);//show custom tooltip
 		}else{
 			SendMessage(gs_hwndClock, WM_USER+103,1,0);//show system tooltip
 			if(hwnd != gs_hwndClock) {
-				HWND tooltip = FindWindowEx(NULL, NULL, "ClockTooltipWindow", NULL);
+				HWND tooltip = FindWindowExA(NULL, NULL, "ClockTooltipWindow", NULL);
 				if(tooltip) {
 					api.PositionWindow(tooltip, 0);
 					// hook to prevent any non-authorized move
@@ -702,7 +700,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_MOUSELEAVE:
 		if(m_TipState){
 			if(m_TipState == 2){
-				if(api.OS < TOS_VISTA || api.GetInt("Tooltip","bCustom",0))
+				if(api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
 					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
@@ -754,8 +752,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		/* fall through */
 	case CLOCKM_REFRESHTASKBAR:{ // refresh other elements than clock (somehow required to actually change the clock's size)
 		HWND taskbar=GetParent(GetParent(hwnd));
-		int alpha = api.GetIntEx("Taskbar", "AlphaTaskbar", 0);
-		int clear_taskbar = api.GetIntEx("Taskbar", "ClearTaskbar", FALSE);
+		int alpha = api.GetIntEx(L"Taskbar", L"AlphaTaskbar", 0);
+		int clear_taskbar = api.GetIntEx(L"Taskbar", L"ClearTaskbar", 0);
 		SetLayeredTaskbar(hwnd, alpha, clear_taskbar, 0);
 		PostMessage(taskbar, WM_SIZE, SIZE_RESTORED, 0);
 		InvalidateRect(taskbar, NULL, 1);
@@ -890,14 +888,14 @@ LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam,
 //---------------------------------+++--> Retreive T-Clock's format settings:
 void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 {
-	const char* section=(preview?"Preview":"Format");
+	const wchar_t* section = (preview ? L"Preview" : L"Format");
 	DWORD dwInfoFormat;
-	m_bNoClock = (char)api.GetInt(section, "NoClockCustomize", 0);
+	m_bNoClock = (char)api.GetInt(section, L"NoClockCustomize", 0);
 	// read format
-	if(!api.GetStr(section, "Format", m_format, sizeof(m_format), "") || !m_format[0]) {
+	if(!api.GetStr(section,L"Format",m_format,_countof(m_format),L"") || !m_format[0]) {
 		m_bNoClock = 1;
 	}
-	g_bHourZero = (char)api.GetInt(section, "HourZero", 0);
+	g_bHourZero = (char)api.GetInt(section, L"HourZero", 0);
 	// parse format
 	dwInfoFormat = FindFormat(m_format);
 	m_bDispSecond = (dwInfoFormat&FORMAT_SECOND)? 1:0;
@@ -916,40 +914,40 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 //---------------------------------+++--> Retreive T-Clock's style settings:
 void ReadStyleData(HWND hwnd, int preview)   //---------------------+++-->
 {
-	const char* section=(preview?"Preview":"Clock");
-	char fontname[80];
+	const wchar_t* section = (preview ? L"Preview" : L"Clock");
+	wchar_t fontname[80];
 	LONG weight, italic;
 	int fontsize, angle;
 	BYTE fontquality;
 	HFONT hFon;
 	/// read style
-	m_basecolorFont = api.GetInt(section, "ForeColor", TCOLOR(TCOLOR_DEFAULT));
-	m_basecolorBG = api.GetInt(section, "BackColor", TCOLOR(TCOLOR_DEFAULT));
+	m_basecolorFont = api.GetInt(section, L"ForeColor", TCOLOR(TCOLOR_DEFAULT));
+	m_basecolorBG = api.GetInt(section, L"BackColor", TCOLOR(TCOLOR_DEFAULT));
 	ColorUpdate(m_basecolorFont,m_basecolorBG);
-	angle=api.GetInt(section,"Angle",0)%360;
+	angle=api.GetInt(section, L"Angle", 0)%360;
 	if(angle<0) angle+=360;
 	m_radian=(double)angle*3.14159265358979323/180.;// ye π doesn't need to be that long :P
-	dlineheight = api.GetInt(section, "LineHeight", 0);
-	m_height = api.GetInt(section, "ClockHeight", 0);
-	m_width = api.GetInt(section, "ClockWidth", 0);
-	dhpos = api.GetInt(section, "HorizPos", 0);
-	dvpos = api.GetInt(section, "VertPos", 0);
+	dlineheight = api.GetInt(section, L"LineHeight", 0);
+	m_height = api.GetInt(section, L"ClockHeight", 0);
+	m_width = api.GetInt(section, L"ClockWidth", 0);
+	dhpos = api.GetInt(section, L"HorizPos", 0);
+	dvpos = api.GetInt(section, L"VertPos", 0);
 	/// font
-	api.GetStr(section, "Font", fontname, 80, "Arial");
-	fontsize = api.GetInt(section, "FontSize", 9);
+	api.GetStr(section, L"Font", fontname, _countof(fontname), L"Arial");
+	fontsize = api.GetInt(section, L"FontSize", 9);
 	if(fontsize>100 || fontsize<=0) fontsize=9;
-	italic = api.GetInt(section, "Italic", 0);
-	weight = api.GetInt(section, "Bold", 0);
+	italic = api.GetInt(section, L"Italic", 0);
+	weight = api.GetInt(section, L"Bold", 0);
 	switch(weight){
 	case 0: break;
 	case 1: weight=FW_BOLD; break;
 	default:
 		weight=FW_SEMIBOLD;
 	}
-	fontquality = (BYTE)api.GetInt(section, "FontQuality", CLEARTYPE_QUALITY);
+	fontquality = (BYTE)api.GetInt(section, L"FontQuality", CLEARTYPE_QUALITY);
 	hFon = CreateMyFont(fontname, fontsize, weight, italic, angle*10, fontquality);
 	/// misc
-	m_bMultimon = api.GetInt("Desktop", "Multimon", 1);
+	m_bMultimon = api.GetInt(L"Desktop", L"Multimon", 1);
 	/// create/update clock
 	UpdateClock(hwnd,hFon);
 	InvalidateRect(hwnd, NULL, 0);
@@ -1022,7 +1020,7 @@ void CALLBACK OnDrawTimer(HWND hwnd, unsigned uMsg, uintptr_t idEvent, unsigned 
 	}
 	
 	if(m_LastTime.wDay!=t.wDay || m_LastTime.wMonth!=t.wMonth || m_LastTime.wYear!=t.wYear) {
-		InitFormat("Format",&t); // format.c
+		InitFormat(L"Format", &t); // format.c
 		InitDaylightTimeTransition();
 		UpdateClock(hwnd,NULL); // resize clock
 		SendMessage(hwnd,CLOCKM_REFRESHTASKBAR,0,0); // reposition clock (inform taskbar about new size)
@@ -1100,41 +1098,41 @@ void CalculateClockTextPosition(){
 void CalculateClockTextSize(){
 	SYSTEMTIME time;
 	int beat100=0;
-	char buf[FORMAT_MAX_SIZE], *pos, *str;
+	wchar_t buf[FORMAT_MAX_SIZE], *pos, *str;
 	unsigned len;
 	SIZE sz;
 	TEXTMETRIC tm;
 	/// fake time/date to use up most possible space for (static) size calculation
 //	GetDisplayTime(&time, m_nDispBeat ? &beat100 : NULL);
-	time.wYear=2222;
-	time.wMonth=12;
-	time.wDayOfWeek=3;
-	time.wDay=22;
-	time.wHour=10;
-	time.wMinute=time.wSecond=22;
-	time.wMilliseconds=666;
-	beat100=666;
-	len=MakeFormat(buf, m_format, &time, beat100);
+	time.wYear = 2222;
+	time.wMonth = 12;
+	time.wDayOfWeek = 3;
+	time.wDay = 22;
+	time.wHour = 10;
+	time.wMinute = time.wSecond = 22;
+	time.wMilliseconds = 666;
+	beat100 = 666;
+	len = MakeFormat(buf, m_format, &time, beat100);
 	/// calc size
 	GetTextMetrics(m_hdcClock,&tm);
-	m_textpadding=tm.tmAveCharWidth*2;
-	m_textheight=m_textwidth=0;
-	m_leading=tm.tmInternalLeading;
-	m_vertfeed=tm.tmHeight-m_leading+dlineheight;
+	m_textpadding = tm.tmAveCharWidth*2;
+	m_textheight = m_textwidth=0;
+	m_leading = tm.tmInternalLeading;
+	m_vertfeed = tm.tmHeight-m_leading+dlineheight;
 	for(pos=buf; *pos; ){
 		for(str=pos; *pos&&*pos!='\n'; ++pos);
-		len=(unsigned)(pos-str);
-		if(*pos=='\n') {*pos++='\0';}
+		len = (unsigned)(pos-str);
+		if(*pos=='\n') *pos++ = '\0';
 		/// width
-		if(GetTextExtentPoint32(m_hdcClock,str,len,&sz)==0)
-			sz.cx=len*tm.tmAveCharWidth;
-		if(m_textwidth<sz.cx)
-			m_textwidth=sz.cx;
+		if(GetTextExtentPoint32(m_hdcClock,str,len,&sz) == 0)
+			sz.cx = (len * tm.tmAveCharWidth);
+		if(m_textwidth < sz.cx)
+			m_textwidth = sz.cx;
 		///height
 		m_textheight+=m_vertfeed;
 	}
-	m_horizfeed=(int)(sin(m_radian)*m_vertfeed);
-	m_vertfeed=(int)(cos(m_radian)*m_vertfeed);
+	m_horizfeed = (int)(sin(m_radian) * m_vertfeed);
+	m_vertfeed = (int)(cos(m_radian) * m_vertfeed);
 	CalculateClockTextPosition();
 }
 int DestroyClock()
@@ -1229,7 +1227,7 @@ void DrawClock(HDC hdc)
 void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100)
 {
 	RGBQUAD* color,* back;
-	char buf[FORMAT_MAX_SIZE],* pos,* str;
+	wchar_t buf[FORMAT_MAX_SIZE],* pos,* str;
 	unsigned len;
 	int vpos,hpos;
 	const unsigned opacity=255-m_col.quad.rgbReserved;
@@ -1298,19 +1296,20 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 {
 	SYSTEMTIME t;
 	int beat100;
-	char fmt[256], str[FORMAT_MAX_SIZE];
+	wchar_t fmt[256], str[FORMAT_MAX_SIZE];
 	
-	api.GetStr("Tooltip", "Tooltip", fmt, sizeof(fmt), "");
-	if(!*fmt) memcpy(fmt,TC_TOOLTIP,sizeof(TC_TOOLTIP));
+	api.GetStr(L"Tooltip", L"Tooltip", fmt, _countof(fmt), L"");
+	if(!*fmt)
+		memcpy(fmt, TC_TOOLTIP, sizeof(TC_TOOLTIP));
 	
 	GetDisplayTime(&t, &beat100);
 	MakeFormat(str, fmt, &t, beat100);
 	if(code == TTN_NEEDTEXTA){
 		NMTTDISPINFOA* tooltip = (NMTTDISPINFOA*)lParam;
-		strncpy_s(tooltip->szText, ARRAYSIZE(tooltip->szText), str, _TRUNCATE);
+		WideCharToMultiByte(CP_ACP, 0, str, -1, tooltip->szText, _countof(tooltip->szText), NULL, NULL);
 	} else {
 		NMTTDISPINFOW* tooltip = (NMTTDISPINFOW*)lParam;
-		MultiByteToWideChar(CP_ACP, 0, str, -1, tooltip->szText, ARRAYSIZE(tooltip->szText));
+		wcsncpy_s(tooltip->szText, _countof(tooltip->szText), str, _TRUNCATE);
 	}
 }
 
@@ -1320,25 +1319,31 @@ void OnTooltipNeedText(UINT code, LPARAM lParam)
 void OnCopy(HWND hwnd, LPARAM lParam)
 {
 	SYSTEMTIME t;	HGLOBAL hg;
-	char entry[7], fmt[MAX_PATH], s[FORMAT_MAX_SIZE], *pbuf;
+	wchar_t entry[7], fmt[MAX_PATH], s[FORMAT_MAX_SIZE], *pbuf;
 	int beat100;
+	size_t size;
 	
 	GetDisplayTime(&t, &beat100);
-	entry[0]='0'+(char)LOWORD(lParam);
-	entry[1]='0'+(char)HIWORD(lParam);
-	memcpy(entry+2,"Clip",5);
-	api.GetStr(REG_MOUSE, entry, fmt, sizeof(fmt), "");
-	if(!*fmt) strcpy(fmt,m_format);
+	entry[0] = '0' + (wchar_t)LOWORD(lParam);
+	entry[1] = '0' + (wchar_t)HIWORD(lParam);
+	memcpy(entry+2, "Clip", 5*sizeof(wchar_t));
+	api.GetStr(REG_MOUSE, entry, fmt, _countof(fmt), L"");
+	if(!*fmt)
+		wcscpy(fmt, m_format);
 	
 	MakeFormat(s, fmt, &t, beat100);
+	size = (wcslen(s) + 1) * sizeof(s[0]);
 	
-	if(!OpenClipboard(hwnd)) return;
+	if(!OpenClipboard(hwnd))
+		return;
 	EmptyClipboard();
-	hg = GlobalAlloc(GMEM_DDESHARE, strlen(s) + 1);
-	pbuf = (char*)GlobalLock(hg);
-	strcpy(pbuf, s);
-	GlobalUnlock(hg);
-	SetClipboardData(CF_TEXT, hg);
+	hg = GlobalAlloc(GMEM_DDESHARE, size);
+	if(hg) {
+		pbuf = (wchar_t*)GlobalLock(hg);
+		memcpy(pbuf, s, size);
+		GlobalUnlock(hg);
+		SetClipboardData(CF_UNICODETEXT, hg);
+	}
 	CloseClipboard();
 }
 //============================================================================================
@@ -1365,7 +1370,7 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 		plt = &(tzi.DaylightDate);
 //		strcpy(szTZone, (char *)tzi.StandardName);
 //		wcstombs(szTZone, tzi.StandardName, 32);
-//		wsprintf(szTZone, "%S", tzi.StandardName);
+//		wsprintf(szTZone, "%ls", tzi.StandardName);
 	}
 	if(dw == TIME_ZONE_ID_DAYLIGHT // This Will Only Apply in the Spring/Summer Months When DST IS in Effect.
 	   && tzi.StandardDate.wMonth == lt.wMonth
@@ -1373,7 +1378,7 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 		plt = &(tzi.StandardDate);
 //		strcpy(szTZone, tzi.DaylightName);
 //		wcstombs(szTZone, tzi.DaylightName, 32);
-//		wsprintf(szTZone, "%S", tzi.DaylightName);
+//		wsprintf(szTZone, "%ls", tzi.DaylightName);
 	}
 	
 	if(plt && plt->wDay < 5) {
@@ -1395,7 +1400,7 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 			iMinuteTransition = plt->wMinute;
 		}
 	}
-//	wsprintf(szTZone, "Day: %S, Std: %S", tzi.DaylightName, tzi.StandardName);
+//	wsprintf(szTZone, "Day: %ls, Std: %ls", tzi.DaylightName, tzi.StandardName);
 //	MessageBox(0, szTZone, "is TimeZone??", MB_OK);
 }
 //================================================================================================

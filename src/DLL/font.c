@@ -25,21 +25,22 @@ struct {
 //----------------------+++--> CallBack Function for EnumFontFamiliesEx, to Find a Designated Font:
 int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
+	const wchar_t* fontname = (wchar_t*)lParam;
 	(void)lpntme; (void)FontType;
-	if(strcmp((LPSTR)lParam, lpelfe->lfFaceName) == 0) return FALSE;
+	if(wcscmp(fontname, lpelfe->lfFaceName) == 0) return FALSE;
 	return TRUE;
 }
 //====================================================================================================================
 //----------------------------------------------------------------------------------+++--> Create a Font For the Clock:
-HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic, int angle, BYTE quality)   //--+++-->
+HFONT CreateMyFont(const wchar_t* fontname, int fontsize, LONG weight, LONG italic, int angle, BYTE quality)   //--+++-->
 {
 	LOGFONT lf;	POINT pt;	HDC hdc;	int langid;
 	int cp, i;	BYTE charset;
 	
 	memset(&lf, 0, sizeof(LOGFONT));
-	langid = api.GetInt("Format", "Locale", GetUserDefaultLangID());
+	langid = api.GetInt(L"Format", L"Locale", GetUserDefaultLangID());
 	
-	GetLocaleInfo(langid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (LPSTR)&cp, sizeof(cp));
+	GetLocaleInfo(langid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (wchar_t*)&cp, sizeof(cp));
 	if(!IsValidCodePage(cp)) cp = CP_ACP;
 	
 	charset = 0;
@@ -81,7 +82,7 @@ HFONT CreateMyFont(const char* fontname, int fontsize, LONG weight, LONG italic,
 	lf.lfQuality = quality;
 	
 	lf.lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-	strncpy_s(lf.lfFaceName,sizeof(lf.lfFaceName),fontname,_TRUNCATE);
+	wcsncpy_s(lf.lfFaceName, _countof(lf.lfFaceName), fontname, _TRUNCATE);
 	
 	return CreateFontIndirect(&lf);
 }

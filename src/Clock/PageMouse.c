@@ -11,52 +11,52 @@ static void OnDestroy();
 static void OnFileBrowse(HWND hDlg, WORD id);
 static void InitMouseControls(HWND hDlg);
 
-static const char* m_mouseButton[]={
-	"Left",
-	"Right",
-	"Middle",
-	"Button 4",
-	"Button 5",
+static const wchar_t* m_mouseButton[]={
+	L"Left",
+	L"Right",
+	L"Middle",
+	L"Button 4",
+	L"Button 5",
 };
-static const short m_mouseButtonCount=sizeof(m_mouseButton)/sizeof(char*);
-static const char* m_mouseClick[]={
-	"Single",
-	"Double",
+static const short m_mouseButtonCount = _countof(m_mouseButton);
+static const wchar_t* m_mouseClick[]={
+	L"Single",
+	L"Double",
 };
-//static const int m_mouseClickCount=sizeof(m_mouseClick)/sizeof(char*);
-#define m_mouseClickCount (sizeof(m_mouseClick)/sizeof(char*))
+//static const int m_mouseClickCount = _countof(m_mouseClick);
+#define m_mouseClickCount _countof(m_mouseClick)
 typedef struct{
 	const int id;
-	const char* name;
+	const wchar_t* name;
 } action_t;
 static const action_t m_mouseAction[]={
-//	{MOUSEFUNC_NONE,"<unknown>"},
-	{MOUSEFUNC_MENU,"Context Menu"},
-	{MOUSEFUNC_TIMER,"Timer"},
-	{IDM_TIMEWATCH,"Timer watch"},
-	{MOUSEFUNC_CLIPBOARD,"Copy date/time by format ->"},
-	{MOUSEFUNC_EXEC,"Execute command ->"},
-	{MOUSEFUNC_SCREENSAVER,"Screensaver"},
-	{MOUSEFUNC_SHOWCALENDER,"Calendar"},
-	{MOUSEFUNC_SHOWPROPERTY,"T-Clock Properties"},
-	{IDM_RECYCLEBIN,"Open Recycle Bin"},
-	{IDM_RECYCLEBIN_PURGE,"Empty Recycle Bin"},
-	{IDM_STOPWATCH,"Stopwatch"},
-	{IDM_PROP_ALARM,"Alarms"},
-	{IDM_SNTP,"Time Sync (SNTP) options"},
-	{IDM_SNTP_SYNC,"Synchronize time"},
-	{IDM_FWD_DATETIME,"Adjust date/time"},
-	{IDM_DATETIME_EX,"Adjust date/time ex"},
-	{IDM_FWD_STACKED,"Show windows stacked"},
-	{IDM_FWD_SIDEBYSIDE,"Show windows side by side"},
-	{IDM_FWD_UNDO,"Undo last window change"},
+//	{MOUSEFUNC_NONE,L"<unknown>"},
+	{MOUSEFUNC_MENU,L"Context Menu"},
+	{MOUSEFUNC_TIMER,L"Timer"},
+	{IDM_TIMEWATCH,L"Timer watch"},
+	{MOUSEFUNC_CLIPBOARD,L"Copy date/time by format ->"},
+	{MOUSEFUNC_EXEC,L"Execute command ->"},
+	{MOUSEFUNC_SCREENSAVER,L"Screensaver"},
+	{MOUSEFUNC_SHOWCALENDER,L"Calendar"},
+	{MOUSEFUNC_SHOWPROPERTY,L"T-Clock Properties"},
+	{IDM_RECYCLEBIN,L"Open Recycle Bin"},
+	{IDM_RECYCLEBIN_PURGE,L"Empty Recycle Bin"},
+	{IDM_STOPWATCH,L"Stopwatch"},
+	{IDM_PROP_ALARM,L"Alarms"},
+	{IDM_SNTP,L"Time Sync (SNTP) options"},
+	{IDM_SNTP_SYNC,L"Synchronize time"},
+	{IDM_FWD_DATETIME,L"Adjust date/time"},
+	{IDM_DATETIME_EX,L"Adjust date/time ex"},
+	{IDM_FWD_STACKED,L"Show windows stacked"},
+	{IDM_FWD_SIDEBYSIDE,L"Show windows side by side"},
+	{IDM_FWD_UNDO,L"Undo last window change"},
 };
-static const int m_mouseActionCount=sizeof(m_mouseAction)/sizeof(action_t);
+static const int m_mouseActionCount = _countof(m_mouseAction);
 
 //----------------------+++--> Mouse Click Date Configuration,
 typedef struct { //--+++--> Manipulation, & Storage Structure.
 	int func[m_mouseClickCount];
-	char data[m_mouseClickCount][MAX_PATH];
+	wchar_t data[m_mouseClickCount][MAX_PATH];
 } CLICKDATA;
 static CLICKDATA* m_pData=NULL;
 
@@ -79,7 +79,7 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 	lvItem.iItem=0;
 	ListView_DeleteAllItems(hList); // cleanup ListView
 	/*
-	if(api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE)){
+	if(api.GetInt(REG_MOUSE,L"DropFiles",DF_RECYCLE)){
 		char szApp[LRG_BUFF];
 		lvItem.iSubItem=0;
 		lvItem.pszText="Drag";
@@ -103,22 +103,23 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 		for(click=0; click<m_mouseClickCount; ++click){
 			int func=m_pData[button].func[click];
 			if(func){
-				lvItem.iSubItem=0;
-				lvItem.pszText=(char*)m_mouseButton[button];// we set it, so it's "const"
-				ListView_InsertItem(hList,&lvItem);
+				lvItem.iSubItem = 0;
+				lvItem.pszText = (wchar_t*)m_mouseButton[button];// we set it, so it's "const"
+				ListView_InsertItem(hList, &lvItem);
 				
 				++lvItem.iSubItem;
-				lvItem.pszText=(char*)m_mouseClick[click];
-				ListView_SetItem(hList,&lvItem);
+				lvItem.pszText = (wchar_t*)m_mouseClick[click];
+				ListView_SetItem(hList, &lvItem);
 				
 				++lvItem.iSubItem;
-				lvItem.pszText=(char*)"<unknown>";
+				lvItem.pszText = L"<unknown>";
 				#ifdef _DEBUG
-				{char* leak=malloc(16);wsprintf(leak,"#%i",func);lvItem.pszText=leak;}
+				{wchar_t* leak=malloc(16*sizeof(leak[0])); wsprintf(leak,L"#%i",func); lvItem.pszText=leak;}
 				#endif // _DEBUG
 				{int iter; for(iter=0; iter<m_mouseActionCount; ++iter){
-					if(func!=m_mouseAction[iter].id) continue;
-					lvItem.pszText=(char*)m_mouseAction[iter].name;
+					if(func!=m_mouseAction[iter].id)
+						continue;
+					lvItem.pszText = (wchar_t*)m_mouseAction[iter].name;
 					break;
 				}}
 				ListView_SetItem(hList,&lvItem);
@@ -127,7 +128,7 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 				if(func == MOUSEFUNC_CLIPBOARD || func <= MOUSEFUNCEXTRA_BEGIN)
 					lvItem.pszText = m_pData[button].data[click];
 				else
-					lvItem.pszText = "";
+					lvItem.pszText = L"";
 				ListView_SetItem(hList,&lvItem);
 				if(button==selButton && click==selClick)
 					ListView_SetItemState(hList,lvItem.iItem,LVIS_FOCUSED|LVIS_SELECTED,0x0F);
@@ -175,7 +176,7 @@ static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //---
 	if(func == MOUSEFUNC_CLIPBOARD || func <= MOUSEFUNCEXTRA_BEGIN){
 		EnableDlgItem(hDlg, IDC_MOUSEFILE, 1);
 		if(!*m_pData[button].data[click] && func == MOUSEFUNC_CLIPBOARD)
-			api.GetStr("Format", "Format", m_pData[button].data[click], MAX_PATH, "");
+			api.GetStr(L"Format", L"Format", m_pData[button].data[click], MAX_PATH, L"");
 	}else
 		EnableDlgItem(hDlg, IDC_MOUSEFILE, 0);
 	EnableDlgItem(hDlg, IDC_MOUSEFILEBROWSE, (func <= MOUSEFUNCEXTRAFILE_BEGIN));
@@ -234,7 +235,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 			int button=ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_MOUSEBUTTON));
 			for(click=0; click<m_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
 			if(click<m_mouseClickCount){
-				Edit_GetText(control, m_pData[button].data[click], MAX_PATH);
+				Edit_GetText(control, m_pData[button].data[click], _countof(m_pData[button].data[click]));
 				SendPSChanged(hDlg);
 			}
 		}else if(id == IDC_MOUSEFILEBROWSE){
@@ -247,7 +248,7 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 				SendPSChanged(hDlg);
 			}
 		}else if(id==666){
-			MessageBox(hDlg,"You need to set at least one \"Context Menu\" action\nYou might be unable to control T-Clock otherwise","Invalid Setting",MB_OK|MB_ICONERROR);
+			MessageBox(hDlg, L"You need to set at least one \"Context Menu\" action\nYou might be unable to control T-Clock otherwise", L"Invalid Setting", MB_OK|MB_ICONERROR);
 		}
 		return TRUE;}
 	case WM_NOTIFY:{
@@ -273,23 +274,23 @@ INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 		case LVN_ITEMCHANGED:
 			if(itm->uNewState&LVIS_SELECTED){
 				HWND hList = GetDlgItem(hDlg, IDC_LIST);
-				char value[TNY_BUFF];
+				wchar_t value[TNY_BUFF];
 				int button, click;
 				LVITEM lvItem;
 				lvItem.mask = LVIF_TEXT;
 				lvItem.iItem = itm->iItem;
-				lvItem.cchTextMax = sizeof(value);
+				lvItem.cchTextMax = _countof(value);
 				lvItem.pszText = value;
 				lvItem.iSubItem = 0;
 				ListView_GetItem(hList, &lvItem);
 				for(button=0; button<m_mouseButtonCount; ++button){
-					if(strcmp(m_mouseButton[button], value) == 0)
+					if(wcscmp(m_mouseButton[button], value) == 0)
 						break;
 				}
 				lvItem.iSubItem = 1;
 				ListView_GetItem(hList, &lvItem);
 				for(click=0; click<m_mouseClickCount; ++click){
-					if(strcmp(m_mouseClick[click], value) == 0)
+					if(wcscmp(m_mouseClick[click], value) == 0)
 						break;
 				}
 				UpdateUIControls(hDlg, button, click, 2);
@@ -307,31 +308,31 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 {
 	HWND drop_cb = GetDlgItem(hDlg, IDC_DROPFILES);
 	HWND listview = GetDlgItem(hDlg, IDC_LIST);
-	char entry[3+4];
-	char buf[LRG_BUFF];
+	wchar_t entry[3+4];
+	wchar_t buf[LRG_BUFF];
 	int button, click;
 	LVCOLUMN lvCol;
-	m_bTransition=1; // start transition
+	m_bTransition = 1; // start transition
 	/// setup basic controls
 	for(click=IDS_NONE; click<=IDS_MOVETO; ++click)
-		ComboBox_AddString(drop_cb,MyString(click));
-	ComboBox_SetCurSel(drop_cb,api.GetInt(REG_MOUSE,"DropFiles",DF_RECYCLE));
-	SendMessage(hDlg,WM_COMMAND,MAKEWPARAM(IDC_DROPFILES,CBN_SELCHANGE),0); // update IDC_DROPFILES related
-	api.GetStr(REG_MOUSE,"DropFilesApp",buf,256,"");
-	SetDlgItemText(hDlg, IDC_DROPFILESAPP,buf);
+		ComboBox_AddString(drop_cb, MyString(click));
+	ComboBox_SetCurSel(drop_cb, api.GetInt(REG_MOUSE,L"DropFiles",DF_RECYCLE));
+	SendMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDC_DROPFILES,CBN_SELCHANGE), 0); // update IDC_DROPFILES related
+	api.GetStr(REG_MOUSE, L"DropFilesApp", buf, _countof(buf), L"");
+	SetDlgItemText(hDlg, IDC_DROPFILESAPP, buf);
 	/// read mouse click settings
-	entry[2]='\0';
-	m_pData=malloc(sizeof(CLICKDATA)*m_mouseButtonCount);
+	entry[2] = '\0';
+	m_pData = malloc(sizeof(CLICKDATA)*m_mouseButtonCount);
 	for(button=0; button<m_mouseButtonCount; ++button) {
 		for(click=0; click<m_mouseClickCount; ++click) {
-			entry[0]='0'+(char)button;
-			entry[1]='1'+(char)click;
-			m_pData[button].func[click]=api.GetInt(REG_MOUSE, entry, MOUSEFUNC_NONE);
+			entry[0] = '0'+(char)button;
+			entry[1] = '1'+(char)click;
+			m_pData[button].func[click] = api.GetInt(REG_MOUSE, entry, MOUSEFUNC_NONE);
 			m_pData[button].data[click][0] = '\0'; // clipboard format / execute file
 			if(m_pData[button].func[click] == MOUSEFUNC_CLIPBOARD || m_pData[button].func[click] <= MOUSEFUNCEXTRA_BEGIN){
-				memcpy(entry+2,"Clip",5);
-				api.GetStr(REG_MOUSE, entry, m_pData[button].data[click], MAX_PATH, "");
-				entry[2]='\0';
+				memcpy(entry+2, L"Clip", 5*sizeof(wchar_t));
+				api.GetStr(REG_MOUSE, entry, m_pData[button].data[click], MAX_PATH, L"");
+				entry[2] = '\0';
 			}
 		}
 	}
@@ -342,81 +343,82 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		EnableDlgItem(hDlg, IDCB_TOOLTIP, 0);
 		CheckDlgButton(hDlg,IDCB_TOOLTIP, 1);
 	}else{
-		CheckDlgButton(hDlg,IDCB_TOOLTIP, api.GetIntEx("Tooltip","bCustom",0));
-		EnableDlgItem(hDlg,IDC_TOOLTIP,IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
+		CheckDlgButton(hDlg,IDCB_TOOLTIP, api.GetIntEx(L"Tooltip",L"bCustom",0));
+		EnableDlgItem(hDlg,IDC_TOOLTIP, IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	}
-	api.GetStr("Tooltip","Tooltip",buf,sizeof(buf),"");
-	if(!*buf) memcpy(buf,TC_TOOLTIP,sizeof(TC_TOOLTIP));
-	SetDlgItemText(hDlg,IDC_TOOLTIP,buf);
+	api.GetStr(L"Tooltip", L"Tooltip", buf, _countof(buf), L"");
+	if(!*buf)
+		wcscpy(buf, TC_TOOLTIP);
+	SetDlgItemText(hDlg, IDC_TOOLTIP, buf);
 	/// setup list view
-	ListView_SetExtendedListViewStyle(listview,LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
-	SetXPWindowTheme(listview,L"Explorer",NULL);
+	ListView_SetExtendedListViewStyle(listview, (LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER));
+	SetXPWindowTheme(listview, L"Explorer", NULL);
 	
-	lvCol.mask=LVCF_FMT|LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM;
-	lvCol.iSubItem=0;
-	lvCol.pszText="Button";
-	lvCol.fmt=LVCFMT_CENTER;
-	lvCol.cx=60;
-	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
+	lvCol.mask = LVCF_FMT|LVCF_WIDTH|LVCF_TEXT|LVCF_SUBITEM;
+	lvCol.iSubItem = 0;
+	lvCol.pszText = L"Button";
+	lvCol.fmt = LVCFMT_CENTER;
+	lvCol.cx = 60;
+	ListView_InsertColumn(listview, lvCol.iSubItem, &lvCol);
 	/* begin 1st column workaround */
 	ListView_InsertColumn(listview, lvCol.iSubItem+1, &lvCol);
 	ListView_DeleteColumn(listview, 0);
 	/* end */
 	++lvCol.iSubItem;
-	lvCol.pszText="Click type";
-	lvCol.fmt=LVCFMT_CENTER;
-	lvCol.cx=70;
-	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
+	lvCol.pszText = L"Click type";
+	lvCol.fmt = LVCFMT_CENTER;
+	lvCol.cx = 70;
+	ListView_InsertColumn(listview, lvCol.iSubItem, &lvCol);
 	
 	++lvCol.iSubItem;
-	lvCol.pszText="Action";
-	lvCol.fmt=LVCFMT_RIGHT;
-	lvCol.cx=160;
-	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
+	lvCol.pszText = L"Action";
+	lvCol.fmt = LVCFMT_RIGHT;
+	lvCol.cx = 160;
+	ListView_InsertColumn(listview, lvCol.iSubItem, &lvCol);
 	
 	++lvCol.iSubItem;
-	lvCol.pszText = "Data";
-	lvCol.fmt=LVCFMT_LEFT;
-	lvCol.cx=151;
-	ListView_InsertColumn(listview,lvCol.iSubItem,&lvCol);
-	m_bTransition=0; // end transition
+	lvCol.pszText = L"Data";
+	lvCol.fmt = LVCFMT_LEFT;
+	lvCol.cx = 151;
+	ListView_InsertColumn(listview, lvCol.iSubItem, &lvCol);
+	m_bTransition = 0; // end transition
 	/// select first mouse setup and UpdateMouseClickList
-	UpdateUIControls(hDlg,0,-1,0); // pre-select first mouse button
+	UpdateUIControls(hDlg, 0, -1, 0); // pre-select first mouse button
 }
 //================================================================================================
 //-------------------------//-------------------------+++--> Apply (Settings) Button Event Handler:
 void OnApply(HWND hDlg)   //----------------------------------------------------------------+++-->
 {
-	char buf[LRG_BUFF], entry[3+4];
+	wchar_t buf[LRG_BUFF], entry[3+4];
 	int sel, button, click;
 	sel = ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_DROPFILES));
-	api.SetInt(REG_MOUSE,"DropFiles",sel);
-	GetDlgItemText(hDlg,IDC_DROPFILESAPP,buf,256);
-	api.SetStr(REG_MOUSE,"DropFilesApp",buf);
-	entry[2]='\0';
+	api.SetInt(REG_MOUSE, L"DropFiles",sel);
+	GetDlgItemText(hDlg, IDC_DROPFILESAPP, buf, _countof(buf));
+	api.SetStr(REG_MOUSE, L"DropFilesApp", buf);
+	entry[2] = '\0';
 	for(button=0; button<m_mouseButtonCount; ++button) {
 		for(click=0; click<m_mouseClickCount; ++click) {
-			entry[0]='0'+(char)button;
-			entry[1]='1'+(char)click;
+			entry[0] = '0'+(char)button;
+			entry[1] = '1'+(char)click;
 			if(m_pData[button].func[click]){
 				api.SetInt(REG_MOUSE, entry, m_pData[button].func[click]);
 				if(m_pData[button].func[click] == MOUSEFUNC_CLIPBOARD || m_pData[button].func[click] <= MOUSEFUNCEXTRA_BEGIN){
 					/// @note : on next backward incompatible change, rename "Clip" to neutral "Data" or "Ex" and cleanup leftover entries
-					memcpy(entry+2, "Clip", 5);
+					memcpy(entry+2, L"Clip", 5*sizeof(wchar_t));
 					api.SetStr(REG_MOUSE, entry, m_pData[button].data[click]);
 					entry[2] = '\0';
 				}
 			}else{
 				api.DelValue(REG_MOUSE, entry);
-				memcpy(entry+2, "Clip",5);
+				memcpy(entry+2, L"Clip", 5*sizeof(wchar_t));
 				api.DelValue(REG_MOUSE, entry);
 				entry[2] = '\0';
 			}
 		}
 	}
-	if(api.OS >= TOS_VISTA) api.SetInt("Tooltip","bCustom",IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
-	GetDlgItemText(hDlg, IDC_TOOLTIP,buf,256);
-	api.SetStr("Tooltip","Tooltip",buf);
+	if(api.OS >= TOS_VISTA) api.SetInt(L"Tooltip", L"bCustom", IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
+	GetDlgItemText(hDlg, IDC_TOOLTIP, buf, _countof(buf));
+	api.SetStr(L"Tooltip", L"Tooltip", buf);
 	// update list
 	button = ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_MOUSEBUTTON));
 	for(click=0; click<m_mouseClickCount && !IsDlgButtonChecked(hDlg,IDC_RADSINGLE+click); ++click);
@@ -439,7 +441,7 @@ void OnDestroy()   //-----------------------------------------------------------
  * \sa IDC_DROPFILESAPPSANSHO, IDC_MOUSEFILEBROWSE */
 void OnFileBrowse(HWND hDlg, WORD id)
 {
-	char filter[80], deffile[MAX_PATH], fname[MAX_PATH];
+	wchar_t filter[80], deffile[MAX_PATH], fname[MAX_PATH];
 	
 	if(id==IDC_DROPFILESAPPSANSHO) {
 		if(ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_DROPFILES)) >= 3) {
@@ -459,11 +461,11 @@ void OnFileBrowse(HWND hDlg, WORD id)
 		}
 	}
 	
-	filter[0]=filter[1]='\0';
+	filter[0] = filter[1] = '\0';
 	str0cat(filter, MyString(IDS_PROGRAMFILE));
-	str0cat(filter, "*.exe;*.cmd");
-	str0cat(filter,MyString(IDS_ALLFILE));
-	str0cat(filter,"*.*");
+	str0cat(filter, L"*.exe;*.cmd");
+	str0cat(filter, MyString(IDS_ALLFILE));
+	str0cat(filter, L"*.*");
 	
 	GetDlgItemText(hDlg, id-1, deffile, MAX_PATH);
 	
@@ -495,21 +497,23 @@ void CheckMouseMenu()
 	short button,click;
 	int hasmenu=0;
 	union{
-		unsigned short entryS;
-		char entry[3];
+		uint32_t entryU;
+		wchar_t entry[3];
 	} u;
-	u.entry[2]='\0';
+	const int bits = (8*sizeof(u.entry[0])); // 16
+	u.entry[2] = '\0';
 	for(button=0; button<m_mouseButtonCount; ++button) {
 		for(click=0; click<m_mouseClickCount; ++click) {
-			u.entryS=('0'+button)|(('0'+click)<<8);
-			if(api.GetInt(REG_MOUSE,u.entry,0)==MOUSEFUNC_MENU) {
-				hasmenu=1;
-				button=(short)m_mouseButtonCount; break;
+			u.entryU = ('0'+button) | (('0'+click)<<bits);
+			if(api.GetInt(REG_MOUSE,u.entry,0) == MOUSEFUNC_MENU) {
+				hasmenu = 1;
+				button = (short)m_mouseButtonCount;
+				break;
 			}
 		}
 	}
 	if(!hasmenu){
-		u.entryS='1'|('1'<<8); // right, 1 click
-		api.SetInt(REG_MOUSE,u.entry,MOUSEFUNC_MENU);
+		u.entryU = '1' | ('1'<<bits); // right, 1 click
+		api.SetInt(REG_MOUSE, u.entry, MOUSEFUNC_MENU);
 	}
 }

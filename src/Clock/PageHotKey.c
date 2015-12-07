@@ -3,27 +3,27 @@
 
 /// @note (White-Tiger#1#11/26/15): don't forget multimedia keys such as "mute volume" as they weren't directly supported by T-Clock nor are supported by HOTKEY_CLASS ...
 
-static char szHotKeySubKey[] = "HotKeys";
+static wchar_t szHotKeySubKey[] = L"HotKeys";
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 
 hotkey_t GetHotkey(int idx) {
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	hotkey_t hotkey;
 	
-	wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, idx);
-	hotkey.key.fsMod = (uint8_t)api.GetInt(subkey, "fsMod", 0);
-	hotkey.key.vk = (uint8_t)api.GetInt(subkey, "vk", 0);
+	wsprintf(subkey, L"%s\\HK%d", szHotKeySubKey, idx);
+	hotkey.key.fsMod = (uint8_t)api.GetInt(subkey, L"fsMod", 0);
+	hotkey.key.vk = (uint8_t)api.GetInt(subkey, L"vk", 0);
 	return hotkey;
 }
 void SetHotkey(int idx, hotkey_t hotkey) {
-	char subkey[TNY_BUFF];
-	wsprintf(subkey, "%s\\HK%d", szHotKeySubKey, idx);
+	wchar_t subkey[TNY_BUFF];
+	wsprintf(subkey, L"%s\\HK%d", szHotKeySubKey, idx);
 	if(hotkey.key.vk){
-		api.SetInt(subkey, "fsMod", hotkey.key.fsMod);
-		api.SetInt(subkey, "vk", hotkey.key.vk);
+		api.SetInt(subkey, L"fsMod", hotkey.key.fsMod);
+		api.SetInt(subkey, L"vk", hotkey.key.vk);
 		/// @note (White-Tiger#1#11/26/15): on next backward incompatible change, remove this and cleanup leftovers
-		api.SetInt(subkey, "bValid", 1);
-		api.SetStr(subkey, "szText", "?");
+		api.SetInt(subkey, L"bValid", 1);
+		api.SetStr(subkey, L"szText", L"?");
 	} else {
 		api.DelKey(subkey);
 	}

@@ -70,6 +70,7 @@
 			<Add alias="release" targets="release-32;release-64;" />
 		</VirtualTargets>
 		<Compiler>
+			<Add option="/D_UNICODE /DUNICODE" />
 			<Add option="/W4" />
 			<Add option="/DWINVER=0x0501" />
 			<Add option="/DPSAPI_VERSION=1" />

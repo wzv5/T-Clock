@@ -31,6 +31,11 @@ void RefreshUs();
  * \return parsed integer */
 int atox(const char* p);
 /**
+ * \brief converts a hex string to integer
+ * \param p hex string to convert
+ * \return parsed integer */
+int wtox(const wchar_t* p);
+/**
  * \brief converts \p hour from 24h format to 12h
  * \param hour 24h format
  * \return 12h format */
@@ -42,11 +47,6 @@ int _24hTo12h(int hour);
  * \return 24h format */
 int _12hTo24h(int hour, int pm);
 /**
- * \brief deletes the end of a path from \a path, eg. "C:/out.exe" becomes "C:/"
- * \param[in,out] path path to delete from
- * \sa add_title(), get_title() */
-void del_title(char* path);
-/**
  * \brief forces hwnd to the foreground,
  * even when the current process isn't the foreground process.
  * (hooks into the current foreground process to complete)
@@ -54,35 +54,38 @@ void del_title(char* path);
  * \sa SetForegroundWindow(), SetActiveWindow() */
 void ForceForegroundWindow(HWND hwnd);
 /**
+ * \brief deletes the end of a path from \a path, eg. "C:/out.exe" becomes "C:/"
+ * \param[in,out] path path to delete from
+ * \sa add_title(), get_title() */
+void del_title(wchar_t* path);
+/**
  * \brief adds a title to a path, eg. "out.exe" to "C:" results "C:/out.exe"
  * \param[in,out] path to manipulate
  * \param[in] title to add (can be relative or absolute)
  * \sa get_title(), del_title() */
-void add_title(char* path, const char* title);
+void add_title(wchar_t* path, const wchar_t* title);
 /**
  * \brief get the title from path, eg. "out.exe" from "C:/out.exe"
  * \param[out] dst receives the title
  * \param[in] path to get title from
  * \sa add_title(), del_title() */
-void get_title(char* dst, const char* path);
+void get_title(wchar_t* dst, const wchar_t* path);
 /**
  * \brief case-insensitively compares if ext matches the file extension of fname
  * \param fname file to test for \a ext
  * \param ext extension to find
  * \return 0 if both extensions match, otherwise the difference */
-int ext_cmp(const char* fname, const char* ext);
-//void parse(char* dst, const char* src, int n);
-//void parsechar(char* dst, const char* src, char ch, int n);
+int ext_cmp(const wchar_t* fname, const wchar_t* ext);
 /**
  * \brief adds a C string to a double-zero terminated string list. That is ABC,0,EFG,0,0
  * \param[in,out] list string list to add \a str to
  * \param[in] str C string to add */
-void str0cat(char* list, const char* str);
+void str0cat(wchar_t* list, const wchar_t* str);
 /**
  * \brief returns a string with \a id from our string table
  * \param id of string to return
  * \return \c NULL on failure */
-char* MyString(UINT id);
+wchar_t* MyString(UINT id);
 //void Pause(HWND hWnd, LPCTSTR pszArgs);
 // HaveSetTimePerms.c
 /**
@@ -99,7 +102,7 @@ int HaveSetTimePermissions();
  * \param[in] dwInitParam
  * \return created or previous \p hwnd
  * \sa CreateDialogParam() */
-HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const char* lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const wchar_t* lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
 #ifdef __cplusplus
 }
 #endif

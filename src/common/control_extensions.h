@@ -14,7 +14,7 @@ extern "C" {
  * \param str string to add
  * \param select if true, also select newly added string
  * \sa ComboBox_AddString() */
-void ComboBox_AddStringOnce(HWND box, const char* str, int select);
+void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select);
 
 /*
 	LINK CONTROLS
@@ -35,7 +35,7 @@ void ComboBox_AddStringOnce(HWND box, const char* str, int select);
  * \param target link target; can be \c NULL if \p link_control's text is to be used
  * \remark \p target is used directly without a copy. You must guarantee its existence for the lifetime of our link control
  * \see LCF_SIMPLE, LCF_NOTIFY, LCF_NOTIFYONLY, LCF_HTTP, LCF_HTTPS, LCF_MAIL, LCF_PARAMS, LCF_RELATIVE */
-void LinkControl_Setup(HWND link_control, unsigned char flags, const char* target);
+void LinkControl_Setup(HWND link_control, unsigned char flags, const wchar_t* target);
 /**
  * \brief call on \c WM_CTLCOLORSTATIC messages from our link control
  * \param hwnd parent of our link control; that is the window that received \c WM_CTLCOLORSTATIC

@@ -19,7 +19,7 @@ struct NTP_Packet { // NTP (Network Time Protocol) Request Packet
 	int transmit_timestamp_fractions;
 };
 
-static const char m_subkey[] = "SNTP";
+static const wchar_t m_subkey[] = L"SNTP";
 static char m_flags;
 static DWORD m_dwTickCountOnSend = 0;
 
@@ -43,38 +43,36 @@ void Log(const char* msg)   //--------------------------------------------------
 	SYSTEMTIME st;
 	
 	GetLocalTime(&st);
-	len = wsprintf(logmsg, "%d/%02d/%02d %02d:%02d:%02d ", st.wYear,
+	len = wsprintfA(logmsg, "%d/%02d/%02d %02d:%02d:%02d ", st.wYear,
 					st.wMonth, st.wDay, st.wHour, st.wMinute, st.wSecond);
-	strncpy_s(logmsg+len, sizeof(logmsg)-len, msg, _TRUNCATE);
+	strncpy_s(logmsg+len, _countof(logmsg)-len, msg, _TRUNCATE);
 	
 	// save to file
 	if(m_flags&SNTPF_LOG) {
-		char fname[MAX_PATH];
-		HFILE hf;
+		wchar_t fname[MAX_PATH];
+		FILE* fp;
 		
-		memcpy(fname, api.root, api.root_len+1);
-		add_title(fname, "SNTP.log");
-		hf = _lopen(fname, OF_WRITE);
-		if(hf == HFILE_ERROR)
-			hf = _lcreat(fname, 0);
-		if(hf == HFILE_ERROR) return;
-		_llseek(hf, 0, 2);
-		_lwrite(hf, logmsg, lstrlen(logmsg));
-		_lwrite(hf, "\r\n", 2);
-		_lclose(hf);
+		memcpy(fname, api.root, api.root_size);
+		add_title(fname, L"SNTP.log");
+		fp = _wfopen(fname, L"ab");
+		if(!fp)
+			return;
+		fputs(logmsg, fp);
+		fwrite("\r\n", 1, 2, fp);
+		fclose(fp);
 	}
 	
 	if(g_hDlgSNTP) { // IF Configure NTP Server is Open, Display Results in Sync History.
-		LVITEM lvItem; //-----+++--> Even if Activity is Not Saved to the Log File.
+		LVITEMA lvItem; //-----+++--> Even if Activity is Not Saved to the Log File.
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
 		lvItem.iItem = 0; //-----+++--> Which Puts the Most Recent Info on Top.
 		lvItem.pszText = logmsg;
-		ListView_InsertItem(GetDlgItem(g_hDlgSNTP,IDC_LIST), &lvItem);
+		SendMessageA(GetDlgItem(g_hDlgSNTP,IDC_LIST), LVM_INSERTITEMA, 0, (LPARAM)&lvItem);
 	}
 	
 	if(m_flags&SNTPF_MESSAGE) {
-		MessageBox(0, logmsg, "T-Clock Time Sync", MB_OK);
+		MessageBoxA(0, logmsg, "T-Clock Time Sync", MB_OK);
 	}
 }
 //================================================================================================
@@ -84,7 +82,7 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	BOOL bOk;
 	char msg[GEN_BUFF];
 	size_t msglen;
-	char szWave[MAX_BUFF];
+	wchar_t szWave[MAX_BUFF];
 	SYSTEMTIME st;
 	union{
 		FILETIME ft;
@@ -126,11 +124,11 @@ void SynchronizeSystemTime(DWORD seconds, DWORD fractions)   //-----------------
 	if(st.wYear == 1601 && st.wMonth == 1
 	&& st.wDay == 1 && st.wHour == 0) {
 		msg[msglen++] = (bOk?'+':'-');
-		msglen += wsprintf(msg+msglen, "%02d:%02d.%03d ",
+		msglen += wsprintfA(msg+msglen, "%02d:%02d.%03d ",
 				 st.wMinute, st.wSecond, st.wMilliseconds);
 	}
 	
-	api.GetStr(m_subkey, "Sound", szWave, MAX_BUFF, "");
+	api.GetStr(m_subkey, L"Sound", szWave, _countof(szWave), L"");
 	if(szWave[0]){
 		PlayFile(g_hwndTClockMain, szWave, 0);
 	}
@@ -180,8 +178,8 @@ void ReceiveSNTPReply(SOCKET sock)   //-----------------------------------------
 	retval = select((int)sock+1, &fds, NULL, NULL, &tv);
 	if(retval == -1){
 		char szErr[MIN_BUFF];
-		wsprintf(szErr, "Receive SOCKET ERROR: %d", WSAGetLastError());
-		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		wsprintfA(szErr, "Receive SOCKET ERROR: %d", WSAGetLastError());
+		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR); // @todo : SocketClose can also show this message
 		SocketClose(sock, szErr);
 		return;
 	}
@@ -216,18 +214,19 @@ int SNTPSend(SOCKET sock, struct sockaddr_storage* serv_addr)
 
 //================================================================================================
 //-------------------------------------------------------------+++--> Open Socket for SNTP Session:
-SOCKET OpenTimeSocket(const char* server)
+SOCKET OpenTimeSocket(const wchar_t* server)
 {
 	struct addrinfo hints = {0};
 	struct addrinfo* addrs,* ap;
 	struct sockaddr_storage serv_addr;
+	char szErr[GEN_BUFF];
 	char host[GEN_BUFF];
 	const char* port;
-	char szErr[MIN_BUFF];
 	int retval;
 	SOCKET sock = (SOCKET)-1;
 	
-	port = GetServerPort(server, host);
+	WideCharToMultiByte(CP_ACP, 0, server, -1, szErr, _countof(szErr), NULL, NULL);
+	port = GetServerPort(szErr, host);
 	if(!port[0]) port = "123";
 	
 	// get one server address
@@ -238,11 +237,11 @@ SOCKET OpenTimeSocket(const char* server)
 	if(retval != 0){
 		switch(retval){
 		case EAI_SERVICE:
-		case EAI_NONAME: strcpy(szErr,"host not found"); break;
-		case EAI_MEMORY: strcpy(szErr,"out of memory"); break;
+		case EAI_NONAME: strcpy(szErr, "host not found"); break;
+		case EAI_MEMORY: strcpy(szErr, "out of memory"); break;
 		default:
-			wsprintf(szErr, "getaddrinfo ERROR: %d", WSAGetLastError());
-			MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+			wsprintfA(szErr, "getaddrinfo ERROR: %d", WSAGetLastError());
+			MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
 		}
 		SocketClose((SOCKET)-1, szErr);
 		return (SOCKET)-1;
@@ -274,8 +273,8 @@ SOCKET OpenTimeSocket(const char* server)
 	// check client socket
 	if(sock == -1) {
 		freeaddrinfo(addrs);
-		wsprintf(szErr, "socket ERROR: %d", WSAGetLastError());
-		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		wsprintfA(szErr, "socket ERROR: %d", WSAGetLastError());
+		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
 		SocketClose(sock, szErr);
 		return (SOCKET)-1;
 	}
@@ -284,8 +283,8 @@ SOCKET OpenTimeSocket(const char* server)
 	// send data
 	retval = SNTPSend(sock, &serv_addr);
 	if(retval == -1) {
-		wsprintf(szErr, "SNTPSend ERROR: %d", WSAGetLastError());
-		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		wsprintfA(szErr, "SNTPSend ERROR: %d", WSAGetLastError());
+		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
 		SocketClose(sock, szErr);
 		return (SOCKET)-1;
 	}
@@ -297,22 +296,22 @@ void SyncTimeNow()
 {
 	WORD wVersionRequested = MAKEWORD(2,2);
 	WSADATA wsaData; // Okay...Now We Want WinSock v2.2
-	char server[GEN_BUFF];
-	char szErr[GEN_BUFF];
+	wchar_t server[GEN_BUFF];
+	wchar_t szErr[GEN_BUFF];
 	SOCKET sock;
 	int retval;
 	
 	if(!g_hDlgSNTP) {
 		m_flags = 0;
-		if(api.GetIntEx(m_subkey, "SaveLog", 0))
+		if(api.GetIntEx(m_subkey, L"SaveLog", 0))
 			m_flags |= SNTPF_LOG;
-		if(api.GetIntEx(m_subkey, "MessageBox", 0))
+		if(api.GetIntEx(m_subkey, L"MessageBox", 0))
 			m_flags |= SNTPF_MESSAGE;
 	}
-	api.GetStrEx(m_subkey, "Server", server, sizeof(server), "");
+	api.GetStrEx(m_subkey, L"Server", server, _countof(server), L"");
 	if(!server[0]) {
-		wsprintf(szErr, "No SNTP Server Specified!");
-		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		wsprintf(szErr, L"No SNTP Server Specified!");
+		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
 		if(!g_hDlgSNTP)
 			NetTimeConfigDialog(0);
 		return;
@@ -320,14 +319,14 @@ void SyncTimeNow()
 	
 	retval = WSAStartup(wVersionRequested, &wsaData);
 	if(retval) { //-----------------------------------------+++--> If WinSock Startup Fails...
-		wsprintf(szErr, "Error initializing WinSock");
-		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		wsprintf(szErr, L"Error initializing WinSock");
+		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
 		return;
 	}
 	
 	if(wsaData.wVersion != wVersionRequested) { //-+++-> Check WinSOCKET's Version:
-		wsprintf(szErr, "WinSock version not supported");
-		MessageBox(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		wsprintf(szErr, L"WinSock version not supported");
+		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
 		return;
 	}
 	
@@ -356,20 +355,20 @@ void NetTimeConfigDialog(int justElevated)   //---------------------------------
 //--------------------------//--+++--> Save Network Time Server Configuration Settings to Registry:
 void OkaySave(HWND hDlg)   //---------------------------------------------------------------+++-->
 {
-	char szServer[GEN_BUFF];
-	char szSound[MAX_PATH];
-	char entry[TNY_BUFF];
+	wchar_t szServer[GEN_BUFF];
+	wchar_t szSound[MAX_PATH];
+	wchar_t entry[TNY_BUFF];
 	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 	int i, count;
 	
-	api.SetInt(m_subkey, "SaveLog", m_flags&SNTPF_LOG);
-	api.SetInt(m_subkey, "MessageBox", m_flags&SNTPF_MESSAGE);
+	api.SetInt(m_subkey, L"SaveLog", m_flags&SNTPF_LOG);
+	api.SetInt(m_subkey, L"MessageBox", m_flags&SNTPF_MESSAGE);
 	
-	GetDlgItemText(hDlg, IDCBX_SYNCSOUND, szSound, MAX_PATH);
-	api.SetStr(m_subkey, "Sound", szSound);
+	GetDlgItemText(hDlg, IDCBX_SYNCSOUND, szSound, _countof(szSound));
+	api.SetStr(m_subkey, L"Sound", szSound);
 	
-	ComboBox_GetText(hServer, szServer, sizeof(szServer));
-	api.SetStr(m_subkey, "Server", szServer);
+	ComboBox_GetText(hServer, szServer, _countof(szServer));
+	api.SetStr(m_subkey, L"Server", szServer);
 	
 	if(szServer[0]) {
 		int index = ComboBox_FindStringExact(hServer, -1, szServer);
@@ -382,17 +381,17 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	}
 	count = ComboBox_GetCount(hServer);
 	// removed deleted servers
-	for(i=api.GetInt(m_subkey,"ServerNum",0); i>count; --i){
-		wsprintf(entry, "Server%d", i);
+	for(i=api.GetInt(m_subkey,L"ServerNum",0); i>count; --i){
+		wsprintf(entry, L"Server%d", i);
 		api.DelValue(m_subkey, entry);
 	}
 	// update server list
 	for(i=0; i < count; ++i) {
 		ComboBox_GetLBText(hServer, i, szServer);
-		wsprintf(entry, "Server%d", i+1);
+		wsprintf(entry, L"Server%d", i+1);
 		api.SetStr(m_subkey, entry, szServer);
 	}
-	api.SetInt(m_subkey, "ServerNum", count);
+	api.SetInt(m_subkey, L"ServerNum", count);
 }
 //================================================================================================
 //------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
@@ -416,7 +415,7 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 		switch(LOWORD(wParam))  {
 		case IDCB_SYNCNOW:{
 			if(m_flags&SNTPF_UAC){
-				api.ExecElevated(GetClockExe(),"/UAC /SyncOpt",hDlg);
+				api.ExecElevated(GetClockExe(),L"/UAC /SyncOpt",hDlg);
 				return TRUE;
 			}
 			OkaySave(hDlg);
@@ -435,14 +434,14 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 			return TRUE;
 			
 		case IDCB_CLEAR:{
-			char logfile[MAX_PATH];
+			wchar_t logfile[MAX_PATH];
 			FILE* fp;
-			HWND hList = GetDlgItem(hDlg,IDC_LIST);
+			HWND hList = GetDlgItem(hDlg, IDC_LIST);
 			ListView_DeleteAllItems(hList);
 			
-			memcpy(logfile, api.root, api.root_len+1);
-			add_title(logfile, "SNTP.log");
-			fp = fopen(logfile, "w");
+			memcpy(logfile, api.root, api.root_size);
+			add_title(logfile, L"SNTP.log");
+			fp = _wfopen(logfile, L"wb");
 			if(fp) fclose(fp);
 			return TRUE;}
 		
@@ -471,10 +470,13 @@ INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 //------------------------//---------------------------+++--> To-Do List for Dialog Initialization:
 void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
 {
-	char str[MAX_PATH];
+	union {
+		wchar_t w[MAX_BUFF];
+		char a[MAX_BUFF];
+	} str;
 	FILE* stReport;
 	LVCOLUMN lvCol;
-	LVITEM lvItem;
+	LVITEMA lvItem;
 	int i, count;
 	HWND hList = GetDlgItem(hDlg,IDC_LIST);
 	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
@@ -483,60 +485,60 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	api.PositionWindow(hDlg,21);
 	
 	// Get the List of Configured Time Servers:
-	api.GetStr(m_subkey, "Server", str, sizeof(str), "");
-	count = api.GetInt(m_subkey, "ServerNum", 0);
+	count = api.GetInt(m_subkey, L"ServerNum", 0);
 	for(i = 1; i <= count; i++) {
-		char s[MAX_BUFF], entry[TNY_BUFF];
-		
-		wsprintf(entry, "Server%d", i);
-		api.GetStr(m_subkey, entry, s, 80, "");
-		if(s[0]) ComboBox_AddString(hServer, s);
+		wchar_t entry[TNY_BUFF];
+		wsprintf(entry, L"Server%d", i);
+		api.GetStr(m_subkey, entry, str.w, _countof(str.w), L"");
+		if(str.w[0])
+			ComboBox_AddString(hServer, str.w);
 	}
 	if(!ComboBox_GetCount(hServer)){
-		ComboBox_AddString(hServer,"europe.pool.ntp.org");
-		ComboBox_AddString(hServer,"north-america.pool.ntp.org");
-		ComboBox_AddString(hServer,"asia.pool.ntp.org");
-		ComboBox_AddString(hServer,"oceania.pool.ntp.org");
-		ComboBox_AddString(hServer,"south-america.pool.ntp.org");
-		ComboBox_AddString(hServer,"africa.pool.ntp.org");
-		ComboBox_AddString(hServer,"time1.google.com");
-		ComboBox_AddString(hServer,"time2.google.com");
-		ComboBox_AddString(hServer,"time3.google.com");
-		ComboBox_AddString(hServer,"time4.google.com");
-		ComboBox_AddString(hServer,"time.nist.gov");
-		ComboBox_AddString(hServer,"time.windows.com");
+		ComboBox_AddString(hServer, L"europe.pool.ntp.org");
+		ComboBox_AddString(hServer, L"north-america.pool.ntp.org");
+		ComboBox_AddString(hServer, L"asia.pool.ntp.org");
+		ComboBox_AddString(hServer, L"oceania.pool.ntp.org");
+		ComboBox_AddString(hServer, L"south-america.pool.ntp.org");
+		ComboBox_AddString(hServer, L"africa.pool.ntp.org");
+		ComboBox_AddString(hServer, L"time1.google.com");
+		ComboBox_AddString(hServer, L"time2.google.com");
+		ComboBox_AddString(hServer, L"time3.google.com");
+		ComboBox_AddString(hServer, L"time4.google.com");
+		ComboBox_AddString(hServer, L"time.nist.gov");
+		ComboBox_AddString(hServer, L"time.windows.com");
 	}
-	if(!str[0])
-		strcpy(str,"pool.ntp.org");
-	ComboBox_AddStringOnce(hServer, str, 1);
+	api.GetStr(m_subkey, L"Server", str.w, _countof(str.w), L"");
+	if(!str.w[0])
+		wcscpy(str.w, L"pool.ntp.org");
+	ComboBox_AddStringOnce(hServer, str.w, 1);
 	
 	SendDlgItemMessage(hDlg, IDCB_DELSERVER, BM_SETIMAGE,
 					   IMAGE_ICON, (LPARAM)g_hIconDel);
 					   
 	// Get the Sync Sound File:
-	api.GetStr(m_subkey, "Sound", str, sizeof(str), "");
-	ComboBox_SetText(sound_cb, str);
+	api.GetStr(m_subkey, L"Sound", str.w, _countof(str.w), L"");
+	ComboBox_SetText(sound_cb, str.w);
 	ComboBoxArray_AddSoundFiles(&sound_cb, 1);
 	
 	// Get the Confirmation Options:
 	m_flags = 0;
-	if(api.GetIntEx(m_subkey, "SaveLog", 0)){
+	if(api.GetIntEx(m_subkey, L"SaveLog", 0)){
 		CheckDlgButton(hDlg, IDCBX_SNTPLOG, 1);
 		m_flags |= SNTPF_LOG;
 	}
-	if(api.GetIntEx(m_subkey, "MessageBox", 0)){
+	if(api.GetIntEx(m_subkey, L"MessageBox", 0)){
 		CheckDlgButton(hDlg, IDCBX_SNTPMESSAGE, 1);
 		m_flags |= SNTPF_MESSAGE;
 	}
 	
 	// init listview
 	ListView_SetExtendedListViewStyle(hList, LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
-	SetXPWindowTheme(hList,L"Explorer",NULL);
+	SetXPWindowTheme(hList, L"Explorer", NULL);
 	
 	lvCol.mask = LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvCol.cx = 280; //-+-// Set Column Width in Pixels
 	lvCol.iSubItem = 0; // This is the First & Only Column
-	lvCol.pszText = "Synchronization History"; // Header Text
+	lvCol.pszText = L"Synchronization History"; // Header Text
 	ListView_InsertColumn(hList, 0, &lvCol);
 	
 	// Test For: SE_SYSTEMTIME_NAME Priviledge Before Enabling Sync Now Button:
@@ -547,20 +549,21 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	}
 	
 	// Load the Time Synchronization Log File:
-	memcpy(str, api.root, api.root_len+1);
-	add_title(str, "SNTP.log");
+	memcpy(str.w, api.root, api.root_size);
+	add_title(str.w, L"SNTP.log");
 	
-	stReport = fopen(str, "r");
+	stReport = _wfopen(str.w, L"rb");
 	if(stReport) {
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iSubItem = 0; // Hold These at Zero So the File Loads Backwards
 		lvItem.iItem = 0; //-----+++--> Which Puts the Most Recent Info on Top.
 		
 		for(;;) {   // (for) Ever Basically.
-			if(fgets(str, sizeof(str), stReport)) {
-				str[strcspn(str,"\n")] = '\0'; // Remove the Newline Character
-				lvItem.pszText = str;
-				ListView_InsertItem(hList, &lvItem);
+			if(fgets(str.a, sizeof(str.a), stReport)) {
+				str.a[strcspn(str.a,"\r")] = '\0'; // remove carriage return
+				str.a[strcspn(str.a,"\n")] = '\0'; // remove linefeed
+				lvItem.pszText = str.a;
+				SendMessageA(hList, LVM_INSERTITEMA, 0, (LPARAM)&lvItem);
 			}else
 				break;
 		}
@@ -571,7 +574,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 //----------------------------------------//---------------+++--> Browse for Sync Event Sound File:
 void OnSanshoAlarm(HWND hDlg, WORD id)   //-------------------------------------------------+++-->
 {
-	char deffile[MAX_PATH], fname[MAX_PATH];
+	wchar_t deffile[MAX_PATH], fname[MAX_PATH];
 	
 	GetDlgItemText(hDlg, id, deffile, MAX_PATH);
 	if(!BrowseSoundFile(hDlg, deffile, fname)) // soundselect.c

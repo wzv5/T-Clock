@@ -30,21 +30,21 @@ HWND	g_hDlgSNTP = NULL;
 HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 
 // used by PageMisc.c and main.c
-const char kSectionImmersiveShell[56+1] = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ImmersiveShell";
-const char kKeyWin32Tray[27+1] = "UseWin32TrayClockExperience";
+const wchar_t kSectionImmersiveShell[56+1] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ImmersiveShell";
+const wchar_t kKeyWin32Tray[27+1] = L"UseWin32TrayClockExperience";
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
 ATOM g_atomTClock = 0; /**< main window class atom */
-const char g_szClassName[] = "TClockMainClass"; /**< our main window class name */
+const wchar_t g_szClassName[] = L"TClockMainClass"; /**< our main window class name */
 UINT g_WM_TaskbarCreated = 0; /**< TaskbarCreated message (broadcasted on Explorer (re-)start) */
 
 /** \brief processes our commandline parameters
  * \param hwndMain clock hwnd of master instance
  * \param cmdline commandline parameters
- * \remarks if hwndMain doesn' match \c g_hwndTClockMain, it'll create a message-only window for sound processing
+ * \remarks if hwndMain doesn't match \c g_hwndTClockMain, it'll create a message-only window for sound processing
  * \sa g_hwndTClockMain, WinMain() */
-static void ProcessCommandLine(HWND hwndMain,const char* cmdline);
+static void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline);
 static void OnTimerMain(HWND hwnd);
 //static void FindTrayServer(); // Redux: what ever it was supposed to be..
 static void InitError(int n);
@@ -88,7 +88,7 @@ static void CALLBACK ToggleCalendar_done(HWND hwnd, UINT uMsg, ULONG_PTR dwData,
 void ToggleCalendar(int type)   //---------------------------+++-->
 {
 	HWND calendar = api.GetCalendar();
-	int is_custom = api.GetInt("Calendar", "bCustom", 0);
+	int is_custom = api.GetInt(L"Calendar", L"bCustom", 0);
 	if(calendar){
 		if(is_custom)
 			SetForegroundWindow(calendar);
@@ -98,9 +98,9 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 		// Windows 10 workaround as SendMessage doesn't work any longer (no error given)
 		SendMessageCallback(g_hwndClock, WM_USER+102, 1, 0, ToggleCalendar_done, 0);//1=open, 0=close
 	}else{
-		char cal[MAX_PATH];
-		memcpy(cal, api.root, api.root_len+1);
-		add_title(cal,"misc\\XPCalendar.exe");
+		wchar_t cal[MAX_PATH];
+		memcpy(cal, api.root, api.root_size);
+		add_title(cal,L"misc\\XPCalendar.exe");
 		api.Exec(cal,NULL,g_hwndTClockMain);
 	}
 }
@@ -113,7 +113,7 @@ void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 20
 	HINSTANCE handle;
 	if(!m_bMonOffOnLock)
 		return;
-	handle = LoadLibrary("wtsapi32");
+	handle = LoadLibrary(L"wtsapi32");
 	if(handle){
 		typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
 		WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification=(WTSUnRegisterSessionNotification_t)GetProcAddress(handle,"WTSUnRegisterSessionNotification");
@@ -131,7 +131,7 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 	HINSTANCE handle;
 	if(m_bMonOffOnLock)
 		return;
-	handle = LoadLibrary("wtsapi32");
+	handle = LoadLibrary(L"wtsapi32");
 	if(handle){
 		typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);
 		WTSRegisterSessionNotification_t WTSRegisterSessionNotification=(WTSRegisterSessionNotification_t)GetProcAddress(handle,"WTSRegisterSessionNotification");
@@ -144,21 +144,21 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 }
 //====================================================================================
 //---------------------------+++--> Does our startup file exist? Also creates filename:
-int GetStartupFile(HWND hDlg,char filename[MAX_PATH]){   //--------------------+++-->
+int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]){   //--------------------+++-->
 	size_t offset;
 	if(SHGetFolderPath(hDlg,CSIDL_STARTUP,NULL,SHGFP_TYPE_CURRENT,filename)!=S_OK){
 		return 0;
 	}
-	offset=strlen(filename);
-	filename[offset]='\\';
-	filename[offset+1]='\0'; // old Stoic Joker link
-	strcat(filename,CONF_START_OLD);
-	strcat(filename,".lnk");
+	offset = wcslen(filename);
+	filename[offset] = '\\';
+	filename[offset+1] = '\0'; // old Stoic Joker link
+	wcscat(filename, CONF_START_OLD);
+	wcscat(filename, L".lnk");
 	if(PathFileExists(filename))
 		return 1;
-	filename[offset+1]='\0'; // new name
-	strcat(filename,CONF_START);
-	strcat(filename,".lnk");
+	filename[offset+1] = '\0'; // new name
+	wcscat(filename, CONF_START);
+	wcscat(filename, L".lnk");
 	if(PathFileExists(filename))
 		return 1;
 	return 0;
@@ -167,7 +167,7 @@ int GetStartupFile(HWND hDlg,char filename[MAX_PATH]){   //--------------------+
 //----------------------------------------+++--> Remove Launch T-Clock on Windows Startup ShortCut:
 void RemoveStartup(HWND hDlg)   //----------------------------------------------------------+++-->
 {
-	char path[MAX_PATH];
+	wchar_t path[MAX_PATH];
 	if(!GetStartupFile(hDlg,path))
 		return;
 	DeleteFile(path);
@@ -175,16 +175,16 @@ void RemoveStartup(HWND hDlg)   //----------------------------------------------
 //===================================
 void AddStartup(HWND hDlg) //--+++-->
 {
-	char path[MAX_PATH], myexe[MAX_PATH];
+	wchar_t path[MAX_PATH], myexe[MAX_PATH];
 	if(GetStartupFile(hDlg,path) || !*path)
 		return;
-	*strrchr(path,'\\')='\0';
-	GetModuleFileName(g_instance, myexe, MAX_PATH);
-	CreateLink(myexe,path,CONF_START);
+	*wcsrchr(path, '\\') = '\0';
+	GetModuleFileName(g_instance, myexe, _countof(path));
+	CreateLink(myexe, path, CONF_START);
 }
 //==========================
 //--+++--> Create Launch T-Clock on Windows Startup ShortCut:
-int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
+int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name)
 {
 	HRESULT hres;
 	IShellLink* psl;
@@ -194,25 +194,22 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (void**)&psl);
 	if(SUCCEEDED(hres)) {
 		IPersistFile* ppf;
-		char path[MAX_PATH];
+		wchar_t path[MAX_PATH];
 		
 		psl->lpVtbl->SetPath(psl, fname);
 		psl->lpVtbl->SetDescription(psl, name);
-		strncpy_s(path,MAX_PATH,fname,_TRUNCATE);
+		wcsncpy_s(path,MAX_PATH,fname,_TRUNCATE);
 		del_title(path);
 		psl->lpVtbl->SetWorkingDirectory(psl, path);
 		
 		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (void**)&ppf);
 		if(SUCCEEDED(hres)) {
-			WORD wsz[MAX_PATH];
-			char lnkfile[MAX_PATH];
-			strncpy_s(lnkfile, MAX_PATH, dstpath, _TRUNCATE);
-			add_title(lnkfile, (char*)name);
-			strcat(lnkfile, ".lnk");
+			wchar_t lnkfile[MAX_PATH];
+			wcsncpy_s(lnkfile, MAX_PATH, dstpath, _TRUNCATE);
+			add_title(lnkfile, name);
+			wcscat(lnkfile, L".lnk");
 			
-			MultiByteToWideChar(CP_ACP, 0, lnkfile, -1, wsz, MAX_PATH);
-			
-			hres = ppf->lpVtbl->Save(ppf, wsz, TRUE);
+			hres = ppf->lpVtbl->Save(ppf, lnkfile, 1);
 			ppf->lpVtbl->Release(ppf);
 		}
 		psl->lpVtbl->Release(psl);
@@ -226,7 +223,7 @@ int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name)
 
 //================================================================================================
 //--------------------------------------------------==-+++--> Entry Point of Program Using WinMain:
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
 {
 	WNDCLASS wndclass;
 	HWND hwndMain;
@@ -234,7 +231,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int updated;
 	
 	(void)hPrevInstance;
-	(void)nCmdShow;
+	(void)nShowCmd;
 	
 	#if defined(__GNUC__) && defined(_DEBUG)
 	#	ifdef _WIN64
@@ -248,21 +245,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	LoadExcHndl(); // LOAD_WITH_ALTERED_SEARCH_PATH works :P At least since Win2k
 	
 	g_instance = hInstance;
-	if(LoadClockAPI("misc/T-Clock" ARCH_SUFFIX, &api)){
-		MessageBox(NULL, "Error loading: T-Clock" ARCH_SUFFIX ".dll", "API error", MB_OK|MB_ICONERROR);
+	if(LoadClockAPI(L"misc/T-Clock" ARCH_SUFFIX, &api)){
+		MessageBox(NULL, L"Error loading: T-Clock" ARCH_SUFFIX L".dll", L"API error", MB_OK|MB_ICONERROR);
 		return 2;
 	}
-	chdir(api.root); // make sure we've got the right working directory
+	_wchdir(api.root); // make sure we've got the right working directory
 	
 	// Make sure we're running Windows 2000 and above
 	if(!api.OS) {
-		MessageBox(NULL,"T-Clock requires Windows 2000 or newer","old OS",MB_OK|MB_ICONERROR);
+		MessageBox(NULL, L"T-Clock requires Windows 2000 or newer", L"old OS", MB_OK|MB_ICONERROR);
 		return 1;
 	}
 	
 	// make sure ObjectBar isn't running -> From Original Code/Unclear if This is Still a Conflict. (test suggested not really.. no crash but no clock either :P)
-	if(FindWindow("ObjectBar Main","ObjectBar")) {
-		MessageBox(NULL,"ObjectBar and T-Clock can't be run together","ObjectBar detected!",MB_OK|MB_ICONERROR);
+	if(FindWindowA("ObjectBar Main","ObjectBar")) {
+		MessageBox(NULL, L"ObjectBar and T-Clock can't be run together", L"ObjectBar detected!" ,MB_OK|MB_ICONERROR);
 		return 1;
 	}
 	
@@ -279,12 +276,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	if(IsWow64()){
 		hwndMain = FindWindow(g_szClassName, NULL);
 		if(hwndMain) { // send commands to existing instance
-			ProcessCommandLine(hwndMain,lpCmdLine);
+			ProcessCommandLine(hwndMain, lpCmdLine);
 		}else{ // start new instance
-			char clock64[MAX_PATH];
-			memcpy(clock64, api.root, api.root_len+1);
-			add_title(clock64,"Clock" ARCH_SUFFIX_64 ".exe");
-			api.Exec(clock64,lpCmdLine,NULL);
+			wchar_t clock64[MAX_PATH];
+			memcpy(clock64, api.root, api.root_size);
+			add_title(clock64, L"Clock" ARCH_SUFFIX_64 L".exe");
+			api.Exec(clock64, lpCmdLine, NULL);
 		}
 		return 0;
 	}
@@ -293,12 +290,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// Do Not Allow the Program to Execute Twice!
 	updated = 25; /**< wait up to 5 sec in 1/5th seconds for other instance */
 	do{
-		HANDLE processlock=CreateMutex(NULL,FALSE,g_szClassName); // we leak handle here, but Windows closes on process exit anyway (so why do it manually?)
+		HANDLE processlock = CreateMutex(NULL, FALSE, g_szClassName); // we leak handle here, but Windows closes on process exit anyway (so why do it manually?)
 		if(processlock && GetLastError()==ERROR_ALREADY_EXISTS){
 			CloseHandle(processlock);
 			hwndMain = FindWindow(g_szClassName, NULL);
 			if(hwndMain) { // This One Sends Commands to the Instance
-				ProcessCommandLine(hwndMain,lpCmdLine); // That is Currently Running.
+				ProcessCommandLine(hwndMain, lpCmdLine); // That is Currently Running.
 				return 0;
 			}
 			Sleep(200);
@@ -314,7 +311,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	CancelAllTimersOnStartUp();
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
-	g_WM_TaskbarCreated = RegisterWindowMessage("TaskbarCreated");
+	g_WM_TaskbarCreated = RegisterWindowMessageA("TaskbarCreated");
 	
 	// register a window class
 	wndclass.style         = 0;
@@ -333,7 +330,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		#define MSGFLT_ADD 1
 		#define MSGFLT_REMOVE 2
 		typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message,DWORD dwFlag);
-		ChangeWindowMessageFilter_t ChangeWindowMessageFilter=(ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandle("user32"), "ChangeWindowMessageFilter");
+		ChangeWindowMessageFilter_t ChangeWindowMessageFilter = (ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandle(L"user32"), "ChangeWindowMessageFilter");
 		if(ChangeWindowMessageFilter){
 			int msgid;
 			ChangeWindowMessageFilter(g_WM_TaskbarCreated,MSGFLT_ADD);
@@ -348,12 +345,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// create a hidden window
 	g_hwndTClockMain = hwndMain = CreateWindowEx(WS_EX_NOACTIVATE, MAKEINTATOM(g_atomTClock),NULL, 0, 0,0,0,0, NULL,NULL,g_instance,NULL);
 	// This Checks for First Instance Startup Options
-	ProcessCommandLine(hwndMain,lpCmdLine);
+	ProcessCommandLine(hwndMain, lpCmdLine);
 	
 	RegisterHotkeys(hwndMain, 1);
 	
 	if(api.OS > TOS_2000) {
-		if(api.GetInt("Desktop", "MonOffOnLock", 0))
+		if(api.GetInt(L"Desktop", L"MonOffOnLock", 0))
 			RegisterSession(hwndMain);
 	}
 	if(updated==1){
@@ -405,43 +402,43 @@ LRESULT CALLBACK MsgOnlyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 //	/lap		record a (the current) lap time
 //================================================================================================
 //---------------------------------------------//---------------+++--> T-Clock Command Line Option:
-void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------------------+++-->
+void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //-----------------------------+++-->
 {
 	int justElevated = 0;
-	const char* p = cmdline;
+	const wchar_t* p = cmdline;
 	if(g_hwndTClockMain != hwndMain){
-		g_hwndTClockMain = CreateWindow("STATIC",NULL,0,0,0,0,0,HWND_MESSAGE_nowarn,0,0,0);
+		g_hwndTClockMain = CreateWindow(L"STATIC", NULL, 0, 0,0,0,0, HWND_MESSAGE_nowarn, 0, 0, 0);
 		SubclassWindow(g_hwndTClockMain, MsgOnlyProc);
 	}
 	
 	while(*p != '\0') {
 		if(*p == '/') {
 			++p;
-			if(strncasecmp(p, "prop", 4) == 0) {
+			if(wcsncasecmp(p, L"prop", 4) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_SHOWPROP, 0);
 				p += 4;
-			} else if(strncasecmp(p, "exit", 4) == 0) {
+			} else if(wcsncasecmp(p, L"exit", 4) == 0) {
 				SendMessage(hwndMain, MAINM_EXIT, 0, 0);
 				p += 4;
-			} else if(strncasecmp(p, "start", 5) == 0) {
+			} else if(wcsncasecmp(p, L"start", 5) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_START, 0);
 				p += 5;
-			} else if(strncasecmp(p, "stop", 4) == 0) {
+			} else if(wcsncasecmp(p, L"stop", 4) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_STOP, 0);
 				p += 4;
-			} else if(strncasecmp(p, "reset", 5) == 0) {
+			} else if(wcsncasecmp(p, L"reset", 5) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESET, 0);
 				p += 5;
-			} else if(strncasecmp(p, "pause", 5) == 0) {
+			} else if(wcsncasecmp(p, L"pause", 5) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_PAUSE, 0);
 				p += 5;
-			} else if(strncasecmp(p, "resume", 6) == 0) {
+			} else if(wcsncasecmp(p, L"resume", 6) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESUME, 0);
 				p += 6;
-			} else if(strncasecmp(p, "lap", 3) == 0) {
+			} else if(wcsncasecmp(p, L"lap", 3) == 0) {
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
 				p += 3;
-			} else if(strncasecmp(p, "SyncOpt", 7) == 0) {
+			} else if(wcsncasecmp(p, L"SyncOpt", 7) == 0) {
 				if(HaveSetTimePermissions()){
 					if(!SendMessage(hwndMain, WM_COMMAND, MAKEWPARAM(IDM_SNTP,1), 0)){
 						NetTimeConfigDialog(justElevated);
@@ -450,18 +447,18 @@ void ProcessCommandLine(HWND hwndMain,const char* cmdline)   //-----------------
 					SendMessage(hwndMain, WM_COMMAND, IDM_SNTP, 0);
 				}
 				p += 7;
-			} else if(strncasecmp(p, "Sync", 4) == 0) {
+			} else if(wcsncasecmp(p, L"Sync", 4) == 0) {
 				p += 4;
 				SendMessage(hwndMain, WM_COMMAND, MAKEWPARAM(IDM_SNTP_SYNC,justElevated), 0);
 				if(g_hwndTClockMain == hwndMain)
 					SendMessage(hwndMain, MAINM_EXIT, 0, 0);
-			} else if(strncmp(p, "Wc", 2) == 0) { // Win10 calendar "restore"
+			} else if(wcsncmp(p, L"Wc", 2) == 0) { // Win10 calendar "restore"
 				if(p[2] == '1') // restore to previous
 					api.SetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 1);
 				else // use the slow (new) one
 					api.DelSystemValue(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray);
 				p += 2;
-			} else if(strncmp(p, "UAC", 3) == 0) {
+			} else if(wcsncmp(p, L"UAC", 3) == 0) {
 				justElevated = 1;
 				p += 3;
 			}
@@ -516,11 +513,11 @@ static void InjectClockHook(HWND hwnd) {
 	if(ticks - s_restart_ticks < 30000){
 		if(++s_restart_num >= 3){
 			if(api.Message(0,
-					"Multiple Explorer crashes or restarts detected\n"
-					"It's possible that T-Clock is crashing your Explorer,\n"
-					"automated hooking postponed.\n"
-					"\n"
-					"Take precaution and exit T-Clock now?","T-Clock",MB_YESNO,MB_ICONEXCLAMATION) == IDYES) {
+					L"Multiple Explorer crashes or restarts detected\n"
+					L"It's possible that T-Clock is crashing your Explorer,\n"
+					L"automated hooking postponed.\n"
+					L"\n"
+					L"Take precaution and exit T-Clock now?", L"T-Clock",MB_YESNO,MB_ICONEXCLAMATION) == IDYES) {
 				SendMessage(hwnd, WM_CLOSE, 0, 0);
 				return;
 			}
@@ -684,10 +681,10 @@ LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam) 
 ---------------------------------------------------------*/
 void InitError(int n)
 {
-	char s[160];
+	wchar_t msg[160];
 	
-	wsprintf(s, "%s: %d", MyString(IDS_NOTFOUNDCLOCK), n);
-	api.Message(NULL, s, "Error", MB_OK, MB_ICONEXCLAMATION);
+	wsprintf(msg, L"%s: %d", MyString(IDS_NOTFOUNDCLOCK), n);
+	api.Message(NULL, msg, L"Error", MB_OK, MB_ICONEXCLAMATION);
 }
 /*---------------------------------------------------------
 ---- Main Timer -------------------------------------------
@@ -712,14 +709,16 @@ void SetDesktopIconTextBk(int enable)   //--------------------------------------
 	COLORREF col;
 	HWND hwnd;
 	
-	hwnd = FindWindow("Progman", "Program Manager");
-	if(!hwnd) return;
+	hwnd = FindWindowA("Progman", "Program Manager");
+	if(!hwnd)
+		return;
 	hwnd = GetWindow(hwnd, GW_CHILD);
 	hwnd = GetWindow(hwnd, GW_CHILD);
 	while(hwnd) {
 		char s[80];
-		GetClassName(hwnd, s, 80);
-		if(strcmp(s, "SysListView32") == 0) break;
+		GetClassNameA(hwnd, s, _countof(s));
+		if(strcmp(s, "SysListView32") == 0)
+			break;
 		hwnd = GetWindow(hwnd, GW_HWNDNEXT);
 	}
 	if(!hwnd) return;

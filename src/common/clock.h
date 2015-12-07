@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-#define CLOCK_API 1
+#define CLOCK_API 2 // UTF-16
 
 #ifndef WM_DWMCOLORIZATIONCOLORCHANGED
 #	define WM_DWMCOLORIZATIONCOLORCHANGED 0x0320
@@ -47,9 +47,9 @@ struct TClockAPI {
  * \sa TOS, TOS_2000, TOS_XP, TOS_XP_64, TOS_VISTA, TOS_WIN7, TOS_WIN8, TOS_WIN8_1, TOS_WIN10, TOS_NEWER, TOS_OLDER */
 	unsigned short OS;
 	unsigned short desktop_button_size; /**< size of the "show desktop" button (W7- 10px ?, W8 8px, W10 4+1px) */
-	const char* root; /**< our root folder path w/o ending slash */
-	size_t root_len; /**< length of our root folder path */
-	
+	const wchar_t* root; /**< our root folder path w/o ending slash */
+	uint16_t root_len; /**< length of our root folder path in characters w/o \\0 */
+	uint16_t root_size; /**< size of our root folder path in bytes w/ \\0 */
 /**
  * \brief starts injection into explorer to replace clock
  * \param hwndMain handle to main/control window */
@@ -76,7 +76,7 @@ struct TClockAPI {
  * \param uBeep \c MB_ICON* constant, \c MB_OK (default beep) or \c -1U ( \c 0xFFFFFFFF ) for silence
  * \return zero on error. Otherwise the button pressed such as \c IDOK, \c IDCANCEL
  * \sa MessageBox(), MessageBoxEx(), MessageBoxIndirect(), MessageBeep() */
-	int (*Message)(HWND parent, const char* msg, const char* title, UINT uType, UINT uBeep);
+	int (*Message)(HWND parent, const wchar_t* msg, const wchar_t* title, UINT uType, UINT uBeep);
 /**
  * \brief positions a window near the clock
  * \param padding padding to use. \c 21 is our \e default, \c 11 is used for Win8's calendar */
@@ -89,7 +89,7 @@ struct TClockAPI {
 /**
  * \brief checks if given path exists
  * \return 1 for a file, 2 for directory */
-	char (*PathExists)(const char* path);
+	int (*PathExists)(const wchar_t* path);
 /**
  * \brief "smartly" extracts filename and parameters from command (used by \c ExecFile())
  * \param[in] command command line to parse
@@ -98,7 +98,7 @@ struct TClockAPI {
  * \return 0 if a valid path was found
  * \remark this function tries to be smart, so spaces are generally ignored for as long as it finds a valid file
  * \sa ExecFile(), MAX_PATH */
-	int (*GetFileAndOption)(const char* command, char* app, char* params);
+	int (*GetFileAndOption)(const wchar_t* command, wchar_t* app, wchar_t* params);
 /**
  * \brief parses given color ( \c COLORREF ) for use by T-Clock or Windows
  * \param color color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)
@@ -122,33 +122,33 @@ struct TClockAPI {
  * \param section,entry
  * \param defval default value to return
  * \return read int or defval */
-	int (*GetInt)(const char* section, const char* entry, int defval);
+	int (*GetInt)(const wchar_t* section, const wchar_t* entry, int defval);
 /**
  * \brief read a int64_t value from our registry
  * \param section,entry
  * \param defval default value to return
  * \return read int64_t or \p defval */
-	int64_t (*GetInt64)(const char* section, const char* entry, int64_t defval);
+	int64_t (*GetInt64)(const wchar_t* section, const wchar_t* entry, int64_t defval);
 /**
  * \brief try to read a int value from our registry or add it if missing
  * \param section,entry
  * \param defval default value to write and return
  * \return read int or defval on failure */
-	int (*GetIntEx)(const char* section, const char* entry, int defval);
+	int (*GetIntEx)(const wchar_t* section, const wchar_t* entry, int defval);
 /**
  * \brief read a int value from Windows' registry
  * \param rootkey,section,entry
  * \param defval default value to return if entry wasn't found
  * \return read int or defval on failure */
-	int (*GetSystemInt)(HKEY rootkey, const char* section, const char* entry, int defval);
+	int (*GetSystemInt)(HKEY rootkey, const wchar_t* section, const wchar_t* entry, int defval);
 /**
  * \brief read a string value from our registry
  * \param[in] section,entry
  * \param[out] val output buffer of \a len size
- * \param[in] len size of \a val
+ * \param[in] len size of \a val in chars
  * \param[in] defval default value to return if \a entry wasn't found
  * \return size of returned string excl. zero terminator */
-	int (*GetStr)(const char* section, const char* entry, char* val, int len, const char* defval);
+	int (*GetStr)(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval);
 /**
  * \brief try to read a string value from our registry or add it if missing
  * \param[in] section,entry
@@ -156,7 +156,7 @@ struct TClockAPI {
  * \param[in] len size of \a val
  * \param[in] defval default value to write and return if \a entry wasn't found
  * \return size of returned string excl. zero terminator */
-	int (*GetStrEx)(const char* section, const char* entry, char* val, int len, const char* defval);
+	int (*GetStrEx)(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval);
 /**
  * \brief read a string value from Windows' registry
  * \param[in] rootkey,section,entry
@@ -164,54 +164,54 @@ struct TClockAPI {
  * \param[in] len size of \a val
  * \param[in] defval default value to return if \a entry wasn't found
  * \return size of returned string excl. zero terminator */
-	int (*GetSystemStr)(HKEY rootkey, const char* section, const char* entry, char* val, int len, const char* defval);
+	int (*GetSystemStr)(HKEY rootkey, const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval);
 /**
  * \brief update or add a int value in our registry
  * \param section,entry
  * \param val new value
  * \return boolean */
-	int (*SetInt)(const char* section, const char* entry, int val);
+	int (*SetInt)(const wchar_t* section, const wchar_t* entry, int val);
 /**
  * \brief update or add a int64_t value in our registry
  * \param section,entry
  * \param val new value
  * \return boolean */
-	int (*SetInt64)(const char* section, const char* entry, int64_t val);
+	int (*SetInt64)(const wchar_t* section, const wchar_t* entry, int64_t val);
 /**
  * \brief update or add a int value in Windows' registry
  * \param rootkey,section,entry
  * \param val new value
  * \return boolean */
-	int (*SetSystemInt)(HKEY rootkey, const char* section, const char* entry, int val);
+	int (*SetSystemInt)(HKEY rootkey, const wchar_t* section, const wchar_t* entry, int val);
 /**
  * \brief update or add a string value in our registry
  * \param section,entry
  * \param val new value
  * \return boolean */
-	int (*SetStr)(const char* section, const char* entry, const char* val);
+	int (*SetStr)(const wchar_t* section, const wchar_t* entry, const wchar_t* val);
 /**
  * \brief update or add a string value in Windows' registry
  * \param rootkey,section,entry
  * \param val new value
  * \return boolean */
-	int (*SetSystemStr)(HKEY rootkey, const char* section, const char* entry, const char* val);
+	int (*SetSystemStr)(HKEY rootkey, const wchar_t* section, const wchar_t* entry, const wchar_t* val);
 /**
  * \brief deletes a value from our registry
  * \param section
  * \param entry value to delete
  * \return boolean */
-	int (*DelValue)(const char* section, const char* entry);
+	int (*DelValue)(const wchar_t* section, const wchar_t* entry);
 /**
  * \brief deletes a value from Windows' registry
  * \param section
  * \param entry value to delete
  * \return boolean */
-	int (*DelSystemValue)(HKEY rootkey, const char* section, const char* entry);
+	int (*DelSystemValue)(HKEY rootkey, const wchar_t* section, const wchar_t* entry);
 /**
  * \brief deletes an entire key from our registry
  * \param section key to delete
  * \return boolean */
-	int (*DelKey)(const char* section);
+	int (*DelKey)(const wchar_t* section);
 	
 	// exec
 	
@@ -224,7 +224,7 @@ struct TClockAPI {
  * \param show = \c SW_SHOWNORMAL
  * \return -1 on failure, 0 on success,1 if user canceled
  * \sa ShellExecute(), ShellExecuteEx(), Exec() */
-	int (*ShellExecute)(const char* method, const char* app, const char* params, HWND parent, int show);
+	int (*ShellExecute)(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show);
 /**
  * \brief starts an application
  * \param app path to run
@@ -232,13 +232,13 @@ struct TClockAPI {
  * \param parent = \c NULL (parent window)
  * \return -1 on failure, 0 on success, 1 if user canceled
  * \sa ExecElevated(), ExecFile(), ShellExecute() */
-	int (*Exec)(const char* app, const char* params, HWND parent);
+	int (*Exec)(const wchar_t* app, const wchar_t* params, HWND parent);
 /**
  * \brief starts an application elevated (displays UAC dialog when required)
  * \return -1 on failure, 0 on success, 1 if user canceled
  * \remarks this function is mainly for Vista+, though even Win2000 shows an user logon screen
  * \sa Exec(), ExecFile(), ShellExecute() */
-	int (*ExecElevated)(const char* app, const char* params, HWND parent);
+	int (*ExecElevated)(const wchar_t* app, const wchar_t* params, HWND parent);
 /**
  * \brief opens a file or starts an application
  * \param command full command-line with file-name and optional arguments
@@ -246,7 +246,7 @@ struct TClockAPI {
  * \return -1 on failure, 0 on success, 1 if user canceled
  * \remark makes use of \c GetFileAndOption() internally and thus same rules apply for \p command
  * \sa Exec(), ExecElevated(), ShellExecute(), GetFileAndOption() */
-	int (*ExecFile)(const char* command, HWND parent);
+	int (*ExecFile)(const wchar_t* command, HWND parent);
 	// format stuff
 /**
  * \brief retrieves a format specifier, width and padding; starting from \p offset[0]
@@ -255,7 +255,7 @@ struct TClockAPI {
  * \param[out] padding white-space padding
  * \return parsed format specifier eg. 'h' or \0 if end was reached
  * \remark \p offset will point to next format position or \0 if end was reached */
-	char (*GetFormat)(const char** offset, int* minimum, int* padding);
+	wchar_t (*GetFormat)(const wchar_t** offset, int* minimum, int* padding);
 /**
  * \brief writes \p number to string \p buffer
  * \param[out] buffer
@@ -263,11 +263,11 @@ struct TClockAPI {
  * \param[in] minimum pads number with zeros to reach given minimum
  * \param[in] padding additional white-space padding
  * \return chars written (excl. \0) */
-	int (*WriteFormatNum)(char* buffer, int number, int minimum, int padding);
+	int (*WriteFormatNum)(wchar_t* buffer, int number, int minimum, int padding);
 	// translation API
-	const char* (*T)(int hash);
-	const char* (*Translate)(const char* str);
-	const char* (*TranslateWindow)(HWND hwnd);
+	const wchar_t* (*T)(int hash);
+	const wchar_t* (*Translate)(const wchar_t* str);
+	const wchar_t* (*TranslateWindow)(HWND hwnd);
 };
 
 /**
@@ -275,7 +275,7 @@ struct TClockAPI {
  * \param dll_path path to our T-Clock[64].dll
  * \param api reference to our API struct that receives functions
  * \return non-zero on error. greater than 0 if internal API failure, lower than 0 if external */
-int LoadClockAPI(const char* dll_path, TClockAPI* api);
+int LoadClockAPI(const wchar_t* dll_path, TClockAPI* api);
 
 extern TClockAPI api;
 

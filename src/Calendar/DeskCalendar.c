@@ -11,20 +11,20 @@ BOOL m_bAutoClose;
 BOOL m_bTopMost;
 //===========================================================================================
 //----------------------------------------------------+++--> Get the Current Day of the Year:
-void GetDayOfYearTitle(char* szTitle, int ivMonths)   //-------------------------------+++-->
+void GetDayOfYearTitle(wchar_t* szTitle, int ivMonths)   //-------------------------------+++-->
 {
 	struct tm today;
-	char szDoY[8];
+	wchar_t szDoY[8];
 	time_t ts = time(NULL);
 	
 	localtime_r(&ts, &today);
-//	strftime(szDoY, 8, "%#j", &today); // <--{OutPut}--> Day 95
-	strftime(szDoY, 8, "%j", &today);   // <--{OutPut}--> Day 095
+//	wcsftime(szDoY, 8, L"%#j", &today); // <--{OutPut}--> Day 95
+	wcsftime(szDoY, 8, L"%j", &today);   // <--{OutPut}--> Day 095
 	
 	if(api.OS < TOS_VISTA && ivMonths==1) {
-		wsprintf(szTitle, "Calendar:  Day: %s", szDoY);
+		wsprintf(szTitle, L"Calendar:  Day: %s", szDoY);
 	} else {
-		wsprintf(szTitle, "T-Clock: Calendar  Day: %s", szDoY);
+		wsprintf(szTitle, L"T-Clock: Calendar  Day: %s", szDoY);
 	}
 }
 LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
@@ -37,24 +37,24 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 		size_t idx;
 		size_t dirty = 0;
 		
-		iMonths = api.GetIntEx("Calendar","ViewMonths",3);
-		iMonthsPast = api.GetIntEx("Calendar","ViewMonthsPast",1);
+		iMonths = api.GetIntEx(L"Calendar", L"ViewMonths", 3);
+		iMonthsPast = api.GetIntEx(L"Calendar", L"ViewMonthsPast", 1);
 		
-		if(api.GetInt("Calendar", "ShowDayOfYear", 1)) {
-			char szTitle[32];
+		if(api.GetInt(L"Calendar", L"ShowDayOfYear", 1)) {
+			wchar_t szTitle[32];
 			GetDayOfYearTitle(szTitle,iMonths);
 			SetWindowText(hwnd,szTitle);
 		}
 		
-		dwCalStyle=WS_CHILD|WS_VISIBLE;
-		if(api.GetInt("Calendar","ShowWeekNums",0))
+		dwCalStyle = WS_CHILD|WS_VISIBLE;
+		if(api.GetInt(L"Calendar",L"ShowWeekNums",0))
 			dwCalStyle|=MCS_WEEKNUMBERS;
 		
-		hCal=CreateWindowEx(0,MONTHCAL_CLASS,"",dwCalStyle,0,0,0,0,hwnd,NULL,NULL,NULL);
+		hCal = CreateWindowEx(0, MONTHCAL_CLASS, L"", dwCalStyle, 0,0,0,0, hwnd, NULL, NULL, NULL);
 		if(!hCal) return -1;
 		
 		for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
-			unsigned color = api.GetInt("Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
+			unsigned color = api.GetInt(L"Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
 			if(color != TCOLOR(TCOLOR_DEFAULT)){
 				dirty |= (1<<idx);
 				MonthCal_SetColor(hCal, g_calendar_color[idx].mcsc, api.GetColor(color,0));
@@ -151,14 +151,13 @@ LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 HWND CreateCalender(HWND hwnd)   //---------------+++-->
 {
 	INITCOMMONCONTROLSEX icex = {sizeof(icex), ICC_DATE_CLASSES};
-	WNDCLASSEX wcx;
+	WNDCLASSEX wcx = {sizeof(wcx)};
 	ATOM calclass;
-	m_bAutoClose = api.GetInt("Calendar", "CloseCalendar", 1);
-	m_bTopMost = api.GetInt("Calendar", "CalendarTopMost", 0);
+	m_bAutoClose = api.GetInt(L"Calendar", L"CloseCalendar", 1);
+	m_bTopMost = api.GetInt(L"Calendar", L"CalendarTopMost", 0);
 	InitCommonControlsEx(&icex);
 	
-	wcx.cbSize = sizeof(wcx);
-	wcx.style =0;
+	wcx.style = 0;
 	wcx.lpfnWndProc = MainWndProc;
 	wcx.cbClsExtra = 0;
 	wcx.cbWndExtra = 0;
@@ -168,10 +167,10 @@ HWND CreateCalender(HWND hwnd)   //---------------+++-->
 	wcx.hCursor = LoadCursor(NULL,IDC_ARROW);
 	wcx.hbrBackground = (HBRUSH)COLOR_WINDOWFRAME;
 	wcx.lpszMenuName = NULL;
-	wcx.lpszClassName = "ClockFlyoutWindow";
-	wcx.hIconSm=NULL;
-	calclass=RegisterClassEx(&wcx);
-	hwnd=CreateWindowEx(0,MAKEINTATOM(calclass),"T-Clock: Calendar",WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE,0,0,0,0,hwnd,0,g_instance,NULL);
+	wcx.lpszClassName = L"ClockFlyoutWindow";
+	wcx.hIconSm = NULL;
+	calclass = RegisterClassEx(&wcx);
+	hwnd = CreateWindowEx(0, MAKEINTATOM(calclass), L"T-Clock: Calendar", (WS_CAPTION|WS_POPUP|WS_SYSMENU|WS_VISIBLE), 0,0,0,0, hwnd, 0, g_instance, NULL);
 	return hwnd;
 }
 
@@ -182,7 +181,7 @@ int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine
 	BOOL bRet;
 	(void)hPrevInstance; (void)lpCmdLine; (void)nCmdShow;// don't warn me about they being unused
 	g_instance = hInstance;
-	if(LoadClockAPI("T-Clock" ARCH_SUFFIX, &api))
+	if(LoadClockAPI(L"T-Clock" ARCH_SUFFIX, &api))
 		return 2;
 	if(!CreateCalender(0))
 		return 1;

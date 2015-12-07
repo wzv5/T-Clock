@@ -31,21 +31,21 @@ INT_PTR CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 	(void)lParam;
 	switch(message) {
 	case WM_INITDIALOG:{
-		int idx=(int)lParam;
-		HWND hParent=GetParent(hDlg);
-		char tmp[LRG_BUFF];
-		SetWindowLongPtr(hDlg,GWLP_USERDATA,idx);
-		wsprintf(tmp,"Item #%i",idx+1);
-		SetDlgItemText(hDlg,IDC_MID_TASKNUM,tmp);
-		ListView_GetItemText(GetDlgItem(hParent,IDC_QMEN_LIST), idx, 1, tmp,sizeof(tmp));
-		SetDlgItemText(hDlg,IDC_MID_TARGET,tmp);
-		if(!*tmp){ // new item
-			EnableDlgItem(hDlg,IDC_MID_DELETE,0);
+		wchar_t tmp[LRG_BUFF];
+		int idx = (int)lParam;
+		HWND hParent = GetParent(hDlg);
+		SetWindowLongPtr(hDlg, GWLP_USERDATA, idx);
+		wsprintf(tmp, L"Item #%i", idx+1);
+		SetDlgItemText(hDlg, IDC_MID_TASKNUM, tmp);
+		ListView_GetItemText(GetDlgItem(hParent,IDC_QMEN_LIST), idx, 1, tmp, _countof(tmp));
+		SetDlgItemText(hDlg, IDC_MID_TARGET, tmp);
+		if(!tmp[0]){ // new item
+			EnableDlgItem(hDlg, IDC_MID_DELETE, 0);
 		}else
-			ListView_GetItemText(GetDlgItem(hParent,IDC_QMEN_LIST), idx, 0, tmp,sizeof(tmp));
-		SetDlgItemText(hDlg,IDC_MID_MENUTEXT,tmp);
-		ListView_GetItemText(GetDlgItem(hParent,IDC_QMEN_LIST), idx, 2, tmp,sizeof(tmp));
-		SetDlgItemText(hDlg,IDC_MID_SWITCHES,tmp);
+			ListView_GetItemText(GetDlgItem(hParent,IDC_QMEN_LIST), idx, 0, tmp, _countof(tmp));
+		SetDlgItemText(hDlg, IDC_MID_MENUTEXT, tmp);
+		ListView_GetItemText(GetDlgItem(hParent,IDC_QMEN_LIST), idx, 2, tmp, _countof(tmp));
+		SetDlgItemText(hDlg, IDC_MID_SWITCHES, tmp);
 		SetFocus(GetDlgItem(hDlg,IDC_MID_MENUTEXT));
 		return TRUE;}
 	case WM_COMMAND:
@@ -72,35 +72,35 @@ Save the New Menu Item Options - From the Menu Item Details Tab
 void SaveNewMenuOptions(HWND hDlg)
 {
 	/// @note : on next backward incompatible change, also change how we store QuickyMenu
-	char key[TNY_BUFF];
-	int offset=9;
-	char szmText[TNY_BUFF];
-	char szmTarget[LRG_BUFF];
-	char szmSwitches[LRG_BUFF];
-	GetDlgItemText(hDlg, IDC_MID_MENUTEXT, szmText,sizeof(szmText));
-	GetDlgItemText(hDlg, IDC_MID_TARGET,   szmTarget,sizeof(szmTarget));
-	GetDlgItemText(hDlg, IDC_MID_SWITCHES, szmSwitches,sizeof(szmSwitches));
-	memcpy(key,"MenuItem-",offset);
-	offset+=wsprintf(key+offset,"%i",GetWindowLong(hDlg,GWLP_USERDATA));
-	if((strlen(szmText)) && (strlen(szmTarget))) {
-		api.SetInt("QuickyMenu\\MenuItems", key, 1);
+	wchar_t key[TNY_BUFF];
+	int offset = 9;
+	wchar_t szmText[TNY_BUFF];
+	wchar_t szmTarget[LRG_BUFF];
+	wchar_t szmSwitches[LRG_BUFF];
+	GetDlgItemText(hDlg, IDC_MID_MENUTEXT, szmText, _countof(szmText));
+	GetDlgItemText(hDlg, IDC_MID_TARGET,   szmTarget, _countof(szmTarget));
+	GetDlgItemText(hDlg, IDC_MID_SWITCHES, szmSwitches, _countof(szmSwitches));
+	memcpy(key, L"MenuItem-", offset*sizeof(wchar_t));
+	offset += wsprintf(key+offset, L"%i", GetWindowLong(hDlg,GWLP_USERDATA));
+	if((wcslen(szmText)) && (wcslen(szmTarget))) {
+		api.SetInt(L"QuickyMenu\\MenuItems", key, 1);
 		
-		memcpy(key+offset,"-Text",6);
-		api.SetStr("QuickyMenu\\MenuItems", key, szmText);
+		wcscpy(key+offset, L"-Text");
+		api.SetStr(L"QuickyMenu\\MenuItems", key, szmText);
 		
-		memcpy(key+offset,"-Target",8);
-		api.SetStr("QuickyMenu\\MenuItems", key, szmTarget);
+		wcscpy(key+offset, L"-Target");
+		api.SetStr(L"QuickyMenu\\MenuItems", key, szmTarget);
 		
-		memcpy(key+offset,"-Switches",10);
-		api.SetStr("QuickyMenu\\MenuItems", key, szmSwitches);
+		wcscpy(key+offset, L"-Switches");
+		api.SetStr(L"QuickyMenu\\MenuItems", key, szmSwitches);
 		
 		EndQuickyEdit(hDlg);
 	} else {
 		DeleteMenuItem(hDlg);
-		wsprintf(szmSwitches, "%s%s",
-			(!strlen(szmText)?"* Menu text can't be empty!\n":""),
-			(!strlen(szmTarget)?"* Target file must be filled!":""));
-		MessageBox(0,szmSwitches,"ERROR: Missing Information!",MB_OK|MB_ICONERROR);
+		wsprintf(szmSwitches, L"%s%s",
+			(!wcslen(szmText)?L"* Menu text can't be empty!\n":L""),
+			(!wcslen(szmTarget)?L"* Target file must be filled!":L""));
+		MessageBox(0,szmSwitches,L"ERROR: Missing Information!",MB_OK|MB_ICONERROR);
 	}
 }
 /*---------------------------------------------------------------------------
@@ -108,33 +108,30 @@ void SaveNewMenuOptions(HWND hDlg)
 ---------------------------------------------------------------------------*/
 void DeleteMenuItem(HWND hDlg)
 {
-	char key[TNY_BUFF];
+	wchar_t key[TNY_BUFF];
 	int offset=9;
-	memcpy(key,"MenuItem-",offset);
-	offset+=wsprintf(key+offset,"%i",GetWindowLong(hDlg,GWLP_USERDATA));
-	api.DelValue("QuickyMenu\\MenuItems", key);
+	memcpy(key, L"MenuItem-", offset * sizeof key[0]);
+	offset += wsprintf(key+offset, L"%i", GetWindowLong(hDlg,GWLP_USERDATA));
+	api.DelValue(L"QuickyMenu\\MenuItems", key);
 	
-	memcpy(key+offset,"-Text",6);
-	api.DelValue("QuickyMenu\\MenuItems", key);
+	wcscpy(key+offset, L"-Text");
+	api.DelValue(L"QuickyMenu\\MenuItems", key);
 	
-	memcpy(key+offset,"-Target",8);
-	api.DelValue("QuickyMenu\\MenuItems", key);
+	wcscpy(key+offset, L"-Target");
+	api.DelValue(L"QuickyMenu\\MenuItems", key);
 	
-	memcpy(key+offset,"-Switches",10);
-	api.DelValue("QuickyMenu\\MenuItems", key);
+	wcscpy(key+offset, L"-Switches");
+	api.DelValue(L"QuickyMenu\\MenuItems", key);
 }
 //================================================================================================
 //-------------------------------------//------+++--> Browse to the Quicky Menu Item's Target File:
 void BrowseForTargetFile(HWND hBft)   //----------------------------------------------------+++-->
 {
-	char szFile[MAX_PATH];
-	char* Filters = "Program Files (*.exe)\0*.exe\0" "All Files (*.*)\0*.*\0";
-	OPENFILENAME ofn;
+	const wchar_t* Filters = L"Program Files (*.exe)\0*.exe\0" L"All Files (*.*)\0*.*\0";
+	wchar_t szFile[MAX_PATH];
+	OPENFILENAME ofn = {sizeof(ofn)};
 	
-	ZeroMemory(szFile, MAX_PATH);
-	ZeroMemory(&ofn, sizeof(ofn)); // Initialize OPENFILENAME
-	
-	ofn.lStructSize  = sizeof(ofn);
+	szFile[0] = '\0';
 	ofn.hwndOwner    = hBft;
 	ofn.hInstance    = NULL;
 	ofn.lpstrFilter  = Filters;

@@ -16,21 +16,21 @@ INT_PTR CALLBACK PageQuickyMenuProc(HWND, UINT, WPARAM, LPARAM); // PageQuickyMe
 //----------------------------------------+++--> Dialog Procedure for Quicky Menus Dialog Messages:
 INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
 {
-	char szText[TNY_BUFF] = {0};
-	LVCOLUMN lvCol;
-	int iCol = 0;
-	
 	switch(message) {
+	case WM_INITDIALOG:{
+		wchar_t szText[TNY_BUFF];
+		LVCOLUMN lvCol;
+		int iCol = 0;
 		
-	case WM_INITDIALOG:
+		lvCol.pszText = szText;
+		
 		OnInit(hDlg);
 		ListView_SetExtendedListViewStyle(GetDlgItem(hDlg,IDC_QMEN_LIST), LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES|LVS_EX_DOUBLEBUFFER);
-		SetXPWindowTheme(GetDlgItem(hDlg,IDC_QMEN_LIST),L"Explorer",NULL);
+		SetXPWindowTheme(GetDlgItem(hDlg,IDC_QMEN_LIST), L"Explorer", NULL);
 		
 		lvCol.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;		 // Load the Column Headers.
 		for(iCol = IDS_LIST_TASKNAME; iCol <= IDS_LIST_TASKSWITCHES; iCol++) {
 			lvCol.iSubItem = iCol;								   // From the String Table
-			lvCol.pszText = szText;							      // Into the Temporary Buffer.
 			if(iCol == IDS_LIST_TASKNAME) {
 				lvCol.cx = 100;		  // Set Column Width in Pixels
 				lvCol.fmt = LVCFMT_LEFT; // left-aligned column
@@ -41,11 +41,11 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				lvCol.cx = 105;		  // Set Column Width in Pixels
 				lvCol.fmt = LVCFMT_LEFT; // left-aligned column
 			}
-			LoadString(0, iCol, szText, sizeof(szText));    // <-- String Loads Here.
+			LoadString(0, iCol, lvCol.pszText, _countof(szText));    // <-- String Loads Here.
 			ListView_InsertColumn(GetDlgItem(hDlg,IDC_QMEN_LIST), iCol, &lvCol); // <- Now It's a Column Header
 		}
 		AddListBoxRows(GetDlgItem(hDlg,IDC_QMEN_LIST));
-		return TRUE;
+		return TRUE;}
 		
 	case WM_COMMAND: {
 		WORD id, code;
@@ -92,11 +92,11 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 --------------------------------------------------*/
 static void OnInit(HWND hDlg)   /*---------------*/
 {
-	CheckDlgButton(hDlg, IDC_QMEN_AUDIO, api.GetInt("QuickyMenu", "AudioProperties", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_DISPLAY, api.GetInt("QuickyMenu", "DisplayProperties", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_EXITWIN, api.GetInt("QuickyMenu", "ExitWindows", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_LAUNCH, api.GetInt("QuickyMenu", "QuickyMenu", TRUE));
-	CheckDlgButton(hDlg, IDC_QMEN_NET, api.GetInt("QuickyMenu", "NetworkDrives", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_AUDIO, api.GetInt(L"QuickyMenu", L"AudioProperties", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_DISPLAY, api.GetInt(L"QuickyMenu", L"DisplayProperties", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_EXITWIN, api.GetInt(L"QuickyMenu", L"ExitWindows", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_LAUNCH, api.GetInt(L"QuickyMenu", L"QuickyMenu", TRUE));
+	CheckDlgButton(hDlg, IDC_QMEN_NET, api.GetInt(L"QuickyMenu", L"NetworkDrives", TRUE));
 	
 }
 /*--------------------------------------------------
@@ -104,42 +104,42 @@ static void OnInit(HWND hDlg)   /*---------------*/
 --------------------------------------------------*/
 void OnApply(HWND hDlg)   /*---------------------*/
 {
-	api.SetInt("QuickyMenu", "DisplayProperties", IsDlgButtonChecked(hDlg, IDC_QMEN_DISPLAY));
-	api.SetInt("QuickyMenu", "AudioProperties",   IsDlgButtonChecked(hDlg, IDC_QMEN_AUDIO));
-	api.SetInt("QuickyMenu", "NetworkDrives",     IsDlgButtonChecked(hDlg, IDC_QMEN_NET));
-	api.SetInt("QuickyMenu", "ExitWindows",       IsDlgButtonChecked(hDlg, IDC_QMEN_EXITWIN));
-	api.SetInt("QuickyMenu", "QuickyMenu",        IsDlgButtonChecked(hDlg, IDC_QMEN_LAUNCH));
+	api.SetInt(L"QuickyMenu", L"DisplayProperties", IsDlgButtonChecked(hDlg, IDC_QMEN_DISPLAY));
+	api.SetInt(L"QuickyMenu", L"AudioProperties",   IsDlgButtonChecked(hDlg, IDC_QMEN_AUDIO));
+	api.SetInt(L"QuickyMenu", L"NetworkDrives",     IsDlgButtonChecked(hDlg, IDC_QMEN_NET));
+	api.SetInt(L"QuickyMenu", L"ExitWindows",       IsDlgButtonChecked(hDlg, IDC_QMEN_EXITWIN));
+	api.SetInt(L"QuickyMenu", L"QuickyMenu",        IsDlgButtonChecked(hDlg, IDC_QMEN_LAUNCH));
 }
 //================================================================================================
 //------------------------------+++--> Populate ListView Control With Currently Configured Options:
 void AddListBoxRows(HWND hList)   //--------------------------------------------------------+++-->
 {
 	LVITEM lvItem;
-	char key[TNY_BUFF];
-	int offset=9;
+	wchar_t key[TNY_BUFF];
+	int offset = 9;
 	int idx;
 	ListView_DeleteAllItems(hList); // Clear ListView Control (Refresh Function)
 	
-	memcpy(key,"MenuItem-",offset);
+	memcpy(key, L"MenuItem-", offset*sizeof(wchar_t));
 	for(idx=12; idx--; ) {
-		char szValue[LRG_BUFF];
+		wchar_t szValue[LRG_BUFF];
 		lvItem.mask = LVIF_TEXT;
 		lvItem.iItem = 0;
 		lvItem.pszText = szValue;
 		lvItem.iSubItem = 0;
-		offset=9+wsprintf(key+9,"%i",idx);
-		memcpy(key+offset,"-Text",6);
-		api.GetStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "-");
+		offset = 9 + wsprintf(key+9, L"%i", idx);
+		wcscpy(key+offset, L"-Text");
+		api.GetStr(L"QuickyMenu\\MenuItems", key, szValue, _countof(szValue), L"-");
 		ListView_InsertItem(hList, &lvItem);
 		
 		lvItem.iSubItem = 1;
-		memcpy(key+offset,"-Target",8);
-		api.GetStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
+		wcscpy(key+offset, L"-Target");
+		api.GetStr(L"QuickyMenu\\MenuItems", key, szValue, _countof(szValue), L"");
 		ListView_SetItem(hList, &lvItem);
 		
 		lvItem.iSubItem = 2;
-		memcpy(key+offset,"-Switches",10);
-		api.GetStr("QuickyMenu\\MenuItems", key, szValue, sizeof(szValue), "");
+		wcscpy(key+offset, L"-Switches");
+		api.GetStr(L"QuickyMenu\\MenuItems", key, szValue, _countof(szValue), L"");
 		ListView_SetItem(hList, &lvItem);
 	}
 }

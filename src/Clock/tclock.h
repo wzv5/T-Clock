@@ -56,21 +56,21 @@ void SetDesktopIconTextBk(int enable);
  * \return path to Clock.exe incl. filename
  * \remark currently just a wrapper for \c _pgmptr */
 //inline const char* GetClockExe(){
-//	return _pgmptr;
+//	return _wpgmptr;
 //}
-#define GetClockExe() _pgmptr
+#define GetClockExe() _wpgmptr
 
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
 void ToggleCalendar(int type);
-int GetStartupFile(HWND hDlg,char filename[MAX_PATH]);
+int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]);
 void AddStartup(HWND hDlg);
 void RemoveStartup(HWND hDlg);
-int CreateLink(LPCSTR fname, LPCSTR dstpath, LPCSTR name);
+int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name);
 
 // used by PageMisc.c and main.c
-extern const char kSectionImmersiveShell[56+1]; ///< SOFTWARE/Microsoft/Windows/CurrentVersion/ImmersiveShell
-extern const char kKeyWin32Tray[27+1]; ///< UseWin32TrayClockExperience
+extern const wchar_t kSectionImmersiveShell[56+1]; ///< SOFTWARE/Microsoft/Windows/CurrentVersion/ImmersiveShell
+extern const wchar_t kKeyWin32Tray[27+1]; ///< UseWin32TrayClockExperience
 
 // settings.c
 int CheckSettings();
@@ -79,7 +79,7 @@ int CheckSettings();
 extern char g_bApplyClock;
 extern char g_bApplyTaskbar;
 void MyPropertySheet(int page);
-BOOL SelectMyFile(HWND hDlg, const char* filter, DWORD nFilterIndex, const char* deffile, char* retfile);
+BOOL SelectMyFile(HWND hDlg, const wchar_t* filter, DWORD nFilterIndex, const wchar_t* deffile, wchar_t* retfile);
 
 // alarm.c
 typedef struct Schedule Schedule;
@@ -129,9 +129,9 @@ enum{
 	ALRM_DIALOG  =0x00000080,
 };
 typedef struct{
-	char name[TNY_BUFF];
-	char message[512];
-	char settings[TNY_BUFF];
+	wchar_t name[TNY_BUFF];
+	wchar_t message[512];
+	wchar_t settings[TNY_BUFF];
 } dlgmsg_t;
 typedef struct alarm_t {
 	int days;
@@ -140,7 +140,7 @@ typedef struct alarm_t {
 	int iTimes;
 	dlgmsg_t dlgmsg;
 	unsigned char uFlags;
-	char fname[MAX_PATH];
+	wchar_t fname[MAX_PATH];
 } alarm_t;
 
 /**
@@ -169,7 +169,7 @@ void OnTimerAlarm(HWND hwnd, time_t time);
  * \param[in] fname sound to be played, or program to be executed. Can be relative to \e TCLOCK/waves/
  * \param[in] dwLoops number of times to repeat
  * \return boolean (started to play a sound) */
-BOOL PlayFile(HWND hwnd, const char* fname, DWORD dwLoops);
+int PlayFile(HWND hwnd, const wchar_t* fname, DWORD dwLoops);
 
 // alarmday.c
 #define ALARMDAY_OKFLAG 0x80000000
@@ -182,8 +182,8 @@ int ChooseAlarmDay(HWND hDlg, unsigned days);
  * \param num number of controls in \a boxes
  * \remark first entry is always "&lt;  no sound  &gt;" and will be selected if combobox is empty */
 void ComboBoxArray_AddSoundFiles(HWND boxes[], int num);
-BOOL IsMMFile(const char* fname);
-BOOL BrowseSoundFile(HWND hDlg, const char* deffile, char* fname);
+BOOL IsMMFile(const wchar_t* fname);
+BOOL BrowseSoundFile(HWND hDlg, const wchar_t* deffile, wchar_t* fname);
 
 // pageformat.c
 void InitFormat();
@@ -254,7 +254,7 @@ void NetTimeConfigDialog(int justElevated);
 
 // BounceWind.c
 int BounceWindOptions(HWND hDlg, dlgmsg_t* dlg);
-void ReleaseTheHound(HWND hwnd, const char* title, const char* text, char* settings);
+void ReleaseTheHound(HWND hwnd, const wchar_t* title, const wchar_t* text, wchar_t* settings);
 
 // Macros
 BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus);

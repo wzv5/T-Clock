@@ -4,29 +4,28 @@
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am
 #include "tclock.h"
 
-char g_szTimersSubKey[]="Timers";
-static int GetTimerInfo(char* dst, int num);
+wchar_t g_szTimersSubKey[] = L"Timers";
 //==================================================================
 //----------+++--> enumerate & display all times to our context menu:
 void UpdateTimerMenu(HMENU hMenu)   //------------------------+++-->
 {
-	unsigned count=api.GetInt(g_szTimersSubKey,"NumberOfTimers",0);
+	unsigned count = api.GetInt(g_szTimersSubKey, L"NumberOfTimers", 0);
 	if(count){
 		unsigned idx;
-		char buf[GEN_BUFF+16];
-		char subkey[TNY_BUFF];
-		size_t offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-		memset(buf,' ',4);
+		wchar_t buf[GEN_BUFF+16];
+		wchar_t subkey[TNY_BUFF];
+		size_t offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+		wcscpy(buf, L"    ");
 		EnableMenuItem(hMenu,IDM_TIMEWATCH,MF_BYCOMMAND|MF_ENABLED);
 		EnableMenuItem(hMenu,IDM_TIMEWATCHRESET,MF_BYCOMMAND|MF_ENABLED);
 		InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
 		for(idx=0; idx<count; ++idx){
-			char* pos=buf+4;
-			wsprintf(subkey+offset, "%d", idx+1);
-			pos+=api.GetStr(subkey,"Name",pos,GEN_BUFF,"");
-			wsprintf(pos,"	(%i",idx+1);
+			wchar_t* pos = buf+4;
+			wsprintf(subkey+offset, L"%d", idx+1);
+			pos += api.GetStr(subkey, L"Name", pos, GEN_BUFF, L"");
+			wsprintf(pos, L"	(%i", idx+1);
 			InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_STRING,IDM_I_TIMER+idx,buf);
-			if(api.GetInt(subkey,"Active",0))
+			if(api.GetInt(subkey,L"Active",0))
 				CheckMenuItem(hMenu,IDM_I_TIMER+idx,MF_BYCOMMAND|MF_CHECKED);
 		}
 		InsertMenu(hMenu,IDM_TIMER,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
@@ -39,8 +38,8 @@ typedef struct{
 	int minute;
 	int hour;
 	int day;
-	char name[GEN_BUFF];
-	char fname[MAX_BUFF];
+	wchar_t name[GEN_BUFF];
+	wchar_t fname[MAX_BUFF];
 	char bActive;
 	char bRepeat;
 	char bBlink;
@@ -51,7 +50,7 @@ typedef struct{
 	int id;
 	DWORD seconds;		// Second  = 1 Second
 	DWORD tickonstart;	// Minute = 60 Seconds
-	char name[GEN_BUFF];// Hour = 3600 Seconds
+	wchar_t name[GEN_BUFF];// Hour = 3600 Seconds
 	char bHomeless;		// Day = 86400 Seconds
 } timer_t;
 
@@ -69,31 +68,31 @@ void EndAllTimers()   //--------------------------------------------+++-->
 //----------------------------------------------+++--> Free Memory to Clear a Timer:
 void StopTimer(int id)   //--------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
 	int idx;
 	
 	for(idx=0; idx<m_timers; ++idx) {
-		if(id==m_timer[idx].id){
+		if(id == m_timer[idx].id){
 			timer_t* told=m_timer;
-			offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-			wsprintf(subkey+offset, "%d", m_timer[idx].id+1);
-			api.SetInt(subkey, "Active", 0);
+			offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+			wsprintf(subkey+offset, L"%d", m_timer[idx].id+1);
+			api.SetInt(subkey, L"Active", 0);
 			if(--m_timers){
 				int i;
-				timer_t* tnew=(timer_t*)malloc(sizeof(timer_t)*m_timers);
+				timer_t* tnew = (timer_t*)malloc(sizeof(timer_t)*m_timers);
 				if(!tnew){
 					++m_timers; return;
 				}
 				for(i=0; i<idx; ++i){
-					tnew[i]=told[i];
+					tnew[i] = told[i];
 				}
 				for(i=idx; i<m_timers; ++i){
-					tnew[i]=told[i+1];
+					tnew[i] = told[i+1];
 				}
-				m_timer=tnew;
+				m_timer = tnew;
 			}else
-				m_timer=NULL;
+				m_timer = NULL;
 			Sleep(0);
 			free(told);
 			return;
@@ -104,47 +103,49 @@ void StopTimer(int id)   //--------------------------------------------------+++
 //----------------------------------------------+++--> Free Memory to Clear a Timer:
 void StartTimer(int id)   //-------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
 	int idx;
 	timer_t* told=m_timer;
 	timer_t* tnew;
 	for(idx=0; idx<m_timers; ++idx) {
-		if(id==m_timer[idx].id) return;
+		if(id == m_timer[idx].id)
+			return;
 	}
-	tnew=(timer_t*)malloc(sizeof(timer_t)*(m_timers+1));
-	if(!tnew) return;
+	tnew = (timer_t*)malloc(sizeof(timer_t)*(m_timers+1));
+	if(!tnew)
+		return;
 	for(idx=0; idx<m_timers; ++idx){
-		tnew[idx]=told[idx];
+		tnew[idx] = told[idx];
 	}
-	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-	wsprintf(subkey+offset, "%d", id+1);
-	api.GetStr(subkey,"Name",tnew[m_timers].name,sizeof(tnew[m_timers].name),"");
+	offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+	wsprintf(subkey+offset, L"%d", id+1);
+	api.GetStr(subkey, L"Name", tnew[m_timers].name, _countof(tnew[m_timers].name), L"");
 	if(!*tnew[m_timers].name){
 		free(tnew);
 		return;
 	}
-	tnew[m_timers].id=id;
-	tnew[m_timers].seconds =api.GetInt(subkey,"Seconds",0);
-	tnew[m_timers].seconds+=api.GetInt(subkey,"Minutes",0)*60;
-	tnew[m_timers].seconds+=api.GetInt(subkey,"Hours",0)*3600;
-	tnew[m_timers].seconds+=api.GetInt(subkey,"Days",0)*86400;
-	tnew[m_timers].bHomeless=1;
-	tnew[m_timers].tickonstart=GetTickCount()/1000;
-	m_timer=tnew;
+	tnew[m_timers].id = id;
+	tnew[m_timers].seconds = api.GetInt(subkey, L"Seconds",0);
+	tnew[m_timers].seconds += api.GetInt(subkey, L"Minutes",0) * 60;
+	tnew[m_timers].seconds += api.GetInt(subkey, L"Hours",0) * 3600;
+	tnew[m_timers].seconds += api.GetInt(subkey, L"Days",0) * 86400;
+	tnew[m_timers].bHomeless = 1;
+	tnew[m_timers].tickonstart = GetTickCount()/1000;
+	m_timer = tnew;
 	++m_timers;
 	free(told);
-	api.SetInt(subkey, "Active", 1);
+	api.SetInt(subkey, L"Active", 1);
 }
 //=================================================================
 //----------------------------------------------+++--> Toggle timer:
 void ToggleTimer(int id)   //--------------------------------+++-->
 {
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
-	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-	wsprintf(subkey+offset, "%d", id+1);
-	if(api.GetInt(subkey,"Active",0)){
+	offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+	wsprintf(subkey+offset, L"%d", id+1);
+	if(api.GetInt(subkey,L"Active",0)){
 		StopTimer(id);
 	}else{
 		StartTimer(id);
@@ -328,7 +329,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 {
 	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
 	HWND file_cb = GetDlgItem(hDlg, IDC_TIMERFILE);
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
 	int idx, count;
 	timeropt_t* pts;
@@ -343,26 +344,26 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	/// add default sound files to file dropdown
 	ComboBoxArray_AddSoundFiles(&file_cb, 1);
 	// add timer to combobox
-	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
-	count=api.GetInt(g_szTimersSubKey, "NumberOfTimers", 0);
+	offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+	count = api.GetInt(g_szTimersSubKey, L"NumberOfTimers", 0);
 	for(idx=0; idx<count; ++idx) {
 		pts = (timeropt_t*)malloc(sizeof(timeropt_t));
-		wsprintf(subkey+offset,"%d",idx+1);
-		pts->second = api.GetInt(subkey, "Seconds",  0);
-		pts->minute = api.GetInt(subkey, "Minutes", 10);
-		pts->hour   = api.GetInt(subkey, "Hours",    0);
-		pts->day    = api.GetInt(subkey, "Days",     0);
-		api.GetStr(subkey, "Name", pts->name, sizeof(pts->name), "");
-		api.GetStr(subkey, "File", pts->fname, sizeof(pts->fname), "");
-		pts->bBlink = (char)api.GetInt(subkey, "Blink", FALSE);
-		pts->bRepeat = (char)api.GetInt(subkey, "Repeat", FALSE);
-		pts->bActive = (char)api.GetInt(subkey, "Active", FALSE);
+		wsprintf(subkey+offset, L"%d", idx+1);
+		pts->second = api.GetInt(subkey, L"Seconds",  0);
+		pts->minute = api.GetInt(subkey, L"Minutes", 10);
+		pts->hour   = api.GetInt(subkey, L"Hours",    0);
+		pts->day    = api.GetInt(subkey, L"Days",     0);
+		api.GetStr(subkey, L"Name", pts->name, _countof(pts->name), L"");
+		api.GetStr(subkey, L"File", pts->fname, _countof(pts->fname), L"");
+		pts->bBlink = (char)api.GetInt(subkey, L"Blink", 0);
+		pts->bRepeat = (char)api.GetInt(subkey, L"Repeat", 0);
+		pts->bActive = (char)api.GetInt(subkey, L"Active", 0);
 		ComboBox_AddString(timer_cb, pts->name);
 		ComboBox_SetItemData(timer_cb, idx, pts);
 	}
 	// add "new timer" item
 	pts = (timeropt_t*)calloc(1, sizeof(timeropt_t));
-	memcpy(pts->name, "<Add New...>", 13);
+	wcscpy(pts->name, L"<Add New...>");
 	ComboBox_AddString(timer_cb, pts->name);
 	ComboBox_SetItemData(timer_cb, count, pts);
 	ComboBox_SetCurSel(timer_cb, 0);
@@ -378,27 +379,27 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 {
 	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
 	int idx, count, seconds, minutes, hours, days;
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
-	char name[GEN_BUFF];
-	char fname[MAX_PATH];
+	wchar_t name[GEN_BUFF];
+	wchar_t fname[MAX_PATH];
 	
-	offset=wsprintf(subkey,"%s\\Timer",g_szTimersSubKey);
-	ComboBox_GetText(timer_cb, name, sizeof(name));
+	offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+	ComboBox_GetText(timer_cb, name, _countof(name));
 	
 	count = ComboBox_GetCount(timer_cb);
-	count -=1; // Skip the Last One Because It's the New Timer Dummy Item
+	count -= 1; // Skip the Last One Because It's the New Timer Dummy Item
 	
 	for(idx=0; idx<count; ++idx) {
 		timeropt_t* pts;
 		pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx);
-		if(!strcmp(pts->name, name)) {
+		if(!wcscmp(pts->name, name)) {
 			pts->bActive = TRUE;
 			break;
 		}
 	}
-	wsprintf(subkey+offset,"%d",idx+1);
-	api.SetStr(subkey, "Name", name);
+	wsprintf(subkey+offset, L"%d", idx+1);
+	api.SetStr(subkey, L"Name", name);
 	seconds = GetDlgItemInt(hDlg, IDC_TIMERSECOND, 0, 0);
 	minutes = GetDlgItemInt(hDlg, IDC_TIMERMINUTE, 0, 0);
 	hours   = GetDlgItemInt(hDlg, IDC_TIMERHOUR,   0, 0);
@@ -406,20 +407,21 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	if(seconds>59) for(; seconds>59; seconds-=60,++minutes);
 	if(minutes>59) for(; minutes>59; minutes-=60,++hours);
 	if(hours>23) for(; hours>23; hours-=24,++days);
-	if(days>42) days=7;
-	api.SetInt(subkey, "Seconds", seconds);
-	api.SetInt(subkey, "Minutes", minutes);
-	api.SetInt(subkey, "Hours",   hours);
-	api.SetInt(subkey, "Days",    days);
+	if(days > 42)
+		days = 7;
+	api.SetInt(subkey, L"Seconds", seconds);
+	api.SetInt(subkey, L"Minutes", minutes);
+	api.SetInt(subkey, L"Hours",   hours);
+	api.SetInt(subkey, L"Days",    days);
 	
-	GetDlgItemText(hDlg, IDC_TIMERFILE, fname, sizeof(fname));
-	api.SetStr(subkey, "File", fname);
+	GetDlgItemText(hDlg, IDC_TIMERFILE, fname, _countof(fname));
+	api.SetStr(subkey, L"File", fname);
 	
-	api.SetInt(subkey, "Repeat", IsDlgButtonChecked(hDlg, IDC_TIMERREPEAT));
-	api.SetInt(subkey, "Blink",  IsDlgButtonChecked(hDlg, IDC_TIMERBLINK));
-	api.SetInt(subkey, "Active",  TRUE);
-	if(idx==count)
-		api.SetInt(g_szTimersSubKey, "NumberOfTimers", idx+1);
+	api.SetInt(subkey, L"Repeat", IsDlgButtonChecked(hDlg, IDC_TIMERREPEAT));
+	api.SetInt(subkey, L"Blink",  IsDlgButtonChecked(hDlg, IDC_TIMERBLINK));
+	api.SetInt(subkey, L"Active",  TRUE);
+	if(idx == count)
+		api.SetInt(g_szTimersSubKey, L"NumberOfTimers", idx+1);
 	
 	StartTimer(idx);
 }
@@ -428,15 +430,15 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 void OnTimerName(HWND hDlg)   //------------------------------------------------------------+++-->
 {
 	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
-	char name[TNY_BUFF];
+	wchar_t name[TNY_BUFF];
 	int idx, count;
 	
-	ComboBox_GetText(timer_cb, name, sizeof(name));
+	ComboBox_GetText(timer_cb, name, _countof(name));
 	count = ComboBox_GetCount(timer_cb);
 	for(idx=0; idx<count; ++idx){
 		timeropt_t* pts;
 		pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx);
-		if(!strcmp(name, pts->name)){
+		if(!wcscmp(name, pts->name)){
 			SetDlgItemInt(hDlg, IDC_TIMERSECOND,	pts->second, 0);
 			SetDlgItemInt(hDlg, IDC_TIMERMINUTE,	pts->minute, 0);
 			SetDlgItemInt(hDlg, IDC_TIMERHOUR,		pts->hour,   0);
@@ -455,9 +457,9 @@ void OnTimerName(HWND hDlg)   //------------------------------------------------
 		}
 	}
 	if(idx<count-1){
-		SetDlgItemText(hDlg,IDOK,"Start");
+		SetDlgItemText(hDlg, IDOK, L"Start");
 	}else{
-		SetDlgItemText(hDlg,IDOK,"Create");
+		SetDlgItemText(hDlg, IDOK, L"Create");
 	}
 	EnableDlgItem(hDlg, IDC_TIMERDEL, idx<count-1);
 }
@@ -466,7 +468,7 @@ void OnTimerName(HWND hDlg)   //------------------------------------------------
 --------------------------------------------------*/
 void OnSanshoAlarm(HWND hDlg, WORD id)
 {
-	char deffile[MAX_PATH], fname[MAX_PATH];
+	wchar_t deffile[MAX_PATH], fname[MAX_PATH];
 	
 	GetDlgItemText(hDlg, id - 1, deffile, MAX_PATH);
 	if(!BrowseSoundFile(hDlg, deffile, fname)) // soundselect.c
@@ -480,17 +482,17 @@ void OnSanshoAlarm(HWND hDlg, WORD id)
 void OnDel(HWND hDlg)   //------------------------------------------------------------------+++-->
 {
 	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
-	char name[TNY_BUFF];
-	char subkey[TNY_BUFF];
+	wchar_t name[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
 	int idx, idx2, count;
 	
-	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-	ComboBox_GetText(timer_cb, name, sizeof(name));
+	offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+	ComboBox_GetText(timer_cb, name, _countof(name));
 	count = ComboBox_GetCount(timer_cb) -1;
 	for(idx=0; idx<count; ++idx) {
 		timeropt_t* pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx);
-		if(!strcmp(name,pts->name)){
+		if(!wcscmp(name,pts->name)){
 			break;
 		}
 	}
@@ -500,22 +502,22 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 	for(idx2=idx+1; idx2<count; ++idx2) {
 		timeropt_t* pts;
 		pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx2);
-		wsprintf(subkey+offset, "%d", idx2); // we're 1 behind, as needed
-		api.SetStr(subkey, "Name",		pts->name);
-		api.SetInt(subkey, "Seconds",	pts->second);
-		api.SetInt(subkey, "Minutes",	pts->minute);
-		api.SetInt(subkey, "Hours",	pts->hour);
-		api.SetInt(subkey, "Days",	pts->day);
-		api.SetStr(subkey, "File",		pts->fname);
-		api.SetInt(subkey, "Repeat",	pts->bRepeat);
-		api.SetInt(subkey, "Blink",	pts->bBlink);
-		api.SetInt(subkey, "Active",	pts->bActive);
+		wsprintf(subkey+offset, L"%d", idx2); // we're 1 behind, as needed
+		api.SetStr(subkey, L"Name",		pts->name);
+		api.SetInt(subkey, L"Seconds",	pts->second);
+		api.SetInt(subkey, L"Minutes",	pts->minute);
+		api.SetInt(subkey, L"Hours",	pts->hour);
+		api.SetInt(subkey, L"Days",	pts->day);
+		api.SetStr(subkey, L"File",		pts->fname);
+		api.SetInt(subkey, L"Repeat",	pts->bRepeat);
+		api.SetInt(subkey, L"Blink",	pts->bBlink);
+		api.SetInt(subkey, L"Active",	pts->bActive);
 	}
-	wsprintf(subkey+offset, "%d", count);
+	wsprintf(subkey+offset, L"%d", count);
 	api.DelKey(subkey);
-	api.SetInt(g_szTimersSubKey, "NumberOfTimers", --count);
+	api.SetInt(g_szTimersSubKey, L"NumberOfTimers", --count);
 	free((void*)ComboBox_GetItemData(timer_cb,idx));
-	ComboBox_DeleteString(timer_cb,idx);
+	ComboBox_DeleteString(timer_cb, idx);
 	
 	ComboBox_SetCurSel(timer_cb, (idx>0)?(idx-1):idx);
 	OnTimerName(hDlg);
@@ -525,10 +527,11 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 //---------------------------------//--------------------+++--> Test -> Play/Stop Alarm Sound File:
 void OnTest(HWND hDlg, WORD id)   //--------------------------------------------------------+++-->
 {
-	char fname[MAX_PATH];
+	wchar_t fname[MAX_PATH];
 	
-	GetDlgItemText(hDlg, id - 2, fname, MAX_PATH);
-	if(!*fname) return;
+	GetDlgItemText(hDlg, id - 2, fname, _countof(fname));
+	if(!fname[0])
+		return;
 	
 	if((HICON)SendDlgItemMessage(hDlg, id, BM_GETIMAGE, IMAGE_ICON, 0) == g_hIconPlay) {
 		if(PlayFile(hDlg, fname, 0)) {
@@ -560,37 +563,38 @@ void OnTimerTimer(HWND hwnd)   //-------------------------------------------+++-
 //------------------------------//---------------------------+++--> Sound Alarm or Open Timer File:
 void Ring(HWND hwnd, int id)   //-----------------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
-	char fname[MAX_BUFF];
-	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-	wsprintf(subkey+offset, "%d", id+1);
-	api.GetStr(subkey, "File", fname, sizeof(fname), "");
-	PlayFile(hwnd, fname, api.GetInt(subkey, "Repeat", 0)?-1:0);
-	if(api.GetInt(subkey, "Blink", 0))
+	wchar_t fname[MAX_BUFF];
+	offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+	wsprintf(subkey+offset, L"%d", id+1);
+	api.GetStr(subkey, L"File", fname, _countof(fname), L"");
+	PlayFile(hwnd, fname, api.GetInt(subkey, L"Repeat", 0)?-1:0);
+	if(api.GetInt(subkey, L"Blink", 0))
 		PostMessage(g_hwndClock, CLOCKM_BLINK, 0, 0);
 }
 //================================================================================================
 //---------+++--> Get Active Timer Name(s) to Populate Menu -or- Mark Selected Timer as "Homeless":
-int GetTimerInfo(char* dst, int num)   //-----------------------------------+++-->
+int GetTimerInfo(wchar_t* dst, int num)   //-----------------------------------+++-->
 {
 	if(num < m_timers) {
-		char* out=dst;
+		wchar_t* out=dst;
 		DWORD tick = GetTickCount()/1000;
 		int iTCount = tick - m_timer[num].tickonstart;
 		int days,hours,minutes;
 		iTCount = m_timer[num].seconds - iTCount;
 		if(iTCount <= 0) {
-			return wsprintf(dst, " <- Time Expired!");
+			return wsprintf(dst, L" <- Time Expired!");
 		}
 		days = iTCount/86400; iTCount%=86400;
 		hours = iTCount/3600; iTCount%=3600;
 		minutes = iTCount/60; iTCount%=60;
-		if(days) out+=wsprintf(out,"%d day%s ",days,(days==1?"":"s"));
-		out+=wsprintf(out,"%02d:%02d:%02d",hours,minutes,iTCount);
+		if(days)
+			out += wsprintf(out, L"%d day%s ", days, (days==1 ? L"" : L"s"));
+		out += wsprintf(out, L"%02d:%02d:%02d", hours, minutes, iTCount);
 		return (int)(out-dst);
 	}
-	*dst='\0';
+	*dst = '\0';
 	return 0;
 }
 //================================================================================================
@@ -613,13 +617,13 @@ void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, char bGoUp)   //-----------
 void OnStopTimer(HWND hWnd)   //------------------------------------------------------------+++-->
 {
 	HWND timer_cb = GetDlgItem(hWnd, IDC_TIMERNAME);
-	char name[GEN_BUFF];
+	wchar_t name[GEN_BUFF];
 	int idx;
 	
-	ComboBox_GetText(timer_cb, name, sizeof(name));
+	ComboBox_GetText(timer_cb, name, _countof(name));
 	
 	for(idx=0; idx<m_timers; ++idx) {
-		if(!strcmp(name, m_timer[idx].name)) {
+		if(!wcscmp(name, m_timer[idx].name)) {
 			int id=m_timer[idx].id;
 			timeropt_t* pts=(timeropt_t*)ComboBox_GetItemData(timer_cb, id);;
 			
@@ -636,15 +640,15 @@ void OnStopTimer(HWND hWnd)   //------------------------------------------------
 //-----------------------------+++--> When T-Clock Starts, Make Sure ALL Timer Are Set as INActive:
 void CancelAllTimersOnStartUp()   //--------------------------------------------------------+++-->
 {
-	char subkey[TNY_BUFF];
+	wchar_t subkey[TNY_BUFF];
 	size_t offset;
 	int idx, count;
 	
-	offset=wsprintf(subkey, "%s\\Timer", g_szTimersSubKey);
-	count = api.GetInt(g_szTimersSubKey, "NumberOfTimers", 0);
+	offset = wsprintf(subkey, L"%s\\Timer", g_szTimersSubKey);
+	count = api.GetInt(g_szTimersSubKey, L"NumberOfTimers", 0);
 	for(idx=0; idx<count; ) {
-		wsprintf(subkey+offset, "%d", ++idx);
-		api.SetInt(subkey, "Active", FALSE);
+		wsprintf(subkey+offset, L"%d", ++idx);
+		api.SetInt(subkey, L"Active", 0);
 	}
 }
 //================================================================================================
@@ -677,7 +681,7 @@ void OnInitTimeView(HWND hDlg)   //---------------------------------------------
 BOOL OnWatchTimer(HWND hDlg)   //-----------------------------------------------+++-->
 {
 	HWND hList=GetDlgItem(hDlg,IDC_LIST);
-	char szStatus[MIN_BUFF];
+	wchar_t szStatus[MIN_BUFF];
 	BOOL bNeeded = FALSE;
 	LVFINDINFO lvFind;
 	LVITEM lvItem;
@@ -712,28 +716,28 @@ BOOL OnWatchTimer(HWND hDlg)   //-----------------------------------------------
 }
 //================================================================================================
 //-----------------------------+++--> Remove Timer X From Timer Watch List (Set Homeless to FALSE):
-void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
+void RemoveFromWatch(HWND hWnd, HWND hList, wchar_t* szTimer, int iLx)
 {
-	const char szMessage[] = TEXT("Yes will cancel the timer & remove it from the Watch List\n"
-							"No will remove timer from Watch List only (timer continues)\n"
-							"Cancel will assume you hit delete accidentally (and do nothing)");
-	char szCaption[GEN_BUFF];
+	const wchar_t szMessage[] = L"Yes will cancel the timer & remove it from the Watch List\n"
+							L"No will remove timer from Watch List only (timer continues)\n"
+							L"Cancel will assume you hit delete accidentally (and do nothing)";
+	wchar_t szCaption[GEN_BUFF];
 	int idx;
-	int id=-1;
+	int id = -1;
 							
 	for(idx=0; idx<m_timers; ++idx) {
-		if(!strcmp(szTimer, m_timer[idx].name)) {
-			id=m_timer[idx].id;
+		if(!wcscmp(szTimer, m_timer[idx].name)) {
+			id = m_timer[idx].id;
 			break;
 		}
 	}
 	
 	if(id==-1) { //----+++--> IF the Timer Has Expired...
-		ListView_DeleteItem(hList,iLx); // Just Delete it.
+		ListView_DeleteItem(hList, iLx); // Just Delete it.
 		return;
 	}
 	
-	wsprintf(szCaption, "Cancel Timer (%s) Also?", szTimer);
+	wsprintf(szCaption, L"Cancel Timer (%s) Also?", szTimer);
 	
 	switch(MessageBox(hWnd, szMessage, szCaption, MB_YESNOCANCEL|MB_ICONQUESTION)) {
 	case IDYES:
@@ -742,9 +746,9 @@ void RemoveFromWatch(HWND hWnd, HWND hList, char* szTimer, int iLx)
 		break;
 	case IDNO:
 		for(idx=0; idx<m_timers; ++idx) {
-			if(!strcmp(szTimer, m_timer[idx].name)) {
+			if(!wcscmp(szTimer, m_timer[idx].name)) {
 				m_timer[idx].bHomeless = 0;
-				ListView_DeleteItem(hList,iLx);
+				ListView_DeleteItem(hList, iLx);
 				break;
 			}
 		}
@@ -787,8 +791,8 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 			case VK_DELETE:{
 				int i;
 				if((i = ListView_GetNextItem(hList,-1,LVNI_SELECTED)) != -1) {
-					char szTimer[GEN_BUFF];
-					ListView_GetItemText(hList, i, 0, szTimer, GEN_BUFF);
+					wchar_t szTimer[GEN_BUFF];
+					ListView_GetItemText(hList, i, 0, szTimer, _countof(szTimer));
 					RemoveFromWatch(hDlg, hList, szTimer, i);
 				}
 				return TRUE;}// Delete Key Handled
