@@ -31,6 +31,7 @@
 #endif
 
 #ifdef __GNUC__
+#	define COMPILER_STRING "GCC"
 #	include <inttypes.h>
 #	define __pragma(x) // MSVC pragmas, safe to ignore since we use them only to fix MSVC bugs...
 	static const GUID CLSID_Shell = {0x13709620,0xc279,0x11ce,{0xa4,0x9e,0x44,0x45,0x53,0x54,0,1}};
@@ -42,7 +43,8 @@
 	/* fix non-conforming 'swprintf' from MSVC without size argument */
 #		define swprintf _snwprintf
 #	endif
-#else
+#else // _MSC_VER
+#	define COMPILER_STRING "MSVC"
 #	define strdup _strdup
 #	define wcsdup _wcsdup
 #	define ltoa _ltoa
@@ -55,7 +57,7 @@
 #		define PRIx64 "I64x"
 #		define SCNx64 PRIx64
 #	endif
-#endif // __GNUC__
+#endif // __GNUC__ / _MSC_VER
 #define wcscasecmp _wcsicmp
 #define wcsncasecmp _wcsnicmp
 

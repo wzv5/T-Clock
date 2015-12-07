@@ -97,9 +97,10 @@ void OnApply(HWND hDlg)
 --------------------------------------------------*/
 void OnLinkClicked(HWND hDlg, UINT id)
 {
-	wchar_t str[128];
-	wcscpy(str, L"mailto:");
-	GetDlgItemText(hDlg, id, str+7, 64);
-	wcscat(str, L"?subject=About "); wcscat(str, ABT_TITLE);
+	wchar_t str[MAX_PATH];
+	size_t len;
+	len = swprintf(str, _countof(str), L"mailto:");
+	len += GetDlgItemText(hDlg, id, str+len, 64);
+	len += swprintf(str+len,  _countof(str)-len, L"?subject=About %s (%hs)", ABT_TITLE, COMPILER_STRING);
 	api.Exec(str, NULL, hDlg);
 }
