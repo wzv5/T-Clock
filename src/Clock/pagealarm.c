@@ -717,7 +717,7 @@ void FormatTimeText(HWND hDlg, WORD idc)
 		if(iTxt>59)
 			iTxt = 0;
 		
-		wsprintf(txt2, L"%02d", iTxt);
+		wsprintf(txt2, FMT("%02d"), iTxt);
 		if(wcscmp(txt2,txt)){
 			Edit_SetText(edit,txt2);
 			Edit_SetSel(edit,2,2);
@@ -729,10 +729,10 @@ void FormatTimeText(HWND hDlg, WORD idc)
 		iTxt = _wtoi(txt);
 		if(b12h){
 			if(iTxt>12) iTxt = 12; // 12am / 12pm
-			wsprintf(txt2, L"%d", iTxt);
+			wsprintf(txt2, FMT("%d"), iTxt);
 		}else{
 			if(iTxt>23) iTxt = 0;
-			wsprintf(txt2, L"%02d", iTxt);
+			wsprintf(txt2, FMT("%02d"), iTxt);
 			CheckDlgButton(hDlg,IDC_AMPM_CHECK,iTxt>=12);
 		}
 		if(wcscmp(txt2,txt)){

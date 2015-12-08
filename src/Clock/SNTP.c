@@ -310,7 +310,7 @@ void SyncTimeNow()
 	}
 	api.GetStrEx(m_subkey, L"Server", server, _countof(server), L"");
 	if(!server[0]) {
-		wsprintf(szErr, L"No SNTP Server Specified!");
+		wsprintf(szErr, FMT("No SNTP Server Specified!"));
 		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
 		if(!g_hDlgSNTP)
 			NetTimeConfigDialog(0);
@@ -319,13 +319,13 @@ void SyncTimeNow()
 	
 	retval = WSAStartup(wVersionRequested, &wsaData);
 	if(retval) { //-----------------------------------------+++--> If WinSock Startup Fails...
-		wsprintf(szErr, L"Error initializing WinSock");
+		wsprintf(szErr, FMT("Error initializing WinSock"));
 		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
 		return;
 	}
 	
 	if(wsaData.wVersion != wVersionRequested) { //-+++-> Check WinSOCKET's Version:
-		wsprintf(szErr, L"WinSock version not supported");
+		wsprintf(szErr, FMT("WinSock version not supported"));
 		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
 		return;
 	}
@@ -382,13 +382,13 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	count = ComboBox_GetCount(hServer);
 	// removed deleted servers
 	for(i=api.GetInt(m_subkey,L"ServerNum",0); i>count; --i){
-		wsprintf(entry, L"Server%d", i);
+		wsprintf(entry, FMT("Server%d"), i);
 		api.DelValue(m_subkey, entry);
 	}
 	// update server list
 	for(i=0; i < count; ++i) {
 		ComboBox_GetLBText(hServer, i, szServer);
-		wsprintf(entry, L"Server%d", i+1);
+		wsprintf(entry, FMT("Server%d"), i+1);
 		api.SetStr(m_subkey, entry, szServer);
 	}
 	api.SetInt(m_subkey, L"ServerNum", count);
@@ -488,7 +488,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	count = api.GetInt(m_subkey, L"ServerNum", 0);
 	for(i = 1; i <= count; i++) {
 		wchar_t entry[TNY_BUFF];
-		wsprintf(entry, L"Server%d", i);
+		wsprintf(entry, FMT("Server%d"), i);
 		api.GetStr(m_subkey, entry, str.w, _countof(str.w), L"");
 		if(str.w[0])
 			ComboBox_AddString(hServer, str.w);

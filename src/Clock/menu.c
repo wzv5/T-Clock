@@ -57,7 +57,7 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 		mii.dwTypeData=name;
 		memcpy(key, L"MenuItem-", offset*sizeof(wchar_t));
 		for(idx=0; idx<12; ++idx) {
-			offset = 9 + wsprintf(key+9, L"%i", idx);
+			offset = 9 + wsprintf(key+9, FMT("%i"), idx);
 			if(api.GetInt(L"QuickyMenu\\MenuItems",key,0)){
 				memcpy(key+offset, L"-Text", 6*sizeof(wchar_t));
 				api.GetStr(L"QuickyMenu\\MenuItems", key, name, _countof(name), L"");
@@ -288,7 +288,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 			wchar_t szQM_Target[MAX_PATH];
 			wchar_t szQM_Switch[MAX_PATH];
 			wcscpy(key, L"MenuItem-");
-			offset += wsprintf(key+offset, L"%i", (wID-IDM_I_MENU));
+			offset += wsprintf(key+offset, FMT("%i"), (wID-IDM_I_MENU));
 			wcscpy(key+offset, L"-Target");
 			api.GetStr(L"QuickyMenu\\MenuItems", key, szQM_Target, _countof(szQM_Target), L"");
 			wcscpy(key+offset, L"-Switches");
@@ -297,7 +297,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		}
 		#ifdef _DEBUG
 		else
-			{char buf[1024]; wsprintf(buf,"%s: unknown ID: %.5i(0x%.4x) (hwnd:%p)\n",__FUNCTION__,wID,wID,hwnd);
+			{char buf[1024]; wsprintf(buf,FMT("%s: unknown ID: %.5i(0x%.4x) (hwnd:%p)\n"),__FUNCTION__,wID,wID,hwnd);
 			OutputDebugString(buf);}
 		#endif // _DEBUG
 	}
@@ -322,7 +322,7 @@ void UpdateAlarmMenu(HMENU hMenu)   //--------------------------+++-->
 		InsertMenu(hMenu,IDM_PROP_ALARM,MF_BYCOMMAND|MF_SEPARATOR,0,NULL);
 		for(idx=0; idx<count; ++idx) {
 			ReadAlarmFromReg(&pAS,idx);
-			wsprintf(buf, L"    %s	(%i", pAS.dlgmsg.name,idx+1);
+			wsprintf(buf, FMT("    %s	(%i"), pAS.dlgmsg.name,idx+1);
 			InsertMenu(hMenu, IDM_PROP_ALARM, MF_BYCOMMAND|MF_STRING, IDM_I_ALARM+idx, buf);
 			if(pAS.uFlags&ALRM_ENABLED)
 				CheckMenuItem(hMenu,IDM_I_ALARM+idx,MF_BYCOMMAND|MF_CHECKED);

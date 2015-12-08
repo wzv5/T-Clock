@@ -683,7 +683,7 @@ void InitError(int n)
 {
 	wchar_t msg[160];
 	
-	wsprintf(msg, L"%s: %d", MyString(IDS_NOTFOUNDCLOCK), n);
+	wsprintf(msg, FMT("%s: %d"), MyString(IDS_NOTFOUNDCLOCK), n);
 	api.Message(NULL, msg, L"Error", MB_OK, MB_ICONEXCLAMATION);
 }
 /*---------------------------------------------------------

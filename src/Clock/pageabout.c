@@ -99,8 +99,8 @@ void OnLinkClicked(HWND hDlg, UINT id)
 {
 	wchar_t str[MAX_PATH];
 	size_t len;
-	len = swprintf(str, _countof(str), L"mailto:");
+	len = swprintf(str, _countof(str), FMT("mailto:"));
 	len += GetDlgItemText(hDlg, id, str+len, 64);
-	len += swprintf(str+len,  _countof(str)-len, L"?subject=About %s (%hs)", ABT_TITLE, COMPILER_STRING);
+	len += swprintf(str+len,  _countof(str)-len, FMT("?subject=About %s (%hs)"), ABT_TITLE, COMPILER_STRING);
 	api.Exec(str, NULL, hDlg);
 }

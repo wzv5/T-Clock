@@ -90,7 +90,7 @@ INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 					CheckDlgButton(hDlg, IDC_ITALIC, chosenfont.lpLogFont->lfItalic);
 					ComboBox_SelectString(hwndCombo, -1, chosenfont.lpLogFont->lfFaceName);
 					hwndCombo = GetDlgItem(hDlg,IDC_FONTSIZE);
-					wsprintf(size, L"%d", chosenfont.iPointSize/10);
+					wsprintf(size, FMT("%d"), chosenfont.iPointSize/10);
 					sel = ComboBox_FindStringExact(hwndCombo, -1, size);
 					if(sel != CB_ERR)
 						ComboBox_SetCurSel(hwndCombo, sel);
@@ -312,7 +312,7 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 					   
 	ReleaseDC(NULL, hdc);
 	
-	wsprintf(font, L"%d", size);
+	wsprintf(font, FMT("%d"), size);
 	pos = ComboBox_FindStringExact(size_cb, -1, font);
 	if(pos != LB_ERR) {
 		ComboBox_SetCurSel(size_cb, pos);
@@ -348,7 +348,7 @@ int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWO
 	// is modern font which supports any size?
 	if((FontType&TRUETYPE_FONTTYPE) || !(FontType&RASTER_FONTTYPE)) {
 		for(i=0; i<_countof(nFontSizes); ++i) {
-			wsprintf(str, L"%hu", nFontSizes[i]);
+			wsprintf(str, FMT("%hu"), nFontSizes[i]);
 			ComboBox_AddString(hwndSize, str);
 		}
 		return 0;
@@ -362,12 +362,12 @@ int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWO
 		if(size == _wtoi(str))
 			return 1;
 		else if(size < _wtoi(str)) {
-			wsprintf(str, L"%d", size);
+			wsprintf(str, FMT("%d"), size);
 			ComboBox_InsertString(hwndSize, i, str);
 			return 1;
 		}
 	}
-	wsprintf(str, L"%d", size);
+	wsprintf(str, FMT("%d"), size);
 	ComboBox_AddString(hwndSize, str);
 	return 1;
 }

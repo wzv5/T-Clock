@@ -35,7 +35,7 @@ INT_PTR CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 		int idx = (int)lParam;
 		HWND hParent = GetParent(hDlg);
 		SetWindowLongPtr(hDlg, GWLP_USERDATA, idx);
-		wsprintf(tmp, L"Item #%i", idx+1);
+		wsprintf(tmp, FMT("Item #%i"), idx+1);
 		SetDlgItemText(hDlg, IDC_MID_TASKNUM, tmp);
 		ListView_GetItemText(GetDlgItem(hParent,IDC_QMEN_LIST), idx, 1, tmp, _countof(tmp));
 		SetDlgItemText(hDlg, IDC_MID_TARGET, tmp);
@@ -81,7 +81,7 @@ void SaveNewMenuOptions(HWND hDlg)
 	GetDlgItemText(hDlg, IDC_MID_TARGET,   szmTarget, _countof(szmTarget));
 	GetDlgItemText(hDlg, IDC_MID_SWITCHES, szmSwitches, _countof(szmSwitches));
 	memcpy(key, L"MenuItem-", offset*sizeof(wchar_t));
-	offset += wsprintf(key+offset, L"%i", GetWindowLong(hDlg,GWLP_USERDATA));
+	offset += wsprintf(key+offset, FMT("%i"), GetWindowLong(hDlg,GWLP_USERDATA));
 	if((wcslen(szmText)) && (wcslen(szmTarget))) {
 		api.SetInt(L"QuickyMenu\\MenuItems", key, 1);
 		
@@ -97,7 +97,7 @@ void SaveNewMenuOptions(HWND hDlg)
 		EndQuickyEdit(hDlg);
 	} else {
 		DeleteMenuItem(hDlg);
-		wsprintf(szmSwitches, L"%s%s",
+		wsprintf(szmSwitches, FMT("%s%s"),
 			(!wcslen(szmText)?L"* Menu text can't be empty!\n":L""),
 			(!wcslen(szmTarget)?L"* Target file must be filled!":L""));
 		MessageBox(0,szmSwitches,L"ERROR: Missing Information!",MB_OK|MB_ICONERROR);
@@ -111,7 +111,7 @@ void DeleteMenuItem(HWND hDlg)
 	wchar_t key[TNY_BUFF];
 	int offset=9;
 	memcpy(key, L"MenuItem-", offset * sizeof key[0]);
-	offset += wsprintf(key+offset, L"%i", GetWindowLong(hDlg,GWLP_USERDATA));
+	offset += wsprintf(key+offset, FMT("%i"), GetWindowLong(hDlg,GWLP_USERDATA));
 	api.DelValue(L"QuickyMenu\\MenuItems", key);
 	
 	wcscpy(key+offset, L"-Text");

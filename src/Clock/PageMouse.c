@@ -114,7 +114,7 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 				++lvItem.iSubItem;
 				lvItem.pszText = L"<unknown>";
 				#ifdef _DEBUG
-				{wchar_t* leak=malloc(16*sizeof(leak[0])); wsprintf(leak,L"#%i",func); lvItem.pszText=leak;}
+				{wchar_t* leak=malloc(16*sizeof(leak[0])); wsprintf(leak,FMT("#%i"),func); lvItem.pszText=leak;}
 				#endif // _DEBUG
 				{int iter; for(iter=0; iter<m_mouseActionCount; ++iter){
 					if(func!=m_mouseAction[iter].id)

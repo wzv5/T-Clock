@@ -375,14 +375,14 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 					}
 					break;
 				}
-				out += wsprintf(out, L"%d", week);
+				out += wsprintf(out, FMT("%d"), week);
 				++fmt;
 			} else if(*fmt == 'u') {
 				int week = 1 + (tmnow.tm_yday + 6 - tmnow.tm_wday) / 7;
-				out += wsprintf(out, L"%d", week);
+				out += wsprintf(out, FMT("%d"), week);
 				++fmt;
 			} else if(*fmt == 'w') { // SWN (Simple Week Number)
-				out += wsprintf(out, L"%d", 1 + tmnow.tm_yday / 7);
+				out += wsprintf(out, FMT("%d"), 1 + tmnow.tm_yday / 7);
 				++fmt;
 			}
 		}
@@ -470,7 +470,7 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 			wchar_t szPosix[16] = {0}; // This will Give the Number of Seconds That Have
 			wchar_t* posix; //--+++--> Elapsed Since the Unix Epoch: 1970-01-01 00:00:00
 			
-			wsprintf(szPosix, L"%ld", time(NULL));
+			wsprintf(szPosix, FMT("%ld"), time(NULL));
 			posix = szPosix;
 			while(*posix) *out++ = *posix++;
 			fmt +=5;

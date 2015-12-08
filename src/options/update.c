@@ -84,7 +84,7 @@ int UpdateCheck_WriteDescription(wchar_t* out, int size, const char* text) {
 		nl = strchr(text, '\n');
 		if(!nl++)
 			nl = strchr(text, '\0');
-		pos += swprintf(pos, size-written, L"   %.*hs", nl-text, text);
+		pos += swprintf(pos, size-written, FMT("   %.*hs"), nl-text, text);
 		text = nl;;
 		written = pos-out;
 	}while(*nl);
@@ -342,13 +342,13 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 					ShowWindow(hDlg, SW_HIDE);
 					idx = version[0]-VER_REVISION;
 					abovebehind = (idx<0 ? L"above" : L"behind");
-					msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"Your version: " L(VER_REVISION_TAG) L"	(%i change(s) %s stable)\n\n", abs(idx), abovebehind);
+					msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("Your version: ") FMT(VER_REVISION_TAG) FMT("	(%i change(s) %s stable)\n\n"), abs(idx), abovebehind);
 					for(idx=0; idx<2; ++idx) {
 						if(version_next[idx]) {
-							msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"%hs:	v%hs#%u\n", kVersionType[idx], version_str[idx], version[idx]);
+							msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("%hs:	v%hs#%u\n"), kVersionType[idx], version_str[idx], version[idx]);
 							msg_pos += UpdateCheck_WriteDescription(msg_pos, msg_end-msg_pos, version_text[idx]);
 							if(!idx)
-								msg_pos += swprintf(msg_pos, msg_end-msg_pos, L"\n");
+								msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("\n"));
 						}
 					}
 					child_id = MessageBoxCustom(hDlg, msg, L"T-Clock updates", MB_ICONINFORMATION);
@@ -375,29 +375,29 @@ static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LP
 			wchar_t text[64];
 			wchar_t* text_pos;
 			size_t maxlen;
-			text_pos = text + swprintf(text, _countof(text), L"<ERROR> ");
+			text_pos = text + swprintf(text, _countof(text), FMT("<ERROR> "));
 			maxlen = _countof(text) + text_pos - text;
 			
 			SendMessage(GetDlgItem(hDlg,IDC_PROGRESS), PBM_SETSTATE, PBST_ERROR, 0);
 			switch(wParam) {
 			case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
-				swprintf(text_pos, maxlen, L"got HTTP status: %i", (int)lParam);
+				swprintf(text_pos, maxlen, FMT("got HTTP status: %i"), (int)lParam);
 				break;
 			case WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
 				if(lParam & WINHTTP_CALLBACK_STATUS_FLAG_SECURITY_CHANNEL_ERROR)
-					swprintf(text_pos, maxlen, L"SSL error");
+					swprintf(text_pos, maxlen, FMT("SSL error"));
 				else
-					swprintf(text_pos, maxlen, L"invalid SSL certificate");
+					swprintf(text_pos, maxlen, FMT("invalid SSL certificate"));
 				break;
 			case WINHTTP_CALLBACK_STATUS_REQUEST_ERROR:
-				swprintf(text_pos, maxlen, L"connection issues");
+				swprintf(text_pos, maxlen, FMT("connection issues"));
 				break;
 			case 2:
-				swprintf(text_pos, maxlen, L"invalid response");
+				swprintf(text_pos, maxlen, FMT("invalid response"));
 				break;
 			/* case 1 */
 			default:
-				swprintf(text_pos, maxlen, L"failed to check for updates");
+				swprintf(text_pos, maxlen, FMT("failed to check for updates"));
 			}
 			SetWindowText(data->status_text, text);
 		} else {

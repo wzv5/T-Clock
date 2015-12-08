@@ -121,25 +121,25 @@ int ParseSettings(){
 			int flags;
 			wchar_t* pos = msg;
 			pos += wsprintf(pos,
-							L"T-Clock stores now some of its settings differently.\n"
-							L"Don't worry though, we'll convert your settings\n"
-							L"to the new format and nothing should get lost.\n"
-							L"\n"
-							L"The new format is simply:");
+							FMT("T-Clock stores now some of its settings differently.\n")
+							FMT("Don't worry though, we'll convert your settings\n")
+							FMT("to the new format and nothing should get lost.\n")
+							FMT("\n")
+							FMT("The new format is simply:"));
 			for(flags=updateflags>>1/*ignore SFORMAT_SILENT*/,ans=0; flags; flags>>=1,++ans){
 				if(flags&1)
-					pos += wsprintf(pos, L"\n	+ %s", SFORMAT[ans]);
+					pos += wsprintf(pos, FMT("\n	+ %s"), SFORMAT[ans]);
 			}
 			if(compatibilityflags){
-				pos += wsprintf(pos,L"\n\n"
-								L"If you want to go back to an old version later on,\n"
-								L"you could/will lose: (be warned)");
+				pos += wsprintf(pos, FMT("\n\n")
+								FMT("If you want to go back to an old version later on,\n")
+								FMT("you could/will lose: (be warned)"));
 				for(flags=compatibilityflags,ans=0; flags; flags>>=1,++ans){
 					if(flags&1)
-						pos += wsprintf(pos, L"\n	- %s", SCOMPAT[ans]);
+						pos += wsprintf(pos, FMT("\n	- %s"), SCOMPAT[ans]);
 				}
 			}
-			pos += wsprintf(pos, L"\n\nRun T-Clock and convert settings now?");
+			pos += wsprintf(pos, FMT("\n\nRun T-Clock and convert settings now?"));
 			ans = MessageBox(NULL, msg, L"You've just updated T-Clock", MB_OKCANCEL|MB_ICONINFORMATION);
 		}else // silent update
 			ans = IDOK;
@@ -173,10 +173,10 @@ void ConvertSettings(VERSION ver) {
 		api.SetInt(L"Clock", L"HorizPos", 0);
 		api.SetInt(L"Clock", L"VertPos", 0);
 		// remove "ID" from "Timers" as no longer used
-		len = wsprintf(buf, L"Timers\\Timer");
+		len = wsprintf(buf, FMT("Timers\\Timer"));
 		idx2 = api.GetInt(L"Timers", L"NumberOfTimers",0);
 		for(idx=0; idx<idx2; ){
-			wsprintf(buf+len, L"%d", ++idx);
+			wsprintf(buf+len, FMT("%d"), ++idx);
 			api.DelValue(buf, L"ID");
 		}
 		/* fall through */
@@ -191,10 +191,10 @@ void ConvertSettings(VERSION ver) {
 	case _2_4_0:{
 		int is12h, hour;
 		// convert alarms to use 24h format
-		len = wsprintf(buf, L"Alarm");
+		len = wsprintf(buf, FMT("Alarm"));
 		idx2 = GetAlarmNum();
 		for(idx=0; idx<idx2; ){
-			wsprintf(buf+len, L"%d", ++idx);
+			wsprintf(buf+len, FMT("%d"), ++idx);
 			is12h = api.GetInt(buf, L"Hour12", 0);
 			if(is12h){ // convert to 24h format
 				hour = api.GetInt(buf, L"Hour", 12);
@@ -208,7 +208,7 @@ void ConvertSettings(VERSION ver) {
 		/// @note : on next backward incompatible change, remove "Kaigyo" key and this "if"
 		if(api.GetInt(L"Format", L"Lf", -1) == -1)
 			api.SetInt(L"Format", L"Lf", (api.GetInt(L"Format",L"Kaigyo",0) ? BST_CHECKED : BST_UNCHECKED));
-		// convert old 12h switch - h/w(±) -> HH/W
+		// convert old 12h switch - h/w(Â±) -> HH/W
 		if(!api.GetInt(L"Format",L"Hour12",1)){
 			char converted = 0;
 			wchar_t fmt[MAX_FORMAT];

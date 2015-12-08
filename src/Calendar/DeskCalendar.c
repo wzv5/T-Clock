@@ -22,9 +22,9 @@ void GetDayOfYearTitle(wchar_t* szTitle, int ivMonths)   //---------------------
 	wcsftime(szDoY, 8, L"%j", &today);   // <--{OutPut}--> Day 095
 	
 	if(api.OS < TOS_VISTA && ivMonths==1) {
-		wsprintf(szTitle, L"Calendar:  Day: %s", szDoY);
+		wsprintf(szTitle, FMT("Calendar:  Day: %s"), szDoY);
 	} else {
-		wsprintf(szTitle, L"T-Clock: Calendar  Day: %s", szDoY);
+		wsprintf(szTitle, FMT("T-Clock: Calendar  Day: %s"), szDoY);
 	}
 }
 LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)

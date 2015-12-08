@@ -198,7 +198,7 @@ void OnOK(HWND hDlg)   //----------------------------------------------------+++
 	
 	if(m_iSkew < 1) m_iSkew = 1; // Divide by Zero = Bad...
 	
-	wsprintf(dlg->settings, L"%i,%i,%i,%i,%i,%hu", m_iBounce, m_iSkew, m_iPaws, m_iSpeed, m_iDelta, m_flags);
+	wsprintf(dlg->settings, FMT("%i,%i,%i,%i,%i,%hu"), m_iBounce, m_iSkew, m_iPaws, m_iSpeed, m_iDelta, m_flags);
 }
 //--------------------------------------------------------//--------//-------+++-->
 //----------------------------+++--> Parse the Dialoggie Settings Out of the String:

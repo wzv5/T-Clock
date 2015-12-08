@@ -177,7 +177,7 @@ static void MyDragDrop__OnDropFiles_(MyDragDrop_t* self)   ///------------+++-->
 	} else if(self->type == DF_OPEN) {
 		wchar_t* command = malloc((2+num+(pos-buf)) * sizeof(wchar_t));
 		if(command){
-			wsprintf(command, L"%s %s", app, buf);
+			wsprintf(command, FMT("%s %s"), app, buf);
 			api.ExecFile(command, NULL);
 			free(command);
 		}
@@ -1370,7 +1370,7 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 		plt = &(tzi.DaylightDate);
 //		strcpy(szTZone, (char *)tzi.StandardName);
 //		wcstombs(szTZone, tzi.StandardName, 32);
-//		wsprintf(szTZone, "%ls", tzi.StandardName);
+//		wsprintf(szTZone, FMT("%ls"), tzi.StandardName);
 	}
 	if(dw == TIME_ZONE_ID_DAYLIGHT // This Will Only Apply in the Spring/Summer Months When DST IS in Effect.
 	   && tzi.StandardDate.wMonth == lt.wMonth
@@ -1378,7 +1378,7 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 		plt = &(tzi.StandardDate);
 //		strcpy(szTZone, tzi.DaylightName);
 //		wcstombs(szTZone, tzi.DaylightName, 32);
-//		wsprintf(szTZone, "%ls", tzi.DaylightName);
+//		wsprintf(szTZone, FMT("%ls"), tzi.DaylightName);
 	}
 	
 	if(plt && plt->wDay < 5) {
@@ -1400,7 +1400,7 @@ void InitDaylightTimeTransition(void)   //--------------------------------------
 			iMinuteTransition = plt->wMinute;
 		}
 	}
-//	wsprintf(szTZone, "Day: %ls, Std: %ls", tzi.DaylightName, tzi.StandardName);
+//	wsprintf(szTZone, FMT("Day: %ls, Std: %ls"), tzi.DaylightName, tzi.StandardName);
 //	MessageBox(0, szTZone, "is TimeZone??", MB_OK);
 }
 //================================================================================================

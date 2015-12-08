@@ -61,6 +61,31 @@
 #define wcscasecmp _wcsicmp
 #define wcsncasecmp _wcsnicmp
 
+/* HACK: GCC isn't smart enough to check wchar_t* format functions,
+ * so implement a workaround which is activated by defining `PRINTF_TEST`
+ * during compilation for a mostly working syntax check */
+#ifdef __MINGW32__
+	__attribute__((format(ms_printf,2,3)))
+	WINUSERAPI int WINAPIV wsprintfA(char* buf, const char* fmt, ...);
+	/*
+	__attribute__((format(ms_wprintf,2,3)))
+	WINUSERAPI int WINAPIV wsprintfW(wchar_t* buf, const wchar_t* fmt, ...);
+	__attribute__((format(ms_wprintf,3,4)))
+	int swprintf(wchar_t* buf, size_t num, const wchar_t* fmt, ...); // */
+#endif
+#ifdef PRINTF_TEST
+#	define FMT(x) x
+#	define wsprintfW(buf,fmt,...) wsprintfA((char*)(buf), fmt, ##__VA_ARGS__)
+#	define swprintf(buf,num,fmt,...) snprintf((char*)(buf), num, fmt, ##__VA_ARGS__)
+#else
+#	ifdef UNICODE
+#		define FMT_(x) L ## x
+#		define FMT(x) FMT_(x)
+#	else
+#		define FMT(x) x
+#	endif
+#endif
+
 #define ARCH_SUFFIX_32 L""
 #define ARCH_SUFFIX_64 L"64"
 #ifndef _WIN64

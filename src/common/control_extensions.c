@@ -100,13 +100,14 @@ LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 			str[0] = '\0';
 			offset = str;
 			if(data->flags & LCF_HTTP){
-				offset += wsprintf(offset, L"http://");
+				offset += wsprintf(offset, FMT("http://"));
 			}else if(data->flags & LCF_HTTPS){
-				offset += wsprintf(offset, L"https://");
+				offset += wsprintf(offset, FMT("https://"));
 			}else if(data->flags & LCF_MAIL){
-				offset += wsprintf(offset, L"mailto:");
+				offset += wsprintf(offset, FMT("mailto:"));
 			}else if(data->flags & LCF_RELATIVE){
-				offset += wsprintf(offset, api.root);
+				memcpy(offset, api.root, api.root_size);
+				offset += api.root_len;
 				*offset++ = '\\';
 			}
 			
@@ -386,7 +387,7 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 			label = m_syscolor[pdis->itemID].name;
 		else{
 			unsigned color = ((col&0xff)<<16) | (col&0xff00) | ((col&0xff0000)>>16);
-			wsprintf(hexcolor, L"#%06x", color);
+			wsprintf(hexcolor, FMT("#%06x"), color);
 			label = hexcolor;
 		}
 		GetTextMetrics(pdis->hDC, &tm);

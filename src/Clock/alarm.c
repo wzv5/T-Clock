@@ -230,7 +230,7 @@ void AlarmGetMSG(dlgmsg_t* msg) {
 	if(!msg->name[0]) {
 		int hour = api.GetInt(g_alarmkey, L"Hour", 12) % 24;
 		int minute = api.GetInt(g_alarmkey, L"Minute", 0);
-		wsprintf(msg->name, L"%02d:%02d", hour, minute);
+		wsprintf(msg->name, FMT("%02d:%02d"), hour, minute);
 	}
 }
 
@@ -296,7 +296,7 @@ void SaveAlarmToReg(alarm_t* pAS, int idx)
 {
 	if(idx >= MAX_ALARM)
 		return;
-	wsprintf(g_alarmkey+ALARMKEY_OFFSET, L"%d", idx+1);
+	wsprintf(g_alarmkey+ALARMKEY_OFFSET, FMT("%d"), idx+1);
 	api.SetStr(g_alarmkey, L"Name", pAS->dlgmsg.name);
 	api.SetInt(g_alarmkey, L"Hour", pAS->hour);
 	api.SetInt(g_alarmkey, L"Minute", pAS->minute);
@@ -320,7 +320,7 @@ int DeleteAlarmFromReg(int idx)
 {
 	if(idx >= MAX_ALARM)
 		return 1;
-	wsprintf(g_alarmkey+ALARMKEY_OFFSET, L"%d", idx+1);
+	wsprintf(g_alarmkey+ALARMKEY_OFFSET, FMT("%d"), idx+1);
 	if(api.GetInt(g_alarmkey, L"Hour", -1) == -1)
 		return 1;
 	api.DelKey(g_alarmkey);
@@ -648,11 +648,11 @@ int PlayMCI(HWND hwnd, int nt)
 	wcscpy(command, L"play myfile");
 	if(nt >= 0) {
 		wchar_t cmdpos[64],out[32];
-		wsprintf(cmdpos, L"status myfile position track %d", nt);
+		wsprintf(cmdpos, FMT("status myfile position track %d"), nt);
 		if(mciSendString(cmdpos, out, _countof(out), NULL) == 0) {
 			wcscat(command, L" from ");
 			wcscat(command, out);
-			wsprintf(cmdpos+29, L"%d", nt+1); // status myfile position track XXX
+			wsprintf(cmdpos+29, FMT("%d"), nt+1); // status myfile position track XXX
 			if(mciSendString(cmdpos, out, _countof(out), NULL) == 0) {
 				wcscat(command, L" to ");
 				wcscat(command, out);

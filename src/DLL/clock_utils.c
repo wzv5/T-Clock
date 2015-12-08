@@ -388,7 +388,7 @@ int Clock_SetInt(const wchar_t* section, const wchar_t* entry, int val) {
 	if(PrepareMyRegKey_(key,section)){
 		if(ms_inifile[0]) {
 			wchar_t s[20];
-			wsprintf(s, L"%d", val);
+			wsprintf(s, FMT("%d"), val);
 			return WritePrivateProfileString(key, entry, s, ms_inifile);
 		} else {
 			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
@@ -410,7 +410,7 @@ int Clock_SetInt64(const wchar_t* section, const wchar_t* entry, int64_t val) {
 	if(PrepareMyRegKey_(key,section)){
 		if(ms_inifile[0]) {
 			wchar_t s[16+1]; // max: 19+1+1(decimal), 16+1(hexadecimal)
-			wsprintf(s, _T("%") _T(PRIx64), val);
+			wsprintf(s, FMT("%") FMT(PRIx64), val);
 			return WritePrivateProfileString(key, entry, s, ms_inifile);
 		} else {
 			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {

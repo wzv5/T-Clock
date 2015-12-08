@@ -10,14 +10,14 @@ hotkey_t GetHotkey(int idx) {
 	wchar_t subkey[TNY_BUFF];
 	hotkey_t hotkey;
 	
-	wsprintf(subkey, L"%s\\HK%d", szHotKeySubKey, idx);
+	wsprintf(subkey, FMT("%s\\HK%d"), szHotKeySubKey, idx);
 	hotkey.key.fsMod = (uint8_t)api.GetInt(subkey, L"fsMod", 0);
 	hotkey.key.vk = (uint8_t)api.GetInt(subkey, L"vk", 0);
 	return hotkey;
 }
 void SetHotkey(int idx, hotkey_t hotkey) {
 	wchar_t subkey[TNY_BUFF];
-	wsprintf(subkey, L"%s\\HK%d", szHotKeySubKey, idx);
+	wsprintf(subkey, FMT("%s\\HK%d"), szHotKeySubKey, idx);
 	if(hotkey.key.vk){
 		api.SetInt(subkey, L"fsMod", hotkey.key.fsMod);
 		api.SetInt(subkey, L"vk", hotkey.key.vk);

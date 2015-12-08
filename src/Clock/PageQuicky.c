@@ -127,7 +127,7 @@ void AddListBoxRows(HWND hList)   //--------------------------------------------
 		lvItem.iItem = 0;
 		lvItem.pszText = szValue;
 		lvItem.iSubItem = 0;
-		offset = 9 + wsprintf(key+9, L"%i", idx);
+		offset = 9 + wsprintf(key+9, FMT("%i"), idx);
 		wcscpy(key+offset, L"-Text");
 		api.GetStr(L"QuickyMenu\\MenuItems", key, szValue, _countof(szValue), L"-");
 		ListView_InsertItem(hList, &lvItem);

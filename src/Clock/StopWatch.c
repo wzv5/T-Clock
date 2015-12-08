@@ -4,7 +4,7 @@
 //#define TIMETEXT_DEFAULT L"00 h 00 m 00 s 000 ms"
 //#define TIMETEXT_FORMAT L"%02d h %02d m %02lu s %03lu ms"
 #define TIMETEXT_DEFAULT L"00:00:00.000"
-#define TIMETEXT_FORMAT L"%02d:%02d:%02lu.%03lu"
+#define TIMETEXT_FORMAT FMT("%02d:%02d:%02lu.%03lu")
 static LARGE_INTEGER m_frequency={{0}};
 static LARGE_INTEGER m_start;// start time
 static LARGE_INTEGER m_lap;// latest lap time
@@ -145,7 +145,7 @@ void StopWatch_Lap(HWND hDlg,int bFromStop){ // Get Current Time as Lap Time and
 	else
 		m_lap=end;
 	
-	wsprintf(buf, L"Lap %d", ListView_GetItemCount(hList)+1);
+	wsprintf(buf, FMT("Lap %d"), ListView_GetItemCount(hList)+1);
 	if(bFromStop)
 		wcscat(buf, L" [S]");
 	lvItem.mask = LVIF_TEXT;
@@ -156,14 +156,14 @@ void StopWatch_Lap(HWND hDlg,int bFromStop){ // Get Current Time as Lap Time and
 	
 	hrs=elapsed/3600000; elapsed%=3600000;
 	min=elapsed/60000; elapsed%=60000;
-	wsprintf(buf, L"%02d:%02d:%02lu.%03lu", hrs ,min, elapsed/1000, elapsed%1000);
+	wsprintf(buf, FMT("%02d:%02d:%02lu.%03lu"), hrs ,min, elapsed/1000, elapsed%1000);
 	lvItem.iSubItem = 1;
 	ListView_SetItem(hList, &lvItem);
 	
 	elapsed=(unsigned long)((end.QuadPart-m_start.QuadPart)*1000/m_frequency.QuadPart);
 	hrs=elapsed/3600000; elapsed%=3600000;
 	min=elapsed/60000; elapsed%=60000;
-	wsprintf(buf, L"%02d:%02d:%02lu.%03lu", hrs, min, elapsed/1000, elapsed%1000);
+	wsprintf(buf, FMT("%02d:%02d:%02lu.%03lu"), hrs, min, elapsed/1000, elapsed%1000);
 	lvItem.iSubItem = 2;
 	ListView_SetItem(hList, &lvItem);
 }
@@ -378,19 +378,19 @@ static void export_print(wchar_t** out, const wchar_t* fmt, const wchar_t* time,
 			++pos;
 			switch(*pos){
 			case 'n': // new line
-				*out += wsprintf(*out, L"\r\n");
+				*out += wsprintf(*out, FMT("\r\n"));
 				break;
 			case 't': // total time
-				*out += wsprintf(*out, time);
+				*out += wsprintf(*out, FMT("%s"), time);
 				break;
 			case '#': // (lap) num
-				*out += wsprintf(*out, L"%2i", num);
+				*out += wsprintf(*out, FMT("%2i"), num);
 				break;
 			case 'l': // lap time
-				*out += wsprintf(*out, lap);
+				*out += wsprintf(*out, FMT("%s"), lap);
 				break;
 			case 'f': // lap flags (currently [S] only)
-				*out += wsprintf(*out, lapflags);
+				*out += wsprintf(*out, FMT("%s"), lapflags);
 				break;
 			default:
 				**out = *--pos;
@@ -429,7 +429,7 @@ static void export_text(HWND hDlg){
 		lapflags[0] = '\0';
 		GetDlgItemText(GetParent(hDlg), IDC_SW_ELAPSED, totaltime, _countof(totaltime));
 		export_print(&bufpos, total+2, totaltime, laps, totaltime, lapflags);
-		bufpos += wsprintf(bufpos, L"\r\n");
+		bufpos += wsprintf(bufpos, FMT("\r\n"));
 	}
 	*bufpos = '\0';
 	SetDlgItemText(hDlg, IDC_SWE_OUT, buf);
