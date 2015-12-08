@@ -4,6 +4,9 @@
 //================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
 #include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
 #include <time.h>
+#include <stdio.h>
+#include <dsound.h>
+
 static wchar_t g_alarmkey[6+6] = L"Alarm";
 #define ALARMKEY_OFFSET 5
 
@@ -483,23 +486,53 @@ void OnTimerAlarm(HWND hwnd, time_t time)   // 12am = Midnight -----------------
 		#endif
 	}
 }
-#include <stdio.h> //--------------------------+++--> Required Here Only for the Open File Stuff:
 //================================================================================================
 //-----+++--> For Computers WithOut Speakers, Play a NoSound (PC Beep) File Through the PC Speaker:
 BOOL PlayNoSound(const wchar_t* fname, DWORD iLoops)   //-----------------------------------+++-->
 {
-	static const char seps[] = ", \r\n";
+	static const char seps[] = ", 	\r\n";
 	char* szToken,*nxToken;
+	#define dummy_channel 2
+	#define dummy_sample_rate 44100 // 8.0 kHz, 11.025 kHz, 22.05 kHz, or 44.1 kHz
+	#define dummy_bits_per_sample 16 // 8 or 16
+	#define dummy_align (dummy_channel * dummy_bits_per_sample / 8)
+	WAVEFORMATEX dummy_wavefmt = {WAVE_FORMAT_PCM, dummy_channel, dummy_sample_rate, (dummy_sample_rate*dummy_align), dummy_align, dummy_bits_per_sample, 0};
+	DSBUFFERDESC dummy_dsbdesc = {sizeof(DSBUFFERDESC), DSBCAPS_GLOBALFOCUS, DSBSIZE_MIN*256, 0, NULL/*&dummy_wavefmt*/ /*, GUID_NULL*/};
+	IDirectSound* dummy_ds = NULL;
+	IDirectSoundBuffer* dummy_ds_buf = NULL;
 	FILE* file = _wfopen(fname, L"r");
+	
+	dummy_dsbdesc.lpwfxFormat = &dummy_wavefmt;
+	dummy_dsbdesc.guid3DAlgorithm = GUID_NULL;
+	
 	if(!file) {
 		m_bKillPCBeep = 1;
 		return FALSE;
 	}
+	
+	// workaround 7+ (Beep() got nasty clicks&pops without other sounds playing)
+	DirectSoundCreate(0, &dummy_ds, 0);
+	if(dummy_ds) {
+		dummy_ds->lpVtbl->SetCooperativeLevel(dummy_ds, g_hwndTClockMain, DSSCL_NORMAL);
+		dummy_ds->lpVtbl->CreateSoundBuffer(dummy_ds, &dummy_dsbdesc, &dummy_ds_buf, 0);
+		if(dummy_ds_buf) {
+			void* ptr1;
+			DWORD ptr1size;
+			if(dummy_ds_buf->lpVtbl->Lock(dummy_ds_buf, 0, 0, &ptr1,&ptr1size, NULL,0, DSBLOCK_ENTIREBUFFER) == DS_OK) {
+				memset(ptr1, 0, ptr1size); // silence
+				dummy_ds_buf->lpVtbl->Unlock(dummy_ds_buf, ptr1,ptr1size, NULL,0);
+				dummy_ds_buf->lpVtbl->Play(dummy_ds_buf, 0, 0, DSBPLAY_LOOPING);
+				// if we stop right here, we'll only get a 20sec time-frame
+//				dummy_ds_buf->lpVtbl->Stop(dummy_ds_buf);
+			}
+		}
+	}
+	
 	while(!m_bKillPCBeep) {
 		// If We Have a Line, Play Its Beep!
 		char szTmp[TNY_BUFF];
 		while(fgets(szTmp, _countof(szTmp), file)) {
-			unsigned duration=10, freq=0, i;
+			unsigned duration = 10, freq = 0, i;
 			szToken = strtok_s(szTmp, seps, &nxToken);
 			for(i=0; szToken; ++i) {
 				int num = atoi(szToken);
@@ -518,8 +551,7 @@ BOOL PlayNoSound(const wchar_t* fname, DWORD iLoops)   //-----------------------
 			if(duration > 3600000) // don't allow a duration longer than 1 hour
 				duration = 3600000;
 			if(m_bKillPCBeep) {  // Just in case It's a Long File...
-				fclose(file); // Check for Kill Code between Beeps.
-				return TRUE;
+				break; //           Check for Kill Code between Beeps.
 			} else if(!freq) {
 				Sleep(duration);
 			} else {
@@ -528,17 +560,22 @@ BOOL PlayNoSound(const wchar_t* fname, DWORD iLoops)   //-----------------------
 		} // END OF IF LINE
 		
 		if(iLoops > 0) { //-> IF We're Looping, Go Back to
-			if(ftell(file) <= 0) // empty file, don't do an "idle loop" (high CPU usage)
+			if(ftell(file) <= 0 && !m_bKillPCBeep) // empty file, don't do an "idle loop" (high CPU usage)
 				Sleep(100);
 			fseek(file, 0, SEEK_SET); // Beginning of File
 			--iLoops;
 		}else{ // Or Die, Exit, Quit, Close, End
 			m_bKillPCBeep = 1;
-			fclose(file);
-			return TRUE;
 		}
 	} // END OF WHILE NOT KILL BEEP
 	fclose(file); // Make Sure File Gets Closed on Early Exit.
+	// cleanup 7+ workaround
+	if(dummy_ds_buf) {
+		dummy_ds_buf->lpVtbl->Stop(dummy_ds_buf);
+		dummy_ds_buf->lpVtbl->Release(dummy_ds_buf), dummy_ds_buf = NULL;
+	}
+	if(dummy_ds)
+		dummy_ds->lpVtbl->Release(dummy_ds), dummy_ds = NULL;
 	return TRUE;
 }
 #include <process.h> // Required for Worker Thread Creation - So Clock Can Send Alarm Kill Code.
@@ -740,7 +777,7 @@ int PlayWave(HWND hwnd, const wchar_t* fname, DWORD dwLoops)   //---------------
 		return 0;
 	}
 	
-	if(waveOutOpen(&m_hWaveOut, WAVE_MAPPER, m_pFormat,
+	if(waveOutOpen(NULL, WAVE_MAPPER, m_pFormat,
 				   0, 0, WAVE_FORMAT_QUERY)) {
 		free(m_pFormat); m_pFormat = NULL;
 		mmioClose(hmmio, 0);

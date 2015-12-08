@@ -91,6 +91,7 @@
 			<Add library="mpr" />
 			<Add library="uuid" />
 			<Add library="msimg32" />
+			<Add library="dsound" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="../common/AutoVersion --git . ../common/version.h" />

@@ -46,18 +46,27 @@ char* win2k_strtok_s(char* strToken, const char* strDelimit, char** context){
 		_set_errno(EINVAL);
 		return NULL;
 	}
+	_set_errno(0);
 	if(strToken)
 		*context = strToken;
-	for(pos=*context; *pos; ++pos){
-		for(delim=strDelimit; *delim && *pos!=*delim; ++delim);
-		if(*delim) break;
-	}
-	_set_errno(0);
-	if(!*pos)
+	if(*context[0] == '\0')
 		return NULL;
-	*pos = '\0';
+	// token start
+	for(pos=*context; *pos; ++pos) {
+		for(delim=strDelimit; *delim && *pos!=*delim; ++delim);
+		if(!*delim)
+			break;
+	}
+	*context = pos;
+	// token end
+	for(; *pos; ++pos) {
+		for(delim=strDelimit; *delim && *pos!=*delim; ++delim);
+		if(*delim)
+			break;
+	}
 	ret = *context;
-	*context = pos+1;
+	*context = (*pos ? pos + 1 : pos);
+	*pos = '\0';
 	return ret;
 }
 wchar_t* win2k_wcstok_s(wchar_t* strToken, const wchar_t* strDelimit, wchar_t** context){
@@ -68,18 +77,27 @@ wchar_t* win2k_wcstok_s(wchar_t* strToken, const wchar_t* strDelimit, wchar_t** 
 		_set_errno(EINVAL);
 		return NULL;
 	}
+	_set_errno(0);
 	if(strToken)
 		*context = strToken;
-	for(pos=*context; *pos; ++pos){
-		for(delim=strDelimit; *delim && *pos!=*delim; ++delim);
-		if(*delim) break;
-	}
-	_set_errno(0);
-	if(!*pos)
+	if(*context[0] == '\0')
 		return NULL;
-	*pos = '\0';
+	// token start
+	for(pos=*context; *pos; ++pos) {
+		for(delim=strDelimit; *delim && *pos!=*delim; ++delim);
+		if(!*delim)
+			break;
+	}
+	*context = pos;
+	// token end
+	for(; *pos; ++pos) {
+		for(delim=strDelimit; *delim && *pos!=*delim; ++delim);
+		if(*delim)
+			break;
+	}
 	ret = *context;
-	*context = pos+1;
+	*context = (*pos ? pos + 1 : pos);
+	*pos = '\0';
 	return ret;
 }
 
