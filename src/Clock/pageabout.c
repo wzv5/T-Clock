@@ -54,7 +54,7 @@ INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lP
 	return FALSE;
 }
 //================================================================================================
-//--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
+//--------------------+++--> Initialize Options dialog & customize T-Clock controls as required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
 	wchar_t path[MAX_PATH];

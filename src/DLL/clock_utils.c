@@ -47,7 +47,7 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 	int wProp, hProp;
 	HWND hwnd_clock;
 	
-	GetWindowRect(hwnd,&moni.rcWork); // Properties Dialog Dimensions
+	GetWindowRect(hwnd, &moni.rcWork); // Options dialog dimensions
 	wProp = moni.rcWork.right-moni.rcWork.left;  //----------+++--> Width
 	hProp = moni.rcWork.bottom-moni.rcWork.top; //----------+++--> Height
 	

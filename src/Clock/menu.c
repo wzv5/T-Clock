@@ -96,11 +96,11 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 {
 	WORD wID = LOWORD(wParam);
 	switch(wID) {
-	case IDM_REFRESHTCLOCK: //-----+++--> RePaint & Size the T-Clock Display Window
+	case IDM_REFRESHTCLOCK:
 		RefreshUs();
 		break;
 		
-	case IDM_SHOWPROP: //---------------------+++--> Show T-Clock Properties Dialog
+	case IDM_SHOWPROP:
 		MyPropertySheet(-1);
 		break;
 	case IDM_PROP_ALARM:
@@ -111,15 +111,15 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		SyncTimeNow();
 		break;
 		
-	case IDM_EXIT: //--------------------------------------+++--> Exit T-Clock 2010
+	case IDM_EXIT:
 		SendMessage(hwnd,WM_CLOSE,0,0);
 		break;
 		
-	case IDM_SHOWCALENDER: //-------------------------------+++--> Display Calender
+	case IDM_SHOWCALENDER:
 		ToggleCalendar(1); // 1=own calendar
 		break;
 		
-	case IDM_DISPLAYPROP: //------------------------------+++--> Display Properties
+	case IDM_DISPLAYPROP:
 		if(api.OS >= TOS_VISTA)
 			api.Exec(L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\1\\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}", NULL, NULL);
 		else
@@ -134,7 +134,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		api.Exec(OPEN_VOLUME, NULL, NULL);
 		break;
 		
-	case IDM_AUDIOPROP: //----------------------------------+++--> Audio Properties
+	case IDM_AUDIOPROP: //----------------------------------+++--> Audio settings / devices
 		api.Exec(L"control", L"mmsys.cpl", NULL);
 		break;
 		

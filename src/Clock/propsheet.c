@@ -1,6 +1,6 @@
 /*-------------------------------------------
   propsheet.c - Kazubon 1997-2001
-  show "properties for TClock"
+  show "Options for T-Clock"
 ---------------------------------------------*/
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "tclock.h"
@@ -55,10 +55,10 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		}
 		
 		// set data of property sheet
-		psh.dwFlags = PSH_USEHICON | PSH_PROPSHEETPAGE | PSH_PROPTITLE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
+		psh.dwFlags = PSH_USEHICON | PSH_PROPSHEETPAGE | PSH_MODELESS | PSH_USECALLBACK | PSH_NOCONTEXTHELP;
 		psh.hInstance = g_instance;
 		psh.hIcon = g_hIconTClock;
-		psh.pszCaption = L"T-Clock Redux";
+		psh.pszCaption = L"T-Clock Options";
 		psh.nPages = PROPERTY_NUM;
 		psh.nStartPage = (page==-1 ? m_startpage : page);
 		psh.ppsp = psp;

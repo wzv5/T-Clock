@@ -1,6 +1,6 @@
 /*-------------------------------------------
   pageformat.c
-  "Format" page of properties
+  "Format" page of Options
                        KAZUBON 1997-1998
 ---------------------------------------------*/
 

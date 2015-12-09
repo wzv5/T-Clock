@@ -392,8 +392,8 @@ LRESULT CALLBACK MsgOnlyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 	return 0;
 }
 //========================================================================================
-//	/exit		exit T-Clock 2010
-//	/prop		show T-Clock 2010 properties
+//	/exit		exit T-Clock
+//	/prop		show T-Clock Options
 //	/SyncOpt	SNTP options
 //	/Sync		synchronize the system clock with an NTP server
 //	/start		start the Stopwatch (open as needed)

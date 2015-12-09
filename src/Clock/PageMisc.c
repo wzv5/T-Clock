@@ -198,7 +198,7 @@ void SetInternational(const wchar_t* entry, const wchar_t* val)
 	api.SetSystemStr(HKEY_CURRENT_USER, L"Control Panel\\International", entry, val);
 }
 //================================================================================================
-//--------------------+++--> Initialize Properties Dialog & Customize T-Clock Controls as Required:
+//--------------------+++--> Initialize options dialog & customize T-Clock controls as required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
 	HWND week_cb = GetDlgItem(hDlg, IDC_FIRSTWEEK);

@@ -1,6 +1,6 @@
 /*-------------------------------------------
   pagealarm.c
-  "Alarm" page of properties
+  "Alarm" page of Options
   KAZUBON 1997-2001
 ---------------------------------------------*/
 // Last Modified by Stoic Joker: Sunday, 03/13/2011 @ 11:54:05am

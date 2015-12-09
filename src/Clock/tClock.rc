@@ -58,7 +58,7 @@ BEGIN
         POPUP "Sounds && Audio Options",IDC_SOUNDAUDIO,0,0
         BEGIN
             MENUITEM "Open Volume Controls",        IDM_VOLUMECONTROL,0,0
-            MENUITEM "Adjust Audio Properties",     IDM_AUDIOPROP,0,0
+            MENUITEM "Audio devices",               IDM_AUDIOPROP,0,0
         END
         POPUP "Network Drive(s)",IDC_NETWORK,0,0
         BEGIN
@@ -88,17 +88,17 @@ BEGIN
             MENUITEM "Reset Watch List",            IDM_TIMEWATCHRESET,0,MFS_DISABLED
             MENUITEM "Add/Edit Timer",              IDM_TIMER,0,0
         END
+        MENUITEM "Display Properties",              IDM_DISPLAYPROP,0,0
+        MENUITEM "",0,MFT_SEPARATOR,0
+        MENUITEM "T-Clock Options",                 IDM_SHOWPROP,0,0
+        MENUITEM "Refresh T-Clock",                 IDM_REFRESHTCLOCK,0,0
+        MENUITEM "",0,MFT_SEPARATOR,0
         POPUP "Exit Windows",IDC_EXITWIN,0,0
         BEGIN
             MENUITEM "Log off",                     IDM_LOGOFF,0,0
             MENUITEM "Reboot",                      IDM_REBOOT,0,0
             MENUITEM "Shut Down",                   IDM_SHUTDOWN,0,0
         END
-        MENUITEM "",0,MFT_SEPARATOR,0
-        MENUITEM "T-Clock Properties",              IDM_SHOWPROP,0,0
-        MENUITEM "Display Properties",              IDM_DISPLAYPROP,0,0
-        MENUITEM "Refresh T-Clock",                 IDM_REFRESHTCLOCK,0,0
-        MENUITEM "",0,MFT_SEPARATOR,0
         MENUITEM "Exit T-Clock",                    IDM_EXIT,0,0
         MENUITEM "",IDS_NONE,MFT_SEPARATOR,0
         MENUITEM "&Run...",                         IDM_FWD_RUNAPP,0,0
@@ -316,7 +316,7 @@ BEGIN
     CONTROL         "Quicky launch menu",IDC_QMEN_LAUNCH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,37,84,11
     CONTROL         "Sounds && Audio options",IDC_QMEN_AUDIO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,122,21,92,11
     CONTROL         "Network drive(s)",IDC_QMEN_NET,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,122,37,69,11
-    CONTROL         "Display properties",IDC_QMEN_DISPLAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,225,37,72,11
+    CONTROL         "Display Properties",IDC_QMEN_DISPLAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,225,37,72,11
     GROUPBOX        "Custom Quicky items (double click item to edit)",IDC_QMEN_GROUP2,6,62,298,132
     CONTROL         "",IDC_QMEN_LIST,WC_LISTVIEW,WS_TABSTOP|LVS_ALIGNLEFT|LVS_NOSORTHEADER|LVS_SINGLESEL|LVS_REPORT, 7,72,295,122
 END
@@ -357,7 +357,7 @@ BEGIN
     LTEXT           "Stopwatch", IDC_STATIC, 11, 44, 81, 9, SS_LEFT, WS_EX_RIGHT
     CONTROL         "", HK_STOPWATCH, HOTKEY_CLASS, WS_TABSTOP, 96, 42, 134, 14, WS_EX_LEFT
     PUSHBUTTON      "revert", IDC_HK_STOPWATCH_B, 232, 42, 36, 14, 0, WS_EX_LEFT
-    LTEXT           "Properties", IDC_STATIC, 11, 62, 81, 9, SS_LEFT, WS_EX_RIGHT
+    LTEXT           "Options", IDC_STATIC, 11, 62, 81, 9, SS_LEFT, WS_EX_RIGHT
     CONTROL         "", HK_SETTINGS, HOTKEY_CLASS, WS_TABSTOP, 96, 60, 134, 14, WS_EX_LEFT
     PUSHBUTTON      "revert", IDC_HK_SETTINGS_B, 232, 60, 36, 14, 0, WS_EX_LEFT
     LTEXT           "Calendar", IDC_STATIC, 11, 80, 81, 9, SS_LEFT, WS_EX_RIGHT

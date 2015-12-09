@@ -38,7 +38,7 @@ static const action_t m_mouseAction[]={
 	{MOUSEFUNC_EXEC,L"Execute command ->"},
 	{MOUSEFUNC_SCREENSAVER,L"Screensaver"},
 	{MOUSEFUNC_SHOWCALENDER,L"Calendar"},
-	{MOUSEFUNC_SHOWPROPERTY,L"T-Clock Properties"},
+	{MOUSEFUNC_SHOWPROPERTY,L"T-Clock Options"},
 	{IDM_RECYCLEBIN,L"Open Recycle Bin"},
 	{IDM_RECYCLEBIN_PURGE,L"Empty Recycle Bin"},
 	{IDM_STOPWATCH,L"Stopwatch"},
