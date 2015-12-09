@@ -486,12 +486,12 @@ CAPTION "StopWatch export"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "Process", IDOK, 179, 210, 50, 14
-    PUSHBUTTON      "Export", IDC_SWE_EXPORT, 231, 210, 50, 14
+    PUSHBUTTON      "Save as...", IDC_SWE_EXPORT, 231, 210, 50, 14
     PUSHBUTTON      "Close", IDCANCEL, 283, 210, 50, 14
-    GROUPBOX        "Header / Footer (use \\n as first data)", IDC_STATIC, 2, 1, 331, 27
+    GROUPBOX        "Header / Footer (start with \\n for footer, otherwise it's a header)", IDC_STATIC, 2, 1, 331, 27
     EDITTEXT        IDC_SWE_TOTAL, 5, 11, 325, 14, ES_AUTOHSCROLL
-    GROUPBOX        "Laps (\\n=new line, \\t=time, \\#=lap(s), \\l=lap time), \\f=lap flags", IDC_STATIC, 2, 27, 331, 27
-    EDITTEXT        IDC_SWE_LAP, 5, 37, 325, 14, ES_AUTOHSCROLL
+    GROUPBOX        "Laps (\\n=new line, \\t=time, \\#=lap(s), \\l=lap time), \\f=lap flags", IDC_STATIC, 2, 29, 331, 27
+    EDITTEXT        IDC_SWE_LAP, 5, 39, 325, 14, ES_AUTOHSCROLL
     GROUPBOX        "Output", IDC_STATIC, 2, 62, 331, 146
     EDITTEXT        IDC_SWE_OUT, 5, 72, 325, 133, WS_VSCROLL | ES_AUTOHSCROLL | ES_MULTILINE
 END
