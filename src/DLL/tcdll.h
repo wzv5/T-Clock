@@ -11,6 +11,7 @@
 #include <math.h>     // Required by use of floor() in Format.c
 
 #include "../common/resource.h"
+#include "../common/win2k_compat.h"
 #include "../common/newapi.h" // UxTheme stuff
 #include "../common/utl.h" // utility functions
 #include "../common/clock.h" // common clock api

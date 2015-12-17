@@ -20,30 +20,27 @@ int DestroyClock();
 int UpdateClock(HWND hwnd, HFONT fnt);
 int UpdateClockSize();
 LRESULT OnCalcRect(HWND hwnd);
-void InitDaylightTimeTransition(void);
 void OnCopy(HWND hwnd, LPARAM lParam);
-BOOL CheckDaylightTimeTransition(SYSTEMTIME* lt);
 void OnTooltipNeedText(UINT code, LPARAM lParam);
 void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100);
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 /*------------------------------------------------
   globals
 --------------------------------------------------*/
-WNDPROC m_oldClockProc=NULL; // original clock procedure
-WNDPROC m_oldWorkerProc=NULL; // original worker procedure used by multi clocks (Win8+)
 #define MAX_MULTIMON_CLOCKS 4
 int m_bMultimon;
 ATOM m_multiClockClass=0;
-struct {
+typedef struct MultiClock {
 	HWND worker;
 	HWND clock;
 	RECT workerRECT;
 	LONG xdiff;
 	LONG ydiff;
-} m_multiClock[MAX_MULTIMON_CLOCKS];
+} MultiClock;
+MultiClock m_multiClock[MAX_MULTIMON_CLOCKS];
 int m_multiClocks=0;
 /// draw variables
 static HDC m_hdcClock=NULL;
@@ -424,17 +421,16 @@ void ShowTip(HWND clock){
 }
 
 void SubsDestroy(){
-	for(; m_multiClocks; ){
-		if(IsWindow(m_multiClock[--m_multiClocks].worker)){
-			SubclassWindow(m_multiClock[m_multiClocks].worker, m_oldWorkerProc);
-			SendMessage(m_multiClock[m_multiClocks].clock,WM_CLOSE,0,0);
+	for(; m_multiClocks; ) {
+		if(IsWindow(m_multiClock[--m_multiClocks].worker)) {
+			RemoveWindowSubclass(m_multiClock[m_multiClocks].worker, WndProcMultiClockWorker, m_multiClocks);
+			SendMessage(m_multiClock[m_multiClocks].clock, WM_CLOSE, 0, 0);
 			SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0,0,
 						m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
 						SWP_NOMOVE);
 		}
 		m_multiClock[m_multiClocks].worker = NULL;
 	}
-	m_oldWorkerProc = NULL;
 }
 void SubsSendResize(){
 	int clock_id;
@@ -470,9 +466,7 @@ void SubsCreate(){
 						break;
 					m_multiClock[clock_id].worker = hwndChild;
 					GetClientRect(hwndChild, &m_multiClock[clock_id].workerRECT);
-					if(!clock_id)
-						m_oldWorkerProc = (WNDPROC)GetWindowLongPtr(hwndChild, GWLP_WNDPROC);
-					SubclassWindow(hwndChild, WndProcMultiClockWorker);
+					SetWindowSubclass(hwndChild, WndProcMultiClockWorker, clock_id, (DWORD_PTR)&m_multiClock[clock_id]);
 					++m_multiClocks;
 				}
 				break;
@@ -501,9 +495,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 		}
 	}
 	
-	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
-	
-	m_oldClockProc = SubclassWindow(hwnd, WndProc);
+	SetWindowSubclass(hwnd, WndProc, 0, 0);
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
 	MyDragDrop_Init();
@@ -528,26 +520,26 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 {
 	SubsDestroy();
 	if(m_multiClockClass){
-		UnregisterClass(MAKEINTATOM(m_multiClockClass),0);
-		m_multiClockClass=0;
+		UnregisterClass(MAKEINTATOM(m_multiClockClass), 0);
+		m_multiClockClass = 0;
 	}
 	RevokeDragDrop(hwnd); // frees m_droptarget
 	MyDragDrop_DeInit();
-	DestroyClock();
-	DestroyTip();
-	EndNewAPI(hwnd);
-	KillTimer(hwnd, TCLOCK_TIMER_ID);
-	SubclassWindow(hwnd, m_oldClockProc);
-	m_oldClockProc=NULL;
 	
+	KillTimer(hwnd, TCLOCK_TIMER_ID);
+	RemoveWindowSubclass(hwnd, WndProc, 0);
 	// Windows uses timer ID 0 for every-minute drawing
 	// make sure it is set (again)
 	SetTimer(hwnd, WIN_CLOCK_TIMER_ID, 10*1000, NULL);
 	
+	DestroyClock();
+	DestroyTip();
+	EndNewAPI(hwnd);
+	
 //  bClockUseTrans = 0;
 //	if(IsWindow(g_hwndTClockMain))
-//		PostMessage(g_hwndTClockMain,MAINM_EXIT,0,0);
-	_beginthread(SelfDestruct,0,hwnd);
+//		PostMessage(g_hwndTClockMain, MAINM_EXIT, 0, 0);
+	_beginthread(SelfDestruct, 0, hwnd);
 }
 static LRESULT CALLBACK HookedTooltip_Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
 	(void)dwRefData;
@@ -566,10 +558,12 @@ static LRESULT CALLBACK HookedTooltip_Proc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 /*------------------------------------------------
   subclass procedure of the clock
 --------------------------------------------------*/
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
+	(void)dwRefData;
 	switch(message){
 	case WM_DESTROY:
+		RemoveWindowSubclass(hwnd, WndProc, uIdSubclass);
 		DestroyClock();
 		break;
 	case(WM_USER+100):// send by windows to get clock size
@@ -782,7 +776,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		OnCopy(hwnd, lParam);
 		return 0;
 	}
-	return CallWindowProc(m_oldClockProc, hwnd, message, wParam, lParam);
+	return DefSubclassProc(hwnd, message, wParam, lParam);
 }
 /*------------------------------------------------
   subclass procedure of the 2nd+ taskbar clock (used to handle clicks, etc.)
@@ -830,66 +824,65 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_MOUSEMOVE:
 	case WM_MOUSEHOVER:
 	case WM_MOUSELEAVE:
-		return WndProc(hwnd, message, wParam, lParam);
+		return WndProc(hwnd, message, wParam, lParam, 0, 0); // quite dangerous call
 	}
-	return DefWindowProc(hwnd,message,wParam,lParam);
+	return DefWindowProc(hwnd, message, wParam, lParam);
 }
 /*------------------------------------------------
   subclass procedure of the 2nd+ taskbar "worker" area (used to resize and allow own clock)
 --------------------------------------------------*/
-LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
-	switch(message){
+	MultiClock* self = (MultiClock*)dwRefData;
+	switch(message) {
+	case WM_DESTROY:
+		RemoveWindowSubclass(hwnd, WndProcMultiClockWorker, uIdSubclass);
+		break;
 	case WM_WINDOWPOSCHANGING:{
 		int x,y,cx,cy;
 		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
-		int clock_id;
-		if(m_bNoClock) break;
-		for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
-			if(m_multiClock[clock_id].worker != hwnd)
-				continue;
-//			MessageBox(0,"WM_WINDOWPOSCHANGING",__FUNCTION__,0);
-			if(!(pwp->flags&SWP_NOSIZE)){
-				if(!pwp->flags && !pwp->x && !pwp->y && pwp->cx==10 && pwp->cy==10){ // special case for us
-//					MessageBox(0,"special",__FUNCTION__,0);
-					if(!m_multiClock[clock_id].workerRECT.left && !m_multiClock[clock_id].workerRECT.top){
-						ClientToScreen(m_multiClock[clock_id].worker,(POINT*)&m_multiClock[clock_id].workerRECT);
-						ScreenToClient(GetParent(m_multiClock[clock_id].worker),(POINT*)&m_multiClock[clock_id].workerRECT);
-					}
-					pwp->flags=SWP_NOMOVE;
-					pwp->cx=m_multiClock[clock_id].workerRECT.right;
-					pwp->cy=m_multiClock[clock_id].workerRECT.bottom;
-				}
-				CallWindowProc(m_oldWorkerProc,hwnd,message,wParam,lParam); // adjusts left margin? (so changes size and pos)
-				m_multiClock[clock_id].workerRECT.right=pwp->cx;
-				m_multiClock[clock_id].workerRECT.bottom=pwp->cy;
-				if(pwp->cx > pwp->cy){ // horizontal
-					pwp->cx=pwp->cx-m_rcClock.right - api.desktop_button_size;
-				}else{
-					pwp->cy=pwp->cy-m_rcClock.bottom - api.desktop_button_size;
-				}
-			}
-			if(!(pwp->flags&SWP_NOMOVE)){
-				m_multiClock[clock_id].workerRECT.left=pwp->x;
-				m_multiClock[clock_id].workerRECT.top=pwp->y;
-			}
-			cx=m_rcClock.right;
-			cy=m_rcClock.bottom;
-			if(m_multiClock[clock_id].workerRECT.right > m_multiClock[clock_id].workerRECT.bottom){ // horizontal
-				x=m_multiClock[clock_id].workerRECT.left+m_multiClock[clock_id].workerRECT.right-m_rcClock.right - api.desktop_button_size;
-				y=m_multiClock[clock_id].workerRECT.top+m_BORDER_MARGIN;
-			}else{
-				x=m_multiClock[clock_id].workerRECT.left+m_BORDER_MARGIN;
-				y=m_multiClock[clock_id].workerRECT.top+m_multiClock[clock_id].workerRECT.bottom-m_rcClock.bottom - api.desktop_button_size;
-			}
-			SetWindowPos(m_multiClock[clock_id].clock,0,x,y,cx,cy,0);
+		if(m_bNoClock)
 			break;
+//		MessageBox(0,"WM_WINDOWPOSCHANGING",__FUNCTION__,0);
+		if(!(pwp->flags&SWP_NOSIZE)){
+			if(!pwp->flags && !pwp->x && !pwp->y && pwp->cx==10 && pwp->cy==10){ // special case for us
+//				MessageBox(0,"special",__FUNCTION__,0);
+				if(!self->workerRECT.left && !self->workerRECT.top){
+					ClientToScreen(self->worker, (POINT*)&self->workerRECT);
+					ScreenToClient(GetParent(self->worker), (POINT*)&self->workerRECT);
+				}
+				pwp->flags=SWP_NOMOVE;
+				pwp->cx = self->workerRECT.right;
+				pwp->cy = self->workerRECT.bottom;
+			}
+			DefSubclassProc(hwnd, message, wParam, lParam); // adjusts left margin? (so changes size and pos)
+			self->workerRECT.right = pwp->cx;
+			self->workerRECT.bottom = pwp->cy;
+			if(pwp->cx > pwp->cy){ // horizontal
+				pwp->cx = pwp->cx-m_rcClock.right - api.desktop_button_size;
+			}else{
+				pwp->cy = pwp->cy-m_rcClock.bottom - api.desktop_button_size;
+			}
 		}
+		if(!(pwp->flags&SWP_NOMOVE)){
+			self->workerRECT.left = pwp->x;
+			self->workerRECT.top = pwp->y;
+		}
+		cx = m_rcClock.right;
+		cy = m_rcClock.bottom;
+		if(self->workerRECT.right > self->workerRECT.bottom){ // horizontal
+			x = self->workerRECT.left+self->workerRECT.right-m_rcClock.right - api.desktop_button_size;
+			y = self->workerRECT.top+m_BORDER_MARGIN;
+		}else{
+			x = self->workerRECT.left+m_BORDER_MARGIN;
+			y = self->workerRECT.top+self->workerRECT.bottom-m_rcClock.bottom - api.desktop_button_size;
+		}
+		SetWindowPos(self->clock, 0, x, y, cx, cy, 0);
 		return 0;}
 	case WM_WINDOWPOSCHANGED:{
 		break;}
 	}
-	return CallWindowProc(m_oldWorkerProc,hwnd,message,wParam,lParam);
+	return DefSubclassProc(hwnd, message, wParam, lParam);
 }
 //==========================================================================
 //---------------------------------+++--> Retreive T-Clock's format settings:
@@ -999,11 +992,6 @@ void CALLBACK OnDrawTimer(HWND hwnd, unsigned uMsg, uintptr_t idEvent, unsigned 
 		SetTimer(hwnd, TCLOCK_TIMER_ID, 1000, OnDrawTimer);
 	}
 	
-	if(CheckDaylightTimeTransition(&t)) {
-		CallWindowProc(m_oldClockProc, hwnd, WM_TIMER, 0, 0);
-		GetDisplayTime(&t, m_nDispBeat ? &beat100 : NULL);
-	}
-	
 	bRedraw = 0;
 	if(m_BlinkState){
 		if(m_LastTime.wMinute && m_BlinkState&BLINK_HOUR)
@@ -1028,10 +1016,9 @@ void CALLBACK OnDrawTimer(HWND hwnd, unsigned uMsg, uintptr_t idEvent, unsigned 
 	
 	if(m_LastTime.wDay!=t.wDay || m_LastTime.wMonth!=t.wMonth || m_LastTime.wYear!=t.wYear) {
 		InitFormat(L"Format", &t); // format.c
-		InitDaylightTimeTransition();
 		UpdateClock(hwnd,NULL); // resize clock
 		SendMessage(hwnd,CLOCKM_REFRESHTASKBAR,0,0); // reposition clock (inform taskbar about new size)
-		bRedraw=0;
+		bRedraw = 0;
 	}
 	
 	memcpy(&m_LastTime, &t, sizeof(t));
@@ -1352,71 +1339,4 @@ void OnCopy(HWND hwnd, LPARAM lParam)
 		SetClipboardData(CF_UNICODETEXT, hg);
 	}
 	CloseClipboard();
-}
-//============================================================================================
-//	char szTZone[32] = {0}; //---+++--> TimeZone String Buffer, Also Used (as External) in Format.c
-//==============================================================================================
-int iHourTransition = -1, iMinuteTransition = -1; //--++--> Used Only in the Two Functions Below!
-//================================================================================================
-//-----------------------------+++--> Initialize Clock With the User's Local Time-Zone Information:
-void InitDaylightTimeTransition(void)   //--------------------------------------------------+++-->
-{
-	TIME_ZONE_INFORMATION tzi;
-	SYSTEMTIME lt, *plt=NULL;
-	DWORD dw;
-	
-	iHourTransition = iMinuteTransition = -1;
-	
-	GetLocalTime(&lt);
-	
-	memset(&tzi, 0, sizeof(tzi));
-	dw = GetTimeZoneInformation(&tzi);
-	if(dw == TIME_ZONE_ID_STANDARD // This Will Only Apply in the Fall/Winter Months When DST is NOT in Effect.
-	   && tzi.DaylightDate.wMonth == lt.wMonth
-	   && tzi.DaylightDate.wDayOfWeek == lt.wDayOfWeek) {
-		plt = &(tzi.DaylightDate);
-//		strcpy(szTZone, (char *)tzi.StandardName);
-//		wcstombs(szTZone, tzi.StandardName, 32);
-//		wsprintf(szTZone, FMT("%ls"), tzi.StandardName);
-	}
-	if(dw == TIME_ZONE_ID_DAYLIGHT // This Will Only Apply in the Spring/Summer Months When DST IS in Effect.
-	   && tzi.StandardDate.wMonth == lt.wMonth
-	   && tzi.StandardDate.wDayOfWeek == lt.wDayOfWeek) {
-		plt = &(tzi.StandardDate);
-//		strcpy(szTZone, tzi.DaylightName);
-//		wcstombs(szTZone, tzi.DaylightName, 32);
-//		wsprintf(szTZone, FMT("%ls"), tzi.DaylightName);
-	}
-	
-	if(plt && plt->wDay < 5) {
-		if(((lt.wDay - 1) / 7 + 1) == plt->wDay) {
-			iHourTransition = plt->wHour;
-			iMinuteTransition = plt->wMinute;
-		}
-	} else if(plt && plt->wDay == 5) {
-		FILETIME ft;
-		DWORDLONG ftqw;
-		SystemTimeToFileTime(&lt,&ft);
-//		*(DWORDLONG*)&ft += 6048000000000ULL;// it's unsave :(
-		ftqw=(((DWORDLONG)ft.dwHighDateTime<<32) | ft.dwLowDateTime) + 6048000000000ULL;
-		ft.dwLowDateTime=ftqw&0xFFFFFFFF;
-		ft.dwHighDateTime=ftqw>>32;
-		FileTimeToSystemTime(&ft, &lt);
-		if(lt.wDay < 8) {
-			iHourTransition = plt->wHour;
-			iMinuteTransition = plt->wMinute;
-		}
-	}
-//	wsprintf(szTZone, FMT("Day: %ls, Std: %ls"), tzi.DaylightName, tzi.StandardName);
-//	MessageBox(0, szTZone, "is TimeZone??", MB_OK);
-}
-//================================================================================================
-//-+++--> iHourTransition & iMinuteTransition Are Now Used to Pass Local Time-Zone Offset to Clock:
-BOOL CheckDaylightTimeTransition(SYSTEMTIME* plt)   //--------------------------------------+++-->
-{
-	if((int)plt->wHour == iHourTransition &&
-	   (int)plt->wMinute >= iMinuteTransition) {
-		iHourTransition = iMinuteTransition = -1;
-		return TRUE;
-	} else return FALSE;
 }
