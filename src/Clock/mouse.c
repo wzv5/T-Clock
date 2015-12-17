@@ -38,13 +38,13 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	(void)lParam;
 	
 	switch(message) {
-	case WM_LBUTTONDOWN: case WM_LBUTTONUP:
+	case WM_LBUTTONDOWN: case WM_LBUTTONDBLCLK: case WM_LBUTTONUP:
 		button=0; break;
-	case WM_RBUTTONDOWN: case WM_RBUTTONUP:
+	case WM_RBUTTONDOWN: case WM_RBUTTONDBLCLK: case WM_RBUTTONUP:
 		button=1; break;
-	case WM_MBUTTONDOWN: case WM_MBUTTONUP:
+	case WM_MBUTTONDOWN: case WM_MBUTTONDBLCLK: case WM_MBUTTONUP:
 		button=2; break;
-	case WM_XBUTTONDOWN: case WM_XBUTTONUP:
+	case WM_XBUTTONDOWN: case WM_XBUTTONDBLCLK: case WM_XBUTTONUP:
 		button=(HIWORD(wParam)==XBUTTON1?3:4); break;
 	default: return;
 	}
@@ -54,6 +54,10 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
+	case WM_LBUTTONDBLCLK:
+	case WM_RBUTTONDBLCLK:
+	case WM_MBUTTONDBLCLK:
+	case WM_XBUTTONDBLCLK:
 		if(m_click_button!=button) m_click=0;
 		m_click_button=button;
 		bDown=1;

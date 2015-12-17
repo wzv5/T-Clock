@@ -504,7 +504,6 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	InitDaylightTimeTransition(); // Get User's Local Time-Zone Information
 	
 	m_oldClockProc = SubclassWindow(hwnd, WndProc);
-	SetClassLong(hwnd, GCL_STYLE, GetClassLong(hwnd, GCL_STYLE) & ~CS_DBLCLKS);
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
 	MyDragDrop_Init();
@@ -649,6 +648,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
+	case WM_LBUTTONDBLCLK:
+	case WM_RBUTTONDBLCLK:
+	case WM_MBUTTONDBLCLK:
+	case WM_XBUTTONDBLCLK:
 		gs_hwndCalendar = NULL; // GetCalendar() falls back to this
 		gs_hwndCalendar = api.GetCalendar();
 		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
@@ -814,6 +817,10 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
 	case WM_XBUTTONDOWN:
+	case WM_LBUTTONDBLCLK:
+	case WM_RBUTTONDBLCLK:
+	case WM_MBUTTONDBLCLK:
+	case WM_XBUTTONDBLCLK:
 		SetFocus(hwnd);
 		/* fall through */
 	case WM_LBUTTONUP:
