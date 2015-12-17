@@ -510,7 +510,8 @@ int Clock_DelKey(const wchar_t* section) {
 
 // exec
 
-int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show) {
+int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show, HANDLE* hProcess) {
+	BOOL success;
 	if(*app){
 		SHELLEXECUTEINFO sei = {sizeof(sei)};
 		sei.hwnd = parent;
@@ -518,20 +519,24 @@ int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t*
 		sei.lpFile = app;
 		sei.lpParameters = params;
 		sei.nShow = show;
-		if(ShellExecuteEx(&sei))
+		if(hProcess)
+			sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+		success = ShellExecuteEx(&sei);
+		if(hProcess)
+			*hProcess = sei.hProcess;
+		if(success)
 			return 0;
-		if(GetLastError()==ERROR_CANCELLED){ // UAC dialog user canceled
+		if(GetLastError() == ERROR_CANCELLED) // UAC dialog user canceled
 			return 1;
-		}
 	}
 	return -1;
 }
 int Clock_Exec(const wchar_t* app, const wchar_t* params, HWND parent) {
-	return Clock_ShellExecute(NULL,app,params,parent,SW_SHOWNORMAL);
+	return Clock_ShellExecute(NULL, app, params, parent, SW_SHOWNORMAL, NULL);
 }
 int Clock_ExecElevated(const wchar_t* app, const wchar_t* params, HWND parent)
 {
-	return Clock_ShellExecute(L"runas", app, params, parent, SW_SHOWNORMAL);
+	return Clock_ShellExecute(L"runas", app, params, parent, SW_SHOWNORMAL, NULL);
 }
 int Clock_ExecFile(const wchar_t* command, HWND parent) {
 	wchar_t app[MAX_PATH], params[MAX_PATH];
@@ -539,7 +544,7 @@ int Clock_ExecFile(const wchar_t* command, HWND parent) {
 		return -1;
 	// if(parent) SetForegroundWindow(parent);
 	Clock_GetFileAndOption(command,app,params);
-	return Clock_ShellExecute(NULL,app,(params[0]?params:NULL),parent,SW_SHOWNORMAL);
+	return Clock_ShellExecute(NULL,app,(params[0]?params:NULL),parent,SW_SHOWNORMAL, NULL);
 }
 
 // format stuff

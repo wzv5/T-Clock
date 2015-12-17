@@ -60,6 +60,7 @@ void SetDesktopIconTextBk(int enable);
 //}
 #define GetClockExe() _wpgmptr
 
+void TranslateDispatchTClockMessage(MSG* msg);
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
 void ToggleCalendar(int type);
@@ -67,6 +68,11 @@ int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]);
 void AddStartup(HWND hDlg);
 void RemoveStartup(HWND hDlg);
 int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name);
+
+// Macros
+BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus);
+#define EnableDlgItem(hDlg,id,b) EnableWindow(GetDlgItem((hDlg),(id)),(b))
+#define ShowDlgItem(hDlg,id,b) ShowWindow(GetDlgItem((hDlg),(id)),(b)?SW_SHOW:SW_HIDE)
 
 // used by PageMisc.c and main.c
 extern const wchar_t kSectionImmersiveShell[56+1]; ///< SOFTWARE/Microsoft/Windows/CurrentVersion/ImmersiveShell
@@ -255,9 +261,4 @@ void NetTimeConfigDialog(int justElevated);
 // BounceWind.c
 int BounceWindOptions(HWND hDlg, dlgmsg_t* dlg);
 void ReleaseTheHound(HWND hwnd, const wchar_t* title, const wchar_t* text, wchar_t* settings);
-
-// Macros
-BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus);
-#define EnableDlgItem(hDlg,id,b) EnableWindow(GetDlgItem((hDlg),(id)),(b))
-#define ShowDlgItem(hDlg,id,b) ShowWindow(GetDlgItem((hDlg),(id)),(b)?SW_SHOW:SW_HIDE)
 

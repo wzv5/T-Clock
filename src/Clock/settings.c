@@ -297,7 +297,7 @@ void FirstTimeSetup(VERSION from_version) {
 		/* fall through */
 	case _2_4_0:
 		// first time update check (firewall warning etc.)
-		api.ShellExecute(NULL, L"misc\\Options", L"-unotify", NULL, SW_HIDE);
+		api.ShellExecute(NULL, L"misc\\Options", L"-unotify", NULL, SW_HIDE, NULL);
 		/* fall through */
 	case CURRENT:
 		break;

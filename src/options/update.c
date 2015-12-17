@@ -32,8 +32,8 @@ static MessageBoxCustomData update_notify_data_ = {
 		{0},
 	},
 	{
-		{L"Automatically check for updates", {3, 3, 114, 8}, 0, 0},
-		{L"include beta versions", {3+114, 3, 80, 8}, BST_MBC_AUTODISABLE, 0},
+		{L"Regularly check for updates", {3, 3, 105, 8}, 0, 0},
+		{L"include beta versions", {3+105, 3, 80, 8}, BST_MBC_AUTODISABLE, 0},
 	},
 	ID_MBC3
 };

@@ -221,6 +221,17 @@ int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name)
 	return 0;
 }
 
+void TranslateDispatchTClockMessage(MSG* msg) {
+	if(!(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,msg))
+	&& !(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,msg))
+	&& !(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,msg))
+	&& !(g_hDlgSNTP && IsWindow(g_hDlgSNTP) && IsDialogMessage(g_hDlgSNTP,msg))
+	&& !(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,msg))){
+		TranslateMessage(msg);
+		DispatchMessage(msg);
+	}
+}
+
 //================================================================================================
 //--------------------------------------------------==-+++--> Entry Point of Program Using WinMain:
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
@@ -357,14 +368,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 		PostMessage(hwndMain,WM_COMMAND,IDM_SHOWPROP,0);
 	}
 	while(GetMessage(&msg, NULL, 0, 0)) {
-		if(!(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg))
-		&& !(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg))
-		&& !(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg))
-		&& !(g_hDlgSNTP && IsWindow(g_hDlgSNTP) && IsDialogMessage(g_hDlgSNTP,&msg))
-		&& !(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,&msg))){
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+		TranslateDispatchTClockMessage(&msg);
 	}
 	
 	RegisterHotkeys(hwndMain, 0);
@@ -482,17 +486,8 @@ void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //--------------
 			else
 				break;
 			MsgWaitForMultipleObjectsEx(0, NULL, timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
-			while(PeekMessage(&msg,NULL,0,0,PM_REMOVE)){
-				if(msg.message == WM_QUIT)
-					break;
-				if(!(g_hwndSheet && IsWindow(g_hwndSheet) && PropSheet_IsDialogMessage(g_hwndSheet,&msg))
-				&& !(g_hDlgTimer && IsWindow(g_hDlgTimer) && IsDialogMessage(g_hDlgTimer,&msg))
-				&& !(g_hDlgTimerWatch && IsWindow(g_hDlgTimerWatch) && IsDialogMessage(g_hDlgTimerWatch,&msg))
-				&& !(g_hDlgSNTP && IsWindow(g_hDlgSNTP) && IsDialogMessage(g_hDlgSNTP,&msg))
-				&& !(g_hDlgStopWatch && IsWindow(g_hDlgStopWatch) && IsDialogStopWatchMessage(g_hDlgStopWatch,&msg))){
-					TranslateMessage(&msg);
-					DispatchMessage(&msg);
-				}
+			while(PeekMessage(&msg,NULL,0,0,PM_REMOVE) && msg.message != WM_QUIT) {
+				TranslateDispatchTClockMessage(&msg);
 			}
 			if(msg.message == WM_QUIT)
 				break;

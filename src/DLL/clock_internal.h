@@ -64,7 +64,7 @@ int Clock_PathExists(const wchar_t* path);
 /** \sa TClockAPI::GetFileAndOption() */
 int Clock_GetFileAndOption(const wchar_t* command, wchar_t* app, wchar_t* params);
 /** \sa TClockAPI::ShellExecute() */
-int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show);
+int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show, HANDLE* hProcess);
 /** \sa TClockAPI::Exec() */
 int Clock_Exec(const wchar_t* app, const wchar_t* params, HWND parent);
 /** \sa TClockAPI::ExecElevated() */

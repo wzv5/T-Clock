@@ -162,8 +162,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		break;
 		
 	case IDM_QUICKY_WINEXP: { //-----------------//--+++--> Windows Explorer Opened
-		ShellExecute(hwnd, L"open", L"Explorer.exe", //-> Correctly at My Computer Level
-					 L"/e, ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", NULL, SW_SHOWNORMAL);
+		api.Exec(L"Explorer", L"/e, ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", hwnd);
 		break;}
 		
 	case IDM_QUICKY_DOS: { // Command Prompt

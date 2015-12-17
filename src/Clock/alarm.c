@@ -428,7 +428,7 @@ void OnTimerAlarm(HWND hwnd, time_t time)   // 12am = Midnight -----------------
 					if(time > schedule->time)
 						schedule->time = time + 86400;
 					api.SetInt64(NULL, UPDATE_TIMESTAMP, schedule->time);
-					api.ShellExecute(NULL, L"misc\\Options", L"-unotify", NULL, SW_HIDE);
+					api.ShellExecute(NULL, L"misc\\Options", L"-unotify", NULL, SW_HIDE, NULL);
 					break;
 #				ifdef WIN2K_COMPAT
 				case SCHEDID_WIN2K:

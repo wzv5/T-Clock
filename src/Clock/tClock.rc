@@ -116,23 +116,25 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED
 CAPTION "About"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "About T-Clock Redux",IDC_STATIC,7,3,295,56
-    ICON            IDI_MAIN,IDC_STATIC,26,13,32,32,SS_ICON|SS_REALSIZEIMAGE
-    CTEXT           "",IDC_ABT_TITLE,68,17,151,11
-//    CTEXT           "White-Tiger 2014 - 2015",IDC_STATIC,103,28,84,10
-    ICON            IDI_STOICJOKER,IDC_STATIC,230,12,32,32,SS_ICON|SS_REALSIZEIMAGE
-    CTEXT           "Stoic",IDC_ABT_StoicJoker,260,19,34,8,SS_CENTER
-    CTEXT           "Joker",IDC_ABT_StoicJoker2,260,28,34,8,SS_CENTER
-    RTEXT           "web:",IDC_ABT_WEB,10,45,21,11
-    LTEXT           "https://github.com/White-Tiger/T-Clock",IDC_ABT_WEBuri,34,45,130,11,SS_NOTIFY
-    RTEXT           "email:",IDC_ABT_MAIL,162,45,25,11
-    LTEXT           "T-Clock@WhiteTiger.e4ward.com",IDC_ABT_MAILuri,189,45,110,11,SS_NOTIFY
-    GROUPBOX        "T-Clock's History",IDC_STATIC,7,64,295,115
-    LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features",IDC_STATIC,13,74,283,20
-    LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.",IDC_STATIC,13,97,283,28
-    LTEXT           "",IDC_ABT_TCLOCK,13,127,283,50
-    DEFPUSHBUTTON   "check for updates", IDC_UPDATE, 96, 28, 102, 14, 0, WS_EX_LEFT
-    CONTROL         "Start T-Clock Redux when Windows starts",IDC_STARTUP,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,42,184,222,11
+    GROUPBOX        "",IDC_ABT_TITLE,7,3,295,56
+    ICON            IDI_MAIN, IDC_STATIC, 26, 13, 32, 32, SS_ICON | SS_REALSIZEIMAGE
+    ICON            IDI_STOICJOKER, IDC_STATIC, 228, 12, 32, 32, SS_ICON | SS_REALSIZEIMAGE
+    CTEXT           "Stoic", IDC_ABT_StoicJoker, 261, 19, 38, 8, SS_CENTER
+    CTEXT           "Joker", IDC_ABT_StoicJoker2, 261, 28, 38, 8, SS_CENTER
+    RTEXT           "web:", IDC_ABT_WEB, 64, 13, 29, 9, SS_RIGHT
+    LTEXT           "https://github.com/White-Tiger/T-Clock", IDC_ABT_WEBuri, 95, 13, 129, 9, SS_NOTIFY
+    RTEXT           "email:", IDC_ABT_MAIL, 64, 24, 29, 9, SS_RIGHT
+    LTEXT           "T-Clock@WhiteTiger.e4ward.com", IDC_ABT_MAILuri, 95, 24, 129, 9, SS_NOTIFY
+    RTEXT           "forum:", IDC_ABT_FORUM, 64, 35, 29, 9, SS_RIGHT
+    LTEXT           "http://donationcoder.com/forum/?board=324.0", IDC_ABT_FORUMuri, 95, 35, 129, 9, SS_NOTIFY
+    AUTOCHECKBOX    "Regularly check for updates", IDC_UPDATE_RELEASE, 29, 47, 105, 8, WS_TABSTOP
+    AUTOCHECKBOX    "include beta versions", IDC_UPDATE_BETA, 142, 46, 83, 8, WS_TABSTOP
+    PUSHBUTTON      "check now", IDC_UPDATE_CHECK, 231, 44, 47, 12, WS_TABSTOP
+    GROUPBOX        "T-Clock's History", IDC_STATIC, 7, 64, 295, 115
+    LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features", IDC_STATIC, 13, 74, 283, 20
+    LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.", IDC_STATIC, 13, 97, 283, 28
+    LTEXT           "",IDC_ABT_TCLOCK, 13, 127, 283, 50
+    AUTOCHECKBOX    "Start T-Clock Redux when Windows starts", IDC_STARTUP, 42, 184, 222, 11, WS_TABSTOP
 END
 
 IDD_PAGEALARM DIALOGEX 0, 0, 310, 199

@@ -222,9 +222,10 @@ struct TClockAPI {
  * \param params = \c NULL (optional program arguments)
  * \param parent = \c NULL (parent window)
  * \param show = \c SW_SHOWNORMAL
+ * \param hProcess = \c HANDLE to launched process, use CloseHandle() to close \e [optional]
  * \return -1 on failure, 0 on success,1 if user canceled
- * \sa ShellExecute(), ShellExecuteEx(), Exec() */
-	int (*ShellExecute)(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show);
+ * \sa ShellExecute(), ShellExecuteEx(), Exec(), ExecElevated() */
+	int (*ShellExecute)(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show, HANDLE* hProcess);
 /**
  * \brief starts an application
  * \param app path to run

@@ -103,14 +103,18 @@
 #define IDM_FWD_LOCKALLTASKBAR          425
 #define IDM_FWD_EXITEXPLORER            518 /* end group (forward commands), end never change */
 /// misc
+#define GROUP_ABT_B_BEGIN               IDC_ABT_TITLE
 #define IDC_ABT_TITLE                   600 /* group */
 #define IDC_ABT_StoicJoker              601
 #define IDC_ABT_StoicJoker2             602
 #define IDC_ABT_WEB                     603
-#define IDC_ABT_MAIL                    604 /* end group */
-#define IDC_ABT_WEBuri                  605
-#define IDC_ABT_MAILuri                 606
-#define IDC_ABT_TCLOCK                  607
+#define IDC_ABT_MAIL                    604
+#define IDC_ABT_FORUM                   605 /* end group */
+#define GROUP_ABT_B_END                 IDC_ABT_FORUM
+#define IDC_ABT_WEBuri                  606
+#define IDC_ABT_MAILuri                 607
+#define IDC_ABT_FORUMuri                608
+#define IDC_ABT_TCLOCK                  609
 #define IDC_QMEN_GROUP1                 700 /* group */
 #define IDC_QMEN_EXITWIN                701 /* group */
 #define IDC_QMEN_AUDIO                  702
@@ -331,7 +335,9 @@
 #define IDC_TONIKAKU                    1611
 #define IDC_WATCHWALL                   1612
 #define IDC_STARTUP                     1613
-#define IDC_UPDATE                      1614
+#define IDC_UPDATE_CHECK                1614
+#define IDC_UPDATE_RELEASE              1615
+#define IDC_UPDATE_BETA                 1616
 #define IDC_LABTESTSOUND                1801
 #define IDC_TESTSOUND                   1802
 #define IDC_TIMERNAME                   1900
