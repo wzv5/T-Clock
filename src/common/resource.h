@@ -37,11 +37,13 @@
 #define IDD_STOPWATCH_EXPORT            132
 #define IDD_CALENDAR_COLOR              133
 #define IDI_MAIN                        190
-#define IDI_STOICJOKER                  191
+#define IDI_ABOUT_LOGO                  191
 #define IDI_PLAY                        192
 #define IDI_STOP                        193
 #define IDI_DEL                         194
 #define IDI_JACKRUSSEL                  195
+#define IDI_STOICJOKER                  196
+#define IDI_STOICJOKER_XMAS             197
 /// messages / commands (menu, hotkey etc)
 #define IDR_MENU                        200
 #define IDC_SOUNDAUDIO                  201 /* group */

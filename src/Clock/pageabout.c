@@ -3,6 +3,7 @@
 //---------------------------------------------------------*/
 // Modified by Stoic Joker: Wednesday, March 3 2010 - 7:17:33
 #include "tclock.h"
+#include <time.h>
 #include "../common/version.h"
 
 static void OnInit(HWND hDlg);
@@ -110,8 +111,28 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	LOGFONT logft;
 	HFONT hftBold;
 	HFONT hftStartup;
+	time_t tt;
+	struct tm tm;
 	SetDlgItemText(hDlg, IDC_ABT_TITLE, ABT_TITLE);
 	SetDlgItemText(hDlg, IDC_ABT_TCLOCK, ABT_TCLOCK);
+	
+	time(&tt);
+	gmtime_r(&tt, &tm);
+	if((tm.tm_mon == 11 && tm.tm_mday >= 18)) {
+		HWND logo = GetDlgItem(hDlg, IDI_ABOUT_LOGO);
+		HICON ico = LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_STOICJOKER_XMAS), IMAGE_ICON, 0,0, LR_SHARED);
+		Static_SetIcon(logo, ico);
+		SetDlgItemText(hDlg, IDC_ABT_StoicJoker, L"Merry");
+		SetDlgItemText(hDlg, IDC_ABT_StoicJoker2, L"Xmas");
+//		SetDlgItemText(hDlg, IDC_ABT_StoicJoker, L"Happy");
+//		SetDlgItemText(hDlg, IDC_ABT_StoicJoker2, L"Holidays");
+	} else if(!(tm.tm_sec % 11) && tm.tm_sec) {
+		HWND logo = GetDlgItem(hDlg, IDI_ABOUT_LOGO);
+		HICON ico = LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_STOICJOKER), IMAGE_ICON, 0,0, LR_SHARED);
+		Static_SetIcon(logo, ico);
+		SetDlgItemText(hDlg, IDC_ABT_StoicJoker, L"Stoic");
+		SetDlgItemText(hDlg, IDC_ABT_StoicJoker2, L"Joker");
+	}
 	
 	hftBold = (HFONT)SendMessage(hDlg, WM_GETFONT, 0, 0);
 	GetObject(hftBold, sizeof(logft), &logft);

@@ -118,9 +118,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "",IDC_ABT_TITLE,7,3,295,56
     ICON            IDI_MAIN, IDC_STATIC, 26, 13, 32, 32, SS_ICON | SS_REALSIZEIMAGE
-    ICON            IDI_STOICJOKER, IDC_STATIC, 228, 12, 32, 32, SS_ICON | SS_REALSIZEIMAGE
-    CTEXT           "Stoic", IDC_ABT_StoicJoker, 261, 19, 38, 8, SS_CENTER
-    CTEXT           "Joker", IDC_ABT_StoicJoker2, 261, 28, 38, 8, SS_CENTER
+    ICON            IDI_ABOUT_LOGO, IDI_ABOUT_LOGO, 228, 12, 32, 32, SS_ICON | SS_REALSIZEIMAGE
+    CTEXT           "White", IDC_ABT_StoicJoker, 261, 19, 38, 8, SS_CENTER
+    CTEXT           "Tiger", IDC_ABT_StoicJoker2, 261, 28, 38, 8, SS_CENTER
     RTEXT           "web:", IDC_ABT_WEB, 64, 13, 29, 9, SS_RIGHT
     LTEXT           "https://github.com/White-Tiger/T-Clock", IDC_ABT_WEBuri, 95, 13, 129, 9, SS_NOTIFY
     RTEXT           "email:", IDC_ABT_MAIL, 64, 24, 29, 9, SS_RIGHT
@@ -572,7 +572,9 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_MAIN                ICON                    "Clock.ico"
-IDI_STOICJOKER          ICON                    "Logo.ico"
+IDI_ABOUT_LOGO          ICON                    "../common/icons/white-tiger.ico"
+IDI_STOICJOKER          ICON                    "../common/icons/stoic.ico"
+IDI_STOICJOKER_XMAS     ICON                    "../common/icons/xmas_stoic.ico"
 IDI_PLAY                ICON                    "PLAY.ico"
 IDI_STOP                ICON                    "stop.ico"
 IDI_DEL                 ICON                    "del.ico"
