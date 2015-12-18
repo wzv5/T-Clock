@@ -12,17 +12,17 @@
 #define ID_WIZFINISH			0x3025
 
 static int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam);
-static LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK Window_PropertySheet_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 // dialog procedures of each page
-INT_PTR CALLBACK PageAboutProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageAlarmProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageMouseProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageColorProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageQuickyProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageFormatProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageHotKeyProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK PageMiscProc(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_About(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_Alarm(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_Mouse(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_Color(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_Quicky(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_Format(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_HotKey(HWND, UINT, WPARAM, LPARAM);
+INT_PTR CALLBACK Page_Misc(HWND, UINT, WPARAM, LPARAM);
 
 static WNDPROC m_oldWndProc; // to save default window procedure
 static int m_startpage = 0; // page to open first
@@ -36,10 +36,10 @@ char g_bApplyClock = 0;
 void MyPropertySheet(int page)   //---------------------------------------------------------+++-->
 {
 	const DLGPROC PageProc[]={
-		PageAboutProc, PageAlarmProc,
-		PageColorProc, PageFormatProc, PageMouseProc,
-		PageQuickyProc,
-		PageHotKeyProc, PageMiscProc,
+		Page_About, Page_Alarm,
+		Page_Color, Page_Format, Page_Mouse,
+		Page_Quicky,
+		Page_HotKey, Page_Misc,
 	};
 	if(!g_hwndSheet || (g_hwndSheet != (HWND)(intptr_t)1 && !IsWindow(g_hwndSheet))) {
 		#define PROPERTY_NUM _countof(PageProc)
@@ -77,14 +77,14 @@ int CALLBACK PropSheetProc(HWND hDlg, UINT uMsg, LPARAM  lParam)   //-----------
 	(void)lParam;
 	if(uMsg == PSCB_INITIALIZED) {
 		// subclass the window
-		m_oldWndProc = SubclassWindow(hDlg, SubclassProc);
+		m_oldWndProc = SubclassWindow(hDlg, Window_PropertySheet_Hooked);
 	}
 	return 0;
 }
 /*--------------------------------------------------------
    window procedure of subclassed property sheet
 ---------------------------------------------------------*/
-LRESULT CALLBACK SubclassProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Window_PropertySheet_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message){
 	case WM_DESTROY:

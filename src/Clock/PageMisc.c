@@ -23,7 +23,7 @@ static CalendarPreset m_calendar_preset[CALENDAR_PRESETS] = {
 };
 static char m_calendar_dirty;
 
-static INT_PTR CALLBACK DlgProcCalendarColors(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam){
+static INT_PTR CALLBACK Window_CalendarColorConfigDlg(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam){
 	switch(msg){
 	case WM_INITDIALOG:{
 		ColorBox colors[6];
@@ -122,7 +122,7 @@ static INT_PTR CALLBACK DlgProcCalendarColors(HWND hDlg, UINT msg, WPARAM wParam
 
 //================================================================================================
 //---------------------------------------------+++--> Dialog Procedure of Miscellaneous Tab Dialog:
-INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //------+++-->
+INT_PTR CALLBACK Page_Misc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
 	switch(message) {
 	case WM_INITDIALOG:
@@ -148,7 +148,7 @@ INT_PTR CALLBACK PageMiscProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 			}else if(id==IDC_CALCOLORS) {
 				INITCOMMONCONTROLSEX icex = {sizeof(icex), ICC_DATE_CLASSES};
 				InitCommonControlsEx(&icex);
-				DialogBox(NULL,MAKEINTRESOURCE(IDD_CALENDAR_COLOR),hDlg,DlgProcCalendarColors);
+				DialogBox(NULL, MAKEINTRESOURCE(IDD_CALENDAR_COLOR), hDlg, Window_CalendarColorConfigDlg);
 			}
 			
 			if((id==IDC_FIRSTWEEK&&code==CBN_SELCHANGE) || (id==IDC_FIRSTDAY&&code==CBN_SELCHANGE) || (id==IDC_CALMONTHS&&code==EN_CHANGE) || (id==IDC_CALMONTHSPAST&&code==EN_CHANGE) || id==IDC_OLDCALENDAR)

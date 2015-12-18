@@ -164,7 +164,7 @@ void CALLBACK HttpProgress(HINTERNET hInternet, DWORD_PTR userdata, unsigned lon
 	}
 }
 
-static INT_PTR CALLBACK UpdateCheck_Proc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+static INT_PTR CALLBACK Window_UpdateCheckDlg(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	const wchar_t* kValueNextVersion[2] = {UPDATE_RELEASE, UPDATE_BETA};
 	const char* kVersionType[2] = {"Release", "Beta"};
 	UpdateData* data;
@@ -427,7 +427,7 @@ int UpdateCheck(int type) {
 			return IDCANCEL;
 		}
 	}
-	ret = DialogBoxParam(g_instance, MAKEINTRESOURCE(IDD_UPDATECHECK), NULL, UpdateCheck_Proc, type);
+	ret = DialogBoxParam(g_instance, MAKEINTRESOURCE(IDD_UPDATECHECK), NULL, Window_UpdateCheckDlg, type);
 	CloseHandle(updatelock);
 	return ret;
 }

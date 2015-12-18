@@ -33,7 +33,7 @@ BOOL GetSetTimePermissions();
 
 static void OnInit(HWND hDlg);
 static void OnSanshoAlarm(HWND hDlg, WORD id);
-static INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 //================================================================================================
 //---------------------------//----------------------------+++--> Save Request Results in SNTP.log:
 void Log(const char* msg)   //--------------------------------------------------------------+++-->
@@ -349,7 +349,7 @@ and add your username to "Change the system time"). I don't know of any specific
 //--------------------------------//---------------------+++--> Open the SNTP Configuration Dialog:
 void NetTimeConfigDialog(int justElevated)   //---------------------------------------------------------+++-->
 {
-	CreateDialogParamOnce(&g_hDlgSNTP, 0, MAKEINTRESOURCE(IDD_SNTPCONFIG), NULL, DlgProcSNTPConfig, (LPARAM)justElevated);
+	CreateDialogParamOnce(&g_hDlgSNTP, 0, MAKEINTRESOURCE(IDD_SNTPCONFIG), NULL, Window_SNTPConfig, (LPARAM)justElevated);
 }
 //================================================================================================
 //--------------------------//--+++--> Save Network Time Server Configuration Settings to Registry:
@@ -395,7 +395,7 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 }
 //================================================================================================
 //------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
-INT_PTR CALLBACK DlgProcSNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch(msg)  {
 	case WM_INITDIALOG:

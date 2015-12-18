@@ -9,12 +9,12 @@ void AddListBoxRows(HWND);
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 
-INT_PTR CALLBACK PageQuickyMenuProc(HWND, UINT, WPARAM, LPARAM); // PageQuickyMenu.c
+INT_PTR CALLBACK Page_QuickyMenu(HWND, UINT, WPARAM, LPARAM); // PageQuickyMenu.c
 
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 //================================================================================================
 //----------------------------------------+++--> Dialog Procedure for Quicky Menus Dialog Messages:
-INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
+INT_PTR CALLBACK Page_Quicky(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
 {
 	switch(message) {
 	case WM_INITDIALOG:{
@@ -72,8 +72,8 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			for(i=IDC_QMEN_GROUP1; i<=IDC_QMEN_LIST; ++i) {
 				ShowDlgItem(hDlg,i,0);
 			}
-			CreateDialogParam(0,MAKEINTRESOURCE(IDD_QUICKY_ADD),hDlg,PageQuickyMenuProc,item); // initializes and kills itself
-		}else if(noti->code==NM_DBLCLK) {
+			CreateDialogParam(0, MAKEINTRESOURCE(IDD_QUICKY_ADD), hDlg, Page_QuickyMenu, item); // initializes and kills itself
+		}else if(noti->code == NM_DBLCLK) {
 			NMITEMACTIVATE* itm=(NMITEMACTIVATE*)noti;
 			int i;
 			if(itm->iItem==-1)
@@ -81,7 +81,7 @@ INT_PTR CALLBACK PageQuickyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			for(i=IDC_QMEN_GROUP1; i<=IDC_QMEN_LIST; ++i) {
 				ShowDlgItem(hDlg,i,0);
 			}
-			CreateDialogParam(0,MAKEINTRESOURCE(IDD_QUICKY_ADD),hDlg,PageQuickyMenuProc,itm->iItem); // initializes and kills itself
+			CreateDialogParam(0, MAKEINTRESOURCE(IDD_QUICKY_ADD), hDlg, Page_QuickyMenu, itm->iItem); // initializes and kills itself
 		}
 		return TRUE;}
 	}

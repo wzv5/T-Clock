@@ -28,7 +28,7 @@ static void SetUpdateChecks(HWND hDlg, int state/* = 0*/) {
 
 #define SendPSChanged(hDlg) SendMessage(GetParent(hDlg),PSM_CHANGED,(WPARAM)(hDlg),0)
 /////////////////////////////////////////////////////////////////////////////////////
-INT_PTR CALLBACK PageAboutProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Page_About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
 	case WM_INITDIALOG:

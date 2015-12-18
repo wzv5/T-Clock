@@ -23,9 +23,9 @@ LRESULT OnCalcRect(HWND hwnd);
 void OnCopy(HWND hwnd, LPARAM lParam);
 void OnTooltipNeedText(UINT code, LPARAM lParam);
 void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100);
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
-LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+static LRESULT CALLBACK Window_SecondaryClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+static LRESULT CALLBACK Window_SecondaryTaskbarWorker_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 /*------------------------------------------------
   globals
@@ -423,7 +423,7 @@ void ShowTip(HWND clock){
 void SubsDestroy(){
 	for(; m_multiClocks; ) {
 		if(IsWindow(m_multiClock[--m_multiClocks].worker)) {
-			RemoveWindowSubclass(m_multiClock[m_multiClocks].worker, WndProcMultiClockWorker, m_multiClocks);
+			RemoveWindowSubclass(m_multiClock[m_multiClocks].worker, Window_SecondaryTaskbarWorker_Hooked, m_multiClocks);
 			SendMessage(m_multiClock[m_multiClocks].clock, WM_CLOSE, 0, 0);
 			SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0,0,
 						m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
@@ -456,7 +456,7 @@ void SubsCreate(){
 				for(clock_id=0; clock_id<m_multiClocks && hwndChild!=m_multiClock[clock_id].worker; ++clock_id); // try to find existing
 				if(clock_id==m_multiClocks){ // new
 					if(!m_multiClockClass){
-						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX),CS_PARENTDC,WndProcMultiClock,0,0,0/*hInstance*/,NULL,NULL,NULL,NULL,L"SecondaryTrayClockWClass",NULL};
+						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX), CS_PARENTDC, Window_SecondaryClock, 0, 0, 0/*hInstance*/, NULL, NULL, NULL, NULL, L"SecondaryTrayClockWClass", NULL};
 						wndclass.hCursor = LoadCursor(NULL,IDC_ARROW);
 						wndclass.hInstance = api.hInstance;
 						m_multiClockClass = RegisterClassEx(&wndclass);
@@ -466,7 +466,7 @@ void SubsCreate(){
 						break;
 					m_multiClock[clock_id].worker = hwndChild;
 					GetClientRect(hwndChild, &m_multiClock[clock_id].workerRECT);
-					SetWindowSubclass(hwndChild, WndProcMultiClockWorker, clock_id, (DWORD_PTR)&m_multiClock[clock_id]);
+					SetWindowSubclass(hwndChild, Window_SecondaryTaskbarWorker_Hooked, clock_id, (DWORD_PTR)&m_multiClock[clock_id]);
 					++m_multiClocks;
 				}
 				break;
@@ -495,7 +495,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 		}
 	}
 	
-	SetWindowSubclass(hwnd, WndProc, 0, 0);
+	SetWindowSubclass(hwnd, Window_Clock_Hooked, 0, 0);
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
 	MyDragDrop_Init();
@@ -514,9 +514,9 @@ static void SelfDestruct(void* hwnd)
 	// we could use FreeLibraryAndExitThread on XP+, but this "hack" should be ok for now.
 	CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)FreeLibrary,&__ImageBase,0,NULL); // die painfully
 }
-//================================================================================================
-//----------------------------------+++--> End Clock Procedure (WndProc) - (Before?) Removing Hook:
-void EndClock(HWND hwnd)   //--------------------------------------------------------------------+++-->
+//==============================================================================
+//---+++--> End Clock Procedure (Window_Clock_Hooked) - (Before?) Removing Hook:
+void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 {
 	SubsDestroy();
 	if(m_multiClockClass){
@@ -527,7 +527,7 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 	MyDragDrop_DeInit();
 	
 	KillTimer(hwnd, TCLOCK_TIMER_ID);
-	RemoveWindowSubclass(hwnd, WndProc, 0);
+	RemoveWindowSubclass(hwnd, Window_Clock_Hooked, 0);
 	// Windows uses timer ID 0 for every-minute drawing
 	// make sure it is set (again)
 	SetTimer(hwnd, WIN_CLOCK_TIMER_ID, 10*1000, NULL);
@@ -541,12 +541,12 @@ void EndClock(HWND hwnd)   //---------------------------------------------------
 //		PostMessage(g_hwndTClockMain, MAINM_EXIT, 0, 0);
 	_beginthread(SelfDestruct, 0, hwnd);
 }
-static LRESULT CALLBACK HookedTooltip_Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+static LRESULT CALLBACK Window_ClockTooltip_Hooked(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
 	(void)dwRefData;
 	
 	switch(uMsg) {
 	case WM_DESTROY:
-		RemoveWindowSubclass(hwnd, HookedTooltip_Proc, uIdSubclass);
+		RemoveWindowSubclass(hwnd, Window_ClockTooltip_Hooked, uIdSubclass);
 		break;
 	case WM_WINDOWPOSCHANGING: {
 		WINDOWPOS* pwp = (WINDOWPOS*)lParam;
@@ -558,12 +558,12 @@ static LRESULT CALLBACK HookedTooltip_Proc(HWND hwnd, UINT uMsg, WPARAM wParam, 
 /*------------------------------------------------
   subclass procedure of the clock
 --------------------------------------------------*/
-LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	(void)dwRefData;
 	switch(message){
 	case WM_DESTROY:
-		RemoveWindowSubclass(hwnd, WndProc, uIdSubclass);
+		RemoveWindowSubclass(hwnd, Window_Clock_Hooked, uIdSubclass);
 		DestroyClock();
 		break;
 	case(WM_USER+100):// send by windows to get clock size
@@ -689,7 +689,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, 
 					api.PositionWindow(tooltip, 0);
 					// hook to prevent any non-authorized move
 					// (Windows sometimes moves the tooltip for unknown reason)
-					SetWindowSubclass(tooltip, HookedTooltip_Proc, 0, 0);
+					SetWindowSubclass(tooltip, Window_ClockTooltip_Hooked, 0, 0);
 				}
 			}
 		}
@@ -779,9 +779,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, 
 	return DefSubclassProc(hwnd, message, wParam, lParam);
 }
 /*------------------------------------------------
-  subclass procedure of the 2nd+ taskbar clock (used to handle clicks, etc.)
+  window procedure of the secondary taskbar clock(s)
 --------------------------------------------------*/
-LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK Window_SecondaryClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message){
 	case WM_NCCREATE:{
@@ -824,19 +824,19 @@ LRESULT CALLBACK WndProcMultiClock(HWND hwnd, UINT message, WPARAM wParam, LPARA
 	case WM_MOUSEMOVE:
 	case WM_MOUSEHOVER:
 	case WM_MOUSELEAVE:
-		return WndProc(hwnd, message, wParam, lParam, 0, 0); // quite dangerous call
+		return Window_Clock_Hooked(hwnd, message, wParam, lParam, 0, 0); // quite dangerous call
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
 /*------------------------------------------------
-  subclass procedure of the 2nd+ taskbar "worker" area (used to resize and allow own clock)
+  subclass procedure of the secondary taskbar "worker" area (used to resize and allow own clock)
 --------------------------------------------------*/
-LRESULT CALLBACK WndProcMultiClockWorker(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
+static LRESULT CALLBACK Window_SecondaryTaskbarWorker_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData)
 {
 	MultiClock* self = (MultiClock*)dwRefData;
 	switch(message) {
 	case WM_DESTROY:
-		RemoveWindowSubclass(hwnd, WndProcMultiClockWorker, uIdSubclass);
+		RemoveWindowSubclass(hwnd, Window_SecondaryTaskbarWorker_Hooked, uIdSubclass);
 		break;
 	case WM_WINDOWPOSCHANGING:{
 		int x,y,cx,cy;

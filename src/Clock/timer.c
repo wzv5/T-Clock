@@ -152,36 +152,36 @@ void ToggleTimer(int id)   //--------------------------------+++-->
 	}
 }
 
-static void OnOK(HWND hDlg);
-static void OnDel(HWND hDlg);
-static void OnInit(HWND hDlg);
-static void OnDestroy(HWND hDlg);
-static void OnStopTimer(HWND hDlg);
-static void OnTimerName(HWND hDlg);
+static void OnOK(HWND hwnd);
+static void OnDel(HWND hwnd);
+static void OnInit(HWND hwnd);
+static void OnDestroy(HWND hwnd);
+static void OnStopTimer(HWND hwnd);
+static void OnTimerName(HWND hwnd);
 static void Ring(HWND hwnd, int id);
-static void OnTest(HWND hDlg, WORD id);
-static void OnSanshoAlarm(HWND hDlg, WORD id);
+static void OnTest(HWND hwnd, WORD id);
+static void OnSanshoAlarm(HWND hwnd, WORD id);
 static void UpdateNextCtrl(HWND hWnd, int iSpin, int iEdit, char bGoUp);
 
-INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK Window_Timer(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 //=========================================================================================*
 // ------------------------------------------------------------- Open Add/Edit Timers Dialog
 //===========================================================================================*
 void DialogTimer()
 {
-	CreateDialogParamOnce(&g_hDlgTimer, 0, MAKEINTRESOURCE(IDD_TIMER), NULL, DlgProcTimer, 0);
+	CreateDialogParamOnce(&g_hDlgTimer, 0, MAKEINTRESOURCE(IDD_TIMER), NULL, Window_Timer, 0);
 }
 //==============================================================================*
 // ---------------------------------- Dialog Procedure for Add/Edit Timers Dialog
 //================================================================================*
-INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Window_Timer(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
 	case WM_INITDIALOG:
-		OnInit(hDlg);
+		OnInit(hwnd);
 		return TRUE;
 	case WM_DESTROY:
-		OnDestroy(hDlg);
+		OnDestroy(hwnd);
 		break;
 		
 	case WM_COMMAND: {
@@ -189,31 +189,31 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 			WORD code = HIWORD(wParam);
 			switch(id) {
 			case IDC_TIMERDEL:
-				OnDel(hDlg);
+				OnDel(hwnd);
 				break;
 				
 			case IDOK:
-				OnOK(hDlg);
+				OnOK(hwnd);
 				/* fall through */
 			case IDCANCEL:
-				DestroyWindow(hDlg);
+				DestroyWindow(hwnd);
 				break;
 				
 			case IDC_TIMERNAME:
-				if(code==CBN_EDITCHANGE) OnTimerName(hDlg);
-				else if(code==CBN_SELCHANGE) PostMessage(hDlg, WM_COMMAND, MAKEWPARAM(id, CBN_EDITCHANGE), lParam);
+				if(code==CBN_EDITCHANGE) OnTimerName(hwnd);
+				else if(code==CBN_SELCHANGE) PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(id, CBN_EDITCHANGE), lParam);
 				break;
 				
 			case IDCB_STOPTIMER:
-				OnStopTimer(hDlg);
+				OnStopTimer(hwnd);
 				break;
 				
 			case IDC_TIMERSANSHO:
-				OnSanshoAlarm(hDlg, id);
+				OnSanshoAlarm(hwnd, id);
 				break;
 				
 			case IDC_TIMERTEST:
-				OnTest(hDlg, id);
+				OnTest(hwnd, id);
 				break;
 			}
 			return TRUE;
@@ -229,71 +229,71 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 				if(lpnmud->iDelta > 0) { // User Selected the Up Arrow
 					switch(LOWORD(wParam)) { //--+++--> on One of the Timer Controls.
 					case IDC_TIMERSECSPIN:
-						i = GetDlgItemInt(hDlg, IDC_TIMERSECOND, NULL, TRUE);
+						i = GetDlgItemInt(hwnd, IDC_TIMERSECOND, NULL, TRUE);
 						if(i == 59)
-							UpdateNextCtrl(hDlg, IDC_TIMERMINSPIN, IDC_TIMERMINUTE, TRUE);
+							UpdateNextCtrl(hwnd, IDC_TIMERMINSPIN, IDC_TIMERMINUTE, TRUE);
 						break;
 						
 					case IDC_TIMERMINSPIN:
-						i = GetDlgItemInt(hDlg, IDC_TIMERMINUTE, NULL, TRUE);
+						i = GetDlgItemInt(hwnd, IDC_TIMERMINUTE, NULL, TRUE);
 						if(lpnmud->iDelta == 4) {
 							if(i < 59)
-								SetDlgItemInt(hDlg, IDC_TIMERMINUTE, i+1, TRUE);
+								SetDlgItemInt(hwnd, IDC_TIMERMINUTE, i+1, TRUE);
 						}
 						if(i == 59)
-							UpdateNextCtrl(hDlg, IDC_TIMERHORSPIN, IDC_TIMERHOUR, TRUE);
+							UpdateNextCtrl(hwnd, IDC_TIMERHORSPIN, IDC_TIMERHOUR, TRUE);
 						break;
 						
 					case IDC_TIMERHORSPIN:
-						i = GetDlgItemInt(hDlg, IDC_TIMERHOUR, NULL, TRUE);
+						i = GetDlgItemInt(hwnd, IDC_TIMERHOUR, NULL, TRUE);
 						if(lpnmud->iDelta == 4) {
 							if(i < 23)
-								SetDlgItemInt(hDlg, IDC_TIMERHOUR, i+1, TRUE);
+								SetDlgItemInt(hwnd, IDC_TIMERHOUR, i+1, TRUE);
 						}
 						if(i == 23)
-							UpdateNextCtrl(hDlg, IDC_TIMERDAYSPIN, IDC_TIMERDAYS, TRUE);
+							UpdateNextCtrl(hwnd, IDC_TIMERDAYSPIN, IDC_TIMERDAYS, TRUE);
 						break;
 						
 					case IDC_TIMERDAYSPIN:
 						if(lpnmud->iDelta == 4) {
-							i = GetDlgItemInt(hDlg, IDC_TIMERDAYS, NULL, TRUE);
+							i = GetDlgItemInt(hwnd, IDC_TIMERDAYS, NULL, TRUE);
 							if(i < 7)
-								SetDlgItemInt(hDlg, IDC_TIMERDAYS, i+1, TRUE);
+								SetDlgItemInt(hwnd, IDC_TIMERDAYS, i+1, TRUE);
 						} break;
 					}
 				} else { //--+++--> User Selected the Down Arrow
 					switch(LOWORD(wParam)) { // on One of the Timer Controls.
 					case IDC_TIMERSECSPIN:
 						if(lpnmud->iDelta == -4) {
-							i = GetDlgItemInt(hDlg, IDC_TIMERSECOND, NULL, TRUE);
+							i = GetDlgItemInt(hwnd, IDC_TIMERSECOND, NULL, TRUE);
 							if(i > 0)
-								SetDlgItemInt(hDlg, IDC_TIMERSECOND, i -1, TRUE);
+								SetDlgItemInt(hwnd, IDC_TIMERSECOND, i -1, TRUE);
 						} break;
 						
 					case IDC_TIMERMINSPIN:
-						i = GetDlgItemInt(hDlg, IDC_TIMERMINUTE, NULL, TRUE);
+						i = GetDlgItemInt(hwnd, IDC_TIMERMINUTE, NULL, TRUE);
 						if(lpnmud->iDelta == -4) {
 							if(i > 0)
-								SetDlgItemInt(hDlg, IDC_TIMERMINUTE, i -1, TRUE);
+								SetDlgItemInt(hwnd, IDC_TIMERMINUTE, i -1, TRUE);
 						}
 						if(i == 0)
-							UpdateNextCtrl(hDlg, IDC_TIMERSECSPIN, IDC_TIMERSECOND, FALSE);
+							UpdateNextCtrl(hwnd, IDC_TIMERSECSPIN, IDC_TIMERSECOND, FALSE);
 						break;
 						
 					case IDC_TIMERHORSPIN:
-						i = GetDlgItemInt(hDlg, IDC_TIMERHOUR, NULL, TRUE);
+						i = GetDlgItemInt(hwnd, IDC_TIMERHOUR, NULL, TRUE);
 						if(lpnmud->iDelta == -4) {
 							if(i > 0)
-								SetDlgItemInt(hDlg, IDC_TIMERHOUR, i -1, TRUE);
+								SetDlgItemInt(hwnd, IDC_TIMERHOUR, i -1, TRUE);
 						}
 						if(i == 0)
-							UpdateNextCtrl(hDlg, IDC_TIMERMINSPIN, IDC_TIMERMINUTE, FALSE);
+							UpdateNextCtrl(hwnd, IDC_TIMERMINSPIN, IDC_TIMERMINUTE, FALSE);
 						break;
 						
 					case IDC_TIMERDAYSPIN:
-						i = GetDlgItemInt(hDlg, IDC_TIMERDAYS, NULL, TRUE);
+						i = GetDlgItemInt(hwnd, IDC_TIMERDAYS, NULL, TRUE);
 						if(i == 0)
-							UpdateNextCtrl(hDlg, IDC_TIMERHORSPIN, IDC_TIMERHOUR, FALSE);
+							UpdateNextCtrl(hwnd, IDC_TIMERHORSPIN, IDC_TIMERHOUR, FALSE);
 						break;
 					}
 				}
@@ -305,16 +305,16 @@ INT_PTR CALLBACK DlgProcTimer(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 	case MM_MCINOTIFY:
 	case MM_WOM_DONE:
 		StopFile();
-		SendDlgItemMessage(hDlg, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
+		SendDlgItemMessage(hwnd, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
 		return TRUE;
 	}
 	return FALSE;
 }
 //================================================================================================
 //------------------------//------------------------+++--> free memories associated with combo box:
-void OnDestroy(HWND hDlg)   //--------------------------------------------------------------+++-->
+void OnDestroy(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
-	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
+	HWND timer_cb = GetDlgItem(hwnd, IDC_TIMERNAME);
 	int idx;
 	int count = ComboBox_GetCount(timer_cb);
 	StopFile();
@@ -325,22 +325,22 @@ void OnDestroy(HWND hDlg)   //--------------------------------------------------
 }
 //================================================================================================
 //------------------------//----------------------------------+++--> Initialize the "Timer" Dialog:
-void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
+void OnInit(HWND hwnd)   //-----------------------------------------------------------------+++-->
 {
-	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
-	HWND file_cb = GetDlgItem(hDlg, IDC_TIMERFILE);
+	HWND timer_cb = GetDlgItem(hwnd, IDC_TIMERNAME);
+	HWND file_cb = GetDlgItem(hwnd, IDC_TIMERFILE);
 	wchar_t subkey[TNY_BUFF];
 	size_t offset;
 	int idx, count;
 	timeropt_t* pts;
 	
-	SendMessage(hDlg, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
-	SendMessage(hDlg, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
+	SendMessage(hwnd, WM_SETICON, ICON_SMALL,(LPARAM)g_hIconTClock);
+	SendMessage(hwnd, WM_SETICON, ICON_BIG,(LPARAM)g_hIconTClock);
 	// init dialog items
-	SendDlgItemMessage(hDlg, IDC_TIMERSECSPIN, UDM_SETRANGE32, 0,59); // 60 Seconds Max
-	SendDlgItemMessage(hDlg, IDC_TIMERMINSPIN, UDM_SETRANGE32, 0,59); // 60 Minutes Max
-	SendDlgItemMessage(hDlg, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
-	SendDlgItemMessage(hDlg, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
+	SendDlgItemMessage(hwnd, IDC_TIMERSECSPIN, UDM_SETRANGE32, 0,59); // 60 Seconds Max
+	SendDlgItemMessage(hwnd, IDC_TIMERMINSPIN, UDM_SETRANGE32, 0,59); // 60 Minutes Max
+	SendDlgItemMessage(hwnd, IDC_TIMERHORSPIN, UDM_SETRANGE32, 0,23); // 24 Hours Max
+	SendDlgItemMessage(hwnd, IDC_TIMERDAYSPIN, UDM_SETRANGE32, 0,7); //  7 Days Max
 	/// add default sound files to file dropdown
 	ComboBoxArray_AddSoundFiles(&file_cb, 1);
 	// add timer to combobox
@@ -367,17 +367,17 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	ComboBox_AddString(timer_cb, pts->name);
 	ComboBox_SetItemData(timer_cb, count, pts);
 	ComboBox_SetCurSel(timer_cb, 0);
-	OnTimerName(hDlg);
-	SendDlgItemMessage(hDlg, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
-	SendDlgItemMessage(hDlg, IDC_TIMERDEL, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconDel);
+	OnTimerName(hwnd);
+	SendDlgItemMessage(hwnd, IDC_TIMERTEST, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
+	SendDlgItemMessage(hwnd, IDC_TIMERDEL, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconDel);
 	
-	api.PositionWindow(hDlg,21);
+	api.PositionWindow(hwnd,21);
 }
 //================================================================================================
 //--{ START TIMER }-----//-----------------+++--> Called When "OK" Button is Clicked (Start Timer):
-void OnOK(HWND hDlg)   //-------------------------------------------------------------------+++-->
+void OnOK(HWND hwnd)   //-------------------------------------------------------------------+++-->
 {
-	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
+	HWND timer_cb = GetDlgItem(hwnd, IDC_TIMERNAME);
 	int idx, count, seconds, minutes, hours, days;
 	wchar_t subkey[TNY_BUFF];
 	size_t offset;
@@ -400,10 +400,10 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	}
 	wsprintf(subkey+offset, FMT("%d"), idx+1);
 	api.SetStr(subkey, L"Name", name);
-	seconds = GetDlgItemInt(hDlg, IDC_TIMERSECOND, 0, 0);
-	minutes = GetDlgItemInt(hDlg, IDC_TIMERMINUTE, 0, 0);
-	hours   = GetDlgItemInt(hDlg, IDC_TIMERHOUR,   0, 0);
-	days    = GetDlgItemInt(hDlg, IDC_TIMERDAYS,   0, 0);
+	seconds = GetDlgItemInt(hwnd, IDC_TIMERSECOND, 0, 0);
+	minutes = GetDlgItemInt(hwnd, IDC_TIMERMINUTE, 0, 0);
+	hours   = GetDlgItemInt(hwnd, IDC_TIMERHOUR,   0, 0);
+	days    = GetDlgItemInt(hwnd, IDC_TIMERDAYS,   0, 0);
 	if(seconds>59) for(; seconds>59; seconds-=60,++minutes);
 	if(minutes>59) for(; minutes>59; minutes-=60,++hours);
 	if(hours>23) for(; hours>23; hours-=24,++days);
@@ -414,11 +414,11 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 	api.SetInt(subkey, L"Hours",   hours);
 	api.SetInt(subkey, L"Days",    days);
 	
-	GetDlgItemText(hDlg, IDC_TIMERFILE, fname, _countof(fname));
+	GetDlgItemText(hwnd, IDC_TIMERFILE, fname, _countof(fname));
 	api.SetStr(subkey, L"File", fname);
 	
-	api.SetInt(subkey, L"Repeat", IsDlgButtonChecked(hDlg, IDC_TIMERREPEAT));
-	api.SetInt(subkey, L"Blink",  IsDlgButtonChecked(hDlg, IDC_TIMERBLINK));
+	api.SetInt(subkey, L"Repeat", IsDlgButtonChecked(hwnd, IDC_TIMERREPEAT));
+	api.SetInt(subkey, L"Blink",  IsDlgButtonChecked(hwnd, IDC_TIMERBLINK));
 	api.SetInt(subkey, L"Active",  TRUE);
 	if(idx == count)
 		api.SetInt(g_szTimersSubKey, L"NumberOfTimers", idx+1);
@@ -427,9 +427,9 @@ void OnOK(HWND hDlg)   //-------------------------------------------------------
 }
 //================================================================================================
 //-----------------------------//-----+++--> Load the Data Set For Timer X When Its Name is Called:
-void OnTimerName(HWND hDlg)   //------------------------------------------------------------+++-->
+void OnTimerName(HWND hwnd)   //------------------------------------------------------------+++-->
 {
-	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
+	HWND timer_cb = GetDlgItem(hwnd, IDC_TIMERNAME);
 	wchar_t name[TNY_BUFF];
 	int idx, count;
 	
@@ -439,49 +439,49 @@ void OnTimerName(HWND hDlg)   //------------------------------------------------
 		timeropt_t* pts;
 		pts = (timeropt_t*)ComboBox_GetItemData(timer_cb, idx);
 		if(!wcscmp(name, pts->name)){
-			SetDlgItemInt(hDlg, IDC_TIMERSECOND,	pts->second, 0);
-			SetDlgItemInt(hDlg, IDC_TIMERMINUTE,	pts->minute, 0);
-			SetDlgItemInt(hDlg, IDC_TIMERHOUR,		pts->hour,   0);
-			SetDlgItemInt(hDlg, IDC_TIMERDAYS,		pts->day,    0);
-			ComboBox_AddStringOnce(GetDlgItem(hDlg,IDC_TIMERFILE), pts->fname, 1);
-			CheckDlgButton(hDlg, IDC_TIMERREPEAT,	pts->bRepeat);
-			CheckDlgButton(hDlg, IDC_TIMERBLINK,	pts->bBlink);
+			SetDlgItemInt(hwnd, IDC_TIMERSECOND,	pts->second, 0);
+			SetDlgItemInt(hwnd, IDC_TIMERMINUTE,	pts->minute, 0);
+			SetDlgItemInt(hwnd, IDC_TIMERHOUR,		pts->hour,   0);
+			SetDlgItemInt(hwnd, IDC_TIMERDAYS,		pts->day,    0);
+			ComboBox_AddStringOnce(GetDlgItem(hwnd,IDC_TIMERFILE), pts->fname, 1);
+			CheckDlgButton(hwnd, IDC_TIMERREPEAT,	pts->bRepeat);
+			CheckDlgButton(hwnd, IDC_TIMERBLINK,	pts->bBlink);
 			if(pts->bActive){
-				EnableDlgItem(hDlg, IDCB_STOPTIMER, TRUE);
-				EnableDlgItem(hDlg, IDOK, FALSE);
+				EnableDlgItem(hwnd, IDCB_STOPTIMER, TRUE);
+				EnableDlgItem(hwnd, IDOK, FALSE);
 			}else{
-				EnableDlgItem(hDlg, IDCB_STOPTIMER, FALSE);
-				EnableDlgItem(hDlg, IDOK, TRUE);
+				EnableDlgItem(hwnd, IDCB_STOPTIMER, FALSE);
+				EnableDlgItem(hwnd, IDOK, TRUE);
 			}
 			break;
 		}
 	}
 	if(idx<count-1){
-		SetDlgItemText(hDlg, IDOK, L"Start");
+		SetDlgItemText(hwnd, IDOK, L"Start");
 	}else{
-		SetDlgItemText(hDlg, IDOK, L"Create");
+		SetDlgItemText(hwnd, IDOK, L"Create");
 	}
-	EnableDlgItem(hDlg, IDC_TIMERDEL, idx<count-1);
+	EnableDlgItem(hwnd, IDC_TIMERDEL, idx<count-1);
 }
 /*------------------------------------------------
   browse sound file
 --------------------------------------------------*/
-void OnSanshoAlarm(HWND hDlg, WORD id)
+void OnSanshoAlarm(HWND hwnd, WORD id)
 {
 	wchar_t deffile[MAX_PATH], fname[MAX_PATH];
 	
-	GetDlgItemText(hDlg, id - 1, deffile, MAX_PATH);
-	if(!BrowseSoundFile(hDlg, deffile, fname)) // soundselect.c
+	GetDlgItemText(hwnd, id - 1, deffile, MAX_PATH);
+	if(!BrowseSoundFile(hwnd, deffile, fname)) // soundselect.c
 		return;
-	SetDlgItemText(hDlg, id - 1, fname);
-	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
+	SetDlgItemText(hwnd, id - 1, fname);
+	PostMessage(hwnd, WM_NEXTDLGCTL, 1, FALSE);
 }
 
 //================================================================================================
 //-----------------------//-----------------------------+++--> Delete One of the Configured Timers:
-void OnDel(HWND hDlg)   //------------------------------------------------------------------+++-->
+void OnDel(HWND hwnd)   //------------------------------------------------------------------+++-->
 {
-	HWND timer_cb = GetDlgItem(hDlg, IDC_TIMERNAME);
+	HWND timer_cb = GetDlgItem(hwnd, IDC_TIMERNAME);
 	wchar_t name[TNY_BUFF];
 	wchar_t subkey[TNY_BUFF];
 	size_t offset;
@@ -520,23 +520,23 @@ void OnDel(HWND hDlg)   //------------------------------------------------------
 	ComboBox_DeleteString(timer_cb, idx);
 	
 	ComboBox_SetCurSel(timer_cb, (idx>0)?(idx-1):idx);
-	OnTimerName(hDlg);
-	PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
+	OnTimerName(hwnd);
+	PostMessage(hwnd, WM_NEXTDLGCTL, 1, FALSE);
 }
 //================================================================================================
 //---------------------------------//--------------------+++--> Test -> Play/Stop Alarm Sound File:
-void OnTest(HWND hDlg, WORD id)   //--------------------------------------------------------+++-->
+void OnTest(HWND hwnd, WORD id)   //--------------------------------------------------------+++-->
 {
 	wchar_t fname[MAX_PATH];
 	
-	GetDlgItemText(hDlg, id - 2, fname, _countof(fname));
+	GetDlgItemText(hwnd, id - 2, fname, _countof(fname));
 	if(!fname[0])
 		return;
 	
-	if((HICON)SendDlgItemMessage(hDlg, id, BM_GETIMAGE, IMAGE_ICON, 0) == g_hIconPlay) {
-		if(PlayFile(hDlg, fname, 0)) {
-			SendDlgItemMessage(hDlg, id, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconStop);
-			InvalidateRect(GetDlgItem(hDlg, id), NULL, FALSE);
+	if((HICON)SendDlgItemMessage(hwnd, id, BM_GETIMAGE, IMAGE_ICON, 0) == g_hIconPlay) {
+		if(PlayFile(hwnd, fname, 0)) {
+			SendDlgItemMessage(hwnd, id, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconStop);
+			InvalidateRect(GetDlgItem(hwnd, id), NULL, FALSE);
 		}
 	} else StopFile();
 }
@@ -755,30 +755,30 @@ void RemoveFromWatch(HWND hWnd, HWND hList, wchar_t* szTimer, int iLx)
 		break;
 	}
 }
-//================================================================================================
-// -----------------------+++--> Message Processor for the Selected Running Timers Watching Dialog:
-INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
+//===============================================================================================
+// ----------------------+++--> Message Processor for the Selected Running Timers Watching Dialog:
+INT_PTR CALLBACK Window_TimerView(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)   //---+++-->
 {
 	switch(msg) {
 	case WM_INITDIALOG:
-		OnInitTimeView(hDlg);
-		SetTimer(hDlg, 3, 285, NULL); // Timer Refresh Times Above 400ms Make
-		api.PositionWindow(hDlg,21); //-----+++--> Timer Watch Dialog Appear Sluggish.
+		OnInitTimeView(hwnd);
+		SetTimer(hwnd, 3, 285, NULL); // Timer Refresh Times Above 400ms Make
+		api.PositionWindow(hwnd,21); //-----+++--> Timer Watch Dialog Appear Sluggish.
 		return TRUE; //-------------------------------+++--> END of Case WM_INITDOALOG
 //================//================================================================
 	case WM_TIMER:
-		if(!OnWatchTimer(hDlg)) { // When the Last Monitored Timer
-			KillTimer(hDlg, 3);			 // Expires, Close the Now UnNeeded
+		if(!OnWatchTimer(hwnd)) { // When the Last Monitored Timer
+			KillTimer(hwnd, 3);			 // Expires, Close the Now UnNeeded
 			g_hDlgTimerWatch = NULL;
-			DestroyWindow(hDlg);		 // Timer Watch/View Dialog Window.
+			DestroyWindow(hwnd);		 // Timer Watch/View Dialog Window.
 		} return TRUE; //--------------------------------+++--> END of Case WM_TIMER
 //====================//============================================================
 	case WM_COMMAND:
 		switch(LOWORD(wParam)) {
 		case IDCANCEL:
-			KillTimer(hDlg, 3);
+			KillTimer(hwnd, 3);
 			g_hDlgTimerWatch = NULL;
-			DestroyWindow(hDlg);
+			DestroyWindow(hwnd);
 			return TRUE;
 		} return FALSE;//------------------------------+++--> END of Case WM_COMMAND
 //===//=============================================================================
@@ -786,14 +786,14 @@ INT_PTR CALLBACK DlgTimerViewProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 		//--------------------------------------------------------------------+++-->
 		if(((NMHDR*)lParam)->code == LVN_KEYDOWN) { //-+> Capture Key Strokes Here.
 			LPNMLVKEYDOWN nmkey = (NMLVKEYDOWN*)lParam;
-			HWND hList=GetDlgItem(hDlg,IDC_LIST);
+			HWND hList=GetDlgItem(hwnd,IDC_LIST);
 			switch(nmkey->wVKey) {
 			case VK_DELETE:{
 				int i;
 				if((i = ListView_GetNextItem(hList,-1,LVNI_SELECTED)) != -1) {
 					wchar_t szTimer[GEN_BUFF];
 					ListView_GetItemText(hList, i, 0, szTimer, _countof(szTimer));
-					RemoveFromWatch(hDlg, hList, szTimer, i);
+					RemoveFromWatch(hwnd, hList, szTimer, i);
 				}
 				return TRUE;}// Delete Key Handled
 			}
@@ -811,5 +811,5 @@ void WatchTimer(int reset)   //-------------------------------------------------
 			m_timer[idx].bHomeless=1;
 		}
 	}
-	CreateDialogParamOnce(&g_hDlgTimerWatch, 0, MAKEINTRESOURCE(IDD_TIMERVIEW), NULL, DlgTimerViewProc, 0);
+	CreateDialogParamOnce(&g_hDlgTimerWatch, 0, MAKEINTRESOURCE(IDD_TIMERVIEW), NULL, Window_TimerView, 0);
 }

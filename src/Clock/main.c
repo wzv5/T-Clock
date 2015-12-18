@@ -33,7 +33,7 @@ HICON	g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 const wchar_t kSectionImmersiveShell[56+1] = L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\ImmersiveShell";
 const wchar_t kKeyWin32Tray[27+1] = L"UseWin32TrayClockExperience";
 
-LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
+LRESULT CALLBACK Window_TClock(HWND, UINT, WPARAM, LPARAM);
 
 ATOM g_atomTClock = 0; /**< main window class atom */
 const wchar_t g_szClassName[] = L"TClockMainClass"; /**< our main window class name */
@@ -326,7 +326,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	
 	// register a window class
 	wndclass.style         = 0;
-	wndclass.lpfnWndProc   = WndProc;
+	wndclass.lpfnWndProc   = Window_TClock;
 	wndclass.cbClsExtra    = 0;
 	wndclass.cbWndExtra    = 0;
 	wndclass.hInstance     = g_instance;
@@ -380,7 +380,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 	return (int)msg.wParam;
 }
 
-LRESULT CALLBACK MsgOnlyProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK Window_TClockDummy(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	(void)wParam; (void)lParam;
 	
@@ -412,7 +412,7 @@ void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //--------------
 	const wchar_t* p = cmdline;
 	if(g_hwndTClockMain != hwndMain){
 		g_hwndTClockMain = CreateWindow(L"STATIC", NULL, 0, 0,0,0,0, HWND_MESSAGE_nowarn, 0, 0, 0);
-		SubclassWindow(g_hwndTClockMain, MsgOnlyProc);
+		SubclassWindow(g_hwndTClockMain, Window_TClockDummy);
 	}
 	
 	while(*p != '\0') {
@@ -530,7 +530,7 @@ static void InjectClockHook(HWND hwnd) {
 }
 //================================================================================================
 //--------------------------------------------------+++--> The Main Application "Window" Procedure:
-LRESULT CALLBACK WndProc(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam)   //--------+++-->
+LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam)   //-+++-->
 {
 	switch(message) {
 	case WM_CREATE:

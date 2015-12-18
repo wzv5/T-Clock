@@ -187,7 +187,7 @@ static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //---
 }
 //================================================================================================
 //-------------------------------------------+++--> Dialog Procedure for Mouse Tab Dialog Messages:
-INT_PTR CALLBACK PageMouseProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-----+++-->
+INT_PTR CALLBACK Page_Mouse(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-----+++-->
 {
 	switch(message){
 	case WM_INITDIALOG:{

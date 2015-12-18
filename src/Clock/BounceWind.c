@@ -18,7 +18,7 @@ static unsigned char m_flags;
 
 static void OnOK(HWND hDlg);
 static void OnInit(HWND hDlg, dlgmsg_t* dlg);
-static INT_PTR CALLBACK AlarmMsgProc(HWND, UINT, WPARAM, LPARAM);
+static INT_PTR CALLBACK Window_AlarmMsgConfigDlg(HWND, UINT, WPARAM, LPARAM);
 
 static void BounceWindow(HWND hwnd,const RECT* rc);
 static void CenterDoggie(HWND hwnd,const RECT* rc);
@@ -30,14 +30,15 @@ static void ParseSettings(wchar_t* data);
 //-----------------------------//----+++--> Open Window Bounce Control Options Here:
 int BounceWindOptions(HWND hDlg, dlgmsg_t* dlg)  //--------------------------+++-->
 {
-	if(DialogBoxParam(0,MAKEINTRESOURCE(IDD_ALARMMSG),hDlg,AlarmMsgProc,(LPARAM)dlg) == IDOK) {
+	INT_PTR ret = DialogBoxParam(0, MAKEINTRESOURCE(IDD_ALARMMSG), hDlg, Window_AlarmMsgConfigDlg, (LPARAM)dlg);
+	if(ret == IDOK) {
 		return 1;
 	}
 	return 0;
 }
 //---------------------------------------------------------------------------+++-->
 // -------------------------------------------+++--> Alarm Message Dialog Procedure:
-INT_PTR CALLBACK AlarmMsgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Window_AlarmMsgConfigDlg(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	(void)lParam;
 	switch(message) {

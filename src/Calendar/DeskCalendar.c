@@ -27,7 +27,7 @@ void GetDayOfYearTitle(wchar_t* szTitle, int ivMonths)   //---------------------
 		wsprintf(szTitle, FMT("T-Clock: Calendar  Day: %s"), szDoY);
 	}
 }
-LRESULT CALLBACK MainWndProc(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg) {
 	case WM_CREATE:{
@@ -158,7 +158,7 @@ HWND CreateCalender(HWND hwnd)   //---------------+++-->
 	InitCommonControlsEx(&icex);
 	
 	wcx.style = 0;
-	wcx.lpfnWndProc = MainWndProc;
+	wcx.lpfnWndProc = Window_Calendar;
 	wcx.cbClsExtra = 0;
 	wcx.cbWndExtra = 0;
 	wcx.hInstance = g_instance;

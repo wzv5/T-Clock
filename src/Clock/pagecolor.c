@@ -29,7 +29,7 @@ static inline void SendPSChanged(HWND hDlg){
 /*------------------------------------------------
   Dialog procedure
 --------------------------------------------------*/
-INT_PTR CALLBACK PageColorProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Page_Color(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
 	case WM_INITDIALOG:

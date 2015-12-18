@@ -128,7 +128,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 }
 //================================================================================================
 //---------------------------------+++--> Dialog procedure for configurable HotKey options tab:
-INT_PTR CALLBACK PageHotKeyProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
+INT_PTR CALLBACK Page_HotKey(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //----+++-->
 {
 	switch(message) {
 	case WM_INITDIALOG:

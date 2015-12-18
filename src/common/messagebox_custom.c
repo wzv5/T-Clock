@@ -9,7 +9,7 @@ typedef struct {
 	int autodisable;
 } MsgData;
 
-static LRESULT CALLBACK MessageBoxCustom_Proc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+static LRESULT CALLBACK Window_MessageBoxCustomDlg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
 	MsgData* data = (MsgData*)dwRefData;
 	enum{kYes, kNo, kCancel, kHelp, kButtons_,};
 	const char kBtnId[kButtons_] = {IDYES, IDNO, IDCANCEL, IDHELP};
@@ -132,7 +132,7 @@ static LRESULT CALLBACK MessageBoxCustom_Proc(HWND hwnd, UINT uMsg, WPARAM wPara
 				ret |= (Button_GetCheck(check) << iter);
 		}
 		SendMessage(GetParent(hwnd), WMBC_CHECKS, ret, 0); // notify creator
-		RemoveWindowSubclass(hwnd, MessageBoxCustom_Proc, uIdSubclass);
+		RemoveWindowSubclass(hwnd, Window_MessageBoxCustomDlg, uIdSubclass);
 		free(data);
 		break;
 	case WM_CTLCOLORSTATIC:
@@ -181,7 +181,7 @@ static LRESULT CALLBACK MessageBoxCustom_Hook(int nCode, WPARAM wParam, LPARAM l
 		UnhookWindowsHookEx(hook_);
 		hook_ = NULL;
 		data = (MsgData*)calloc(1, sizeof(MsgData));
-		if(!data || !SetWindowSubclass((HWND)wParam, MessageBoxCustom_Proc, 0, (DWORD_PTR)data)) {
+		if(!data || !SetWindowSubclass((HWND)wParam, Window_MessageBoxCustomDlg, 0, (DWORD_PTR)data)) {
 			free(data);
 			PostMessage((HWND)wParam, WM_CLOSE, 0, 0);
 		}

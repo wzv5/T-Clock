@@ -24,9 +24,9 @@ void EndQuickyEdit(HWND hDlg)
 	SetFocus(GetDlgItem(hParent,IDC_QMEN_LIST));
 	DestroyWindow(hDlg);
 }
-//===================================================================================================
-//--------------------------------------+++--> Dialog Procedure for Menu Item Details Dialog Messages:
-INT_PTR CALLBACK PageQuickyMenuProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-++-->
+//===============================================================================================
+//----------------------------------+++--> Dialog Procedure for Menu Item Details Dialog Messages:
+INT_PTR CALLBACK Page_QuickyMenu(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)   //-++-->
 {
 	(void)lParam;
 	switch(message) {

@@ -40,7 +40,7 @@ static void SendPSChanged(HWND hDlg){
 /*------------------------------------------------
   Dialog procedure
 --------------------------------------------------*/
-INT_PTR CALLBACK PageAlarmProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Page_Alarm(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	
 	switch(message) {

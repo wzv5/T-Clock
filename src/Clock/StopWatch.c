@@ -17,15 +17,15 @@ static int m_rezYcontrols;
 static int m_rezCXlist;
 static int m_rezCYlist;
 
-static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
-static INT_PTR CALLBACK DlgProcStopwatchExport(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK Window_Stopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
+static INT_PTR CALLBACK Window_StopwatchExportDlg(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 static void OnTimer(HWND hDlg);
 
 //================================================================================================
 // -------------------------------------------------------------------+++--> Open Stopwatch Dialog:
 void DialogStopWatch()   //--------------------------------------------------------+++-->
 {
-	CreateDialogParamOnce(&g_hDlgStopWatch, 0, MAKEINTRESOURCE(IDD_STOPWATCH), NULL, DlgProcStopwatch, 0);
+	CreateDialogParamOnce(&g_hDlgStopWatch, 0, MAKEINTRESOURCE(IDD_STOPWATCH), NULL, Window_Stopwatch, 0);
 }
 
 BOOL IsDialogStopWatchMessage(HWND hwnd, MSG* msg){ // handles hotkeys
@@ -257,16 +257,16 @@ static void OnTimer(HWND hDlg)   //---------------------------------------------
 }
 //================================================================================================
 // --------------------------------------------------+++--> Message Processor for Stopwatch Dialog:
-static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
+static INT_PTR CALLBACK Window_Stopwatch(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)   //------+++-->
 {
 	switch(msg) {
 	case WM_INITDIALOG:
-		OnInit(hDlg);
-		api.PositionWindow(hDlg,21);
+		OnInit(hwnd);
+		api.PositionWindow(hwnd,21);
 		return TRUE;
 	case WM_DESTROY:{
 		// save pos & size
-		RECT rc; GetWindowRect(hDlg,&rc);
+		RECT rc; GetWindowRect(hwnd,&rc);
 		rc.bottom = rc.bottom-rc.top;
 		if(rc.bottom != m_rezCY){
 			api.SetInt(L"Timers", L"SwSize", rc.bottom);
@@ -274,27 +274,27 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 			api.DelValue(L"Timers", L"SwSize");
 		}
 		// cleaup elapsed font
-		{HFONT hfont = (HFONT)SendDlgItemMessage(hDlg, IDC_SW_ELAPSED, WM_GETFONT, 0, 0);
-		SendDlgItemMessage(hDlg, IDC_SW_ELAPSED, WM_SETFONT, 0, 0);
+		{HFONT hfont = (HFONT)SendDlgItemMessage(hwnd, IDC_SW_ELAPSED, WM_GETFONT, 0, 0);
+		SendDlgItemMessage(hwnd, IDC_SW_ELAPSED, WM_SETFONT, 0, 0);
 		DeleteObject(hfont);
 		// cleanup button font
-		hfont = (HFONT)SendDlgItemMessage(hDlg, IDC_SW_START, WM_GETFONT, 0, 0);
-		SendDlgItemMessage(hDlg, IDC_SW_START, WM_SETFONT,0,0);
-		SendDlgItemMessage(hDlg, IDC_SW_RESET, WM_SETFONT,0,0);
+		hfont = (HFONT)SendDlgItemMessage(hwnd, IDC_SW_START, WM_GETFONT, 0, 0);
+		SendDlgItemMessage(hwnd, IDC_SW_START, WM_SETFONT,0,0);
+		SendDlgItemMessage(hwnd, IDC_SW_RESET, WM_SETFONT,0,0);
 		DeleteObject(hfont);}
 		break;}
 	/// handling
 	case WM_ACTIVATE:
 		if(LOWORD(wParam)==WA_ACTIVE || LOWORD(wParam)==WA_CLICKACTIVE){
-			SetWindowPos(hDlg,HWND_TOPMOST_nowarn,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+			SetWindowPos(hwnd,HWND_TOPMOST_nowarn,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 		}else{
-			SetWindowPos(hDlg,HWND_NOTOPMOST_nowarn,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+			SetWindowPos(hwnd,HWND_NOTOPMOST_nowarn,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 			// actually it should be lParam, but that's "always" NULL for other process' windows
 			SetWindowPos(GetForegroundWindow(),HWND_TOP,0,0,0,0,SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 		}
 		break;
 	case WM_CTLCOLORSTATIC:
-		if((HWND)lParam!=GetDlgItem(hDlg,IDC_SW_ELAPSED))
+		if((HWND)lParam!=GetDlgItem(hwnd,IDC_SW_ELAPSED))
 			break;
 		SetTextColor((HDC)wParam,0x00000000);
 		SetBkColor((HDC)wParam,0x00FFFFFF);
@@ -305,7 +305,7 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 		WINDOWPOS* info=(WINDOWPOS*)lParam;
 		if(!(info->flags&SWP_NOSIZE)){
 			if(info->cx!=m_rezCX || info->cy<m_rezCY){
-				RECT rc; GetWindowRect(hDlg,&rc);
+				RECT rc; GetWindowRect(hwnd,&rc);
 				if(info->cx!=m_rezCX){
 					info->cx=m_rezCX;
 					info->x=rc.left;
@@ -321,40 +321,40 @@ static INT_PTR CALLBACK DlgProcStopwatch(HWND hDlg, UINT msg, WPARAM wParam, LPA
 		WINDOWPOS* info=(WINDOWPOS*)lParam;
 		if(!(info->flags&SWP_NOSIZE)){
 			int diff=info->cy-m_rezCY;
-			int control;
-			for(control=IDC_SW_START; control<=IDC_SW_EXPORT; ++control){
-				HWND hwnd=GetDlgItem(hDlg,control);
-				RECT rc; GetWindowRect(hwnd,&rc);
-				ScreenToClient(hDlg,(POINT*)&rc);
-				SetWindowPos(hwnd,HWND_TOP,rc.left,m_rezYcontrols+diff,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
+			int idx;
+			for(idx=IDC_SW_START; idx<=IDC_SW_EXPORT; ++idx){
+				HWND control = GetDlgItem(hwnd, idx);
+				RECT rc; GetWindowRect(control, &rc);
+				ScreenToClient(hwnd, (POINT*)&rc);
+				SetWindowPos(control, HWND_TOP, rc.left, m_rezYcontrols+diff, 0, 0, (SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER));
 			}
-			SetWindowPos(GetDlgItem(hDlg,IDC_SW_LAPS),HWND_TOP,0,0,m_rezCXlist,m_rezCYlist+diff,SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOZORDER);
+			SetWindowPos(GetDlgItem(hwnd,IDC_SW_LAPS), HWND_TOP, 0, 0, m_rezCXlist, m_rezCYlist+diff, (SWP_NOMOVE|SWP_NOACTIVATE|SWP_NOZORDER));
 		}
 		return TRUE;}
 	/// user interaction
 	case WM_TIMER:
 		if(!m_paused)
-			OnTimer(hDlg);
+			OnTimer(hwnd);
 		return TRUE;
 	case WM_COMMAND: {
 			WORD id = LOWORD(wParam);
 			switch(id) {
 			case IDC_SW_START: // Start/Stop
-				StopWatch_TogglePause(hDlg);
+				StopWatch_TogglePause(hwnd);
 				break;
 			case IDC_SW_RESET:
-				StopWatch_Reset(hDlg);
+				StopWatch_Reset(hwnd);
 				break;
 			case IDC_SW_EXPORT:
-				DialogBox(0,MAKEINTRESOURCE(IDD_STOPWATCH_EXPORT),hDlg,DlgProcStopwatchExport);
+				DialogBox(0, MAKEINTRESOURCE(IDD_STOPWATCH_EXPORT), hwnd, Window_StopwatchExportDlg);
 				break;
 			case IDC_SW_LAP:
-				StopWatch_Lap(hDlg,0);
+				StopWatch_Lap(hwnd,0);
 				break;
 			case IDCANCEL:
-				KillTimer(hDlg, 1);
+				KillTimer(hwnd, 1);
 				g_hDlgStopWatch = NULL;
-				DestroyWindow(hDlg);
+				DestroyWindow(hwnd);
 			}
 			return TRUE;
 		}
@@ -435,7 +435,7 @@ static void export_text(HWND hDlg){
 	SetDlgItemText(hDlg, IDC_SWE_OUT, buf);
 	free(buf);
 }
-static INT_PTR CALLBACK DlgProcStopwatchExport(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK Window_StopwatchExportDlg(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	(void)lParam; // unused
 	switch(msg) {

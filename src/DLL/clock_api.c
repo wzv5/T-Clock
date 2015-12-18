@@ -28,7 +28,7 @@ static ULONGLONG WINAPI GetTickCount64_Wrapper(){
 	return GetTickCount();
 }
 // main.c
-LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK Hook_CallWndProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 #define ClockAPI(func) Clock_##func,
 TClockAPI api = {
@@ -276,7 +276,7 @@ void Clock_Inject(HWND hwnd)
 	}
 	
 	// install an hook to thread of taskbar
-	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, CallWndProc, api.hInstance, dwThreadId);
+	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, Hook_CallWndProc, api.hInstance, dwThreadId);
 	if(!m_hhook) {
 		SendMessage(gs_hwndTClockMain, MAINM_ERROR, 0, 3);
 		return;

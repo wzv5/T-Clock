@@ -46,7 +46,7 @@ static inline void SendPSChanged(HWND hDlg){
 /*------------------------------------------------
    Dialog Procedure for the "Format" page
 --------------------------------------------------*/
-INT_PTR CALLBACK PageFormatProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK Page_Format(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch(message) {
 	case WM_INITDIALOG:
