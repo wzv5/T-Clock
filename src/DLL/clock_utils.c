@@ -213,24 +213,47 @@ static int PrepareMyRegKey_(wchar_t key[80], const wchar_t* section) {
 	return 1;
 }
 
-int Clock_GetInt(const wchar_t* section, const wchar_t* entry, int defval) {
+static int GetInt_(HKEY rootkey, const wchar_t* section, const wchar_t* entry, int defval, int* val) {
 	wchar_t key[80];
 	HKEY hkey;
+	int result = -1;
 	
-	if(PrepareMyRegKey_(key,section)){
+	if(!rootkey && PrepareMyRegKey_(key,section)){
+		section = key;
 		if(ms_inifile[0]) {
-			return GetPrivateProfileInt(key, entry, defval, ms_inifile);
-		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-				int val;
-				DWORD regtype, size = sizeof(val);
-				if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&val,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
-					defval = val;
-				RegCloseKey(hkey);
+			wchar_t val[11+1]; // -2147483648 \0
+			GetPrivateProfileString(section, entry, kInvalidKey, val, _countof(val), ms_inifile);
+			if(val[0] != kInvalidKey[0] || val[1] != kInvalidKey[1]) {
+				result = 0;
+				defval = _wtoi(val);
 			}
+		} else {
+			rootkey = HKEY_CURRENT_USER;
 		}
 	}
-	return defval;
+	if(rootkey && RegOpenKeyEx(rootkey,section,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
+		int val;
+		DWORD regtype, size = sizeof(val);
+		if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&val,&size)==ERROR_SUCCESS && regtype==REG_DWORD) {
+			result = 0;
+			defval = val;
+		}
+		RegCloseKey(hkey);
+	}
+	*val = defval;
+	return result;
+}
+
+int Clock_GetSystemInt(HKEY rootkey, const wchar_t* section, const wchar_t* entry, int defval) {
+	int val;
+	GetInt_(rootkey, section, entry, defval, &val);
+	return val;
+}
+
+int Clock_GetInt(const wchar_t* section, const wchar_t* entry, int defval) {
+	int val;
+	GetInt_(0, section, entry, defval, &val);
+	return val;
 }
 
 int64_t Clock_GetInt64(const wchar_t* section, const wchar_t* entry, int64_t defval) {
@@ -257,105 +280,10 @@ int64_t Clock_GetInt64(const wchar_t* section, const wchar_t* entry, int64_t def
 }
 
 int Clock_GetIntEx(const wchar_t* section, const wchar_t* entry, int defval) {
-	wchar_t key[80];
-	HKEY hkey;
-	
-	if(PrepareMyRegKey_(key,section)){
-		if(ms_inifile[0]) {
-			wchar_t val[20];
-			GetPrivateProfileString(key, entry, kInvalidKey, val, _countof(val), ms_inifile);
-			if(val[0] != kInvalidKey[0] || val[1] != kInvalidKey[1])
-				defval = _wtoi(val);
-			else
-				Clock_SetInt(section, entry, defval);
-		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-				int val;
-				DWORD regtype, size = sizeof(val);
-				if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&val,&size)==ERROR_SUCCESS && regtype==REG_DWORD){
-					defval = val;
-				}else{
-					Clock_SetInt(section, entry, defval);
-				}
-				RegCloseKey(hkey);
-			}
-		}
-	}
-	return defval;
-}
-
-int Clock_GetSystemInt(HKEY rootkey, const wchar_t* section, const wchar_t* entry, int defval) {
-	HKEY hkey;
-	
-	if(RegOpenKeyEx(rootkey,section,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-		int val;
-		DWORD regtype, size = sizeof(val);
-		if(RegQueryValueEx(hkey,entry,0,&regtype,(BYTE*)&val,&size)==ERROR_SUCCESS && regtype==REG_DWORD)
-			defval = val;
-		RegCloseKey(hkey);
-	}
-	return defval;
-}
-
-int Clock_GetStr(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
-	wchar_t key[80];
-	HKEY hkey;
-	DWORD regtype, size;
-	int ret = -1;
-	
-	if(PrepareMyRegKey_(key,section)){
-		if(ms_inifile[0]) {
-			ret = GetPrivateProfileString(key, entry, defval, val, len, ms_inifile);
-		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-				size = len * sizeof(val[0]);
-				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
-					ret = size / sizeof(val[0]);
-					if(ret) --ret;
-				}
-				RegCloseKey(hkey);
-			}
-		}
-	}
-	if(ret == -1){
-		if((ret=(int)wcslen(defval)) <= len){
-			wcscpy(val, defval);
-		}else ret = 0;
-	}
-	if(!ret) val[0] = '\0';
-	return ret;
-}
-
-int Clock_GetStrEx(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
-	wchar_t key[80];
-	HKEY hkey;
-	DWORD regtype, size;
-	int ret = -1;
-	
-	if(PrepareMyRegKey_(key,section)){
-		if(ms_inifile[0]) {
-			ret = GetPrivateProfileString(key, entry, kInvalidKey, val, len, ms_inifile);
-			if(val[0] == kInvalidKey[0] && val[1] == kInvalidKey[1])
-				ret = -1;
-		} else {
-			if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_read,&hkey) == ERROR_SUCCESS) {
-				size = len * sizeof(val[0]);
-				if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
-					ret = size / sizeof(val[0]);
-					if(ret) --ret;
-				}
-				RegCloseKey(hkey);
-			}
-		}
-	}
-	if(ret == -1){
-		if((ret=(int)wcslen(defval)) <= len){
-			Clock_SetStr(section, entry, defval);
-			wcscpy(val, defval);
-		}else ret = 0;
-	}
-	if(!ret) val[0] = '\0';
-	return ret;
+	int val;
+	if(GetInt_(0, section, entry, defval, &val) != 0)
+		Clock_SetInt(section, entry, defval);
+	return val;
 }
 
 int Clock_GetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
@@ -367,11 +295,16 @@ int Clock_GetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entr
 		size = len * sizeof(val[0]);
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 			ret = size / sizeof(val[0]);
-			if(ret) --ret;
+			if(ret) {
+				if(val[--ret] != '\0') {
+					if(ret+1 < len) ++ret;
+					val[ret] = '\0';
+				}
+			}
 		}
 		RegCloseKey(hkey);
 	}
-	if(ret == -1) {
+	if(ret == -1 && defval) {
 		if((ret=(int)wcslen(defval)) <= len){
 			wcscpy(val, defval);
 		}else ret = 0;
@@ -380,47 +313,37 @@ int Clock_GetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entr
 	return ret;
 }
 
-int Clock_SetInt(const wchar_t* section, const wchar_t* entry, int val) {
+int Clock_GetStr(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
 	wchar_t key[80];
-	HKEY hkey;
-	int ret = 0;
+	int ret = -1;
 	
 	if(PrepareMyRegKey_(key,section)){
 		if(ms_inifile[0]) {
-			wchar_t s[20];
-			wsprintf(s, FMT("%d"), val);
-			return WritePrivateProfileString(key, entry, s, ms_inifile);
+			ret = GetPrivateProfileString(key, entry, kInvalidKey, val, len, ms_inifile);
+			if(val[0] == kInvalidKey[0] && val[1] == kInvalidKey[1])
+				ret = -1;
 		} else {
-			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-				if(RegSetValueEx(hkey, entry, 0, REG_DWORD, (const BYTE*)&val, sizeof(val)) == ERROR_SUCCESS) {
-					ret = 1;
-				}
-				RegCloseKey(hkey);
-			}
+			return Clock_GetSystemStr(HKEY_CURRENT_USER, key, entry, val, len, defval);
 		}
 	}
+	if(ret == -1 && defval){
+		if((ret=(int)wcslen(defval)) <= len){
+			wcscpy(val, defval);
+		}else ret = 0;
+	}
+	if(!ret) val[0] = '\0';
 	return ret;
 }
 
-int Clock_SetInt64(const wchar_t* section, const wchar_t* entry, int64_t val) {
-	wchar_t key[80];
-	HKEY hkey;
-	int ret = 0;
-	
-	if(PrepareMyRegKey_(key,section)){
-		if(ms_inifile[0]) {
-			wchar_t s[16+1]; // max: 19+1+1(decimal), 16+1(hexadecimal)
-			wsprintf(s, FMT("%") FMT(PRIx64), val);
-			return WritePrivateProfileString(key, entry, s, ms_inifile);
-		} else {
-			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-				if(RegSetValueEx(hkey, entry, 0, REG_DWORD, (const BYTE*)&val, sizeof(val)) == ERROR_SUCCESS) {
-					ret = 1;
-				}
-				RegCloseKey(hkey);
-			}
-		}
+int Clock_GetStrEx(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
+	int ret = Clock_GetStr(section, entry, val, len, NULL);
+	if(ret == -1){
+		if((ret=(int)wcslen(defval)) <= len){
+			Clock_SetStr(section, entry, defval);
+			wcscpy(val, defval);
+		}else ret = 0;
 	}
+	if(!ret) val[0] = '\0';
 	return ret;
 }
 
@@ -437,20 +360,36 @@ int Clock_SetSystemInt(HKEY rootkey, const wchar_t* section, const wchar_t* entr
 	return ret;
 }
 
-int Clock_SetStr(const wchar_t* section, const wchar_t* entry, const wchar_t* val) {
+int Clock_SetInt(const wchar_t* section, const wchar_t* entry, int val) {
+	wchar_t key[80];
+	
+	if(!PrepareMyRegKey_(key,section))
+		return 0;
+	if(ms_inifile[0]) {
+		wchar_t s[11+1]; // -2147483648 \0
+		swprintf(s, _countof(s), FMT("%d"), val);
+		return WritePrivateProfileString(key, entry, s, ms_inifile);
+	}
+	return Clock_SetSystemInt(HKEY_CURRENT_USER, key, entry, val);
+}
+
+int Clock_SetInt64(const wchar_t* section, const wchar_t* entry, int64_t val) {
 	wchar_t key[80];
 	HKEY hkey;
 	int ret = 0;
 	
 	if(PrepareMyRegKey_(key,section)){
-		if(ms_inifile[0])
-			return WritePrivateProfileString(key, entry, val, ms_inifile);
-		
-		if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-			if(RegSetValueEx(hkey, entry, 0, REG_SZ, (const BYTE*)val, (DWORD)(wcslen(val)*sizeof(val[0])+sizeof(val[0]))) == ERROR_SUCCESS) {
-				ret = 1;
+		if(ms_inifile[0]) {
+			wchar_t s[16+1]; // max: 19+1+1(decimal), 16+1(hexadecimal)
+			swprintf(s, _countof(s), FMT("%") FMT(PRIx64), val);
+			return WritePrivateProfileString(key, entry, s, ms_inifile);
+		} else {
+			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
+				if(RegSetValueEx(hkey, entry, 0, REG_DWORD, (const BYTE*)&val, sizeof(val)) == ERROR_SUCCESS) {
+					ret = 1;
+				}
+				RegCloseKey(hkey);
 			}
-			RegCloseKey(hkey);
 		}
 	}
 	return ret;
@@ -469,22 +408,14 @@ int Clock_SetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entr
 	return ret;
 }
 
-int Clock_DelValue(const wchar_t* section, const wchar_t* entry) {
+int Clock_SetStr(const wchar_t* section, const wchar_t* entry, const wchar_t* val) {
 	wchar_t key[80];
-	HKEY hkey;
-	int ret = 0;
+	if(!PrepareMyRegKey_(key,section))
+		return 0;
 	
-	if(PrepareMyRegKey_(key,section)){
-		if(ms_inifile[0])
-			return WritePrivateProfileString(key, entry, NULL, ms_inifile);
-		
-		if(RegOpenKeyEx(HKEY_CURRENT_USER,key,0,ms_reg_fullaccess,&hkey) == ERROR_SUCCESS) {
-			if(RegDeleteValue(hkey, entry) == ERROR_SUCCESS)
-				ret = 1;
-			RegCloseKey(hkey);
-		}
-	}
-	return ret;
+	if(ms_inifile[0])
+		return WritePrivateProfileString(key, entry, val, ms_inifile);
+	return Clock_SetSystemStr(HKEY_CURRENT_USER, key, entry, val);
 }
 
 int Clock_DelSystemValue(HKEY rootkey, const wchar_t* section, const wchar_t* entry) {
@@ -496,6 +427,16 @@ int Clock_DelSystemValue(HKEY rootkey, const wchar_t* section, const wchar_t* en
 		RegCloseKey(hkey);
 	}
 	return ret;
+}
+
+int Clock_DelValue(const wchar_t* section, const wchar_t* entry) {
+	wchar_t key[80];
+	if(!PrepareMyRegKey_(key,section))
+		return 0;
+	
+	if(ms_inifile[0])
+		return WritePrivateProfileString(key, entry, NULL, ms_inifile);
+	return Clock_DelSystemValue(HKEY_CURRENT_USER, key, entry);
 }
 
 int Clock_DelKey(const wchar_t* section) {
