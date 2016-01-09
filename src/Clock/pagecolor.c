@@ -73,7 +73,7 @@ INT_PTR CALLBACK Page_Color(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 				LOGFONT lf = {0};
 				CHOOSEFONT chosenfont = {sizeof(CHOOSEFONT)};
 				chosenfont.hwndOwner = hDlg;
-				chosenfont.Flags = CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT;
+				chosenfont.Flags = CF_FORCEFONTEXIST | CF_INITTOLOGFONTSTRUCT | CF_PRINTERFONTS | CF_SCREENFONTS;
 				chosenfont.lpLogFont = &lf;
 				hwndCombo = GetDlgItem(hDlg,IDC_FONTSIZE);
 				ComboBox_GetText(hwndCombo, size, _countof(size));
