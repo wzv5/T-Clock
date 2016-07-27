@@ -385,7 +385,7 @@ int Clock_SetInt64(const wchar_t* section, const wchar_t* entry, int64_t val) {
 			return WritePrivateProfileString(key, entry, s, ms_inifile);
 		} else {
 			if(RegCreateKeyEx(HKEY_CURRENT_USER,key,0,NULL,0,ms_reg_fullaccess,NULL,&hkey,NULL) == ERROR_SUCCESS) {
-				if(RegSetValueEx(hkey, entry, 0, REG_DWORD, (const BYTE*)&val, sizeof(val)) == ERROR_SUCCESS) {
+				if(RegSetValueEx(hkey, entry, 0, REG_QWORD, (const BYTE*)&val, sizeof(val)) == ERROR_SUCCESS) {
 					ret = 1;
 				}
 				RegCloseKey(hkey);
