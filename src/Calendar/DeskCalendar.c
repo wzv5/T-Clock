@@ -175,7 +175,7 @@ HWND CreateCalender(HWND hwnd)   //---------------+++-->
 }
 
 //int main(int argc,char* argv[])
-int CALLBACK WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,LPSTR lpCmdLine,int nCmdShow)
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, char* lpCmdLine, int nCmdShow)
 {
 	MSG msg;
 	BOOL bRet;

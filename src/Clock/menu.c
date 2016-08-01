@@ -296,8 +296,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		}
 		#ifdef _DEBUG
 		else
-			{char buf[1024]; wsprintf(buf,FMT("%s: unknown ID: %.5i(0x%.4x) (hwnd:%p)\n"),__FUNCTION__,wID,wID,hwnd);
-			OutputDebugString(buf);}
+			DBGOUT("%s: unknown ID: %.5i(0x%.4x) (hwnd:%p)", __FUNCTION__, wID, wID, hwnd);
 		#endif // _DEBUG
 	}
 	return 0;

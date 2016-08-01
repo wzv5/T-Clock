@@ -262,7 +262,7 @@ SOCKET OpenTimeSocket(const wchar_t* server)
 			sprintf(host,"%hu.%hu.%hu.%hu",addr->sin_addr.s_net,addr->sin_addr.s_host,addr->sin_addr.s_lh,addr->sin_addr.s_impno);
 		}
 		sprintf(szErr,"[%s]:%hu\n",host,ntohs(((struct sockaddr_in*)&serv_addr)->sin_port));
-		OutputDebugString(szErr);
+		DBGOUT(szErr);
 		#endif // _DEBUG
 		break;
 //		if(connect(sock, ap->ai_addr, ap->ai_addrlen) != -1)

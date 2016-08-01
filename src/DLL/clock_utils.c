@@ -192,7 +192,7 @@ static int PrepareMyRegKey_(wchar_t key[80], const wchar_t* section) {
 	
 	if(m_regkey_size+section_len > 80){
 		#ifdef _DEBUG
-		MessageBox(NULL,"settings key too huge","PrepareMyRegKey",0);
+		MessageBoxA(NULL, "settings key too huge", "PrepareMyRegKey", 0);
 		#endif
 		return 0;
 	}

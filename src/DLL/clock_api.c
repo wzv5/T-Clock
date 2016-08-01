@@ -165,7 +165,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 		GetLongPathName(own_path, ms_root, _countof(ms_root));
 		del_title(ms_root); del_title(ms_root);
 		ms_root_len = (uint16_t)wcslen(ms_root);
-		DBGOUT("root: %s\n", ms_root);
+		DBGOUT("root: %ls\n", ms_root);
 		
 		// https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832%28v=vs.85%29.aspx
 		if(GetVersionEx(&osvi)){
@@ -175,31 +175,31 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 			case 5: // 2000-Vista
 				switch(osvi.dwMinorVersion ){
 				case 0:
-					gs_tos=TOS_2000; break;
+					gs_tos = TOS_2000; break;
 				case 1:
-					gs_tos=TOS_XP; break;
+					gs_tos = TOS_XP; break;
 				default: // 2+
-					gs_tos=TOS_XP_64;
+					gs_tos = TOS_XP_64;
 				}
 				break;
 			case 6: // Vista+
 				switch(osvi.dwMinorVersion ){
 				case 0:
-					gs_tos=TOS_VISTA; break;
+					gs_tos = TOS_VISTA; break;
 				case 1:
-					gs_tos=TOS_WIN7; break;
+					gs_tos = TOS_WIN7; break;
 				case 2:
-					gs_tos=TOS_WIN8; break;
+					gs_tos = TOS_WIN8; break;
 				case 3:
-					gs_tos=TOS_WIN8_1; break;
+					gs_tos = TOS_WIN8_1; break;
 				case 4:
-					gs_tos=TOS_WIN10; break;
+					gs_tos = TOS_WIN10; break;
 				default:
-					gs_tos=TOS_NEWER;
+					gs_tos = TOS_NEWER;
 				}
 				break;
 			default:
-				gs_tos=TOS_NEWER;
+				gs_tos = TOS_NEWER;
 			}
 		}
 		

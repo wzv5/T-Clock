@@ -117,7 +117,7 @@ static void UpdateUIList(HWND hDlg, int selButton, int selClick)   //---+++-->
 				{wchar_t* leak=malloc(16*sizeof(leak[0])); wsprintf(leak,FMT("#%i"),func); lvItem.pszText=leak;}
 				#endif // _DEBUG
 				{int iter; for(iter=0; iter<m_mouseActionCount; ++iter){
-					if(func!=m_mouseAction[iter].id)
+					if(func != m_mouseAction[iter].id)
 						continue;
 					lvItem.pszText = (wchar_t*)m_mouseAction[iter].name;
 					break;
@@ -176,7 +176,7 @@ static void UpdateUIControls(HWND hDlg, int button, int click, int type)   //---
 	if(func == MOUSEFUNC_CLIPBOARD || func <= MOUSEFUNCEXTRA_BEGIN){
 		EnableDlgItem(hDlg, IDC_MOUSEFILE, 1);
 		if(!*m_pData[button].data[click] && func == MOUSEFUNC_CLIPBOARD)
-			api.GetStr(L"Format", L"Format", m_pData[button].data[click], MAX_PATH, L"");
+			api.GetStr(L"Format", L"Format", m_pData[button].data[click], _countof(m_pData[button].data[click]), L"");
 	}else
 		EnableDlgItem(hDlg, IDC_MOUSEFILE, 0);
 	EnableDlgItem(hDlg, IDC_MOUSEFILEBROWSE, (func <= MOUSEFUNCEXTRAFILE_BEGIN));
@@ -331,7 +331,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 			m_pData[button].data[click][0] = '\0'; // clipboard format / execute file
 			if(m_pData[button].func[click] == MOUSEFUNC_CLIPBOARD || m_pData[button].func[click] <= MOUSEFUNCEXTRA_BEGIN){
 				memcpy(entry+2, L"Clip", 5*sizeof(wchar_t));
-				api.GetStr(REG_MOUSE, entry, m_pData[button].data[click], MAX_PATH, L"");
+				api.GetStr(REG_MOUSE, entry, m_pData[button].data[click], _countof(m_pData[button].data[click]), L"");
 				entry[2] = '\0';
 			}
 		}

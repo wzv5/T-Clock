@@ -234,7 +234,7 @@ void TranslateDispatchTClockMessage(MSG* msg) {
 
 //================================================================================================
 //--------------------------------------------------==-+++--> Entry Point of Program Using WinMain:
-int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nShowCmd)
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmdLine, int nShowCmd)
 {
 	WNDCLASS wndclass;
 	HWND hwndMain;

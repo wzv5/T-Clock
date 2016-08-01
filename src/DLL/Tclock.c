@@ -483,15 +483,15 @@ int SetupClockAPI(int version, TClockAPI* api); // clock_api.c
 void InitClock(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
 	gs_hwndClock = hwnd;
-	m_hself=LoadLibrary(L"T-Clock" ARCH_SUFFIX);
+	m_hself = LoadLibrary(L"T-Clock" ARCH_SUFFIX);
 	SetupClockAPI(CLOCK_API, NULL); // initialize API
-	GetClientRect(hwnd,&m_rcClock); // use original clock size until we've loaded our settings
+	GetClientRect(hwnd, &m_rcClock); // use original clock size until we've loaded our settings
 	{//"top" margin detection // 2px Win8 default (Vista+)
 		RECT rcBar; GetClientRect(GetParent(GetParent(hwnd)),&rcBar);
 		if(rcBar.right>rcBar.bottom){//horizontal
-			m_BORDER_MARGIN=rcBar.bottom-m_rcClock.bottom;
+			m_BORDER_MARGIN = rcBar.bottom-m_rcClock.bottom;
 		}else{//vertical
-			m_BORDER_MARGIN=rcBar.right-m_rcClock.right;
+			m_BORDER_MARGIN = rcBar.right-m_rcClock.right;
 		}
 	}
 	
@@ -499,8 +499,8 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
 	MyDragDrop_Init();
-	m_droptarget=MyDragDrop_Create(hwnd);
-	RegisterDragDrop(hwnd,m_droptarget);
+	m_droptarget = MyDragDrop_Create(hwnd);
+	RegisterDragDrop(hwnd, m_droptarget);
 	
 	SendMessage(hwnd, CLOCKM_REFRESHCLOCK, 0, 0); // reads settings and creates clock
 	SendMessage(hwnd, CLOCKM_REFRESHTASKBAR, 0, 0);
@@ -577,14 +577,14 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		if(IsWindowVisible(hwnd)){
 			if(!(pwp->flags&SWP_NOSIZE) && !(pwp->flags&SWP_NOMOVE)){
 				if(pwp->x >= pwp->y){ // horizontal
-					pwp->cx=m_rcClock.right;
+					pwp->cx = m_rcClock.right;
 					if(m_height){ // explorer auto-updates our height, but we use custom
-						pwp->cy=m_rcClock.bottom;
+						pwp->cy = m_rcClock.bottom;
 					}
 				}else{
-					pwp->cy=m_rcClock.bottom;
+					pwp->cy = m_rcClock.bottom;
 					if(m_width){ // explorer auto-updates our width, but we use custom
-						pwp->cx=m_rcClock.right;
+						pwp->cx = m_rcClock.right;
 					}
 				}
 			}
@@ -949,7 +949,7 @@ void ReadStyleData(HWND hwnd, int preview)   //---------------------+++-->
 	/// misc
 	m_bMultimon = api.GetInt(L"Desktop", L"Multimon", 1);
 	/// create/update clock
-	UpdateClock(hwnd,hFon);
+	UpdateClock(hwnd, hFon);
 	InvalidateRect(hwnd, NULL, 0);
 	InvalidateRect(GetParent(hwnd), NULL, 1);
 }
