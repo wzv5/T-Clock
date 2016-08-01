@@ -30,6 +30,10 @@
 #	define MonthCal_SizeRectToMin(hmc, prc) SNDMSG (hmc, MCM_SIZERECTTOMIN, 0,(LPARAM) (prc))
 #endif
 
+#ifndef SEE_MASK_NOASYNC // missing in GCC 4.6.3 (Ubuntu 12.04)
+#	define SEE_MASK_NOASYNC SEE_MASK_FLAG_DDEWAIT
+#endif // SEE_MASK_NOASYNC
+
 #ifdef __GNUC__
 #	define COMPILER_STRING "GCC"
 #	include <inttypes.h>
