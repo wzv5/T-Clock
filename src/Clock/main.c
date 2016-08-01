@@ -282,22 +282,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	
 //	FindTrayServer(hwndMain);
 	
-	// Make sure we're not running 32bit on 64bit OS / start the other one
-	#ifndef _WIN64
-	if(IsWow64()){
-		hwndMain = FindWindow(g_szClassName, NULL);
-		if(hwndMain) { // send commands to existing instance
-			ProcessCommandLine(hwndMain, lpCmdLine);
-		}else{ // start new instance
-			wchar_t clock64[MAX_PATH];
-			memcpy(clock64, api.root, api.root_size);
-			add_title(clock64, L"Clock" ARCH_SUFFIX_64 L".exe");
-			api.Exec(clock64, lpCmdLine, NULL);
-		}
-		return 0;
-	}
-	#endif // _WIN64
-	
 	// Do Not Allow the Program to Execute Twice!
 	updated = 25; /**< wait up to 5 sec in 1/5th seconds for other instance */
 	do{
@@ -312,6 +296,26 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 			Sleep(200);
 			continue;
 		}
+		// Make sure we're not running 32bit on a 64bit OS / start the other one
+		#ifndef _WIN64
+		if(IsWow64()){
+			wchar_t clock64[MAX_PATH];
+			CloseHandle(processlock);
+			memcpy(clock64, api.root, api.root_size);
+			add_title(clock64, L"Clock" ARCH_SUFFIX_64 L".exe");
+			api.ShellExecute(NULL, clock64, lpCmdLine, NULL, SW_SHOWNORMAL, &processlock);
+			if(processlock) {
+				for(; (lpCmdLine = wcschr(lpCmdLine,'/')); ++lpCmdLine) {
+					if(!wcsncasecmp(lpCmdLine,L"/exit",5)) {
+						WaitForSingleObject(processlock, INFINITE);
+						break;
+					}
+				}
+				CloseHandle(processlock);
+			}
+			return 0;
+		}
+		#endif // _WIN64
 		break;
 	}while(updated--);
 	

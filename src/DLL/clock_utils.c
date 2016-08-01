@@ -452,25 +452,25 @@ int Clock_DelKey(const wchar_t* section) {
 // exec
 
 int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show, HANDLE* hProcess) {
-	BOOL success;
+	int ret = -1;
+	SHELLEXECUTEINFO sei = {sizeof(sei)};
+	sei.hwnd = parent;
+	sei.lpVerb = method;
+	sei.lpFile = app;
+	sei.lpParameters = params;
+	sei.nShow = show;
 	if(*app){
-		SHELLEXECUTEINFO sei = {sizeof(sei)};
-		sei.hwnd = parent;
-		sei.lpVerb = method;
-		sei.lpFile = app;
-		sei.lpParameters = params;
-		sei.nShow = show;
 		if(hProcess)
 			sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
-		success = ShellExecuteEx(&sei);
-		if(hProcess)
-			*hProcess = sei.hProcess;
-		if(success)
-			return 0;
-		if(GetLastError() == ERROR_CANCELLED) // UAC dialog user canceled
-			return 1;
+		if(ShellExecuteEx(&sei)) {
+			ret = 0;
+		}else if(GetLastError() == ERROR_CANCELLED) {// UAC dialog user canceled
+			ret = 1;
+		}
 	}
-	return -1;
+	if(hProcess)
+		*hProcess = sei.hProcess;
+	return ret;
 }
 int Clock_Exec(const wchar_t* app, const wchar_t* params, HWND parent) {
 	return Clock_ShellExecute(NULL, app, params, parent, SW_SHOWNORMAL, NULL);
