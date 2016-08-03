@@ -14,6 +14,8 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 * [**view all available**](//github.com/White-Tiger/T-Clock/releases)
 
 #### Differences to Stoic Joker's T-Clock 2010 [Build 95/98](http://www.donationcoder.com/forum/index.php?topic=21944.0)
+- [x] + supports Win10 with 1st-Anniversary update *(v2.4.1)*
+- [x] + Unicode support *(v2.4.1)*
 - [x] * improved file structure
 - [x] + ISO-8601 week number support *(Wi)*
 - [x] + original Windows calendar and tooltip usable
@@ -59,7 +61,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 * [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) (install **both** 32bit `vcredist_x86` +  64bit `vcredist_x64` **on 64bit** OS. Alternatively just use our \_static builds)
 
 ### Support
-* [Forum Topic](http://donationcoder.com/forum/index.php?topic=21944.0)
+* [Forum](http://donationcoder.com/forum/?board=324)
 * [Issue Tracker](//github.com/White-Tiger/T-Clock/issues)
 * or send a mail to the email address in T-Clock's about screen *(just click on it)*
 
