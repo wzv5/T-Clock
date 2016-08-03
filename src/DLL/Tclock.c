@@ -675,6 +675,8 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 			tme.hwndTrack = hwnd;
 			tme.dwHoverTime = HOVER_DEFAULT;
 			m_TipState = TrackMouseEvent(&tme);
+			if(IsXPThemeActive())
+				m_col.ref = GetXPClockColor(gs_hwndClock, CLS_HOT);
 			FillClockBGHover();
 			InvalidateRect(gs_hwndClock, NULL, 0);
 		}
@@ -705,6 +707,8 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
 			}
 			m_TipState = 0;
+			if(IsXPThemeActive())
+				m_col.ref = GetXPClockColor(gs_hwndClock, CLS_NORMAL);
 			FillClockBG();
 			InvalidateRect(gs_hwndClock,NULL,0);
 		}
@@ -1056,7 +1060,7 @@ void FillClockBG()
 void FillClockBGHover()
 {
 	if(!m_colorBG_start) return;
-	if(api.OS>=TOS_WIN7 && IsXPThemeActive()) {
+	if(IsXPThemeActive()) {
 		DrawXPClockHover(gs_hwndClock,m_hdcClockBG,&m_rcClock);
 	}
 }

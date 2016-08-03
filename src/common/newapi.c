@@ -6,6 +6,8 @@
 #include <uxtheme.h>
 #include "../common/utl.h"
 
+#include "newapi.h"
+
 int IsWow64(){
 	int ret=0;
 	#ifndef _WIN64
@@ -41,7 +43,8 @@ pSetLayeredWindowAttributes_t pSetLayeredWindowAttributes=NULL;
 #define THEME_FUNC_CHECK_THEME(name,hwnd,ret) \
 	THEME_FUNC_CHECK(name,ret)\
 	if(!hClockTheme){\
-		hClockTheme=pOpenThemeData(hwnd,CLOCK);/*TrayClockWClass*/\
+		hClockTheme = pOpenThemeData(hwnd,(m_theme_version>=TV_10_beta ? VSCLASS_TASKBAND2 : VSCLASS_CLOCK));\
+		m_theme_clock_part = (m_theme_version>=TV_10 ? 5 : CLP_TIME);\
 		if(!hClockTheme) return ret;\
 	}
 #define THEME_FUNC_DEFINE(name,ret,params) \
@@ -55,11 +58,23 @@ THEME_FUNC_DEFINE(OpenThemeData,HTHEME,(HWND hwnd, LPCWSTR pszClassList));
 THEME_FUNC_DEFINE(IsThemeActive,BOOL,());
 THEME_FUNC_DEFINE(SetWindowTheme,HRESULT,(HWND hwnd, LPCWSTR pszSubAppName, LPCWSTR pszSubIdList));
 THEME_FUNC_DEFINE(GetThemeColor,HRESULT,(HTHEME hTheme, int iPartId, int iStateId, int iPropId, COLORREF* pColor));
+//THEME_FUNC_DEFINE(IsThemePartDefined,BOOL,(HTHEME hTheme, int iPartId, int iStateId));
+//THEME_FUNC_DEFINE(IsThemeBackgroundPartiallyTransparent,BOOL,(HTHEME hTheme, int iPartId, int iStateId));
 THEME_FUNC_DEFINE(DrawThemeBackground,HRESULT,(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect));
 THEME_FUNC_DEFINE(DrawThemeParentBackground,HRESULT,(HWND hwnd, HDC hdc, RECT* prc));
 
-static BOOL bInitLayeredWindow = FALSE;
-static BOOL bInitDrawTheme = FALSE;
+static char bInitLayeredWindow = 0;
+static uint16_t m_theme_version = 0;
+static char m_theme_clock_part = CLP_TIME;
+#define TV_2000 0x0500
+#define TV_XP 0x0501
+#define TV_XP_64 0x0502
+#define TV_Vista 0x0600
+#define TV_7 0x0601
+#define TV_8 0x0602
+#define TV_8_1 0x0603
+#define TV_10_beta 0x0604
+#define TV_10 0x0a00
 
 static void RefreshRebar(HWND hwndBar);
 
@@ -74,7 +89,7 @@ void InitLayeredWindow(void)
 			FreeLibrary(hmodUSER32); hmodUSER32 = NULL;
 		}
 	}
-	bInitLayeredWindow = TRUE;
+	bInitLayeredWindow = 1;
 }
 
 void EndNewAPI(HWND hwndClock)
@@ -98,10 +113,12 @@ void EndNewAPI(HWND hwndClock)
 	/// DrawTheme
 	THEME_FUNC_RELEASE(DrawThemeParentBackground);
 	THEME_FUNC_RELEASE(DrawThemeBackground);
+//	THEME_FUNC_RELEASE(IsThemeBackgroundPartiallyTransparent);
+//	THEME_FUNC_RELEASE(IsThemePartDefined);
 	THEME_FUNC_RELEASE(GetThemeColor);
-	THEME_FUNC_RELEASE(OpenThemeData);
-	THEME_FUNC_RELEASE(SetWindowTheme);
 	THEME_FUNC_RELEASE(IsThemeActive);
+	THEME_FUNC_RELEASE(SetWindowTheme);
+	THEME_FUNC_RELEASE(OpenThemeData);
 	if(hClockTheme){
 		pCloseThemeData(hClockTheme); hClockTheme=NULL;
 	}
@@ -194,37 +211,24 @@ void RefreshRebar(HWND hwndBar)
 
 void InitDrawTheme()
 {
-	if(bInitDrawTheme) return;
-	bInitDrawTheme=1;
-	hmodUxTheme=LoadLibraryA("uxtheme");
+	if(m_theme_version)
+		return;
+	m_theme_version = GetVersion() & 0xffff;
+	m_theme_version = ((m_theme_version & 0xff) << 8 | m_theme_version >> 8);
+	hmodUxTheme = LoadLibraryA("uxtheme");
 	if(hmodUxTheme){
 		THEME_FUNC_RETRIEVE(CloseThemeData);
 		THEME_FUNC_RETRIEVE(OpenThemeData);
 		THEME_FUNC_RETRIEVE(IsThemeActive);
 		THEME_FUNC_RETRIEVE(SetWindowTheme);
 		THEME_FUNC_RETRIEVE(GetThemeColor);
+//		THEME_FUNC_RETRIEVE(IsThemePartDefined);
+//		THEME_FUNC_RETRIEVE(IsThemeBackgroundPartiallyTransparent);
 		THEME_FUNC_RETRIEVE(DrawThemeBackground);
 		THEME_FUNC_RETRIEVE(DrawThemeParentBackground);
 	}
 }
 
-/// Win7+ clock defines
-#define TASKBAND L"TaskBand2"
-#define CLOCK L"Clock"
-#ifndef CLP_TIME
-#	define CLP_TIME 1
-#	define CLS_NORMAL 1
-#	define CLS_HOT 2
-#	define CLS_PRESSED 3
-//#	define TMT_COLOR 204
-#	define TMT_BACKGROUND 1602
-#	define TMT_TEXTCOLOR 3803
-
-#	define TMT_TRANSPARENTCOLOR 3809
-#	define TMT_WINDOW 1606
-#	define TMT_WINDOWFRAME 1607
-#	define TMT_FILLCOLOR 3802
-#endif
 void ReloadXPClockTheme()
 {
 	THEME_FUNC_CHECK(OpenThemeData,)
@@ -233,37 +237,43 @@ void ReloadXPClockTheme()
 		hClockTheme=NULL;
 	}
 }
-COLORREF GetXPClockColor(HWND hwndClock)
+COLORREF GetXPClockColor(HWND hwndClock, int state)
 {
 	COLORREF ret;
-	THEME_FUNC_CHECK_THEME(GetThemeColor,hwndClock,0x00FFFFFF)
-	pGetThemeColor(hClockTheme,CLP_TIME,CLS_NORMAL,TMT_TEXTCOLOR,&ret);
+	THEME_FUNC_CHECK_THEME(GetThemeColor, hwndClock, 0x00FFFFFF)
+	pGetThemeColor(hClockTheme, m_theme_clock_part, state, TMT_TEXTCOLOR, &ret);
 	return ret;
 }
-COLORREF GetXPClockColorBG(HWND hwndClock)
+COLORREF GetXPClockColorBG(HWND hwndClock, int state)
 {
 	COLORREF ret;
-	THEME_FUNC_CHECK_THEME(GetThemeColor,hwndClock,0x00000000)
-	pGetThemeColor(hClockTheme,CLP_TIME,CLS_NORMAL,TMT_BACKGROUND,&ret);
+	THEME_FUNC_CHECK_THEME(GetThemeColor, hwndClock, 0x00000000)
+	pGetThemeColor(hClockTheme, m_theme_clock_part, state, TMT_BACKGROUND, &ret);
 	return ret;
 }
 void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT* prc)
 {
 	THEME_FUNC_CHECK(DrawThemeParentBackground,)
+	THEME_FUNC_CHECK_THEME(DrawThemeBackground,hwnd,)
 	pDrawThemeParentBackground(hwnd, hdc, prc);
+	if(m_theme_version >= TV_7)
+		pDrawThemeBackground(hClockTheme, hdc, m_theme_clock_part, CLS_NORMAL, prc, NULL);
 }
 void DrawXPClockHover(HWND hwnd, HDC hdc, RECT* prc)
 {
+	THEME_FUNC_CHECK(DrawThemeParentBackground,)
 	THEME_FUNC_CHECK_THEME(DrawThemeBackground,hwnd,)
-	pDrawThemeBackground(hClockTheme,hdc,CLP_TIME,CLS_HOT,prc,NULL);
+	pDrawThemeParentBackground(hwnd, hdc, prc);
+	if(m_theme_version >= TV_7)
+		pDrawThemeBackground(hClockTheme, hdc, m_theme_clock_part, CLS_HOT, prc, NULL);
 }
 
 BOOL IsXPThemeActive(){
-	HIGHCONTRAST highcontContrast={sizeof(HIGHCONTRAST)};
+//	HIGHCONTRAST highcontContrast = {sizeof(HIGHCONTRAST)};
 	THEME_FUNC_CHECK(IsThemeActive,0)
-	SystemParametersInfo(SPI_GETHIGHCONTRAST,sizeof(HIGHCONTRAST),&highcontContrast,0);
-	if(highcontContrast.dwFlags&HCF_HIGHCONTRASTON)
-		return 0;
+//	SystemParametersInfo(SPI_GETHIGHCONTRAST, sizeof(HIGHCONTRAST), &highcontContrast, 0);
+//	if(highcontContrast.dwFlags & HCF_HIGHCONTRASTON)
+//		return 0;
 	return pIsThemeActive();
 }
 HRESULT SetXPWindowTheme(HWND hwnd, LPCWSTR pszSubAppName, LPCWSTR pszSubIdList){

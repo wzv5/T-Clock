@@ -23,20 +23,43 @@ void SetLayeredTaskbar(HWND hwndClock, int alpha, int clear_taskbar, int refresh
 //void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans);
 
 // DrawTheme
+#define VSCLASS_CLOCK L"Clock"
+#define VSCLASS_TASKBAND2 L"TaskBand2" /**< Win10+ */
+
+#ifndef CLP_TIME
+#	define CLP_TIME 1
+#	define CLS_NORMAL 1
+#	define CLS_HOT 2
+#	define CLS_PRESSED 3
+//#	define TMT_COLOR 204
+#	define TMT_BACKGROUND 1602
+#	define TMT_WINDOWTEXT 1609
+#	define TMT_CAPTIONTEXT 1610
+#	define TMT_BTNTEXT 1619
+#	define TMT_INFOTEXT 1624
+#	define TMT_TEXTCOLOR 3803
+
+#	define TMT_TRANSPARENTCOLOR 3809
+#	define TMT_WINDOW 1606
+#	define TMT_WINDOWFRAME 1607
+#	define TMT_FILLCOLOR 3802
+#endif
 
 /**
  * \brief get current theme color for our clock text
  * \param hwndClock handle to our clock
+ * \param state one of \c CLS_NORMAL, \c CLS_HOT or \c CLS_PRESSED
  * \return COLORREF with our text color
- * \sa GetXPClockColorBG(), ReloadXPClockTheme() */
-COLORREF GetXPClockColor(HWND hwndClock);
+ * \sa GetXPClockColorBG(), ReloadXPClockTheme(), CLS_NORMAL, CLS_HOT, CLS_PRESSED */
+COLORREF GetXPClockColor(HWND hwndClock, int state);
 /**
  * \brief get current theme color for our clock background
  * \param hwndClock handle to our clock
+ * \param state one of \c CLS_NORMAL, \c CLS_HOT or \c CLS_PRESSED
  * \return COLORREF with our background color
  * \remarks might not work properly on XP
- * \sa GetXPClockColor(), ReloadXPClockTheme() */
-COLORREF GetXPClockColorBG(HWND hwndClock);
+ * \sa GetXPClockColor(), ReloadXPClockTheme(), CLS_NORMAL, CLS_HOT, CLS_PRESSED */
+COLORREF GetXPClockColorBG(HWND hwndClock, int state);
 /**
  * \brief reloads current theme information used by \c GetXPClockColor() and \c GetXPClockColorBG()
  * \sa GetXPClockColor(), GetXPClockColorBG() */

@@ -71,7 +71,7 @@ unsigned Clock_GetColor(unsigned color, int use_raw)
 		if(use_raw)
 			return color;
 		if(IsXPThemeActive() && gs_hwndClock)
-			return GetXPClockColor(gs_hwndClock);
+			return GetXPClockColor(gs_hwndClock, CLS_NORMAL);
 		else
 			return GetSysColor(COLOR_WINDOWTEXT);
 	case TCOLOR_TRANSPARENT:
@@ -94,7 +94,7 @@ unsigned Clock_GetColor(unsigned color, int use_raw)
 		if(use_raw==2)
 			return color;
 		if(IsXPThemeActive() && gs_hwndClock)
-			return GetXPClockColorBG(gs_hwndClock);
+			return GetXPClockColorBG(gs_hwndClock, CLS_NORMAL);
 		else
 			return GetSysColor(COLOR_3DFACE);
 	}
