@@ -23,6 +23,7 @@ LRESULT OnCalcRect(HWND hwnd);
 void OnCopy(HWND hwnd, LPARAM lParam);
 void OnTooltipNeedText(UINT code, LPARAM lParam);
 void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100);
+static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 static LRESULT CALLBACK Window_SecondaryClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -83,7 +84,9 @@ union{
 	if(m_colBG.ref != oldbg)\
 		FillClockBG();\
 	} __pragma(warning(suppress:4127)) while(0)
-/// misc variables
+/*** misc variables ***/
+static uint16_t m_clock_base_width; ///< original clock's width used by taskbar calculation
+static uint16_t m_clock_base_height; ///< original clock's height used by taskbar calculation
 int m_TipState=0;
 HWND m_TipHwnd = NULL;
 TOOLINFO m_TipInfo;
@@ -508,6 +511,8 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	m_hself = LoadLibrary(L"T-Clock" ARCH_SUFFIX);
 	SetupClockAPI(CLOCK_API, NULL); // initialize API
 	GetClientRect(hwnd, &m_rcClock); // use original clock size until we've loaded our settings
+	m_clock_base_width = m_rcClock.right;
+	m_clock_base_height = m_rcClock.bottom;
 	{//"top" margin detection // 2px Win8 default (Vista+)
 		RECT rcBar; GetClientRect(GetParent(GetParent(hwnd)),&rcBar);
 		if(rcBar.right>rcBar.bottom){//horizontal
@@ -516,7 +521,8 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 			m_BORDER_MARGIN = rcBar.right-m_rcClock.right;
 		}
 	}
-	
+	// Win 10 1st-anniversary update requires us to hook the tray
+	SetWindowSubclass(GetParent(hwnd), Window_ClockTray_Hooked, 0, 0);
 	SetWindowSubclass(hwnd, Window_Clock_Hooked, 0, 0);
 	
 	CreateTip(hwnd); // Create Mouse-Over ToolTip Window & Contents
@@ -551,6 +557,7 @@ void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 	MyDragDrop_DeInit();
 	
 	KillTimer(hwnd, TCLOCK_TIMER_ID);
+	RemoveWindowSubclass(GetParent(hwnd), Window_ClockTray_Hooked, 0);
 	RemoveWindowSubclass(hwnd, Window_Clock_Hooked, 0);
 	// Windows uses timer ID 0 for every-minute drawing
 	// make sure it is set (again)
@@ -579,6 +586,52 @@ static LRESULT CALLBACK Window_ClockTooltip_Hooked(HWND hwnd, UINT uMsg, WPARAM 
 	}
 	return DefSubclassProc(hwnd, uMsg, wParam, lParam);
 }
+/*--------------------------------------------------------------
+  subclass procedure of the clock's tray to control clock size
+---------------------------------------------------------------*/
+static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+	(void)dwRefData;
+	switch(message) {
+	case(WM_USER+100):{// send by windows to get tray size
+		union {
+			struct{
+				uint16_t width;
+				uint16_t height;
+			};
+			LRESULT combined;
+		} size;
+		if(m_bNoClock)
+			break;
+		size.combined = DefSubclassProc(hwnd, message, wParam, lParam);
+		size.width += m_rcClock.right - m_clock_base_width;
+		return size.combined;}
+	case WM_NOTIFY:{
+		LRESULT ret;
+		NMHDR* nmh = (NMHDR*)lParam;
+		RECT clock_rc;
+		POINT pos;
+		if(nmh->code != PGN_CALCSIZE || m_bNoClock)
+			break;
+		ret = DefSubclassProc(hwnd, message, wParam, lParam);
+		GetClientRect(gs_hwndClock, &clock_rc);
+		MapWindowPoints(gs_hwndClock, hwnd, (POINT*)&clock_rc, 1);
+		clock_rc.right = clock_rc.left + m_clock_base_width;
+		clock_rc.bottom = clock_rc.top + m_clock_base_height;
+		for(HWND child=GetWindow(hwnd,GW_CHILD); child; child=GetWindow(child, GW_HWNDNEXT)) {
+			pos.x = pos.y = 0;
+			MapWindowPoints(child, hwnd, &pos, 1);
+			if(pos.x >= clock_rc.right) {
+				pos.x += m_rcClock.right - m_clock_base_width;
+				SetWindowPos(child, 0, pos.x, pos.y, 0, 0, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOSIZE);
+			} else if(pos.y >= clock_rc.bottom) {
+				pos.y += m_rcClock.bottom - m_clock_base_height;
+				SetWindowPos(child, 0, pos.x, pos.y, 0, 0, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOSIZE);
+			}
+		}
+		return ret;}
+	}
+	return DefSubclassProc(hwnd, message, wParam, lParam);
+}
 /*------------------------------------------------
   subclass procedure of the clock
 --------------------------------------------------*/
@@ -587,19 +640,17 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	(void)dwRefData;
 	switch(message){
 	case WM_DESTROY:
+		RemoveWindowSubclass(GetParent(hwnd), Window_ClockTray_Hooked, 0);
 		RemoveWindowSubclass(hwnd, Window_Clock_Hooked, uIdSubclass);
 		DestroyClock();
 		break;
-	case(WM_USER+100):// send by windows to get clock size
-		if(m_bNoClock) break;
-		if(!(GetWindowLongPtr(hwnd,GWL_STYLE)&WS_VISIBLE))
-			return 0;
-		return ((LRESULT)m_rcClock.bottom << 16) | (LRESULT)m_rcClock.right;
 	case WM_WINDOWPOSCHANGING:{
 		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
 		if(m_bNoClock) break;
 		if(IsWindowVisible(hwnd)){
 			if(!(pwp->flags&SWP_NOSIZE) && !(pwp->flags&SWP_NOMOVE)){
+				m_clock_base_width = pwp->cx; // keep base size in sync (eg. on "short time" format or DPI change)
+				m_clock_base_height = pwp->cy;
 				if(pwp->x >= pwp->y){ // horizontal
 					pwp->cx = m_rcClock.right;
 					if(m_height){ // explorer auto-updates our height, but we use custom
