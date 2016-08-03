@@ -39,8 +39,8 @@ typedef struct MultiClock {
 	HWND worker;
 	HWND clock;
 	RECT workerRECT;
-	long clock_base_height;
 	long clock_base_width;
+	long clock_base_height;
 } MultiClock;
 MultiClock m_multiClock[MAX_MULTIMON_CLOCKS];
 int m_multiClocks=0;
@@ -430,6 +430,8 @@ void SubsSendResize(){
 	int clock_id;
 	RECT rc;
 	HWND taskbar;
+	if(api.OS < TOS_WIN10)
+		return;
 	for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
 		// force a taskbar refresh
 //		SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0, 0,
@@ -476,7 +478,7 @@ void SubsCreate(){
 					if(m_multiClock[clock_id].clock) { // real clock, hook it
 						GetClientRect(m_multiClock[clock_id].clock, &rc);
 						m_multiClock[clock_id].clock_base_width = rc.right;
-						m_multiClock[clock_id].clock_base_height = rc.left;
+						m_multiClock[clock_id].clock_base_height = rc.bottom;
 						SetWindowSubclass(m_multiClock[clock_id].clock, Window_SecondaryClock_Hooked, clock_id, (DWORD_PTR)&m_multiClock[clock_id]);
 						SendMessage(m_multiClock[clock_id].clock, WM_CREATE, 0, 0);
 					} else { // create our own clock
@@ -605,7 +607,10 @@ static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM 
 		if(m_bNoClock)
 			break;
 		size.combined = DefSubclassProc(hwnd, message, wParam, lParam);
-		size.part.width += (uint16_t)(m_rcClock.right - m_clock_base_width);
+		if(size.part.width > size.part.height)
+			size.part.width += (uint16_t)(m_rcClock.right - m_clock_base_width);
+		else
+			size.part.height += (uint16_t)(m_rcClock.bottom - m_clock_base_height);
 		return size.combined;}
 	case WM_NOTIFY:{
 		LRESULT ret;
