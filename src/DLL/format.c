@@ -6,7 +6,7 @@
 // Last Modified by Stoic Joker: Friday, 12/16/2011 @ 3:36:00pm
 #include "tcdll.h"
 
-static WORD m_codepage = CP_ACP;
+static DWORD m_codepage = CP_ACP;
 static wchar_t m_MonthShort[11], m_MonthLong[31];
 static wchar_t m_DayOfWeekShort[11], m_DayOfWeekLong[31];
 static wchar_t* m_DayOfWeekEng[7] = { L"Sun", L"Mon", L"Tue", L"Wed", L"Thu", L"Fri", L"Sat" };

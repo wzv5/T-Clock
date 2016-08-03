@@ -39,8 +39,8 @@ typedef struct MultiClock {
 	HWND worker;
 	HWND clock;
 	RECT workerRECT;
-	LONG clock_base_height;
-	LONG clock_base_width;
+	long clock_base_height;
+	long clock_base_width;
 } MultiClock;
 MultiClock m_multiClock[MAX_MULTIMON_CLOCKS];
 int m_multiClocks=0;
@@ -85,8 +85,8 @@ union{
 		FillClockBG();\
 	} __pragma(warning(suppress:4127)) while(0)
 /*** misc variables ***/
-static uint16_t m_clock_base_width; ///< original clock's width used by taskbar calculation
-static uint16_t m_clock_base_height; ///< original clock's height used by taskbar calculation
+static long m_clock_base_width; ///< original clock's width used by taskbar calculation
+static long m_clock_base_height; ///< original clock's height used by taskbar calculation
 static HWND m_clock_active = NULL;
 #define WPARAM_SUBCLOCK 0x8000
 int m_TipState=0;
@@ -592,26 +592,27 @@ static LRESULT CALLBACK Window_ClockTooltip_Hooked(HWND hwnd, UINT uMsg, WPARAM 
   subclass procedure of the clock's tray to control clock size
 ---------------------------------------------------------------*/
 static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-	(void)dwRefData;
+	(void)uIdSubclass, (void)dwRefData;
 	switch(message) {
 	case(WM_USER+100):{// send by windows to get tray size
 		union {
 			struct{
 				uint16_t width;
 				uint16_t height;
-			};
+			} part;
 			LRESULT combined;
 		} size;
 		if(m_bNoClock)
 			break;
 		size.combined = DefSubclassProc(hwnd, message, wParam, lParam);
-		size.width += m_rcClock.right - m_clock_base_width;
+		size.part.width += (uint16_t)(m_rcClock.right - m_clock_base_width);
 		return size.combined;}
 	case WM_NOTIFY:{
 		LRESULT ret;
 		NMHDR* nmh = (NMHDR*)lParam;
 		RECT clock_rc;
 		POINT pos;
+		HWND child;
 		if(nmh->code != PGN_CALCSIZE || m_bNoClock)
 			break;
 		ret = DefSubclassProc(hwnd, message, wParam, lParam);
@@ -619,7 +620,7 @@ static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM 
 		MapWindowPoints(gs_hwndClock, hwnd, (POINT*)&clock_rc, 1);
 		clock_rc.right = clock_rc.left + m_clock_base_width;
 		clock_rc.bottom = clock_rc.top + m_clock_base_height;
-		for(HWND child=GetWindow(hwnd,GW_CHILD); child; child=GetWindow(child, GW_HWNDNEXT)) {
+		for(child=GetWindow(hwnd,GW_CHILD); child; child=GetWindow(child, GW_HWNDNEXT)) {
 			pos.x = pos.y = 0;
 			MapWindowPoints(child, hwnd, &pos, 1);
 			if(pos.x >= clock_rc.right) {
@@ -1420,7 +1421,7 @@ void OnCopy(HWND hwnd, LPARAM lParam)
 	GetDisplayTime(&t, &beat100);
 	entry[0] = '0' + (wchar_t)LOWORD(lParam);
 	entry[1] = '0' + (wchar_t)HIWORD(lParam);
-	memcpy(entry+2, "Clip", 5*sizeof(wchar_t));
+	wcscpy(entry+2, L"Clip");
 	api.GetStr(REG_MOUSE, entry, fmt, _countof(fmt), L"");
 	if(!*fmt)
 		wcscpy(fmt, m_format);

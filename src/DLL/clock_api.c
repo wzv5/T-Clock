@@ -93,6 +93,7 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 	FILE* in_fp,* out_fp;
 	size_t out_len, len;
 	wchar_t out_name[MAX_PATH];
+	int ret = 0;
 	
 	in_fp = _wfopen(in_name, L"r+b");
 	if(in_fp) {
@@ -103,7 +104,7 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 			if(in_data && out) {
 				out->bom = 0xfeff;
 				rewind(in_fp);
-				fread(in_data, 1, file_size, in_fp);
+				file_size = (off_t)fread(in_data, 1, file_size, in_fp);
 				if(file_size && !IsTextUnicode(in_data,file_size,NULL)) {
 					in_data[file_size] = '\0';
 					out_len = MultiByteToWideChar(CP_ACP, 0, in_data, file_size, out->data, file_size*2);
@@ -122,7 +123,6 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 					out_name[len-1] = '$';
 				}
 				out_fp = _wfopen(out_name, L"wb");
-				fclose(in_fp);
 				if(out_fp) {
 					++out_len;
 					out_len ^= fwrite(out, sizeof(wchar_t), out_len, out_fp);
@@ -136,10 +136,11 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 			free(out);
 			free(in_data);
 			if(!in_data || !out)
-				return 2;
+				ret = 2;
 		}
+		fclose(in_fp);
 	}
-	return 0;
+	return ret;
 }
 
 DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
