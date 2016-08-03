@@ -87,6 +87,8 @@ union{
 /*** misc variables ***/
 static uint16_t m_clock_base_width; ///< original clock's width used by taskbar calculation
 static uint16_t m_clock_base_height; ///< original clock's height used by taskbar calculation
+static HWND m_clock_active = NULL;
+#define WPARAM_SUBCLOCK 0x8000
 int m_TipState=0;
 HWND m_TipHwnd = NULL;
 TOOLINFO m_TipInfo;
@@ -697,6 +699,15 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		DrawClock(hdc);
 		ReleaseDC(hwnd, hdc);
 		return 0;}
+	case WM_USER+102: {
+		if(api.OS >= TOS_WIN10_1) { // emulated click for Win10.1, older OS would require the "click" on the notify area with the clocks coordinates (parent)
+			if(hwnd != m_clock_active)
+				return SendMessage(m_clock_active, message, wParam, lParam);
+			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(0,0));
+			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(0,0));
+			return 0;
+		}
+		break;}
 	case WM_ERASEBKGND:
 		return 0;
 	case WM_PAINT: {
@@ -721,6 +732,8 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	case WM_RBUTTONDBLCLK:
 	case WM_MBUTTONDBLCLK:
 	case WM_XBUTTONDBLCLK:
+		if(!(wParam&WPARAM_SUBCLOCK))
+			m_clock_active = hwnd;
 		gs_hwndCalendar = NULL; // GetCalendar() falls back to this
 		gs_hwndCalendar = api.GetCalendar();
 		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
@@ -890,6 +903,12 @@ static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WP
 		EndPaint(hwnd,&ps);
 		return 0;}
 	/// clock features
+	case WM_USER+102: // emulated click for Win10.1 to open calendar
+		if(dwRefData) {
+			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(0,0));
+			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(0,0));
+		}
+		return 0;
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
@@ -904,10 +923,12 @@ static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WP
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
 	case WM_XBUTTONUP:
+		m_clock_active = hwnd;
+		/* fall through */
 	case WM_MOUSEMOVE:
 	case WM_MOUSEHOVER:
 	case WM_MOUSELEAVE:
-		return Window_Clock_Hooked(hwnd, message, wParam, lParam, 0, 0); // quite dangerous call
+		return Window_Clock_Hooked(hwnd, message, wParam|WPARAM_SUBCLOCK, lParam, 0, 0); // quite dangerous call
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
