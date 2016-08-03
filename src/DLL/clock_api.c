@@ -22,6 +22,8 @@ SHARED unsigned short gs_tos = 0;
 #	pragma data_seg()
 #endif
 
+const wchar_t* kConfigName = L"\\T-Clock.ini";
+
 HHOOK m_hhook = NULL;
 
 static ULONGLONG WINAPI GetTickCount64_Wrapper(){
@@ -141,7 +143,6 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 }
 
 DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
-	const wchar_t* kConfigName = L"\\T-Clock.ini";
 	wchar_t own_path[_countof(ms_root)];
 	OSVERSIONINFO osvi = {sizeof(OSVERSIONINFO)};
 	HANDLE api_mutex;
@@ -302,7 +303,13 @@ void Clock_Exit()
 	Clock_InjectFinalize(); // uninstall hook helper if any
 	if(gs_hwndClock && IsWindow(gs_hwndClock)){
 		HWND hwnd = FindWindowA("Shell_TrayWnd",NULL);
+		HANDLE mutex;
 		SendMessage(gs_hwndClock,WM_COMMAND,IDM_EXIT,0); // kill our clock
+		mutex = OpenMutex(SYNCHRONIZE, 0, kConfigName+1);
+		WaitForSingleObject(mutex, INFINITE);
+		ReleaseMutex(mutex);
+		CloseHandle(mutex);
+		
 		PostMessage(gs_hwndClock,WM_TIMER,0,0); // refresh Windows' clock
 		gs_hwndClock = NULL;
 		// refresh the taskbar

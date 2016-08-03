@@ -20,6 +20,8 @@ extern HWND gs_hwndTClockMain; /**< our main window for hotkeys, menus and sound
 extern HWND gs_hwndClock;      /**< the clock hwnd \b [shared] */
 extern HWND gs_hwndCalendar;   /**< calendar state \b [shared] \sa TClockAPI::GetCalendar() */
 
+extern const wchar_t* kConfigName;   /**< ini file name (also used for mutexes) */
+
 #define TZNAME_MAX		  256//10
 
 // tclock.c

@@ -518,7 +518,9 @@ static void SelfDestruct(void* hwnd)
 //---+++--> End Clock Procedure (Window_Clock_Hooked) - (Before?) Removing Hook:
 void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 {
-	SubsDestroy();
+	HANDLE mutex = CreateMutex(NULL, 0, kConfigName+1); // SendMessage() "fix"
+	WaitForSingleObject(mutex, 0);
+	SubsDestroy(); // <- causes our parents SendMessage() call to exit prematurely
 	if(m_multiClockClass){
 		UnregisterClass(MAKEINTATOM(m_multiClockClass), 0);
 		m_multiClockClass = 0;
@@ -537,8 +539,8 @@ void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 	EndNewAPI(hwnd);
 	
 //  bClockUseTrans = 0;
-//	if(IsWindow(g_hwndTClockMain))
-//		PostMessage(g_hwndTClockMain, MAINM_EXIT, 0, 0);
+	ReleaseMutex(mutex);
+	CloseHandle(mutex);
 	_beginthread(SelfDestruct, 0, hwnd);
 }
 static LRESULT CALLBACK Window_ClockTooltip_Hooked(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
