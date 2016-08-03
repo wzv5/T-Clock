@@ -24,6 +24,7 @@ void OnCopy(HWND hwnd, LPARAM lParam);
 void OnTooltipNeedText(UINT code, LPARAM lParam);
 void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100);
 static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 static LRESULT CALLBACK Window_SecondaryClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK Window_SecondaryTaskbarWorker_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
@@ -37,8 +38,8 @@ typedef struct MultiClock {
 	HWND worker;
 	HWND clock;
 	RECT workerRECT;
-	LONG xdiff;
-	LONG ydiff;
+	LONG clock_base_height;
+	LONG clock_base_width;
 } MultiClock;
 MultiClock m_multiClock[MAX_MULTIMON_CLOCKS];
 int m_multiClocks=0;
@@ -46,7 +47,7 @@ int m_multiClocks=0;
 static HDC m_hdcClock=NULL;
 static HDC m_hdcClockBG;
 static char m_bHorizontalTaskbar=1;
-static RECT m_rcClock={0};
+static RECT m_rcClock = {0};
 static RGBQUAD* m_color_start=NULL,* m_color_end;
 static RGBQUAD* m_colorBG_start=NULL,* m_colorBG_end;
 static HGDIOBJ m_oldfnt=NULL;
@@ -420,29 +421,38 @@ void ShowTip(HWND clock){
 	SendMessage(m_TipHwnd,TTM_TRACKACTIVATE,TRUE,(LPARAM)&m_TipInfo);
 }
 
-void SubsDestroy(){
-	for(; m_multiClocks; ) {
-		if(IsWindow(m_multiClock[--m_multiClocks].worker)) {
-			RemoveWindowSubclass(m_multiClock[m_multiClocks].worker, Window_SecondaryTaskbarWorker_Hooked, m_multiClocks);
-			SendMessage(m_multiClock[m_multiClocks].clock, WM_CLOSE, 0, 0);
-			SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0,0,
-						m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
-						SWP_NOMOVE);
-		}
-		m_multiClock[m_multiClocks].worker = NULL;
-	}
-}
 void SubsSendResize(){
 	int clock_id;
+	RECT rc;
+	HWND taskbar;
 	for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
-		SetWindowPos(m_multiClock[clock_id].worker,0,0,0,10,10,0); // set new clock size and position
+		// force a taskbar refresh
+//		SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0, 0,
+//					m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
+//					SWP_NOMOVE);
+		taskbar = GetParent(m_multiClock[clock_id].worker);
+		GetClientRect(taskbar, &rc);
+		SetWindowPos(taskbar, 0, 0,0, rc.right+1,rc.bottom, SWP_NOMOVE|SWP_NOOWNERZORDER|SWP_NOZORDER);
+		SetWindowPos(taskbar, 0, 0,0, rc.right,rc.bottom, SWP_NOMOVE|SWP_NOOWNERZORDER|SWP_NOZORDER);
 	}
+}
+void SubsDestroy(){
+	int clock_id;
+	for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
+		if(IsWindow(m_multiClock[clock_id].worker)) {
+			RemoveWindowSubclass(m_multiClock[clock_id].worker, Window_SecondaryTaskbarWorker_Hooked, clock_id);
+			SendMessage(m_multiClock[clock_id].clock, WM_CLOSE, 0xDEED, 0);
+		}
+	}
+	SubsSendResize();
+	m_multiClocks = 0;
 }
 void SubsCreate(){
 	char classname[GEN_BUFF];
 	HWND hwndBar;
 	HWND hwndChild;
 	int clock_id;
+	RECT rc;
 	if(m_multiClocks || !m_bMultimon) return;
 	// loop all secondary taskbars
 	hwndBar=FindWindowExA(NULL,NULL,"Shell_SecondaryTrayWnd",NULL);
@@ -455,17 +465,28 @@ void SubsCreate(){
 					break;
 				for(clock_id=0; clock_id<m_multiClocks && hwndChild!=m_multiClock[clock_id].worker; ++clock_id); // try to find existing
 				if(clock_id==m_multiClocks){ // new
-					if(!m_multiClockClass){
-						WNDCLASSEX wndclass = {sizeof(WNDCLASSEX), CS_PARENTDC, Window_SecondaryClock, 0, 0, 0/*hInstance*/, NULL, NULL, NULL, NULL, L"SecondaryTrayClockWClass", NULL};
-						wndclass.hCursor = LoadCursor(NULL,IDC_ARROW);
-						wndclass.hInstance = api.hInstance;
-						m_multiClockClass = RegisterClassEx(&wndclass);
-					}
-					m_multiClock[clock_id].clock = CreateWindowEx(0,MAKEINTATOM(m_multiClockClass),NULL,WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE,0,0,5,5,GetParent(hwndChild),0,0,NULL);
-					if(!m_multiClock[clock_id].clock)
-						break;
 					m_multiClock[clock_id].worker = hwndChild;
 					GetClientRect(hwndChild, &m_multiClock[clock_id].workerRECT);
+					m_multiClock[clock_id].clock = FindWindowEx(hwndBar, NULL, L"ClockButton", NULL);
+					if(m_multiClock[clock_id].clock) { // real clock, hook it
+						GetClientRect(m_multiClock[clock_id].clock, &rc);
+						m_multiClock[clock_id].clock_base_width = rc.right;
+						m_multiClock[clock_id].clock_base_height = rc.left;
+						SetWindowSubclass(m_multiClock[clock_id].clock, Window_SecondaryClock_Hooked, clock_id, (DWORD_PTR)&m_multiClock[clock_id]);
+						SendMessage(m_multiClock[clock_id].clock, WM_CREATE, 0, 0);
+					} else { // create our own clock
+						m_multiClock[clock_id].clock_base_width = 0;
+						m_multiClock[clock_id].clock_base_height = 0;
+						if(!m_multiClockClass) {
+							WNDCLASSEX wndclass = {sizeof(WNDCLASSEX), CS_PARENTDC, Window_SecondaryClock, 0, 0, 0/*hInstance*/, NULL, NULL, NULL, NULL, L"ClockButton", NULL};
+							wndclass.hCursor = LoadCursor(NULL,IDC_ARROW);
+							wndclass.hInstance = api.hInstance;
+							m_multiClockClass = RegisterClassEx(&wndclass);
+						}
+						m_multiClock[clock_id].clock = CreateWindowEx(0, MAKEINTATOM(m_multiClockClass), NULL, WS_CHILD|WS_CLIPSIBLINGS|WS_VISIBLE, 0,0,5,5, hwndBar, 0, 0, NULL);
+					}
+					if(!m_multiClock[clock_id].clock)
+						break;
 					SetWindowSubclass(hwndChild, Window_SecondaryTaskbarWorker_Hooked, clock_id, (DWORD_PTR)&m_multiClock[clock_id]);
 					++m_multiClocks;
 				}
@@ -475,6 +496,7 @@ void SubsCreate(){
 		}
 		hwndBar = FindWindowExA(NULL,hwndBar,"Shell_SecondaryTrayWnd",NULL);
 	}
+	SubsSendResize();
 }
 HMODULE m_hself;
 int SetupClockAPI(int version, TClockAPI* api); // clock_api.c
@@ -736,7 +758,6 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		ReadStyleData(hwnd,0); // also creates/updates clock
 		MyDragDrop_Enable(m_droptarget,1); // enable/disable DropFiles on clock
 		SubsCreate();
-		SubsSendResize();
 		// "try" to setup our timer on every "manual" clock-refresh
 		if(m_bNoClock) { // kill our timer; setup Windows'
 			KillTimer(hwnd, TCLOCK_TIMER_ID);
@@ -787,18 +808,23 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 /*------------------------------------------------
   window procedure of the secondary taskbar clock(s)
 --------------------------------------------------*/
-static LRESULT CALLBACK Window_SecondaryClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
 	switch(message){
 	case WM_NCCREATE:{
 		return 1; }
 	case WM_CREATE:{
 		SetWindowLongPtr(hwnd, GWLP_ID, 303); // same ID as original clock
-		RegisterDragDrop(hwnd,m_droptarget); // setup DropFiles on sub-clock
+		RegisterDragDrop(hwnd, m_droptarget); // setup DropFiles on sub-clock
 		return 0; }
 	case WM_CLOSE:{
 		RevokeDragDrop(hwnd); // kill DropFiles on sub-clock
-		DestroyWindow(hwnd);
+		if(dwRefData) { // hooked clock window
+			RemoveWindowSubclass(hwnd, Window_SecondaryClock_Hooked, uIdSubclass);
+			if(wParam != 0xDEED)
+				return DefSubclassProc(hwnd, message, wParam, lParam);
+		} else { // custom created clock window
+			DestroyWindow(hwnd);
+		}
 		return 0; }
 	case WM_WINDOWPOSCHANGING:{
 		return 0;}
@@ -834,6 +860,9 @@ static LRESULT CALLBACK Window_SecondaryClock(HWND hwnd, UINT message, WPARAM wP
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
+static LRESULT CALLBACK Window_SecondaryClock(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	return Window_SecondaryClock_Hooked(hwnd, message, wParam, lParam, 0, 0);
+}
 /*------------------------------------------------
   subclass procedure of the secondary taskbar "worker" area (used to resize and allow own clock)
 --------------------------------------------------*/
@@ -846,28 +875,21 @@ static LRESULT CALLBACK Window_SecondaryTaskbarWorker_Hooked(HWND hwnd, UINT mes
 		break;
 	case WM_WINDOWPOSCHANGING:{
 		int x,y,cx,cy;
-		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
+		int offset_x, offset_y;
+		WINDOWPOS* pwp = (WINDOWPOS*)lParam;
 		if(m_bNoClock)
 			break;
+		offset_x = (m_rcClock.right + api.desktop_button_size) - self->clock_base_width;
+		offset_y = (m_rcClock.bottom + api.desktop_button_size) - self->clock_base_height;
 //		MessageBox(0,"WM_WINDOWPOSCHANGING",__FUNCTION__,0);
 		if(!(pwp->flags&SWP_NOSIZE)){
-			if(!pwp->flags && !pwp->x && !pwp->y && pwp->cx==10 && pwp->cy==10){ // special case for us
-//				MessageBox(0,"special",__FUNCTION__,0);
-				if(!self->workerRECT.left && !self->workerRECT.top){
-					ClientToScreen(self->worker, (POINT*)&self->workerRECT);
-					ScreenToClient(GetParent(self->worker), (POINT*)&self->workerRECT);
-				}
-				pwp->flags=SWP_NOMOVE;
-				pwp->cx = self->workerRECT.right;
-				pwp->cy = self->workerRECT.bottom;
-			}
 			DefSubclassProc(hwnd, message, wParam, lParam); // adjusts left margin? (so changes size and pos)
 			self->workerRECT.right = pwp->cx;
 			self->workerRECT.bottom = pwp->cy;
 			if(pwp->cx > pwp->cy){ // horizontal
-				pwp->cx = pwp->cx-m_rcClock.right - api.desktop_button_size;
+				pwp->cx = pwp->cx - offset_x;
 			}else{
-				pwp->cy = pwp->cy-m_rcClock.bottom - api.desktop_button_size;
+				pwp->cy = pwp->cy - offset_y;
 			}
 		}
 		if(!(pwp->flags&SWP_NOMOVE)){
@@ -877,11 +899,11 @@ static LRESULT CALLBACK Window_SecondaryTaskbarWorker_Hooked(HWND hwnd, UINT mes
 		cx = m_rcClock.right;
 		cy = m_rcClock.bottom;
 		if(self->workerRECT.right > self->workerRECT.bottom){ // horizontal
-			x = self->workerRECT.left+self->workerRECT.right-m_rcClock.right - api.desktop_button_size;
-			y = self->workerRECT.top+m_BORDER_MARGIN;
+			x = self->workerRECT.left + self->workerRECT.right - offset_x;
+			y = self->workerRECT.top + m_BORDER_MARGIN;
 		}else{
-			x = self->workerRECT.left+m_BORDER_MARGIN;
-			y = self->workerRECT.top+self->workerRECT.bottom-m_rcClock.bottom - api.desktop_button_size;
+			x = self->workerRECT.left + m_BORDER_MARGIN;
+			y = self->workerRECT.top + self->workerRECT.bottom - offset_y;
 		}
 		SetWindowPos(self->clock, 0, x, y, cx, cy, 0);
 		return 0;}
