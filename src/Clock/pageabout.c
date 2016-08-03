@@ -38,6 +38,12 @@ INT_PTR CALLBACK Page_About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		int controlid;
 		HFONT hftBold=(HFONT)SendDlgItemMessage(hDlg,IDC_ABT_TITLE,WM_GETFONT,0,0);
 		HFONT hftBigger=(HFONT)SendDlgItemMessage(hDlg,IDC_STARTUP,WM_GETFONT,0,0);
+		
+		// first time update check (firewall warning etc.)
+		if(api.GetInt(L"",UPDATE_RELEASE,1) && !api.GetInt64(L"",UPDATE_TIMESTAMP,0)) {
+			TimetableAdd(SCHEDID_UPDATE, 0, 0);
+		}
+		
 		SendDlgItemMessage(hDlg,IDC_STARTUP,WM_SETFONT,0,0);
 		for(controlid=GROUP_ABT_B_BEGIN; controlid<=GROUP_ABT_B_END; ++controlid){
 			SendDlgItemMessage(hDlg,controlid,WM_SETFONT,0,0);

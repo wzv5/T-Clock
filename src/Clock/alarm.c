@@ -32,13 +32,14 @@ Schedule* TimetableAdd(int id, time_t ts, unsigned data) {
 	schedule = TimetableSearchID(id);
 	if(schedule) {
 		TimetableQueue(schedule, 0);
-		if(ts > 86400)
-			schedule->time = ts;
 	} else {
 		schedule = (Schedule*)malloc(sizeof(Schedule));
 		if(!schedule)
 			return NULL;
 		schedule->id = id;
+		schedule->time = 0;
+	}
+	if(ts != -1) {
 		if(ts <= 86400)
 			ts = time(NULL) + ts;
 		schedule->time = ts;
@@ -356,8 +357,10 @@ void InitAlarm()   //-----------------------------------------------------------
 	ts = time(NULL) + 300;
 	next_update = api.GetInt64(NULL, UPDATE_TIMESTAMP, 0);
 	if(!next_update) {
-		next_update = time(NULL) + 86400;
-		api.SetInt64(NULL, UPDATE_TIMESTAMP, next_update);
+		// don't overwrite timestamp as required for proper first-time startup
+		//next_update = ts + 86400;
+		//api.SetInt64(NULL, UPDATE_TIMESTAMP, next_update);
+		next_update = ts + 1200; // in 25 minutes
 	}
 	if(ts > next_update)
 		TimetableAdd(SCHEDID_UPDATE, ts, (unsigned)(ts-next_update));
