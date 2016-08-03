@@ -173,7 +173,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 			switch(osvi.dwMajorVersion){
 			case 0: case 1: case 2: case 3: case 4:
 				break;
-			case 5: // 2000-Vista
+			case 5: // 2000 - XP
 				switch(osvi.dwMinorVersion ){
 				case 0:
 					gs_tos = TOS_2000; break;
@@ -183,7 +183,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 					gs_tos = TOS_XP_64;
 				}
 				break;
-			case 6: // Vista+
+			case 6: // Vista - Win10(preview)
 				switch(osvi.dwMinorVersion ){
 				case 0:
 					gs_tos = TOS_VISTA; break;
@@ -194,15 +194,24 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 				case 3:
 					gs_tos = TOS_WIN8_1; break;
 				case 4:
-					gs_tos = TOS_WIN10; break;
+					gs_tos = TOS_WIN10; break; // old insider builds
 				default:
 					gs_tos = TOS_NEWER;
 				}
+				break;
+			case 10: // Win 10 (newer versions)
+				gs_tos = TOS_WIN10; // build 9926
+				// Windows 10 Anniversary Update (Version 1607)
+				//	first build: 11082
+				//	breaking build (likely): 14291
+				if(osvi.dwBuildNumber >= 14291)
+					gs_tos = TOS_WIN10_1;
 				break;
 			default:
 				gs_tos = TOS_NEWER;
 			}
 		}
+		//DBGMSG_("ver: %ld.%ld.%ld.%ld\ngs_tos: %hu", osvi.dwMajorVersion, osvi.dwMinorVersion, osvi.dwBuildNumber, osvi.dwPlatformId, gs_tos);
 		
 		if(gs_tos < TOS_XP_64) { // Win2000/XP 32bit fix
 			ms_reg_fullaccess &= ~KEY_WOW64_64KEY;

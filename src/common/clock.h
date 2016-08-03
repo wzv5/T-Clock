@@ -35,7 +35,8 @@ enum TOS {
 	TOS_WIN7	=0x0010, /**< best OS as of 2009-2015 as some might say \sa TClockAPI::OS */
 	TOS_WIN8	=0x0020, /**< first to support multiple taskbars, yet buggy \sa TClockAPI::OS */
 	TOS_WIN8_1	=0x0040, /**< first to require weird/stupid manifest... \sa TClockAPI::OS */
-	TOS_WIN10	=0x0080, /**< latest, didn't add anything new to T-Clock yet \sa TClockAPI::OS */
+	TOS_WIN10	=0x0080, /**< didn't add anything new to T-Clock yet \sa TClockAPI::OS */
+	TOS_WIN10_1	=0x0100 | TOS_WIN10, /**< latest, broke T-Clock entirely (1st-Anniversary Update) \sa TClockAPI::OS */
 	TOS_NEWER	=0x8000, /**< in case we're "outdated" and the curent OS is newer than our known ones \sa TClockAPI::OS */
 };
 
@@ -44,7 +45,7 @@ struct TClockAPI {
 	HINSTANCE hInstance; /**< handle to T-Clock.dll */
 /**
  * \brief holds current OS version flags
- * \sa TOS, TOS_2000, TOS_XP, TOS_XP_64, TOS_VISTA, TOS_WIN7, TOS_WIN8, TOS_WIN8_1, TOS_WIN10, TOS_NEWER, TOS_OLDER */
+ * \sa TOS, TOS_2000, TOS_XP, TOS_XP_64, TOS_VISTA, TOS_WIN7, TOS_WIN8, TOS_WIN8_1, TOS_WIN10, TOS_WIN10_1, TOS_NEWER, TOS_OLDER */
 	unsigned short OS;
 	unsigned short desktop_button_size; /**< size of the "show desktop" button (W7- 10px ?, W8 8px, W10 4+1px) */
 	const wchar_t* root; /**< our root folder path w/o ending slash */
