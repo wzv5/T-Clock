@@ -1,17 +1,14 @@
-57|414
+57|419
 2.1.0|2.4.1
 |(first release)
-|Windows 10 Anniversary support
+|Windows 10 Anniversary support (Beta2)
 !!! if you're using portable mode / T-Clock.ini, please create a backup before updating !!!
 ! clock working once again on Windows 10 with anniversary update applied
 + now fully supporting Unicode! Use all those fancy smileys for your clock text, or tryout other languages like Japanese ;)
 + added update checker checkboxes to about page
 + added link to forums to about page
++ week number format now supports padding, just keep adding those "W" :P
 * we now call our options, "Options" and no longer "properties" (as they would only apply to single items / files)
 * "removed" Stoic Joker from about page by replacing his logo with mine.. :/
 * context menu slightly reordered
-* hooking is now slightly more safe (when using other 3rd party apps)
-! fixed issue on API / DLL shutdown (it didn't correcly wait for DLL to unhook)
 ! fixed .pcb file support. will now play smoothly on Windows 7+
-! fixed storing of 64bit registry values (thanks B00ze64, #30)
-* other misc changes, tweaks and fixes
