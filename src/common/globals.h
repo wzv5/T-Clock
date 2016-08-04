@@ -57,6 +57,10 @@
 #	define strncasecmp _strnicmp
 #	define localtime_r(tt,tm) (localtime_s((tm),(tt)) ? NULL : (tm))
 #	define gmtime_r(tt,tm) (gmtime_s((tm),(tt)) ? NULL : (tm))
+#	ifndef PRIi64
+#		define PRIi64 "I64i"
+#		define SCNi64 PRIi64
+#	endif
 #	ifndef PRIx64
 #		define PRIx64 "I64x"
 #		define SCNx64 PRIx64
