@@ -261,9 +261,9 @@ void DrawXPClockBackground(HWND hwnd, HDC hdc, RECT* prc)
 }
 void DrawXPClockHover(HWND hwnd, HDC hdc, RECT* prc)
 {
-	THEME_FUNC_CHECK(DrawThemeParentBackground,)
+	//THEME_FUNC_CHECK(DrawThemeParentBackground,)
 	THEME_FUNC_CHECK_THEME(DrawThemeBackground,hwnd,)
-	pDrawThemeParentBackground(hwnd, hdc, prc);
+	//pDrawThemeParentBackground(hwnd, hdc, prc);
 	if(m_theme_version >= TV_7)
 		pDrawThemeBackground(hClockTheme, hdc, m_theme_clock_part, CLS_HOT, prc, NULL);
 }

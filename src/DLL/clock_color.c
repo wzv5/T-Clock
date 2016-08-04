@@ -56,26 +56,31 @@ void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb, BOOL blend) { /// there
 	col.quad.rgbReserved = 0x00;
 	m_themecolor = col.ref;
 }
-unsigned Clock_GetColor(unsigned color, int use_raw)
+unsigned Clock_GetColor(unsigned color, int flags)
 {
 	// useraw = 1 == want some raw values, mainly "default"
 	// useraw = 2 == always want raw values (that is, everytime a TCOLOR_* isn't save to be right)
 	unsigned sub;
+	int state = CLS_NORMAL;
 	if((color&TCOLOR_MASK)!=TCOLOR_MAGIC)
 		return color;
-	sub=color^TCOLOR_MAGIC;
-	if(sub<TCOLOR_BEGIN_)
+	if(flags & TCOLORFLAG_HOVER)
+		state = CLS_HOT;
+//	if(flags & TCOLORFLAG_PRESSED)
+//		state = CLS_PRESSED;
+	sub = color^TCOLOR_MAGIC;
+	if(sub < TCOLOR_BEGIN_)
 		return GetSysColor(sub);
 	switch(sub){
 	case TCOLOR_DEFAULT:
-		if(use_raw)
+		if(flags & (TCOLORFLAG_RAW1|TCOLORFLAG_RAW2))
 			return color;
 		if(IsXPThemeActive() && gs_hwndClock)
-			return GetXPClockColor(gs_hwndClock, CLS_NORMAL);
+			return GetXPClockColor(gs_hwndClock, state);
 		else
 			return GetSysColor(COLOR_WINDOWTEXT);
 	case TCOLOR_TRANSPARENT:
-		if(use_raw)
+		if(flags & (TCOLORFLAG_RAW1|TCOLORFLAG_RAW2))
 			return color;
 		return 0xFF000000;
 	case TCOLOR_THEME:
@@ -91,10 +96,10 @@ unsigned Clock_GetColor(unsigned color, int use_raw)
 			Clock_On_DWMCOLORIZATIONCOLORCHANGED(0, 1);
 		return m_themecolor_alpha;
 	case TCOLOR_THEME_BG:
-		if(use_raw==2)
+		if(flags & TCOLORFLAG_RAW2)
 			return color;
 		if(IsXPThemeActive() && gs_hwndClock)
-			return GetXPClockColorBG(gs_hwndClock, CLS_NORMAL);
+			return GetXPClockColorBG(gs_hwndClock, state);
 		else
 			return GetSysColor(COLOR_3DFACE);
 	}

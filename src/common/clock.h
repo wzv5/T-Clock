@@ -25,6 +25,12 @@ enum TCOLORS {
 	TCOLOR_THEME_BG, /**< meta, current theme's clock background color <b>failed attempt and useless</b> */
 	TCOLOR_END_,
 };
+enum TCOLORFLAGS {
+	TCOLORFLAG_NORMAL = 0x00, /**< returns colors directly for drawing */
+	TCOLORFLAG_RAW1 = 0x01, /**< return \c TCOLOR_DEFAULT and \c TCOLOR_TRANSPARENT directly \sa TCOLORS */
+	TCOLORFLAG_RAW2 = 0x02, /**< return even more directly (except theme colors) \sa TCOLORS */
+	TCOLORFLAG_HOVER = 0x04, /**< use hover colors for \c TCOLOR_DEFAULT \sa TCOLOR_DEFAULT */
+};
 
 enum TOS {
 	TOS_OLDER	=0x0000, /**< unknown (older) OS or error \sa TClockAPI::OS */
@@ -102,13 +108,13 @@ struct TClockAPI {
 	int (*GetFileAndOption)(const wchar_t* command, wchar_t* app, wchar_t* params);
 /**
  * \brief parses given color ( \c COLORREF ) for use by T-Clock or Windows
- * \param color color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)
- * \param use_raw \c 1 if raw color should be returned, eg. "unparsed" for some \c TCOLOR_* values that wouldn't be good to preview
+ * \param color the color to parse (can be either one of \c TCOLORS, a Windows system color or a user defined color)
+ * \param flags any of \c TCOLORFLAGS
  * \return parsed color value
- * \remark \a use_raw currently only applies to \c TCOLOR_DEFAULT and \c TCOLOR_TRANSPARENT
+ * \remark \a flags are mostly for \c TCOLOR_DEFAULT
  * \remark \b we use the highest byte as a transparency value, ranging from 0-255, while 255 means fully transparent
- * \sa TCOLORS, On_DWMCOLORIZATIONCOLORCHANGED(), COLORREF, RGB(), GetSysColor() */
-	unsigned (*GetColor)(unsigned color,int use_raw);
+ * \sa TCOLORS, TCOLORFLAGS, On_DWMCOLORIZATIONCOLORCHANGED(), COLORREF, RGB(), GetSysColor() */
+	unsigned (*GetColor)(unsigned color, int flags);
 /**
  * \brief callback for use by \c WM_DWMCOLORIZATIONCOLORCHANGED messages to read current theme's color
  * \param argb wParam of \c WM_DWMCOLORIZATIONCOLORCHANGED

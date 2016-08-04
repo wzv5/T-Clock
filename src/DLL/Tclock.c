@@ -62,28 +62,34 @@ static int m_vertfeed,m_vertpos;
 static int m_horizfeed,m_horizpos;
 /// colors
 COLORREF m_basecolorBG, m_basecolorFont;
-typedef struct tagBGRQUAD{
+typedef struct BGRQUAD {
 	BYTE rgbRed;
 	BYTE rgbGreen;
 	BYTE rgbBlue;
 	BYTE rgbReserved;
 } BGRQUAD;
-union{
+typedef union COLOR {
 	BGRQUAD quad;
 	COLORREF ref;
-} m_col;
-union{
-	BGRQUAD quad;
-	COLORREF ref;
-} m_colBG;
-#define ColorUpdate(col,colBG) do{\
-	COLORREF oldbg;\
-	m_col.ref = api.GetColor(col, 0);\
-	oldbg = m_colBG.ref;\
-	m_colBG.ref = api.GetColor(colBG, 1);\
-	if(m_colBG.ref != oldbg)\
-		FillClockBG();\
-	} __pragma(warning(suppress:4127)) while(0)
+} COLOR;
+COLOR m_col;
+COLOR m_col_normal;
+COLOR m_col_hover;
+COLOR m_colBG;
+
+void ColorUpdate(unsigned text_color, unsigned back_color) {
+	COLORREF old;
+	m_col_normal.ref = m_col.ref = api.GetColor(text_color, 0);
+	if(text_color == TCOLOR(TCOLOR_DEFAULT) || text_color == TCOLOR(TCOLOR_TRANSPARENT))
+		m_col_hover.ref = api.GetColor(TCOLOR(TCOLOR_DEFAULT), TCOLORFLAG_HOVER);
+	else
+		m_col_hover = m_col_normal;
+	old = m_colBG.ref;
+	m_colBG.ref = api.GetColor(back_color, TCOLORFLAG_RAW1);
+	if(m_colBG.ref != old)
+		FillClockBG();
+}
+
 /*** misc variables ***/
 static long m_clock_base_width; ///< original clock's width used by taskbar calculation
 static long m_clock_base_height; ///< original clock's height used by taskbar calculation
@@ -767,8 +773,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 			tme.hwndTrack = hwnd;
 			tme.dwHoverTime = HOVER_DEFAULT;
 			m_TipState = TrackMouseEvent(&tme);
-			if(IsXPThemeActive())
-				m_col.ref = GetXPClockColor(gs_hwndClock, CLS_HOT);
+			m_col = m_col_hover;
 			FillClockBGHover();
 			InvalidateRect(gs_hwndClock, NULL, 0);
 		}
@@ -799,8 +804,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
 			}
 			m_TipState = 0;
-			if(IsXPThemeActive())
-				m_col.ref = GetXPClockColor(gs_hwndClock, CLS_NORMAL);
+			m_col = m_col_normal;
 			FillClockBG();
 			InvalidateRect(gs_hwndClock,NULL,0);
 		}

@@ -154,7 +154,7 @@ static const syscolor_t m_syscolor[]={
 	{TCOLOR_THEME,L"Theme color"},
 	{TCOLOR_THEME_DARK,L"Theme color (dark)"},
 	{TCOLOR_THEME_ALPHA,L"Theme color w/ alpha"},
-//	{TCOLOR_THEME_BG,"Theme bg color"},
+//	{TCOLOR_THEME_BG,L"Theme bg color"},
 	
 	{COLOR_3DFACE,L"3DFACE"},
 	{COLOR_3DSHADOW,L"3DSHADOW"},
@@ -258,7 +258,7 @@ LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		char color_str[8];
 		HGLOBAL hg;
 		char* pbuf;
-		unsigned color = api.GetColor(ColorBox_GetColorRaw(hwnd),2);
+		unsigned color = api.GetColor(ColorBox_GetColorRaw(hwnd), TCOLORFLAG_RAW2);
 		color = ((color&0xff)<<16) | (color&0xff00) | ((color&0xff0000)>>16);
 		__pragma(warning(suppress:4996)) sprintf(color_str, "#%06x", color);
 		if(!OpenClipboard(hwnd))
@@ -309,7 +309,7 @@ LRESULT CALLBACK ColorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 				if(!size){ // valid hex value
 					for(size=TCOLOR_BEGIN_; size<TCOLOR_END_; ++size){
-						if(color == (api.GetColor(TCOLOR(size),2) & 0xffffff))
+						if(color == (api.GetColor(TCOLOR(size),TCOLORFLAG_RAW2) & 0xffffff))
 							break;
 					}
 					if(size != TCOLOR_END_)
@@ -362,7 +362,7 @@ LRESULT ColorBox_OnDrawItem(WPARAM wParam, LPARAM lParam) {
 	color_rc.bottom = color_rc.top + draw_rc.bottom;
 	
 	if(IsWindowEnabled(pdis->hwndItem)) {
-//		col = api.GetColor((COLORREF)pdis->itemData,2);
+//		col = api.GetColor((COLORREF)pdis->itemData, TCOLORFLAG_RAW);
 //		if((col&TCOLOR_MASK)==TCOLOR_MAGIC)
 //			col &= 0x00ffffff;
 		col = api.GetColor((COLORREF)pdis->itemData,0);
@@ -443,7 +443,7 @@ int ColorBox_ChooseColor(HWND button)
 	HWND color_cb = GetWindow(button, GW_HWNDPREV);
 	size_t idx;
 	
-	color = api.GetColor((COLORREF)ComboBox_GetItemData(color_cb, ComboBox_GetCurSel(color_cb)),2);
+	color = api.GetColor((COLORREF)ComboBox_GetItemData(color_cb, ComboBox_GetCurSel(color_cb)), TCOLORFLAG_RAW2);
 	
 	// https://msdn.microsoft.com/en-us/library/windows/desktop/ms646908%28v=vs.85%29.aspx
 	//   https://msdn.microsoft.com/en-us/library/ms646869%28v=vs.85%29.aspx
