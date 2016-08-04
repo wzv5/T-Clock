@@ -620,7 +620,7 @@ int PlayFile(HWND hwnd, const wchar_t* fname, DWORD dwLoops)
 	&&(fname[0]!='.' || (fname[1]!='/' && fname[1]!='\\' && (fname[1]!='.' ||  (fname[2]!='/' && fname[2]!='\\'))))) // no relative path (strict relative)
 	{ // do it relative to "waves/"
 		wchar_t app[MAX_PATH];
-		const size_t len = wcslen(fname)+1; // incl. terminating null
+		const int len = (int)wcslen(fname)+1; // incl. terminating null
 		if(len < (MAX_PATH-api.root_len-7)){
 			memcpy(file, api.root, api.root_size); // absolute path is at least required by .pcb / PlayNoSoundThread (not for .wav)
 			memcpy(file+api.root_len, L"\\waves\\", (7*sizeof(file[0])));

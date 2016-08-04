@@ -63,6 +63,9 @@ void InitFormat(const wchar_t* section, SYSTEMTIME* lt)   //--------------------
 	if(GetDateFormat(ilang, DATE_USE_ALT_CALENDAR, lt, L"yyyy", year, _countof(year)))
 		m_AltYear = _wtoi(year);
 }
+
+__pragma(warning(push))
+__pragma(warning(disable:4701)) // MSVC is confused with our S(..) format (uptime) about "num" being "uninitialized"
 //================================================================================================
 //-------------+++--> Format T-Clock's OutPut String From Current Date, Time, & System Information:
 unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME* pt, int beat100)   //------------------+++-->
@@ -503,6 +506,7 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 	*out='\0';
 	return (unsigned)(out-buf);
 }
+__pragma(warning(pop))
 
 /*--------------------------------------------------
 --------------------------------------- Check Format
