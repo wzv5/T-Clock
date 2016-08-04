@@ -341,18 +341,25 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 			if(specifier)
 				out += api.WriteFormatNum(out, num, width, padding);
 		} else if(*fmt == 'W') { // Week-of-Year
+			char buf[4];
+			int width, padding, num;
+			wchar_t specifier;
 			struct tm tmnow;
 			time_t ts = time(NULL);
 			localtime_r(&ts, &tmnow);
-			++fmt;
-			if(*fmt == 's') { // Week-Of-Year Starts Sunday
-				out += wcsftime(out, bufend-out, L"%U", &tmnow);
-				++fmt;
-			} else if(*fmt == 'm') { // Week-Of-Year Starts Monday
-				out += wcsftime(out, bufend-out, L"%W", &tmnow);
-				++fmt;
-			} else if(*fmt == 'i') { // ISO-8601 week (1st version by henriko.se, 2nd by White-Tiger)
-				int wday,borderdays,week;
+			api.GetFormat(&fmt, &width, &padding);
+			specifier = *fmt;
+			switch(specifier){
+			case 's': // Week-Of-Year Starts Sunday
+				strftime(buf, _countof(buf), "%U", &tmnow);
+				num = atoi(buf);
+				break;
+			case 'm': // Week-Of-Year Starts Monday
+				strftime(buf, _countof(buf), "%W", &tmnow);
+				num = atoi(buf);
+				break;
+			case 'i':{ // ISO-8601 week (1st version by henriko.se, 2nd by White-Tiger)
+				int wday, borderdays, week;
 				for(;;){
 					wday = (!tmnow.tm_wday?6:tmnow.tm_wday-1); // convert from Sun-Sat to Mon-Sun (0-5)
 					borderdays = (tmnow.tm_yday + 7 - wday) % 7; // +7 to prevent it from going negative
@@ -378,15 +385,21 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 					}
 					break;
 				}
-				out += wsprintf(out, FMT("%d"), week);
+				num = week;
+				break;}
+			case 'u':
+				num = (1 + (tmnow.tm_yday + 6 - tmnow.tm_wday) / 7);
+				break;
+			case 'w': // SWN (Simple Week Number)
+				num = (1 + tmnow.tm_yday / 7);
+				break;
+			default:
+				specifier = '\0';
+				*out++ = 'W';
+			}
+			if(specifier) {
 				++fmt;
-			} else if(*fmt == 'u') {
-				int week = 1 + (tmnow.tm_yday + 6 - tmnow.tm_wday) / 7;
-				out += wsprintf(out, FMT("%d"), week);
-				++fmt;
-			} else if(*fmt == 'w') { // SWN (Simple Week Number)
-				out += wsprintf(out, FMT("%d"), 1 + tmnow.tm_yday / 7);
-				++fmt;
+				out += api.WriteFormatNum(out, num, width, padding);
 			}
 		}
 //================================================================================================
@@ -431,51 +444,34 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 //================================================================================================
 //======================================= ORDINAL DATE Code =======================================
 		else if(*fmt == 'O' && *(fmt + 1) == 'D') { //--------+++--> Ordinal Date UTC:
-			wchar_t szOD[16] = {0};
 			struct tm today;
 			time_t UTC = time(NULL);
-			wchar_t* od;
 			
 			gmtime_r(&UTC, &today);
-			wcsftime(szOD, 16, L"%Y-%j", &today);
-			od = szOD;
-			while(*od) *out++ = *od++;
+			out += wcsftime(out, 16, L"%Y-%j", &today);
 			fmt +=2;
 		}
 		//==========================================================================
 		else if(*fmt == 'O' && *(fmt + 1) == 'd') { //------+++--> Ordinal Date Local:
-			wchar_t szOD[16] = {0};
 			struct tm today;
 			time_t ts = time(NULL);
-			wchar_t* od;
 			
 			localtime_r(&ts, &today);
-			wcsftime(szOD, 16, L"%Y-%j", &today);
-			od = szOD;
-			while(*od) *out++ = *od++;
+			out += wcsftime(out, 16, L"%Y-%j", &today);
 			fmt +=2;
 		}
 		//==========================================================================
 		else if(*fmt == 'D' && wcsncmp(fmt, L"DOY", 3) == 0) { //--+++--> Day-Of-Year:
-			wchar_t szDoy[8] = {0};
 			struct tm today;
 			time_t ts = time(NULL);
-			wchar_t* doy;
 			
 			localtime_r(&ts, &today);
-			wcsftime(szDoy, 8, L"%j", &today);
-			doy = szDoy;
-			while(*doy) *out++ = *doy++;
+			out += wcsftime(out, 8, L"%j", &today);
 			fmt +=3;
 		}
 		//==========================================================================
 		else if(*fmt == 'P' && wcsncmp(fmt, L"POSIX", 5) == 0) { //-> Posix/Unix Time:
-			wchar_t szPosix[16] = {0}; // This will Give the Number of Seconds That Have
-			wchar_t* posix; //--+++--> Elapsed Since the Unix Epoch: 1970-01-01 00:00:00
-			
-			wsprintf(szPosix, FMT("%ld"), time(NULL));
-			posix = szPosix;
-			while(*posix) *out++ = *posix++;
+			out += wsprintf(out, FMT("%") FMT(PRIi64), (int64_t)time(NULL));
 			fmt +=5;
 		}
 		//==========================================================================
