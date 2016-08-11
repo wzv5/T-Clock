@@ -151,6 +151,11 @@ int ParseSettings(){
 	return 0;
 }
 
+static void FixShortInt(const wchar_t* section, const wchar_t* entry) {
+	int val = api.GetInt(section, entry, 0);
+	if(val)
+		api.SetInt(section, entry, (short)val);
+}
 void ConvertSettings(VERSION ver) {
 	wchar_t buf[MAX_PATH];
 	int idx, idx2;
@@ -179,6 +184,11 @@ void ConvertSettings(VERSION ver) {
 			wsprintf(buf+len, FMT("%d"), ++idx);
 			api.DelValue(buf, L"ID");
 		}
+		// fix for short values stored improperly as int but read as short. required since commit e4406d0
+		FixShortInt(L"Clock", L"LineHeight");
+		FixShortInt(L"Taskbar", L"AlphaTaskbar");
+		FixShortInt(L"Calendar", L"ViewMonths");
+		FixShortInt(L"Calendar", L"ViewMonthsPast");
 		/* fall through */
 		
 	case _2_3_0:
