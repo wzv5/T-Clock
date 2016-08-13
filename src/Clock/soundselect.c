@@ -48,14 +48,10 @@ void GetMMFileExts(wchar_t* dst)
 /*------------------------------------------------------------------
 ---------------------------------- open dialog to browse sound files
 ------------------------------------------------------------------*/
-BOOL BrowseSoundFile(HWND hDlg, const wchar_t* deffile, wchar_t* fname)
+BOOL BrowseSoundFile(HWND hDlg, const wchar_t* deffile, wchar_t fname[MAX_PATH])
 {
 	wchar_t filter[1024], mmfileexts[1024];
-	wchar_t ftitle[MAX_PATH], initdir[MAX_PATH];
-	
-	OPENFILENAME ofn;
-	ZeroMemory(&ofn, sizeof(ofn)); // Initialize OPENFILENAME
-	ofn.lStructSize = sizeof(ofn);
+	DWORD index;
 	
 	filter[0]=filter[1]='\0';
 	str0cat(filter, MyString(IDS_MMFILE));
@@ -64,34 +60,12 @@ BOOL BrowseSoundFile(HWND hDlg, const wchar_t* deffile, wchar_t* fname)
 	str0cat(filter, MyString(IDS_ALLFILE));
 	str0cat(filter, L"*.*");
 	
-	if(!deffile[0] || IsMMFile(deffile)) ofn.nFilterIndex = 1;
-	else ofn.nFilterIndex = 2;
+	if(!deffile[0] || IsMMFile(deffile))
+		index = 1;
+	else
+		index = 2;
 	
-	memcpy(initdir, api.root, api.root_size);
-	if(deffile[0]) {
-		WIN32_FIND_DATA fd;
-		HANDLE hfind;
-		hfind = FindFirstFile(deffile, &fd);
-		if(hfind != INVALID_HANDLE_VALUE) {
-			FindClose(hfind);
-			wcsncpy_s(initdir, _countof(initdir), deffile, _TRUNCATE);
-			del_title(initdir);
-		}
-	}
-	
-	*fname = '\0';
-	
-	ofn.hwndOwner = hDlg;
-	ofn.hInstance = NULL;
-	ofn.lpstrFilter = filter;
-	ofn.lpstrFile = fname;
-	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrFileTitle = ftitle;
-	ofn.nMaxFileTitle = MAX_PATH;
-	ofn.lpstrInitialDir = initdir;
-	ofn.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|OFN_FILEMUSTEXIST;
-	
-	if(GetOpenFileName(&ofn)) {
+	if(SelectMyFile(hDlg, filter, index, deffile, fname)) {
 		if(!wcsncmp(fname,api.root,api.root_len)) { // make relative to waves/ if possible
 			if(!wcsncmp(fname+api.root_len, L"\\waves\\", 7)) {
 				memmove(fname, fname+api.root_len+7, ((wcslen(fname)-api.root_len-7+1) * sizeof fname[0]));
@@ -115,70 +89,3 @@ BOOL IsMMFile(const wchar_t* fname)
 	}
 	return 0;
 }
-/*
-static BOOL bPlaying = FALSE;
-void OnInitDialog(HWND hDlg)
-{
-	HWND hwndStatic;
-	RECT rc1, rc2;
-	POINT pt;
-	int dx;
-	
-	SendDlgItemMessage(hDlg, IDC_TESTSOUND, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconPlay);
-	EnableDlgItem(hDlg, IDC_TESTSOUND, FALSE);
-	
-	bPlaying = FALSE;
-	
-	// find "File Name:" Label
-	hwndStatic = GetDlgItem(GetParent(hDlg), 0x442);
-	if(hwndStatic == NULL) return;
-	GetWindowRect(hwndStatic, &rc1);
-	
-	// move "Test:" Label
-	GetWindowRect(GetDlgItem(hDlg, IDC_LABTESTSOUND), &rc2);
-	dx = rc1.left - rc2.left;
-	pt.x = rc2.left + dx; pt.y = rc2.top;
-	ScreenToClient(hDlg, &pt);
-	SetWindowPos(GetDlgItem(hDlg, IDC_LABTESTSOUND), NULL, pt.x, pt.y, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
-	
-	// move play button
-	GetWindowRect(GetDlgItem(hDlg, IDC_TESTSOUND), &rc2);
-	pt.x = rc2.left + dx; pt.y = rc2.top;
-	ScreenToClient(hDlg, &pt);
-	SetWindowPos(GetDlgItem(hDlg, IDC_TESTSOUND), NULL, pt.x, pt.y, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
-}// */
-/*
-void OnFileNameChanged(HWND hDlg)
-{
-	char fname[MAX_PATH];
-	WIN32_FIND_DATA fd;
-	BOOL b = FALSE;
-	
-	HANDLE hfind = INVALID_HANDLE_VALUE;
-	
-	if(CommDlg_OpenSave_GetFilePath(GetParent(hDlg), fname, _countof(fname)) <= _countof(fname)) {
-		hfind = FindFirstFile(fname, &fd);
-		if(hfind != INVALID_HANDLE_VALUE) {
-			if(!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) b = TRUE;
-			FindClose(hfind);
-		}
-	}
-	EnableDlgItem(hDlg, IDC_TESTSOUND, b);
-}// */
-/*
-void OnTestSound(HWND hDlg)
-{
-	char fname[MAX_PATH];
-	
-	if(CommDlg_OpenSave_GetFilePath(GetParent(hDlg), fname, _countof(fname)) <= _countof(fname)) {
-		if((HICON)SendDlgItemMessage(hDlg, IDC_TESTSOUND, BM_GETIMAGE, IMAGE_ICON, 0) == g_hIconPlay) {
-			if(PlayFile(hDlg, fname, 0)) {
-				SendDlgItemMessage(hDlg, IDC_TESTSOUND, BM_SETIMAGE, IMAGE_ICON, (LPARAM)g_hIconStop);
-				InvalidateRect(GetDlgItem(hDlg, IDC_TESTSOUND), NULL, FALSE);
-				bPlaying = TRUE;
-			}
-		} else {
-			StopFile(); bPlaying = FALSE;
-		}
-	}
-}// */

@@ -127,20 +127,9 @@ void DeleteMenuItem(HWND hDlg)
 //-------------------------------------//------+++--> Browse to the Quicky Menu Item's Target File:
 void BrowseForTargetFile(HWND hBft)   //----------------------------------------------------+++-->
 {
-	const wchar_t* Filters = L"Program Files (*.exe)\0*.exe\0" L"All Files (*.*)\0*.*\0";
 	wchar_t szFile[MAX_PATH];
-	OPENFILENAME ofn = {sizeof(ofn)};
 	
-	szFile[0] = '\0';
-	ofn.hwndOwner    = hBft;
-	ofn.hInstance    = NULL;
-	ofn.lpstrFilter  = Filters;
-	ofn.lpstrFile    = szFile;
-	ofn.nMaxFile     = MAX_PATH;
-	ofn.lpstrInitialDir = api.root;
-	ofn.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|OFN_FILEMUSTEXIST;
-	
-	if(GetOpenFileName(&ofn)) {
+	if(SelectMyFile(hBft, L"Program Files (*.exe)\0*.exe\0" L"All Files (*.*)\0*.*\0", 0, NULL, szFile)) {
 		SetDlgItemText(hBft, IDC_MID_TARGET, szFile);
 	}
 }

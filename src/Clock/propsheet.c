@@ -156,40 +156,32 @@ LRESULT CALLBACK Window_PropertySheet_Hooked(HWND hwnd, UINT message, WPARAM wPa
 /*------------------------------------------------
    select file
 --------------------------------------------------*/
-BOOL SelectMyFile(HWND hDlg, const wchar_t* filter, DWORD nFilterIndex, const wchar_t* deffile, wchar_t* retfile)
+BOOL SelectMyFile(HWND hDlg, const wchar_t* filter, DWORD filter_index, const wchar_t* deffile, wchar_t retfile[MAX_PATH])
 {
-	wchar_t fname[MAX_PATH], ftitle[MAX_PATH], initdir[MAX_PATH];
-	OPENFILENAME ofn = {sizeof(OPENFILENAME)};
-	BOOL r;
+	wchar_t initdir[MAX_PATH];
+	OPENFILENAME ofn = {sizeof(ofn)};
 	
 	memcpy(initdir, api.root, api.root_size);
-	if(deffile[0]) {
+	if(deffile && deffile[0]) {
 		WIN32_FIND_DATA fd;
 		HANDLE hfind;
 		hfind = FindFirstFile(deffile, &fd);
 		if(hfind != INVALID_HANDLE_VALUE) {
 			FindClose(hfind);
-			wcsncpy_s(initdir, _countof(initdir), deffile,_TRUNCATE);
+			wcsncpy_s(initdir, _countof(initdir), deffile, _TRUNCATE);
 			del_title(initdir);
 		}
 	}
 	
-	fname[0] = '\0';
+	retfile[0] = '\0';
 	ofn.hwndOwner = hDlg;
 	ofn.hInstance = g_instance;
 	ofn.lpstrFilter = filter;
-	ofn.nFilterIndex = nFilterIndex;
-	ofn.lpstrFile= fname;
+	ofn.nFilterIndex = filter_index;
+	ofn.lpstrFile = retfile;
 	ofn.nMaxFile = MAX_PATH;
-	ofn.lpstrFileTitle = ftitle;
-	ofn.nMaxFileTitle = MAX_PATH;
 	ofn.lpstrInitialDir = initdir;
-	ofn.Flags = OFN_HIDEREADONLY|OFN_EXPLORER|OFN_FILEMUSTEXIST;
+	ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_NODEREFERENCELINKS;
 	
-	r = GetOpenFileName(&ofn);
-	if(!r) return r;
-	
-	wcscpy(retfile, ofn.lpstrFile);
-	
-	return r;
+	return GetOpenFileName(&ofn);
 }

@@ -364,11 +364,11 @@ static INT_PTR CALLBACK Window_Stopwatch(HWND hwnd, UINT msg, WPARAM wParam, LPA
 
 static BOOL SaveFileDialog(HWND hDlg, wchar_t* file /*in/out*/, int filebuflen)
 {
-	OPENFILENAME ofn = {sizeof(OPENFILENAME)};
+	OPENFILENAME ofn = {sizeof(ofn)};
 	ofn.hwndOwner = hDlg;
 	ofn.lpstrFile = file;
 	ofn.nMaxFile = filebuflen;
-	ofn.Flags = OFN_NOCHANGEDIR|OFN_OVERWRITEPROMPT|OFN_PATHMUSTEXIST;
+	ofn.Flags = OFN_NOCHANGEDIR | OFN_OVERWRITEPROMPT | OFN_PATHMUSTEXIST;
 	return GetSaveFileName(&ofn);
 }
 static void export_print(wchar_t** out, const wchar_t* fmt, const wchar_t* time, int num, const wchar_t* lap, const wchar_t* lapflags){

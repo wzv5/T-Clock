@@ -85,7 +85,15 @@ int CheckSettings();
 extern char g_bApplyClock;
 extern char g_bApplyTaskbar;
 void MyPropertySheet(int page);
-BOOL SelectMyFile(HWND hDlg, const wchar_t* filter, DWORD nFilterIndex, const wchar_t* deffile, wchar_t* retfile);
+/** wrapper for GetOpenFileName()
+ * \param[in] hDlg parent window to be disabled during selection \e [optional]
+ * \param[in] filter list of filters ( \c Name\0*.ext;*.ext2\0... ), terminated by \0\0
+ * \param[in] filter_index index of selected filter in \a filter counting from 1 \e [optional]
+ * \param[in] deffile initial (previously selected) file or directory \e [optional]
+ * \param[out] retfile holds selected file; or "" on error
+ * \return boolean, \p deffile will be non-empty on success
+ * \sa GetOpenFileName() */
+BOOL SelectMyFile(HWND hDlg, const wchar_t* filter, DWORD filter_index, const wchar_t* deffile, wchar_t retfile[MAX_PATH]);
 
 // alarm.c
 typedef struct Schedule Schedule;

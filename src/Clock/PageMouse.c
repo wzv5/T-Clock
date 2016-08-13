@@ -8,6 +8,12 @@
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 static void OnDestroy();
+/** \brief browse for a file or folder triggered by control \p id
+ * \param hDlg
+ * \param id control id of browse button
+ * \remark \p id - 1 must be an edit control or dropdown that receives the chosen file
+ * \remark When \p id equals \c IDC_DROPFILESAPPSANSHO , it'll browse for either a file or folder depending on current selection in \c IDC_DROPFILES
+ * \sa IDC_DROPFILESAPPSANSHO, IDC_MOUSEFILEBROWSE */
 static void OnFileBrowse(HWND hDlg, WORD id);
 static void InitMouseControls(HWND hDlg);
 
@@ -433,12 +439,6 @@ void OnDestroy()   //-----------------------------------------------------------
 /*--------------------------------------------------
 --------------- Handle File Dropped on Clock Options
 --------------------------------------------------*/
-/** \brief browse for a file or folder triggered by control \p id
- * \param hDlg
- * \param id control id of browse button
- * \remark \p id - 1 must be an edit control or dropdown that receives the chosen file
- * \remark When \p id equals \c IDC_DROPFILESAPPSANSHO , it'll browse for either a file or folder depending on current selection in \c IDC_DROPFILES
- * \sa IDC_DROPFILESAPPSANSHO, IDC_MOUSEFILEBROWSE */
 void OnFileBrowse(HWND hDlg, WORD id)
 {
 	wchar_t filter[80], deffile[MAX_PATH], fname[MAX_PATH];
@@ -454,6 +454,7 @@ void OnFileBrowse(HWND hDlg, WORD id)
 			if(pidl) {
 				SHGetPathFromIDList(pidl, fname);
 				SetDlgItemText(hDlg, id-1, fname);
+				CoTaskMemFree(pidl);
 				PostMessage(hDlg, WM_NEXTDLGCTL, 1, FALSE);
 				SendPSChanged(hDlg);
 			}
