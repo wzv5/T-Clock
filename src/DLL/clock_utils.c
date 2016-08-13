@@ -413,8 +413,24 @@ int Clock_SetStr(const wchar_t* section, const wchar_t* entry, const wchar_t* va
 	if(!PrepareMyRegKey_(key,section))
 		return 0;
 	
-	if(ms_inifile[0])
+	if(ms_inifile[0]) {
+		size_t size = wcslen(val);
+		if(size && (val[0] < '0' || val[size-1] <= 0x20)) {
+			int ret;
+			wchar_t* val_mod;
+			size = (wcslen(val)+1) * sizeof(val[0]);
+			val_mod = (wchar_t*)malloc(size + 2*sizeof(val[0]));
+			val_mod[0] = '"';
+			memcpy(val_mod+1, val, size);
+			size /= sizeof(val[0]);
+			val_mod[size] = '"';
+			val_mod[1 + size] = '\0';
+			ret = WritePrivateProfileString(key, entry, val_mod, ms_inifile);
+			free(val_mod);
+			return ret;
+		}
 		return WritePrivateProfileString(key, entry, val, ms_inifile);
+	}
 	return Clock_SetSystemStr(HKEY_CURRENT_USER, key, entry, val);
 }
 
