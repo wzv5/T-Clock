@@ -8,7 +8,7 @@
 #include <string>
 using namespace std;
 
-#define AV_VERSION "1.0.2"
+#define AV_VERSION "1.0.3"
 
 #ifdef _MSC_VER
 #	include <direct.h>//unlink,getcwd
@@ -675,14 +675,6 @@ bool WriteHeader(const char* filepath,Version &ver)
 	fputs("#ifndef AUTOVERSION_H\n",fheader);
 	fputs("#define AUTOVERSION_H\n",fheader);
 	fputs("/* Note: to use integer defines as strings, use STR(), eg. STR(VER_REVISION) */\n",fheader);
-	fputs("#ifndef STR\n",fheader);
-	fputs("#	define STR_(x) #x\n",fheader);
-	fputs("#	define STR(x) STR_(x)\n",fheader);
-	fputs("#endif\n",fheader);
-	fputs("#ifndef L\n",fheader);
-	fputs("#	define L_(x) L##x\n",fheader);
-	fputs("#	define L(x) L_(x)\n",fheader);
-	fputs("#endif\n",fheader);
 //	fputs("namespace Version{\n",fheader);
 	fputs("/**** Version ****/\n",fheader);
 	WriteDefine(fheader,"MAJOR",ver);
@@ -740,6 +732,19 @@ bool WriteHeader(const char* filepath,Version &ver)
 	fprintf(fheader,"#	define VER_DATE_SHORT \"%s\"\n",tmp);
 	strftime(tmp,64,"%Y-%m-%dT%H:%M:%SZ",ttm);
 	fprintf(fheader,"#	define VER_DATE_ISO \"%s\"\n",tmp);
+	
+	fputs("/**** Helper 'functions' ****/\n",fheader);
+	fputs("#	define VER_IsReleaseOrHigher() ( VER_STATUS >= 3 )\n", fheader);
+	for(int i=0; i<STATUS_NUM_; ++i)
+		fprintf(fheader,"#	define VER_Is%s() ( VER_STATUS == %i )\n", STATUS_S[i], i);
+	fputs("#ifndef STR\n",fheader);
+	fputs("#	define STR_(x) #x\n",fheader);
+	fputs("#	define STR(x) STR_(x)\n",fheader);
+	fputs("#endif\n",fheader);
+	fputs("#ifndef L\n",fheader);
+	fputs("#	define L_(x) L##x\n",fheader);
+	fputs("#	define L(x) L_(x)\n",fheader);
+	fputs("#endif\n",fheader);
 
 	fputs("#endif\n",fheader);
 	fclose(fheader);

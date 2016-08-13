@@ -5,7 +5,6 @@
 #include "tclock.h"
 #include <time.h>
 #include "../common/version.h"
-
 static void OnInit(HWND hDlg);
 static void OnApply(HWND hDlg);
 static void OnLinkClicked(HWND hDlg, UINT id);
@@ -23,6 +22,9 @@ static void SetUpdateChecks(HWND hDlg, int state/* = 0*/) {
 	} else {
 		state = IsDlgButtonChecked(hDlg, IDC_UPDATE_RELEASE);
 	}
+	#if !VER_IsReleaseOrHigher() // non-release build, forced beta check
+		state = 0;
+	#endif
 	EnableDlgItem(hDlg, IDC_UPDATE_BETA, state);
 }
 
@@ -58,8 +60,7 @@ INT_PTR CALLBACK Page_About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		}
 		break;}
 	case WM_COMMAND: {
-		WORD id;
-		id = LOWORD(wParam);
+		WORD id = LOWORD(wParam);
 		if(id == IDC_UPDATE_CHECK) {
 			HWND options = GetParent(hDlg);
 			HANDLE proc;
@@ -92,14 +93,14 @@ INT_PTR CALLBACK Page_About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			EnableDlgItem(hDlg, IDC_UPDATE_RELEASE, 1);
 			EnableWindow((HWND)lParam, 1);
 			SetForegroundWindow(options);
+			return TRUE;
 		}else if(id == IDC_ABT_MAILuri) {
 			OnLinkClicked(hDlg, id);
+			return TRUE;
 		}else if(id == IDC_UPDATE_RELEASE) {
 			SetUpdateChecks(hDlg, 1);
-			SendPSChanged(hDlg);
-		} else {
-			SendPSChanged(hDlg);
 		}
+		SendPSChanged(hDlg);
 		return TRUE;}
 	case WM_NOTIFY:
 		switch(((NMHDR*)lParam)->code) {
