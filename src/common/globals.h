@@ -208,5 +208,10 @@ enum{ // Drop&File enum / registry settings
 #	define DBGMSG(fmt,...) /**< nop; RELEASE \sa DBGMSG_ */
 #	define DBGOUT(fmt,...) /**< nop; RELEASE \sa DBGOUT_ */
 #endif // _DEBUG
+#ifdef _MSC_VER
+#	define COMPILE_ASSERT(condition) {extern char assertion_error[1 / !!(condition)];}
+#else
+#	define COMPILE_ASSERT(condition) {extern char assertion_error[1 / !!(condition)]; (void)assertion_error;}
+#endif
 
 #endif // TCLOCK_GLOBAL_H

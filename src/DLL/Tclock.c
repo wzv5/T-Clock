@@ -421,20 +421,28 @@ void ShowTip(){
 }
 
 void SubsSendResize(){
+	typedef struct WINDOWPOS_fix {
+		HWND hwnd;
+		HWND hwndInsertAfter;
+		RECT rect;
+		UINT flags;
+	} WINDOWPOS_fix;
+	WINDOWPOS_fix pos;
 	int clock_id;
-	RECT rc;
 	HWND taskbar;
+	
+	COMPILE_ASSERT(sizeof(WINDOWPOS) == sizeof(WINDOWPOS_fix));
+	
 	if(api.OS < TOS_WIN10)
 		return;
 	for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
 		// force a taskbar refresh
-//		SetWindowPos(m_multiClock[m_multiClocks].worker, HWND_TOP, 0, 0,
-//					m_multiClock[m_multiClocks].workerRECT.right, m_multiClock[m_multiClocks].workerRECT.bottom,
-//					SWP_NOMOVE);
 		taskbar = GetParent(m_multiClock[clock_id].worker);
-		GetClientRect(taskbar, &rc);
-		SetWindowPos(taskbar, 0, 0,0, rc.right+1,rc.bottom, SWP_NOMOVE|SWP_NOOWNERZORDER|SWP_NOZORDER);
-		SetWindowPos(taskbar, 0, 0,0, rc.right,rc.bottom, SWP_NOMOVE|SWP_NOOWNERZORDER|SWP_NOZORDER);
+		memset(&pos, 0, sizeof(pos));
+		pos.flags = SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+		pos.hwnd = taskbar;
+		GetClientRect(taskbar, &pos.rect);
+		SendMessage(taskbar, WM_WINDOWPOSCHANGED, 0, (LPARAM)&pos);
 	}
 }
 void SubsDestroy(){
@@ -442,11 +450,12 @@ void SubsDestroy(){
 	for(clock_id=0; clock_id<m_multiClocks; ++clock_id){
 		if(IsWindow(m_multiClock[clock_id].worker)) {
 			RemoveWindowSubclass(m_multiClock[clock_id].worker, Window_SecondaryTaskbarWorker_Hooked, clock_id);
-			SendMessage(m_multiClock[clock_id].clock, WM_CLOSE, 0xDEED, 0);
+			SendMessage(m_multiClock[clock_id].clock, WM_CLOSE, 0xDEED, 0); // handles RemoveWindowSubclass(m_multiClock[clock_id].clock)
 		}
 	}
 	SubsSendResize();
-	m_multiClocks = 0;
+	for(; m_multiClocks; )
+		m_multiClock[--m_multiClocks].worker = NULL;
 }
 void SubsCreate(){
 	char classname[GEN_BUFF];
@@ -913,9 +922,9 @@ static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WP
 		return 0;
 	case WM_PAINT:{
 		PAINTSTRUCT ps;
-		BeginPaint(hwnd,&ps);
-//		BitBlt(BeginPaint(hwnd,&ps),0,0,g_rcClock.right,g_rcClock.bottom,g_hdcClock,0,0,SRCCOPY);
-		EndPaint(hwnd,&ps);
+		BeginPaint(hwnd, &ps);
+		BitBlt(ps.hdc, 0,0,m_rcClock.right,m_rcClock.bottom, m_hdcClock, 0,0, SRCCOPY);
+		EndPaint(hwnd, &ps);
 		return 0;}
 	/// clock features
 	case WM_USER+102: // emulated click for Win10.1 to open calendar
@@ -1384,7 +1393,6 @@ void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100)
 				hdc = GetDC(m_multiClock[vpos].clock);
 				BitBlt(hdc, 0,0,m_rcClock.right,m_rcClock.bottom, m_hdcClock, 0,0, SRCCOPY);
 				ReleaseDC(m_multiClock[vpos].clock, hdc);
-				ValidateRect(m_multiClock[vpos].clock, NULL);
 			}while(++vpos < m_multiClocks);
 		}
 	}else{
@@ -1395,7 +1403,6 @@ void DrawClockSub(HDC hdc, SYSTEMTIME* pt, int beat100)
 				hdc = GetDC(m_multiClock[vpos].clock);
 				BitBlt(hdc, 0,0,m_rcClock.right,m_rcClock.bottom, m_hdcClock, 0,0, NOTSRCCOPY);
 				ReleaseDC(m_multiClock[vpos].clock, hdc);
-				ValidateRect(m_multiClock[vpos].clock, NULL);
 			}while(++vpos < m_multiClocks);
 		}
 	}
