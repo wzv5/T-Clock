@@ -255,6 +255,32 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 	
 	if(_api) // NULL if internally called
 		memcpy(_api, &api, sizeof(TClockAPI));
+	
+//	#if defined(_DEBUG)
+	{
+		HMODULE exchndl;
+		#ifdef _WIN64
+		#	define EXCHNDL_PATH L"\\.debug\\64\\exchndl"
+		#else
+		#	define EXCHNDL_PATH L"\\.debug\\exchndl"
+		#endif
+		memcpy(own_path, ms_root, api.root_size);
+		memcpy(own_path + ms_root_len, EXCHNDL_PATH, sizeof(EXCHNDL_PATH));
+		exchndl = GetModuleHandleA("exchndl");
+		if(!exchndl)
+			exchndl = LoadLibraryEx(own_path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH); // intended leak
+		if(exchndl) {
+			typedef BOOL (APIENTRY *pExcHndlSetLogFileNameA)(const char* szLogFileName);
+			char logpath[MAX_PATH];
+			pExcHndlSetLogFileNameA ExcHndlSetLogFileNameA = (pExcHndlSetLogFileNameA)GetProcAddress(exchndl, "ExcHndlSetLogFileNameA");
+			if(ExcHndlSetLogFileNameA) {
+				memcpy(own_path + ms_root_len, L"\\Crash.log", (10+1)*sizeof(wchar_t));
+				WideCharToMultiByte(CP_ACP, 0, own_path, ms_root_len+(10+1), logpath, _countof(logpath), NULL, NULL);
+				ExcHndlSetLogFileNameA(logpath);
+			}
+		}
+	}
+//	#endif
 	return 0;
 }
 

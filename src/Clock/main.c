@@ -246,17 +246,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	(void)hPrevInstance;
 	(void)nShowCmd;
 	
-	#if defined(__GNUC__) && defined(_DEBUG)
-	#	ifdef _WIN64
-	#		define LoadExcHndl() LoadLibraryExA("dbg\\64\\exchndl", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)
-	#	else
-	#		define LoadExcHndl() LoadLibraryExA("dbg\\exchndl", NULL, LOAD_WITH_ALTERED_SEARCH_PATH)
-	#	endif
-	#else
-	#	define LoadExcHndl()
-	#endif
-	LoadExcHndl(); // LOAD_WITH_ALTERED_SEARCH_PATH works :P At least since Win2k
-	
 	g_instance = hInstance;
 	if(LoadClockAPI(L"misc/T-Clock" ARCH_SUFFIX, &api)){
 		MessageBox(NULL, L"Error loading: T-Clock" ARCH_SUFFIX L".dll", L"API error", MB_OK|MB_ICONERROR);
@@ -471,6 +460,9 @@ void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //--------------
 			} else if(wcsncmp(p, L"UAC", 3) == 0) {
 				justElevated = 1;
 				p += 3;
+			} else if(wcsncmp(p, L"SEH", 3) == 0) {
+				p += 3;
+				SendMessage(FindClock(), WM_COMMAND, IDM_SHUTDOWN, 0);
 			}
 			continue;
 		}

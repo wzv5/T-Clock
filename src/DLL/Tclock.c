@@ -818,8 +818,16 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		}
 		return 0;}
 	case WM_COMMAND:
-		if(LOWORD(wParam)==IDM_EXIT)
+		switch(LOWORD(wParam)) {
+		case IDM_EXIT:
 			EndClock(hwnd);
+			break;
+		case IDM_SHUTDOWN: {// unload 'exchndl' if loaded
+			HMODULE exchndl = GetModuleHandleA("exchndl");
+			if(exchndl)
+				FreeLibrary(exchndl);
+			break;}
+		}
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
 		m_TipState = 0;
