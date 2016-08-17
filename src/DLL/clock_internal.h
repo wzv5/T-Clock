@@ -17,6 +17,8 @@ void Clock_InjectFinalize();
 /** \sa TClockAPI::Exit() */
 void Clock_Exit();
 
+/** \sa TClockAPI::GetClock() */
+HWND Clock_GetClock(int uncached);
 /** \sa TClockAPI::GetCalendar() */
 HWND Clock_GetCalendar();
 /** \sa TClockAPI::Message() */

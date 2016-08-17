@@ -19,9 +19,6 @@ int IsUserInAdminGroup();
 unsigned GetParentProcess(unsigned pid);
 // clock related
 /**
- * \brief finds the tray clock handle */
-HWND FindClock();
-/**
  * \brief refreshes taskbar and clock */
 void RefreshUs();
 // unsorted

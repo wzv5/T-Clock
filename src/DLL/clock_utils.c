@@ -8,8 +8,28 @@ static const wchar_t kInvalidKey[] = L"\1\b";
 
 // misc
 
-HWND Clock_GetCalendar()
-{
+HWND Clock_GetClock(int uncached) {
+	char classname[80];
+	HWND taskbar, child;
+	if(!uncached && gs_hwndClock && IsWindow(gs_hwndClock))
+		return gs_hwndClock;
+	
+	taskbar = FindWindowA("Shell_TrayWnd", NULL);
+	// find the clock window
+	for(child=GetWindow(taskbar,GW_CHILD); child; child=GetWindow(child,GW_HWNDNEXT)) {
+		GetClassNameA(child, classname, _countof(classname));
+		if(!strcmp(classname,"TrayNotifyWnd")) {
+			for(child=GetWindow(child,GW_CHILD); child; child=GetWindow(child,GW_HWNDNEXT)) {
+				GetClassNameA(child, classname, _countof(classname));
+				if(!strcmp(classname,"TrayClockWClass"))
+					return child;
+			}
+			break;
+		}
+	}
+	return NULL;
+}
+HWND Clock_GetCalendar() {
 	HWND hwnd = FindWindowExA(NULL,NULL,"ClockFlyoutWindow",NULL);
 	if(hwnd)
 		return hwnd;
@@ -104,9 +124,7 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 	}
 	
 	// center small windows within clock dimension if possible
-	hwnd_clock = gs_hwndClock;
-	if(!hwnd_clock) // T-Clock isn't running
-		hwnd_clock = FindClock();
+	hwnd_clock = Clock_GetClock(0);
 	if(hwnd_clock) {
 		int offset;
 		GetWindowRect(hwnd_clock, &moni.rcWork);

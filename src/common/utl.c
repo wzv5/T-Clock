@@ -69,32 +69,11 @@ unsigned GetParentProcess(unsigned pid) {
 	CloseHandle(snap);
 	return ppid;
 }
-//==================================================================================
-//--------------------------------------------------+++--> finds the tray clock hwnd:
-HWND FindClock()   //---------------------------------------------------------+++-->
-{
-	char classname[80];
-	HWND hwndBar = FindWindowA("Shell_TrayWnd",NULL);
-	// find the clock window
-	HWND hwndChild;
-	for(hwndChild=GetWindow(hwndBar,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
-		GetClassNameA(hwndChild, classname, _countof(classname));
-		if(!strcmp(classname,"TrayNotifyWnd")) {
-			for(hwndChild=GetWindow(hwndChild,GW_CHILD); hwndChild; hwndChild=GetWindow(hwndChild,GW_HWNDNEXT)) {
-				GetClassNameA(hwndChild, classname, _countof(classname));
-				if(!strcmp(classname,"TrayClockWClass"))
-					return hwndChild;
-			}
-			break;
-		}
-	}
-	return NULL;
-}
 //===================================================================================
 //-------------------------------------+++--> Force a ReDraw of T-Clock & the TaskBar:
 void RefreshUs()   //----------------------------------------------------------+++-->
 {
-	HWND hclock=FindClock();
+	HWND hclock = api.GetClock(0);
 	if(hclock){
 		SendMessage(hclock,CLOCKM_REFRESHCLOCK,0,0);
 		SendMessage(hclock,CLOCKM_REFRESHTASKBAR,0,0);

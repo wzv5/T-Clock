@@ -462,7 +462,7 @@ void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //--------------
 				p += 3;
 			} else if(wcsncmp(p, L"SEH", 3) == 0) {
 				p += 3;
-				SendMessage(FindClock(), WM_COMMAND, IDM_SHUTDOWN, 0);
+				SendMessage(api.GetClock(0), WM_COMMAND, IDM_SHUTDOWN, 0);
 			}
 			continue;
 		}

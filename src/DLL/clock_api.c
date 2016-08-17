@@ -45,6 +45,7 @@ TClockAPI api = {
 	ClockAPI(InjectFinalize)
 	ClockAPI(Exit)
 	// misc
+	ClockAPI(GetClock)
 	ClockAPI(GetCalendar)
 	ClockAPI(Message)
 	ClockAPI(PositionWindow)
@@ -287,7 +288,7 @@ void Clock_Inject(HWND hwnd)
 	HWND hwndBar, hwndClock;
 	DWORD dwThreadId;
 	
-	hwndClock = FindClock();
+	hwndClock = Clock_GetClock(1);
 	gs_hwndTClockMain = hwnd;
 	if(gs_hwndClock && IsWindow(gs_hwndClock) && gs_hwndClock==hwndClock){
 		SendMessage(gs_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)gs_hwndClock);

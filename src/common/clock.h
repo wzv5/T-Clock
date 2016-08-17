@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-#define CLOCK_API 2 // UTF-16
+#define CLOCK_API 3 // UTF-16, GetClock()
 
 #ifndef WM_DWMCOLORIZATIONCOLORCHANGED
 #	define WM_DWMCOLORIZATIONCOLORCHANGED 0x0320
@@ -70,6 +70,11 @@ struct TClockAPI {
 	
 	// misc
 	
+/**
+ * \brief get/find the clock's \c HWND
+ * \param uncached set to \c 1 to receive uncached results
+ * \return clock \c HWND or \c NULL */
+	HWND (*GetClock)(int uncached);
 /**
  * \brief get currently opened calendar \c HWND, if any
  * \return calendar \c HWND or \c NULL */
