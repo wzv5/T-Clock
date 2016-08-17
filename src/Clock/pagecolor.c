@@ -239,8 +239,8 @@ void OnApply(HWND hDlg,BOOL preview)
 	api.SetInt(section, L"HorizPos", (int)SendDlgItemMessage(hDlg,IDC_SPINHPOS,UDM_GETPOS32,0,0));
 	api.SetInt(section, L"Angle", (int)SendDlgItemMessage(hDlg,IDC_SPINANGLE,UDM_GETPOS32,0,0));
 	
+	api.SetInt((preview ? section : L"Taskbar"), L"AlphaTaskbar", (int)SendDlgItemMessage(hDlg,IDC_SPINALPHA,UDM_GETPOS32,0,0));
 	if(!preview){
-		api.SetInt(L"Taskbar", L"AlphaTaskbar", (int)SendDlgItemMessage(hDlg,IDC_SPINALPHA,UDM_GETPOS32,0,0));
 		api.DelKey(L"Preview");
 		m_transition = 0;
 	}else

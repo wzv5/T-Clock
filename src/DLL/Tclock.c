@@ -836,6 +836,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		}
 		return 0;}
 	case CLOCKM_REFRESHCLOCKPREVIEW: // refresh the clock
+		wParam = 1;
 		ReadStyleData(hwnd,1); // also creates/updates clock
 		/* fall through */
 	case CLOCKM_REFRESHCLOCKPREVIEWFORMAT: // refresh the clock
@@ -844,7 +845,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		/* fall through */
 	case CLOCKM_REFRESHTASKBAR:{ // refresh other elements than clock (somehow required to actually change the clock's size)
 		HWND taskbar=GetParent(GetParent(hwnd));
-		int alpha = api.GetIntEx(L"Taskbar", L"AlphaTaskbar", 0);
+		int alpha = api.GetIntEx((wParam ? L"Preview" : L"Taskbar"), L"AlphaTaskbar", 0);
 		int clear_taskbar = api.GetIntEx(L"Taskbar", L"ClearTaskbar", 0);
 		SetLayeredTaskbar(hwnd, alpha, clear_taskbar, 0);
 		PostMessage(taskbar, WM_SIZE, SIZE_RESTORED, 0);
