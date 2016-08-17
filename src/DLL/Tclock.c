@@ -395,17 +395,18 @@ static void MyDragDrop_Enable(IDropTarget* myobj, int bEnable){
 //---------------------------------------------------------+++--> Create Mouse-Over ToolTip Window:
 void CreateTip(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
-//	hwndTip = CreateWindowEx(WS_EX_TOPMOST,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX|TTS_BALLOON,
-	m_TipHwnd = CreateWindowEx(WS_EX_TOPMOST|WS_EX_TRANSPARENT,TOOLTIPS_CLASS,NULL, WS_POPUP|TTS_ALWAYSTIP|TTS_NOPREFIX,
-							CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL,api.hInstance,NULL);
-	if(!m_TipHwnd)
-		return;
 	memset(&m_TipInfo, 0, sizeof(TOOLINFO));
 	m_TipInfo.cbSize = sizeof(TOOLINFO);
-	m_TipInfo.uFlags = TTF_IDISHWND|TTF_TRACK|TTF_TRANSPARENT;
+	if(api.OS <= TOS_XP_64)
+		m_TipInfo.cbSize -= sizeof(m_TipInfo.lpReserved);
+	m_TipInfo.uFlags = TTF_IDISHWND | TTF_TRACK;
 	m_TipInfo.hwnd = hwnd;
 	m_TipInfo.uId = (UINT_PTR)hwnd;
 	m_TipInfo.lpszText = LPSTR_TEXTCALLBACK_nowarn;
+	m_TipHwnd = CreateWindowEx(WS_EX_TOPMOST, TOOLTIPS_CLASS, NULL, (WS_POPUP | TTS_ALWAYSTIP | TTS_NOPREFIX),
+					CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT, NULL,NULL, api.hInstance,NULL);
+	if(!m_TipHwnd)
+		return;
 	
 	SendMessage(m_TipHwnd, TTM_ADDTOOL, 0, (LPARAM)&m_TipInfo);
 	SendMessage(m_TipHwnd, TTM_SETMAXTIPWIDTH, 0, 300);
@@ -417,19 +418,9 @@ void DestroyTip()
 	SendMessage(m_TipHwnd,TTM_DELTOOL,0,(LPARAM)&m_TipInfo);
 	DestroyWindow(m_TipHwnd); m_TipHwnd=NULL;
 }
-void ShowTip(HWND clock){
-	MONITORINFO taskbarMoni={sizeof(MONITORINFO)};
-	RECT rc; GetWindowRect(clock,&rc);
-	GetMonitorInfo(MonitorFromWindow(clock,MONITOR_DEFAULTTONEAREST),&taskbarMoni);
-	if(rc.left-taskbarMoni.rcMonitor.left<128){//is left
-		SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.right,rc.top));
-	}else{//right
-		if(rc.top-taskbarMoni.rcMonitor.top<128){//is top
-			SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.left,rc.bottom+3));
-		}else//bottom
-			SendMessage(m_TipHwnd,TTM_TRACKPOSITION,0,MAKELPARAM(rc.right,rc.top-3));
-	}
-	SendMessage(m_TipHwnd,TTM_TRACKACTIVATE,TRUE,(LPARAM)&m_TipInfo);
+void ShowTip(){
+	SendMessage(m_TipHwnd, TTM_TRACKACTIVATE, TRUE, (LPARAM)&m_TipInfo);
+	api.PositionWindow(m_TipHwnd, 0);
 }
 
 void SubsSendResize(){
@@ -565,6 +556,7 @@ void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 	}
 	RevokeDragDrop(hwnd); // frees m_droptarget
 	MyDragDrop_DeInit();
+	DestroyTip();
 	
 	KillTimer(hwnd, TCLOCK_TIMER_ID);
 	RemoveWindowSubclass(GetParent(hwnd), Window_ClockTray_Hooked, 0);
@@ -574,7 +566,6 @@ void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 	SetTimer(hwnd, WIN_CLOCK_TIMER_ID, 10*1000, NULL);
 	
 	DestroyClock();
-	DestroyTip();
 	EndNewAPI(hwnd);
 	
 //  bClockUseTrans = 0;
@@ -780,8 +771,8 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		return 0;
 	case WM_MOUSEHOVER:
 		m_TipState = 2;
-		if(api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0)){
-			ShowTip(hwnd);//show custom tooltip
+		if(api.OS >= TOS_WIN10_1 || (api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0))){
+			ShowTip();//show custom/emulated tooltip
 		}else{
 			SendMessage(gs_hwndClock, WM_USER+103,1,0);//show system tooltip
 			if(hwnd != gs_hwndClock) {
@@ -798,7 +789,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	case WM_MOUSELEAVE:
 		if(m_TipState){
 			if(m_TipState == 2){
-				if(api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0))
+				if(api.OS >= TOS_WIN10_1 || (api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0)))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
 					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
@@ -818,8 +809,11 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		return MA_ACTIVATE;
 	case WM_NOTIFY: {
 		UINT code=((LPNMHDR)lParam)->code;
-		if(code==TTN_NEEDTEXTA || code==TTN_NEEDTEXTW)
+		if(code==TTN_NEEDTEXTA || code==TTN_NEEDTEXTW) {
+			if(api.OS >= TOS_WIN10_1 && !api.GetInt(L"Tooltip",L"bCustom",0))
+				return DefSubclassProc(hwnd, message, wParam, lParam);
 			OnTooltipNeedText(code,lParam);
+		}
 		return 0;}
 	case WM_COMMAND:
 		if(LOWORD(wParam)==IDM_EXIT)

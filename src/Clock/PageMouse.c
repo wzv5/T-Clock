@@ -424,6 +424,8 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 	}
 	if(api.OS >= TOS_VISTA) api.SetInt(L"Tooltip", L"bCustom", IsDlgButtonChecked(hDlg,IDCB_TOOLTIP));
 	GetDlgItemText(hDlg, IDC_TOOLTIP, buf, _countof(buf));
+	if(!wcscmp(buf, TC_TOOLTIP))
+		buf[0] = '\0';
 	api.SetStr(L"Tooltip", L"Tooltip", buf);
 	// update list
 	button = ComboBox_GetCurSel(GetDlgItem(hDlg,IDC_MOUSEBUTTON));

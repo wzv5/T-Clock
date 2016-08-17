@@ -42,34 +42,30 @@ int Clock_Message(HWND parent, const wchar_t* msg, const wchar_t* title, UINT uT
 }
 
 void Clock_PositionWindow(HWND hwnd, int padding) {
+	HMONITOR monitor;
 	POINT cursor_pos;
 	MONITORINFO moni = {sizeof(moni)};
 	int wProp, hProp;
 	HWND hwnd_clock;
+	#define horizontal moni.cbSize
 	
 	GetWindowRect(hwnd, &moni.rcWork); // Options dialog dimensions
 	wProp = moni.rcWork.right-moni.rcWork.left;  //----------+++--> Width
 	hProp = moni.rcWork.bottom-moni.rcWork.top; //----------+++--> Height
 	
 	GetCursorPos(&cursor_pos);
-	GetMonitorInfo(MonitorFromPoint(cursor_pos,MONITOR_DEFAULTTONEAREST),&moni);
+	monitor = MonitorFromPoint(cursor_pos,MONITOR_DEFAULTTONEAREST);
+	GetMonitorInfo(monitor, &moni);
 	
+	horizontal = 1;
 	if(moni.rcWork.top!=moni.rcMonitor.top || moni.rcWork.bottom!=moni.rcMonitor.bottom) { // taskbar is horizontal
 		moni.rcMonitor.left=moni.rcWork.right-wProp-padding;
 		if(moni.rcWork.top!=moni.rcMonitor.top) // top
 			moni.rcMonitor.top=moni.rcWork.top+padding;
 		else // bottom
 			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
-		// center small windows within clock dimension when possible
-		hwnd_clock = gs_hwndClock;
-		if(!hwnd_clock)
-			hwnd_clock = FindClock();
-		if(hwnd_clock) {
-			GetClientRect(hwnd_clock, &moni.rcWork);
-			if(wProp < moni.rcWork.right)
-				moni.rcMonitor.left -= ((moni.rcWork.right - wProp)>>1) + api.desktop_button_size;
-		}
 	}else if(moni.rcWork.left!=moni.rcMonitor.left || moni.rcWork.right!=moni.rcMonitor.right){ // vertical
+		horizontal = 0;
 		moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
 		if(moni.rcWork.left!=moni.rcMonitor.left) // left
 			moni.rcMonitor.left=moni.rcWork.left+padding;
@@ -98,6 +94,7 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 		}else{
 			int diff=taskbarMoni.rcMonitor.left-taskbarRC.left;
 			int visiblesize=taskbarMoni.rcMonitor.right-taskbarMoni.rcMonitor.left+diff;
+			horizontal = 0;
 			moni.rcMonitor.top=moni.rcWork.bottom-hProp-padding;
 			if((diff>0 && diff>tbW/10) || !diff || (diff<0 && (visiblesize!=tbW && visiblesize>tbW/10))) // left
 				moni.rcMonitor.left=moni.rcWork.left+padding+tbW;
@@ -105,6 +102,37 @@ void Clock_PositionWindow(HWND hwnd, int padding) {
 				moni.rcMonitor.left=moni.rcWork.right-wProp-padding-tbW;
 		}
 	}
+	
+	// center small windows within clock dimension if possible
+	hwnd_clock = gs_hwndClock;
+	if(!hwnd_clock) // T-Clock isn't running
+		hwnd_clock = FindClock();
+	if(hwnd_clock) {
+		int offset;
+		GetWindowRect(hwnd_clock, &moni.rcWork);
+		if(horizontal) {
+			offset = ((moni.rcWork.right - moni.rcWork.left - wProp)>>1);
+			if(MonitorFromWindow(hwnd_clock,MONITOR_DEFAULTTONEAREST) == monitor) {
+				if((moni.rcMonitor.left - offset) > moni.rcWork.left)
+					moni.rcMonitor.left = moni.rcWork.left + offset;
+			} else {
+				offset += api.desktop_button_size;
+				if((moni.rcMonitor.left + wProp - offset) < moni.rcMonitor.right)
+					moni.rcMonitor.left -= offset;
+			}
+		} else {
+			offset = ((moni.rcWork.bottom - moni.rcWork.top - hProp)>>1);
+			if(MonitorFromWindow(hwnd_clock,MONITOR_DEFAULTTONEAREST) == monitor) {
+				if((moni.rcMonitor.top - offset) > moni.rcWork.top)
+					moni.rcMonitor.top = moni.rcWork.top + offset;
+			} else {
+				offset += api.desktop_button_size;
+				if((moni.rcMonitor.top + hProp - offset) < moni.rcMonitor.bottom)
+					moni.rcMonitor.top -= offset;
+			}
+		}
+	}
+	#undef horizontal
 	SetWindowPos(hwnd,HWND_TOP,moni.rcMonitor.left,moni.rcMonitor.top,0,0,SWP_NOSIZE|SWP_NOACTIVATE|SWP_NOZORDER);
 }
 
