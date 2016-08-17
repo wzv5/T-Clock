@@ -24,6 +24,9 @@ extern const wchar_t* kConfigName;   /**< ini file name (also used for mutexes) 
 
 #define TZNAME_MAX		  256//10
 
+#define WIN_CLOCK_TIMER_ID 0 ///< actually invalid since TOS_WIN10_1
+#define TCLOCK_TIMER_ID 13 ///< non-conflicting timer ID
+
 // tclock.c
 void DrawClock(HDC hdc);
 void GetDisplayTime(SYSTEMTIME* pt, int* beat100);

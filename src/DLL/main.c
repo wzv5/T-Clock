@@ -4,6 +4,7 @@
 // Modified by Stoic Joker: Tuesday, March 2 2010 - 10:42:42
 #include "tcdll.h"
 
+HANDLE g_exit_lock = NULL;
 void InitClock(HWND hwnd);
 
 //========================================================================================
@@ -19,6 +20,11 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   /
 		#endif
 		break;
 	case DLL_PROCESS_DETACH:
+		if(g_exit_lock) {
+			// "notify" Clock.exe about our exit
+			ReleaseSemaphore(g_exit_lock, 1, NULL);
+			CloseHandle(g_exit_lock);
+		}
 		break;
 	default: break;
 	}

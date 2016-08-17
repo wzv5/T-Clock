@@ -146,7 +146,7 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 	wchar_t own_path[_countof(ms_root)];
 	OSVERSIONINFO osvi = {sizeof(OSVERSIONINFO)};
-	HANDLE api_mutex;
+	HANDLE api_lock;
 	struct _stat st;
 	
 	if(version != CLOCK_API)
@@ -155,11 +155,11 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 	//
 	// synchronized code
 	//
-	api_mutex = CreateMutex(NULL, 0, kConfigName+1);
-	if(!api_mutex)
+	api_lock = CreateSemaphore(NULL, 1, 1, kConfigName+1);
+	if(!api_lock)
 		return -2;
-	if(WaitForSingleObject(api_mutex, 5000) == WAIT_TIMEOUT) {
-		CloseHandle(api_mutex);
+	if(WaitForSingleObject(api_lock, 5000) == WAIT_TIMEOUT) {
+		CloseHandle(api_lock);
 		return -3;
 	}
 	if(!ms_root_len){ // initialize once. (only use ms_/gs_ variables!!!)
@@ -232,8 +232,8 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 			ms_inifile[0] = '\0';
 		}
 	}
-	ReleaseMutex(api_mutex);
-	CloseHandle(api_mutex);
+	ReleaseSemaphore(api_lock, 1, NULL);
+	CloseHandle(api_lock);
 	//
 	// end of synchronized code
 	//
@@ -312,20 +312,14 @@ void Clock_Exit()
 {
 	Clock_InjectFinalize(); // uninstall hook helper if any
 	if(gs_hwndClock && IsWindow(gs_hwndClock)){
-		HWND hwnd = FindWindowA("Shell_TrayWnd",NULL);
-		HANDLE mutex;
+		HANDLE lock;
 		SendMessage(gs_hwndClock,WM_COMMAND,IDM_EXIT,0); // kill our clock
-		mutex = OpenMutex(SYNCHRONIZE, 0, kConfigName+1);
-		WaitForSingleObject(mutex, INFINITE);
-		ReleaseMutex(mutex);
-		CloseHandle(mutex);
+		lock = OpenSemaphore(SYNCHRONIZE, 0, kConfigName+1);
+		WaitForSingleObject(lock, INFINITE);
+		ReleaseSemaphore(lock, 1, NULL);
+		CloseHandle(lock);
+		Sleep(1); // hopefully useless sleep
 		
-		PostMessage(gs_hwndClock,WM_TIMER,0,0); // refresh Windows' clock
 		gs_hwndClock = NULL;
-		// refresh the taskbar
-		if(hwnd) {
-			PostMessage(hwnd, WM_SIZE, SIZE_RESTORED, 0);
-			InvalidateRect(hwnd, NULL, TRUE);
-		}
 	}
 }

@@ -8,9 +8,6 @@
 #include <shlobj.h>//CFSTR_SHELLIDLIST
 #include <process.h>//_beginthread
 
-#define WIN_CLOCK_TIMER_ID 0
-#define TCLOCK_TIMER_ID 13 ///< non-conflicting timer ID
-
 void CALLBACK OnDrawTimer(HWND hwnd, unsigned uMsg, uintptr_t idEvent, unsigned long dwTime);
 void ReadStyleData(HWND hwnd, int preview);
 void ReadFormatData(HWND hwnd, int preview);
@@ -502,14 +499,13 @@ void SubsCreate(){
 	}
 	SubsSendResize();
 }
-HMODULE m_hself;
 int SetupClockAPI(int version, TClockAPI* api); // clock_api.c
 //================================================================================================
 //---------------------------------------------------------------------+++--> Initialize the Clock:
 void InitClock(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
 	gs_hwndClock = hwnd;
-	m_hself = LoadLibrary(L"T-Clock" ARCH_SUFFIX);
+	LoadLibrary(L"T-Clock" ARCH_SUFFIX); // self-reference
 	SetupClockAPI(CLOCK_API, NULL); // initialize API
 	GetClientRect(hwnd, &m_rcClock); // use original clock size until we've loaded our settings
 	m_clock_base_width = m_rcClock.right;
@@ -536,19 +532,28 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 	if(!m_color_start) // fixes display issue when clock has same size as T-Clock (Win7 + default settings)
 		UpdateClockSize();
 }
-EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+extern HANDLE g_exit_lock; // main.c
+EXTERN_C IMAGE_DOS_HEADER __ImageBase; ///< own dll handle
 static void SelfDestruct(void* hwnd)
 { // never crashed without this SelfDestruct stub, but better safe then sorry :P Crashing the explorer isn't that nice.
-	SendMessage(hwnd,WM_NULL,0,0); // make sure we're out of our hooked message loop
+	HWND taskbar = GetParent(GetParent(hwnd));
+	// make sure we're out of our hooked message loop
+	SendMessage(GetParent(hwnd), WM_NULL, 0, 0);
+	InvalidateRect(hwnd, NULL, TRUE);
+	SendMessage(hwnd, WM_NULL, 0, 0);
+	// refresh primary taskbar
+	InvalidateRect(taskbar, NULL, TRUE);
+	SendMessage(taskbar, WM_SIZE, SIZE_RESTORED, 0);
 	// we could use FreeLibraryAndExitThread on XP+, but this "hack" should be ok for now.
-	CreateThread(NULL,0,(LPTHREAD_START_ROUTINE)FreeLibrary,&__ImageBase,0,NULL); // die painfully
+	CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibrary, &__ImageBase, 0, NULL); // die painfully
 }
 //==============================================================================
 //---+++--> End Clock Procedure (Window_Clock_Hooked) - (Before?) Removing Hook:
 void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 {
-	HANDLE mutex = CreateMutex(NULL, 0, kConfigName+1); // SendMessage() "fix"
-	WaitForSingleObject(mutex, 0);
+	g_exit_lock = CreateSemaphore(NULL, 1, 1, kConfigName+1); // SendMessage() "fix"
+	WaitForSingleObject(g_exit_lock, 0);
 	SubsDestroy(); // <- causes our parents SendMessage() call to exit prematurely
 	if(m_multiClockClass){
 		UnregisterClass(MAKEINTATOM(m_multiClockClass), 0);
@@ -568,9 +573,6 @@ void EndClock(HWND hwnd)   //---------------------------------------------+++-->
 	DestroyClock();
 	EndNewAPI(hwnd);
 	
-//  bClockUseTrans = 0;
-	ReleaseMutex(mutex);
-	CloseHandle(mutex);
 	_beginthread(SelfDestruct, 0, hwnd);
 }
 static LRESULT CALLBACK Window_ClockTooltip_Hooked(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
