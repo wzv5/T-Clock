@@ -21,7 +21,7 @@ HWND Clock_GetCalendar()
 		} u;
 		GetWindowRect(hwnd, &u.rc);
 		// IsWindowVisible()/IsWindowEnabled() are always true
-		if(WindowFromPoint(u.pt) == hwnd)
+		if(ChildWindowFromPointEx(GetDesktopWindow(), u.pt, CWP_SKIPDISABLED|CWP_SKIPTRANSPARENT) == hwnd)
 			return hwnd;
 	}
 	return gs_hwndCalendar;

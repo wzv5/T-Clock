@@ -607,8 +607,8 @@ static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM 
 	case(WM_USER+100):{// send by windows to get tray size
 		union {
 			struct{
-				uint16_t width;
-				uint16_t height;
+				int16_t width;
+				int16_t height;
 			} part;
 			LRESULT combined;
 		} size;
@@ -616,9 +616,9 @@ static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM 
 			break;
 		size.combined = DefSubclassProc(hwnd, message, wParam, lParam);
 		if(size.part.width > size.part.height)
-			size.part.width += (uint16_t)(m_rcClock.right - m_clock_base_width);
+			size.part.width += (int16_t)(m_rcClock.right - m_clock_base_width);
 		else
-			size.part.height += (uint16_t)(m_rcClock.bottom - m_clock_base_height);
+			size.part.height += (int16_t)(m_rcClock.bottom - m_clock_base_height);
 		return size.combined;}
 	case WM_NOTIFY:{
 		LRESULT ret;
@@ -686,8 +686,6 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		if(m_bNoClock) break;
 		if(!(pwp->flags&SWP_NOSIZE)){
 			UpdateClockSize();
-			pwp->cx=m_rcClock.right;
-			pwp->cy=m_rcClock.bottom;
 		}
 		return 0;}
 	case WM_DWMCOLORIZATIONCOLORCHANGED://forwarded by T-Clock itself

@@ -296,7 +296,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 			add_title(clock64, L"Clock" ARCH_SUFFIX_64 L".exe");
 			api.ShellExecute(NULL, clock64, lpCmdLine, NULL, SW_SHOWNORMAL, &processlock);
 			if(processlock) {
-				for(; !!(lpCmdLine = wcschr(lpCmdLine,'/')); ++lpCmdLine) { // MSVC sucks == true
+				for(; (lpCmdLine = wcschr(lpCmdLine,'/'))!=NULL; ++lpCmdLine) { // MSVC sucks == true
 					if(!wcsncasecmp(lpCmdLine,L"/exit",5)) {
 						WaitForSingleObject(processlock, INFINITE);
 						break;

@@ -43,7 +43,7 @@ pSetLayeredWindowAttributes_t pSetLayeredWindowAttributes=NULL;
 #define THEME_FUNC_CHECK_THEME(name,hwnd,ret) \
 	THEME_FUNC_CHECK(name,ret)\
 	if(!hClockTheme){\
-		hClockTheme = pOpenThemeData(hwnd,(m_theme_version>=TV_10_beta ? VSCLASS_TASKBAND2 : VSCLASS_CLOCK));\
+		hClockTheme = pOpenThemeData(hwnd,(m_theme_version>=TV_10 ? VSCLASS_TASKBAND2 : VSCLASS_CLOCK));\
 		m_theme_clock_part = (m_theme_version>=TV_10 ? 5 : CLP_TIME);\
 		if(!hClockTheme) return ret;\
 	}
