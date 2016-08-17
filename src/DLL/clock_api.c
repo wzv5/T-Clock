@@ -48,7 +48,7 @@ TClockAPI api = {
 	ClockAPI(GetCalendar)
 	ClockAPI(Message)
 	ClockAPI(PositionWindow)
-	NULL, // ClockAPI(GetTickCount)
+	NULL, // ClockAPI(GetTickCount64)
 	ClockAPI(PathExists)
 	ClockAPI(GetFileAndOption)
 	ClockAPI(GetColor)
@@ -241,11 +241,9 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 	api.OS = gs_tos;
 	api.root_len = ms_root_len;
 	api.root_size = (ms_root_len+1) * sizeof(ms_root[0]);
-	if(gs_tos >= TOS_VISTA){
-		api.GetTickCount64 = (GetTickCount64_t)GetProcAddress(GetModuleHandle(L"kernel32"), "GetTickCount64");
-		if(!api.GetTickCount64)
-			api.GetTickCount64 = GetTickCount64_Wrapper;
-	}
+	api.GetTickCount64 = (GetTickCount64_t)GetProcAddress(GetModuleHandleA("kernel32"), "GetTickCount64");
+	if(!api.GetTickCount64)
+		api.GetTickCount64 = GetTickCount64_Wrapper;
 	
 	if(gs_tos >= TOS_WIN10) {
 		api.desktop_button_size = 4+1;
