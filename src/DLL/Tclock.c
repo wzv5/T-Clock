@@ -663,20 +663,18 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	case WM_WINDOWPOSCHANGING:{
 		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
 		if(m_bNoClock) break;
-		if(IsWindowVisible(hwnd)){
-			if(!(pwp->flags&SWP_NOSIZE) && !(pwp->flags&SWP_NOMOVE)){
-				m_clock_base_width = pwp->cx; // keep base size in sync (eg. on "short time" format or DPI change)
-				m_clock_base_height = pwp->cy;
-				if(pwp->x >= pwp->y){ // horizontal
-					pwp->cx = m_rcClock.right;
-					if(m_height){ // explorer auto-updates our height, but we use custom
-						pwp->cy = m_rcClock.bottom;
-					}
-				}else{
+		if(!(pwp->flags&SWP_NOSIZE) && !(pwp->flags&SWP_NOMOVE)){
+			m_clock_base_width = pwp->cx; // keep base size in sync (eg. on "short time" format or DPI change)
+			m_clock_base_height = pwp->cy;
+			if(pwp->x >= pwp->y){ // horizontal
+				pwp->cx = m_rcClock.right;
+				if(m_height){ // explorer auto-updates our height, but we use custom
 					pwp->cy = m_rcClock.bottom;
-					if(m_width){ // explorer auto-updates our width, but we use custom
-						pwp->cx = m_rcClock.right;
-					}
+				}
+			}else{
+				pwp->cy = m_rcClock.bottom;
+				if(m_width){ // explorer auto-updates our width, but we use custom
+					pwp->cx = m_rcClock.right;
 				}
 			}
 		}
