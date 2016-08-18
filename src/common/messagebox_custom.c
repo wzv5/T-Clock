@@ -78,7 +78,7 @@ static LRESULT CALLBACK Window_MessageBoxCustomDlg(HWND hwnd, UINT uMsg, WPARAM 
 			check_rc.left = check_rc.bottom = 0;
 			check_rc.top = 0x7fffffff;
 			for(iter=0; iter<MBC_MAX_CHECKBOXES && settings->check[iter].text; ++iter){
-				if(settings->check[iter].pos.top < check_rc.top && settings->check[iter].pos.top > 0)
+				if(settings->check[iter].pos.top < check_rc.top && settings->check[iter].pos.top >= 0)
 					check_rc.top = settings->check[iter].pos.top;
 				check_rc.right = (settings->check[iter].pos.top + settings->check[iter].pos.bottom);
 				if(check_rc.right > check_rc.bottom)
@@ -189,11 +189,44 @@ static LRESULT CALLBACK MessageBoxCustom_Hook(int nCode, WPARAM wParam, LPARAM l
 	return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-int MessageBoxCustom(HWND parent, wchar_t* message, wchar_t* title, unsigned style) {
+int MessageBoxCustom(HWND parent, const wchar_t* message, const wchar_t* title, unsigned style) {
 	int ret;
 	if(hook_)
 		return 0;
 	hook_ = SetWindowsHookEx(WH_CBT, MessageBoxCustom_Hook, NULL, GetCurrentThreadId());
 	ret = MessageBox(parent, message, title, MB_YESNOCANCEL|MB_HELP|style);
+	return ret;
+}
+
+static LRESULT CALLBACK MBC_Proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	MessageBoxCustomData* data = (MessageBoxCustomData*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	int i;
+	(void)lParam;
+	
+	switch(message) {
+	case WMBC_INITDIALOG:
+		return (LRESULT)data;
+	case WMBC_CHECKS:
+		for(i=0; i<MBC_MAX_CHECKBOXES; ++i){
+			if(wParam&1)
+				data->check[i].state |= BST_CHECKED;
+			else
+				data->check[i].state &= ~BST_CHECKED;
+			wParam >>= 1;
+		}
+		return 0;
+	}
+	return 0;
+}
+int MessageBoxCustom_Direct(MessageBoxCustomData* settings, const wchar_t* message, const wchar_t* title, unsigned style) {
+	int ret;
+	HWND parent = CreateWindowA("STATIC", NULL, 0, 0,0,0,0, HWND_MESSAGE, 0, 0, 0);
+	if(!parent)
+		return 0;
+	SetWindowLongPtr(parent, GWLP_USERDATA, (LONG_PTR)settings);
+	SubclassWindow(parent, MBC_Proc);
+	ret = MessageBoxCustom(parent, message, title, style);
+	DestroyWindow(parent);
 	return ret;
 }

@@ -33,19 +33,30 @@ extern "C" {
 #define MBC_CHECK1 1004
 #define MBC_CHECK2 1005
 #define MBC_CHECK_END (MBC_CHECK1 + MBC_MAX_CHECKBOXES)
+typedef struct MessageBoxCustomData MessageBoxCustomData;
 
-/** \brief displays a customizable MessageBox which sends callbacks to its parent
+/**
+ * \brief displays a customizable MessageBox which sends callbacks to its parent
  * \param parent required parent window that receives \c WMBC_INITDIALOG and \c WMBC_CHECKS callbacks
  * \param message
  * \param title
  * \param style message box style flags such as MB_ICONINFORMATION|MB_DEFBUTTON3
- * \return -1/0 on failure, \c ID_MBC1 - \c ID_MBC4 or \c close_id on success
+ * \return -1/0 on failure, on success one of \c ID_MBC1 - \c ID_MBC4 or \c close_id
  * \remark sends the callback message \c WMBC_INITDIALOG on creation to request \c MessageBoxCustomData structure
  * \remark set \c MessageBoxCustomData.close_id to desired value when user closes dialog (defaults to \c IDCANCEL)
  * \remark set \c MessageBoxCustomData.icon_title* to custom window icon \e (optional)
  * \remark set \c MessageBoxCustomData.icon_text to custom text icon \e (optional)
  * \sa MessageBoxCustomData, MB_ICONEXCLAMATION, MB_ICONWARNING, MB_ICONINFORMATION, MB_ICONASTERISK, MB_ICONQUESTION, MB_ICONSTOP, MB_ICONERROR, MB_ICONHAND, MB_DEFBUTTON1, MB_APPLMODAL, MB_SYSTEMMODAL, MB_TASKMODAL, MB_TOPMOST */
-int MessageBoxCustom(HWND parent, wchar_t* message, wchar_t* title, unsigned style /* = MB_DEFBUTTON1 */);
+int MessageBoxCustom(HWND parent, const wchar_t* message, const wchar_t* title, unsigned style /* = MB_DEFBUTTON1 */);
+/**
+ * \brief works like \c MessageBoxCustom() but doesn't require a parent window
+ * \param[in,out] settings settings to use, will receive updated checkbox states
+ * \param[in] message
+ * \param[in] title
+ * \param[in] style message box style flags such as MB_ICONINFORMATION|MB_DEFBUTTON3
+ * \return -1/0 on failure, on success one of \c ID_MBC1 - \c ID_MBC4 or \c close_id
+ * \sa MessageBoxCustom() */
+int MessageBoxCustom_Direct(MessageBoxCustomData* settings, const wchar_t* message, const wchar_t* title, unsigned style /* = MB_DEFBUTTON1 */);
 
 typedef struct MBC_Button {
 	const wchar_t* text;
@@ -55,19 +66,19 @@ typedef struct MBC_Button {
 
 typedef struct MBC_Check {
 	const wchar_t* text;
-	RECT pos;  /**< checkbox offsets and size */
+	RECT pos;  /**< checkbox offset and size in dialog units (left: left padding, top: vertical padding, right: width, bottom: height */
 	int state; /**< checked states \sa BST_CHECKED, BST_UNCHECKED, BST_MBC_AUTODISABLE, BST_MBC_RAW_STYLE */
 	int style; /**< checkbox styles to add/overwrite \sa BST_MBC_RAW_STYLE */
 } MBC_Check;
 
-typedef struct MessageBoxCustomData {
+struct MessageBoxCustomData {
 	HICON icon_title_big; /**< custom title icon or NULL for parent's */
 	HICON icon_title_small;
 	HICON icon_text;      /**< custom message icon or NULL for default */
 	MBC_Button button[4]; /**< \sa MBC_Button */
 	MBC_Check check[MBC_MAX_CHECKBOXES]; /**< \sa MBC_Check */
 	int close_id; /**< default close/ESC control ID */
-} MessageBoxCustomData;
+};
 
 #ifdef __cplusplus
 }
