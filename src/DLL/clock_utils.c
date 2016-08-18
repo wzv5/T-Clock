@@ -219,7 +219,7 @@ static LONG WINAPI MyRegDeleteKeyEx(HKEY hKey,wchar_t* lpSubKey,REGSAM samDesire
 	static RegDeleteKeyEx_t pRegDeleteKeyEx=NULL;
 	if(gs_tos >= TOS_XP_64){
 		if(!pRegDeleteKeyEx)
-			pRegDeleteKeyEx = (RegDeleteKeyEx_t)GetProcAddress(GetModuleHandle(L"advapi32"), "RegDeleteKeyExW");
+			pRegDeleteKeyEx = (RegDeleteKeyEx_t)GetProcAddress(GetModuleHandleA("advapi32"), "RegDeleteKeyExW");
 		if(pRegDeleteKeyEx)
 			return pRegDeleteKeyEx(hKey,lpSubKey,samDesired,Reserved);
 	}

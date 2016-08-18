@@ -24,7 +24,7 @@ void Clock_On_DWMCOLORIZATIONCOLORCHANGED(unsigned argb, BOOL blend) { /// there
 		RegCloseKey(hkey);
 	}// */
 	typedef HRESULT (WINAPI *DwmGetColorizationColorPtr)(DWORD* pcrColorization, BOOL* pfOpaqueBlend);
-	HMODULE hdwm = LoadLibrary(L"dwmapi");
+	HMODULE hdwm = LoadLibraryA("dwmapi");
 	if(hdwm) {
 		DwmGetColorizationColorPtr pDwmGetColorizationColor; /**< \sa DwmGetColorizationColor() */
 		pDwmGetColorizationColor = (DwmGetColorizationColorPtr)GetProcAddress(hdwm, "DwmGetColorizationColor");

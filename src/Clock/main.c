@@ -115,7 +115,7 @@ void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 20
 	HINSTANCE handle;
 	if(!m_bMonOffOnLock)
 		return;
-	handle = LoadLibrary(L"wtsapi32");
+	handle = LoadLibraryA("wtsapi32");
 	if(handle){
 		typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
 		WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification=(WTSUnRegisterSessionNotification_t)GetProcAddress(handle,"WTSUnRegisterSessionNotification");
@@ -133,7 +133,7 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 	HINSTANCE handle;
 	if(m_bMonOffOnLock)
 		return;
-	handle = LoadLibrary(L"wtsapi32");
+	handle = LoadLibraryA("wtsapi32");
 	if(handle){
 		typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);
 		WTSRegisterSessionNotification_t WTSRegisterSessionNotification=(WTSRegisterSessionNotification_t)GetProcAddress(handle,"WTSRegisterSessionNotification");
@@ -336,7 +336,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 		#define MSGFLT_ADD 1
 		#define MSGFLT_REMOVE 2
 		typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message,DWORD dwFlag);
-		ChangeWindowMessageFilter_t ChangeWindowMessageFilter = (ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandle(L"user32"), "ChangeWindowMessageFilter");
+		ChangeWindowMessageFilter_t ChangeWindowMessageFilter = (ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandleA("user32"), "ChangeWindowMessageFilter");
 		if(ChangeWindowMessageFilter){
 			int msgid;
 			ChangeWindowMessageFilter(g_WM_TaskbarCreated,MSGFLT_ADD);
