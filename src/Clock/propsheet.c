@@ -95,10 +95,6 @@ LRESULT CALLBACK Window_PropertySheet_Hooked(HWND hwnd, UINT message, WPARAM wPa
 			g_bApplyClock = 0;
 			PostMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
 		}
-//		if(g_bApplyClear) {
-//			g_bApplyClear = 0;
-//			PostMessage(g_hwndClock, CLOCKM_REFRESHCLEARTASKBAR, 0, 0);
-//		}
 		if(g_bApplyTaskbar) {
 			g_bApplyTaskbar = 0;
 			PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);
@@ -128,10 +124,6 @@ LRESULT CALLBACK Window_PropertySheet_Hooked(HWND hwnd, UINT message, WPARAM wPa
 					g_bApplyClock = 0;
 					PostMessage(g_hwndClock, CLOCKM_REFRESHCLOCK, 0, 0);
 				}
-//				if(g_bApplyClear) {
-//					g_bApplyClear = 0;
-//					PostMessage(g_hwndClock, CLOCKM_REFRESHCLEARTASKBAR, 0, 0);
-//				}
 				if(g_bApplyTaskbar) {
 					g_bApplyTaskbar = 0;
 					PostMessage(g_hwndClock, CLOCKM_REFRESHTASKBAR, 0, 0);

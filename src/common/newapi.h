@@ -7,7 +7,7 @@ extern "C" {
 
 /**
  * \brief unloads all new API functions and removes \c WS_EX_LAYERED from the taskbar of our clock \a hwndClock
- * \param hwndClock HWND to our clock (can be \c NULL)
+ * \param hwndClock clock window (used only from within DLL) \e [optional]
  * \sa SetLayeredTaskbar() */
 void EndNewAPI(HWND hwndClock);
 /**
@@ -16,10 +16,11 @@ void EndNewAPI(HWND hwndClock);
 int IsWow64();
 /**
  * \brief sets the taskbar \c WS_EX_LAYERED to enable transparency (when user chose to)
- * \param hwndClock HWND to our clock
- * \param refresh forces a full taskbar refresh if set
+ * \param hwndClock clock window
+ * \param opacity percent opacity
+ * \param clear_taskbar make \c COLOR_3DFACE the transparent color
  * \sa EndNewAPI() */
-void SetLayeredTaskbar(HWND hwndClock, int alpha, int clear_taskbar, int refresh);
+void SetLayeredTaskbar(HWND hwndClock, int opacity, int clear_taskbar);
 //void TC2DrawBlt(HDC dhdc, int dx, int dy, int dw, int dh, HDC shdc, int sx, int sy, int sw, int sh, BOOL useTrans);
 
 // DrawTheme

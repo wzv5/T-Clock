@@ -20,11 +20,7 @@ int IsWow64(){
 	return ret;
 }
 
-static HMODULE hmodUSER32 = NULL;
 static HMODULE hmodUxTheme = NULL;
-
-typedef BOOL (WINAPI* pSetLayeredWindowAttributes_t)(HWND,COLORREF,BYTE,DWORD);
-pSetLayeredWindowAttributes_t pSetLayeredWindowAttributes=NULL;
 
 /// UxTheme macros
 #define THEME_FUNC_RETRIEVE(name) \
@@ -51,7 +47,7 @@ pSetLayeredWindowAttributes_t pSetLayeredWindowAttributes=NULL;
 	typedef ret (WINAPI* p##name##_t)params;\
 	p##name##_t p##name=NULL
 /// UxTheme defines
-static HTHEME hClockTheme=NULL;
+static HTHEME hClockTheme = NULL;
 THEME_FUNC_DEFINE(CloseThemeData,HRESULT,(HTHEME hTheme));
 THEME_FUNC_DEFINE(OpenThemeData,HTHEME,(HWND hwnd, LPCWSTR pszClassList));
 
@@ -63,7 +59,12 @@ THEME_FUNC_DEFINE(GetThemeColor,HRESULT,(HTHEME hTheme, int iPartId, int iStateI
 THEME_FUNC_DEFINE(DrawThemeBackground,HRESULT,(HTHEME hTheme, HDC hdc, int iPartId, int iStateId, LPCRECT pRect, LPCRECT pClipRect));
 THEME_FUNC_DEFINE(DrawThemeParentBackground,HRESULT,(HWND hwnd, HDC hdc, RECT* prc));
 
-static char bInitLayeredWindow = 0;
+static struct {
+	DWORD flags;
+	COLORREF color;
+	BYTE alpha;
+	char had_style;
+} m_layered = {0, 0, 0, -1};
 static uint16_t m_theme_version = 0;
 static char m_theme_clock_part = CLP_TIME;
 #define TV_2000 0x0500
@@ -78,38 +79,21 @@ static char m_theme_clock_part = CLP_TIME;
 
 static void RefreshRebar(HWND hwndBar);
 
-void InitLayeredWindow(void)
-{
-	if(bInitLayeredWindow) return;
-	
-	hmodUSER32 = LoadLibraryA("user32");
-	if(hmodUSER32) {
-		pSetLayeredWindowAttributes = (pSetLayeredWindowAttributes_t)GetProcAddress(hmodUSER32, "SetLayeredWindowAttributes");
-		if(!pSetLayeredWindowAttributes) {
-			FreeLibrary(hmodUSER32); hmodUSER32 = NULL;
-		}
-	}
-	bInitLayeredWindow = 1;
-}
-
-void EndNewAPI(HWND hwndClock)
-{
-	if(pSetLayeredWindowAttributes && hwndClock) {
-		HWND hwnd;
-		LONG_PTR exstyle;
-		
-		hwnd = GetParent(GetParent(hwndClock));
-		exstyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-		if(exstyle & WS_EX_LAYERED) {
-			exstyle &= ~WS_EX_LAYERED;
-			SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
-			RefreshRebar(hwnd);
+void EndNewAPI(HWND hwndClock) {
+	if(hwndClock && m_layered.had_style != -1) {
+		HWND hwnd = GetParent(GetParent(hwndClock));
+		if(!m_layered.had_style) {
+			LONG_PTR exstyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
+			if(exstyle & WS_EX_LAYERED) {
+				exstyle &= ~WS_EX_LAYERED;
+				SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
+				RefreshRebar(hwnd);
+			}
+		} else {
+			SetLayeredWindowAttributes(hwnd, m_layered.color, m_layered.alpha, m_layered.flags);
 		}
 	}
 	
-	if(hmodUSER32) FreeLibrary(hmodUSER32);
-	hmodUSER32 = NULL;
-	pSetLayeredWindowAttributes = NULL;
 	/// DrawTheme
 	THEME_FUNC_RELEASE(DrawThemeParentBackground);
 	THEME_FUNC_RELEASE(DrawThemeBackground);
@@ -149,32 +133,43 @@ void GradientFillClock(HDC hdc, RECT* prc, COLORREF col1, COLORREF col2) {
 	GdiGradientFill(hdc, vert, 2, &gRect, 1, GRADIENT_FILL_RECT_H);
 }
 */
-void SetLayeredTaskbar(HWND hwndClock, int alpha, int clear_taskbar, int refresh)
+void SetLayeredTaskbar(HWND hwndClock, int alpha, int clear_taskbar)
 {
 	LONG_PTR exstyle;
 	HWND hwnd;
 	
 	alpha = 255 - (alpha * 255 / 100);
-	if(alpha < 8) alpha = 8; else if(alpha > 255) alpha = 255;
-	
-	if(!pSetLayeredWindowAttributes && (alpha < 255 || clear_taskbar)) InitLayeredWindow();
-	if(!pSetLayeredWindowAttributes) return;
+	if(alpha < 8)
+		alpha = 8;
+	else if(alpha > 255)
+		alpha = 255;
 	
 	hwnd = GetParent(GetParent(hwndClock));
 	
 	exstyle = GetWindowLongPtr(hwnd, GWL_EXSTYLE);
-	if(alpha < 255 || clear_taskbar) exstyle |= WS_EX_LAYERED;
-	else exstyle &= ~WS_EX_LAYERED;
-	SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
-	if(refresh) {
-		RefreshUs();
+	if(m_layered.had_style == -1) {
+		typedef BOOL (WINAPI* GetLayeredWindowAttributes_t)(HWND hwnd, COLORREF* pcrKey, BYTE* pbAlpha, DWORD* pdwFlags);
+		GetLayeredWindowAttributes_t pGetLayeredWindowAttributes = (GetLayeredWindowAttributes_t)GetProcAddress(GetModuleHandleA("user32"), "GetLayeredWindowAttributes");
+		if(alpha == 255 && !clear_taskbar)
+			return; // nothing to do
+		m_layered.had_style = (exstyle & WS_EX_LAYERED ? 1 : 0);
+		if(pGetLayeredWindowAttributes)
+			pGetLayeredWindowAttributes(hwnd, &m_layered.color, &m_layered.alpha, &m_layered.flags);
 	}
-	RefreshRebar(hwnd);
 	
-	if(alpha < 255 && !clear_taskbar)
-		pSetLayeredWindowAttributes(hwnd, 0, (BYTE)alpha, LWA_ALPHA);
-	else if(clear_taskbar)
-		pSetLayeredWindowAttributes(hwnd, GetSysColor(COLOR_3DFACE), (BYTE)alpha, LWA_COLORKEY|LWA_ALPHA);
+	if(!m_layered.had_style) {
+		if(alpha < 255 || clear_taskbar)
+			exstyle |= WS_EX_LAYERED;
+		else
+			exstyle &= ~WS_EX_LAYERED;
+		SetWindowLongPtr(hwnd, GWL_EXSTYLE, exstyle);
+	}
+	
+	RefreshRebar(hwnd);
+	if(clear_taskbar)
+		SetLayeredWindowAttributes(hwnd, GetSysColor(COLOR_3DFACE), (BYTE)alpha, LWA_COLORKEY|LWA_ALPHA);
+	else
+		SetLayeredWindowAttributes(hwnd, 0, (BYTE)alpha, LWA_ALPHA);
 }
 
 /*--------------------------------------------------

@@ -862,13 +862,10 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		HWND taskbar=GetParent(GetParent(hwnd));
 		int alpha = api.GetIntEx((wParam ? L"Preview" : L"Taskbar"), L"AlphaTaskbar", 0);
 		int clear_taskbar = api.GetIntEx(L"Taskbar", L"ClearTaskbar", 0);
-		SetLayeredTaskbar(hwnd, alpha, clear_taskbar, 0);
+		SetLayeredTaskbar(hwnd, alpha, clear_taskbar);
 		PostMessage(taskbar, WM_SIZE, SIZE_RESTORED, 0);
 		InvalidateRect(taskbar, NULL, 1);
 		return 0;}
-//	case CLOCKM_REFRESHCLEARTASKBAR:
-//		SetLayeredTaskbar(hwnd,1);
-//		return 0;
 	case CLOCKM_BLINK: // blink the clock
 		if(wParam)
 			m_BlinkState|=BLINK_HOUR;
