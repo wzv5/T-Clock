@@ -379,7 +379,7 @@ void SetAlarmToDlg(HWND hDlg, alarm_t* pAS)   //--------------------------------
 	SendDlgItemMessage(hDlg, IDC_SPINMINUTE, UDM_SETPOS32, 0, pAS->minute);
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETRANGE32, (WPARAM)-1,42);
 	SendDlgItemMessage(hDlg, IDC_SPINTIMES, UDM_SETPOS32, 0, pAS->iTimes);
-	ComboBox_AddStringOnce(file_cb, pAS->fname, 1);
+	ComboBox_AddStringOnce(file_cb, pAS->fname, 1, 0);
 	
 	SetDlgItemText(hDlg, IDC_ALRMMSG_TEXT, pAS->dlgmsg.message);
 	SetDlgItemText(hDlg, IDC_ALRMMSG_SETTINGS, pAS->dlgmsg.settings);

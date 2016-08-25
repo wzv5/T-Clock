@@ -494,6 +494,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 			ComboBox_AddString(hServer, str.w);
 	}
 	if(!ComboBox_GetCount(hServer)){
+		ComboBox_AddString(hServer, L"pool.ntp.org");
 		ComboBox_AddString(hServer, L"europe.pool.ntp.org");
 		ComboBox_AddString(hServer, L"north-america.pool.ntp.org");
 		ComboBox_AddString(hServer, L"asia.pool.ntp.org");
@@ -508,9 +509,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		ComboBox_AddString(hServer, L"time.windows.com");
 	}
 	api.GetStr(m_subkey, L"Server", str.w, _countof(str.w), L"");
-	if(!str.w[0])
-		wcscpy(str.w, L"pool.ntp.org");
-	ComboBox_AddStringOnce(hServer, str.w, 1);
+	ComboBox_AddStringOnce(hServer, str.w, 1, 0);
 	
 	SendDlgItemMessage(hDlg, IDCB_DELSERVER, BM_SETIMAGE,
 					   IMAGE_ICON, (LPARAM)g_hIconDel);

@@ -13,8 +13,9 @@ extern "C" {
  * \param box
  * \param str string to add
  * \param select if true, also select newly added string
+ * \param def_select item to be selected if \p str is empty or \c -1 to ignore
  * \sa ComboBox_AddString() */
-void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select);
+void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select, int def_select);
 
 /*
 	LINK CONTROLS

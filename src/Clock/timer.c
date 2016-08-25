@@ -415,6 +415,8 @@ void OnOK(HWND hwnd)   //-------------------------------------------------------
 	api.SetInt(subkey, L"Days",    days);
 	
 	GetDlgItemText(hwnd, IDC_TIMERFILE, fname, _countof(fname));
+	if(fname[0] == '<')
+		fname[0] = '\0';
 	api.SetStr(subkey, L"File", fname);
 	
 	api.SetInt(subkey, L"Repeat", IsDlgButtonChecked(hwnd, IDC_TIMERREPEAT));
@@ -443,7 +445,7 @@ void OnTimerName(HWND hwnd)   //------------------------------------------------
 			SetDlgItemInt(hwnd, IDC_TIMERMINUTE,	pts->minute, 0);
 			SetDlgItemInt(hwnd, IDC_TIMERHOUR,		pts->hour,   0);
 			SetDlgItemInt(hwnd, IDC_TIMERDAYS,		pts->day,    0);
-			ComboBox_AddStringOnce(GetDlgItem(hwnd,IDC_TIMERFILE), pts->fname, 1);
+			ComboBox_AddStringOnce(GetDlgItem(hwnd,IDC_TIMERFILE), pts->fname, 1, 0);
 			CheckDlgButton(hwnd, IDC_TIMERREPEAT,	pts->bRepeat);
 			CheckDlgButton(hwnd, IDC_TIMERBLINK,	pts->bBlink);
 			if(pts->bActive){

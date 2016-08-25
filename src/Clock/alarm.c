@@ -304,6 +304,8 @@ void SaveAlarmToReg(alarm_t* pAS, int idx)
 	api.SetStr(g_alarmkey, L"Name", pAS->dlgmsg.name);
 	api.SetInt(g_alarmkey, L"Hour", pAS->hour);
 	api.SetInt(g_alarmkey, L"Minute", pAS->minute);
+	if(pAS->fname[0] == '<')
+		pAS->fname[0] = '\0';
 	api.SetStr(g_alarmkey, L"File", pAS->fname);
 	
 	api.SetStr(g_alarmkey, L"jrMessage", pAS->dlgmsg.message);

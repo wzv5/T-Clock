@@ -5,11 +5,14 @@
 	GENERIC
 */
 
-void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select)
+void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select, int def_select)
 {
 	int sel;
 	if(!str[0]){
-		ComboBox_SetText(box, str);
+		if(!select || def_select == -1)
+			ComboBox_SetText(box, str);
+		else
+			ComboBox_SetCurSel(box, def_select);
 		return;
 	}
 	sel = ComboBox_FindStringExact(box, -1, str);
