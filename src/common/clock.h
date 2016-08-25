@@ -156,28 +156,31 @@ struct TClockAPI {
 /**
  * \brief read a string value from our registry
  * \param[in] section,entry
- * \param[out] val output buffer of \a len size
+ * \param[out] val output buffer of \a len size \e [optional]
  * \param[in] len size of \a val in chars
  * \param[in] defval default value to return if \a entry wasn't found \e [optional]
  * \return size of returned string excl. zero terminator.
- * \return returns \c -1 on error when \p defval is \c NULL */
+ * \return returns \c -1 on error when \p defval is \c NULL
+ * \remark if \p val is \c NULL and \p len = \c 0, it returns a length guess. Check only for \c -1, \c 0, \c >0 */
 	int (*GetStr)(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval);
 /**
  * \brief try to read a string value from our registry or add it if missing
  * \param[in] section,entry
- * \param[out] val output buffer of \a len size
+ * \param[out] val output buffer of \a len size \e [optional]
  * \param[in] len size of \a val
  * \param[in] defval default value to write and return if \a entry wasn't found
- * \return size of returned string excl. zero terminator */
+ * \return size of returned string excl. zero terminator
+ * \remark if \p val is \c NULL and \p len = \c 0, it returns a length guess. Check only for \c -1, \c 0, \c >0  */
 	int (*GetStrEx)(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval);
 /**
  * \brief read a string value from Windows' registry
  * \param[in] rootkey,section,entry
- * \param[out] val output buffer of \a len size
+ * \param[out] val output buffer of \a len size \e [optional]
  * \param[in] len size of \a val in chars
  * \param[in] defval default value to return if \a entry wasn't found \e [optional]
  * \return size of returned string excl. zero terminator.
- * \return returns \c -1 on error when \p defval is \c NULL */
+ * \return returns \c -1 on error when \p defval is \c NULL
+ * \remark if \p val is \c NULL and \p len = \c 0, it returns a length guess. Check only for \c -1, \c 0, \c >0 */
 	int (*GetSystemStr)(HKEY rootkey, const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval);
 /**
  * \brief update or add a int value in our registry

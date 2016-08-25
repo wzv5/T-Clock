@@ -342,7 +342,8 @@ int Clock_GetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entr
 		if(RegQueryValueEx(hkey, entry, 0, &regtype, (BYTE*)val, &size) == ERROR_SUCCESS) {
 			ret = size / sizeof(val[0]);
 			if(ret) {
-				if(val[--ret] != '\0') {
+				--ret;
+				if(val && val[ret] != '\0') {
 					if(ret+1 < len) ++ret;
 					val[ret] = '\0';
 				}
@@ -350,46 +351,88 @@ int Clock_GetSystemStr(HKEY rootkey, const wchar_t* section, const wchar_t* entr
 		}
 		RegCloseKey(hkey);
 	}
-	if(ret == -1 && defval) {
-		if((ret=(int)wcslen(defval)) <= len){
-			wcscpy(val, defval);
-		}else ret = 0;
+	if(val) {
+		if(ret == -1 && defval) {
+			ret = (int)wcslen(defval);
+			if(ret >= len)
+				ret = len - 1;
+			memcpy(val, defval, ret * sizeof(val[0]));
+			val[ret] = '\0';
+		}
+		if(ret <= 0)
+			val[0] = '\0';
 	}
-	if(!ret) val[0] = '\0';
 	return ret;
 }
 
+static int GetPrivateProfileStringLength(const wchar_t* section, const wchar_t* entry, int len_expected, const wchar_t* ini) {
+	wchar_t dummy[3];
+	wchar_t* dummy_large;
+	int ret;
+	ret = GetPrivateProfileString(section, entry, kInvalidKey, dummy, _countof(dummy), ini);
+	if(ret == (_countof(dummy) - 1) && len_expected) {
+		ret = (len_expected % 1024);
+		if(ret)
+			len_expected += (1024 - ret);
+		ret = len_expected;
+		for(;;){
+			dummy_large = malloc(len_expected * sizeof(wchar_t));
+			if(!dummy_large)
+				break;
+			ret = GetPrivateProfileString(section, entry, NULL, dummy_large, len_expected, ini);
+			free(dummy_large);
+			if(ret != (len_expected - 1))
+				break;
+			len_expected += 1024;
+		}
+	} else if(dummy[0] == kInvalidKey[0] && dummy[1] == kInvalidKey[1]) {
+		ret = -1;
+	}
+	return ret;
+}
 int Clock_GetStr(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
 	wchar_t key[80];
 	int ret = -1;
 	
 	if(PrepareMyRegKey_(key,section)){
 		if(ms_inifile[0]) {
-			ret = GetPrivateProfileString(key, entry, kInvalidKey, val, len, ms_inifile);
-			if(val[0] == kInvalidKey[0] && val[1] == kInvalidKey[1])
-				ret = -1;
+			if(val) {
+				ret = GetPrivateProfileString(key, entry, kInvalidKey, val, len, ms_inifile);
+				if(val[0] == kInvalidKey[0] && val[1] == kInvalidKey[1])
+					ret = -1;
+			} else {
+				ret = GetPrivateProfileStringLength(key, entry, len, ms_inifile);
+			}
 		} else {
 			return Clock_GetSystemStr(HKEY_CURRENT_USER, key, entry, val, len, defval);
 		}
 	}
-	if(ret == -1 && defval){
-		if((ret=(int)wcslen(defval)) <= len){
-			wcscpy(val, defval);
-		}else ret = 0;
+	if(val) {
+		if(ret == -1 && defval) {
+			ret = (int)wcslen(defval);
+			if(ret >= len)
+				ret = len - 1;
+			memcpy(val, defval, ret * sizeof(val[0]));
+			val[ret] = '\0';
+		}
+		if(ret <= 0)
+			val[0] = '\0';
 	}
-	if(!ret) val[0] = '\0';
 	return ret;
 }
 
 int Clock_GetStrEx(const wchar_t* section, const wchar_t* entry, wchar_t* val, int len, const wchar_t* defval) {
 	int ret = Clock_GetStr(section, entry, val, len, NULL);
 	if(ret == -1){
-		if((ret=(int)wcslen(defval)) <= len){
-			Clock_SetStr(section, entry, defval);
-			wcscpy(val, defval);
-		}else ret = 0;
+		Clock_SetStr(section, entry, defval);
+		ret = (int)wcslen(defval);
+		if(ret >= len)
+			ret = len - 1;
+		if(val) {
+			memcpy(val, defval, ret * sizeof(val[0]));
+			val[ret] = '\0';
+		}
 	}
-	if(!ret) val[0] = '\0';
 	return ret;
 }
 
