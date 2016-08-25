@@ -1,4 +1,5 @@
 #include "../common/globals.h"
+#include <commctrl.h>
 #include "control_extensions.h"
 
 /*
@@ -21,6 +22,83 @@ void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select, int def_se
 	}
 	if(select)
 		ComboBox_SetCurSel(box, sel);
+}
+
+int CALLBACK SortString_LV(HWND list, int flags, intptr_t item1, intptr_t item2, intptr_t column) {
+	int order;
+	wchar_t str1[128];
+	wchar_t str2[_countof(str1)];
+	LVITEM item;
+	
+	item.mask = LVIF_TEXT;
+	item.cchTextMax = _countof(str1);
+	item.iSubItem = (int)column;;
+	
+	item.iItem = (int)item1;
+	item.pszText = str1;
+	ListView_GetItem(list, &item);
+	
+	item.iItem = (int)item2;
+	item.pszText = str2;
+	ListView_GetItem(list, &item);
+	
+	if(flags & SORT_INSENSITIVE)
+		order = wcsncasecmp(str1, str2, _countof(str1));
+	else
+		order = wcsncmp(str1, str2, _countof(str1));
+	if(flags & SORT_DEC)
+		order = -order;
+	return order;
+}
+
+typedef struct sort_wrapper_t {
+	sort_func_t func;
+	intptr_t user;
+	HWND hwnd;
+	int flags;
+} sort_wrapper_t;
+
+static int CALLBACK SortWrapper_(LPARAM item1, LPARAM item2, LPARAM wrapper_) {
+	sort_wrapper_t* wrapper = (sort_wrapper_t*)wrapper_;
+	return wrapper->func(wrapper->hwnd, wrapper->flags, item1, item2, wrapper->user);
+}
+
+void ListView_SortItemsExEx(HWND list, sort_func_t func, intptr_t param, int flags) {
+	sort_wrapper_t wrapper;
+	LONG_PTR last_sort;
+	wrapper.func = func;
+	wrapper.user = param;
+	wrapper.hwnd = list;
+	wrapper.flags = flags;
+	if((wrapper.flags & SORT_NEXT) == SORT_NEXT) {
+		last_sort = GetWindowLongPtr(list, GWLP_USERDATA);
+		if(last_sort) {
+			if((last_sort & 0x00ffffff) == param) {
+				wrapper.flags &= ~(SORT_ASC | SORT_DEC);
+				if(flags & (SORT_ASC | SORT_DEC)) { // toggle
+					if(last_sort & SORT_DEC)
+						wrapper.flags |= SORT_ASC;
+					else
+						wrapper.flags |= SORT_DEC;
+				} else { // refresh sort
+					if(last_sort & SORT_DEC)
+						wrapper.flags |= SORT_DEC;
+				}
+			}
+		}
+	}
+	if(wrapper.flags & SORT_CUSTOMPARAM)
+		ListView_SortItems(list, SortWrapper_, &wrapper);
+	else
+		ListView_SortItemsEx(list, SortWrapper_, &wrapper);
+	if(wrapper.flags & SORT_REMEMBER) {
+		last_sort = param;
+		if(wrapper.flags & SORT_DEC)
+			last_sort |= SORT_DEC;
+		else
+			last_sort |= SORT_ASC;
+		SetWindowLongPtr(list, GWLP_USERDATA, last_sort);
+	}
 }
 
 /*

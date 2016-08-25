@@ -159,6 +159,7 @@ typedef struct alarm_t {
 
 /**
  * \brief enable / disable alarm
+ * \param idx alarm id
  * \param enable 1: enable, 0: disable, -1: toggle, -2: read from reg */
 void AlarmEnable(int idx, int enable);
 /**
@@ -215,15 +216,21 @@ void CheckMouseMenu();
 // timer.c
 void UpdateTimerMenu(HMENU hMenu);
 
-void StopTimer(int id);
-void StartTimer(int id);
-void ToggleTimer(int id);
+/**
+ * \brief enable / disable timer
+ * \param id timer id (or \c -1 for all)
+ * \param enable 1: enable, 0: disable, -1: toggle */
+void TimerEnable(int id, int enable);
+/**
+ * \brief process menu item click on a timer
+ * \param hmenu menu handle
+ * \param itemid id of clicked timer item */
+void TimerMenuItemClick(HMENU hmenu, int itemid);
 
 void WatchTimer(int reset);
-void CancelAllTimersOnStartUp();
 
 void EndAllTimers();
-void DialogTimer();
+void DialogTimer(int select_id);
 void OnTimerTimer(HWND hwnd);
 
 // StopWatch.c

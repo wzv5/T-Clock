@@ -314,7 +314,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	if((updated=CheckSettings())<0){
 		return 1;
 	}
-	CancelAllTimersOnStartUp();
 	
 	// Message of the taskbar recreating - Special thanks to Mr.Inuya
 	g_WM_TaskbarCreated = RegisterWindowMessageA("TaskbarCreated");

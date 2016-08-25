@@ -84,9 +84,9 @@ BEGIN
         POPUP "T-Clock Timers",IDC_TIMERS,0,0
         BEGIN
             MENUITEM "Stopwatch",                   IDM_STOPWATCH,0,0
-            MENUITEM "Watch List\t(running timers)", IDM_TIMEWATCH,0,MFS_DISABLED
+            MENUITEM "Watch List\t(running timers)", IDM_TIMEWATCH,0,0
             MENUITEM "Reset Watch List",            IDM_TIMEWATCHRESET,0,MFS_DISABLED
-            MENUITEM "Add/Edit Timer",              IDM_TIMER,0,0
+            MENUITEM "Add/Edit Timers",              IDM_TIMER,0,0
         END
         MENUITEM "Display Properties",              IDM_DISPLAYPROP,0,0
         MENUITEM "",0,MFT_SEPARATOR,0
@@ -103,6 +103,36 @@ BEGIN
         MENUITEM "",IDS_NONE,MFT_SEPARATOR,0
         MENUITEM "&Run...",                         IDM_FWD_RUNAPP,0,0
         MENUITEM "E&xit Explorer",                  IDM_FWD_EXITEXPLORER,0,0
+    END
+END
+
+IDR_TIMER MENUEX
+BEGIN
+    POPUP "", 0, 0, 0
+    BEGIN
+        MENUITEM "&Restart\tR", IDM_TIMER_RESTART, 0, 0
+        MENUITEM "&Stop\tS", IDM_TIMER_STOP, 0, 0
+        MENUITEM "&Hide\tH", IDM_TIMER_HIDE, 0, 0
+        MENUITEM "&Edit\tE", IDM_TIMER_EDIT, 0, 0
+        MENUITEM "", 0, MFT_SEPARATOR, 0
+        MENUITEM "&Cleanup expired\tC", IDM_TIMER_CLEANUP, 0, 0
+        MENUITEM "Restart list\tShift+R", IDM_TIMER_ALL_RESTART, 0, 0
+        MENUITEM "Restore hidden", IDM_TIMER_RESTORE, 0, MFS_DISABLED
+        MENUITEM "Start all", IDM_TIMER_ALL_START, 0, 0
+        MENUITEM "Stop all", IDM_TIMER_ALL_STOP, 0, 0
+        MENUITEM "", 0, MFT_SEPARATOR, 0
+        POPUP "Timers", IDM_TIMER_LIST, 0, 0
+        BEGIN
+            MENUITEM "Add/Edit Timers", IDM_TIMER, 0, 0
+        END
+        POPUP "Options", IDM_TIMER_OPTIONS, 0, 0
+        BEGIN
+            MENUITEM "Click through when inactive", IDM_TIMER_OPT_OVERLAY, 0, 0
+            MENUITEM "Slightly transparent", IDM_TIMER_OPT_OPACITY_80, 0, 0
+            MENUITEM "Half transparent", IDM_TIMER_OPT_OPACITY_50, 0, 0
+            MENUITEM "Barely visible", IDM_TIMER_OPT_OPACITY_25, 0, 0
+        END
+//        MENUITEM "Close\tESC", IDCANCEL, 0, 0
     END
 END
 
@@ -499,11 +529,12 @@ BEGIN
 END
 
 IDD_TIMERVIEW DIALOGEX 0, 0, 186, 93
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+STYLE DS_SHELLFONT | WS_CAPTION | WS_VISIBLE | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_POPUP | WS_THICKFRAME | WS_SYSMENU
+EXSTYLE WS_EX_WINDOWEDGE | WS_EX_APPWINDOW | WS_EX_LAYERED
 CAPTION "Timer Watch"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "",IDC_LIST,WC_LISTVIEW,WS_TABSTOP|LVS_ALIGNLEFT|LVS_NOSORTHEADER|LVS_SINGLESEL|LVS_REPORT, 0,0,186,93
+    CONTROL         "", IDC_LIST, WC_LISTVIEW, WS_TABSTOP | LVS_ALIGNLEFT | LVS_SHOWSELALWAYS | LVS_SINGLESEL | LVS_REPORT, 0, 0, 186, 93
 END
 
 IDD_SNTPCONFIG DIALOGEX 0, 0, 310, 200

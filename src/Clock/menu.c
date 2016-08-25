@@ -74,7 +74,7 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	if(item) {
 		if(item >= IDM_I_BEGIN_) {
 			if(item >= IDM_I_TIMER && item < (IDM_I_TIMER+1000)){
-				ToggleTimer(item - IDM_I_TIMER);
+				TimerMenuItemClick(hMenu, item);
 			}else if(item >= IDM_I_ALARM && item < (IDM_I_ALARM+1000)){
 				AlarmEnable(item - IDM_I_ALARM, -1);
 			}else if(item >= IDM_I_MENU && item < (IDM_I_MENU+1000)){
@@ -264,7 +264,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 			StopWatch_Lap(g_hDlgStopWatch,0);
 		break;
 	case IDM_TIMER:
-		DialogTimer();
+		DialogTimer(0);
 		break;
 	case IDM_TIMEWATCH:
 		WatchTimer(0); // Shelter All the Homeless Timers.

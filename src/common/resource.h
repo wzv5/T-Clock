@@ -143,6 +143,24 @@
 //#define IDC_SW_STOP                     1024
 #define IDC_SW_RESET                    1024
 #define IDC_SW_EXPORT                   1025 /* end group */
+#define IDR_TIMER                       1100
+#define GROUP_TIMER_BEGIN               IDM_TIMER_RESTART
+#define IDM_TIMER_RESTART               1101 /* group 'timer context' */
+#define IDM_TIMER_STOP                  1102
+#define IDM_TIMER_HIDE                  1103
+#define IDM_TIMER_EDIT                  1104 /* end group */
+#define GROUP_TIMER_END                 IDM_TIMER_EDIT
+#define IDM_TIMER_CLEANUP               1105
+#define IDM_TIMER_ALL_RESTART           1106
+#define IDM_TIMER_RESTORE               1107
+#define IDM_TIMER_ALL_START             1108
+#define IDM_TIMER_ALL_STOP              1109
+#define IDM_TIMER_LIST                  1110
+#define IDM_TIMER_OPTIONS               1120
+#define IDM_TIMER_OPT_OVERLAY           1121
+#define IDM_TIMER_OPT_OPACITY_80        1122
+#define IDM_TIMER_OPT_OPACITY_50        1123
+#define IDM_TIMER_OPT_OPACITY_25        1124
 
 // HotKeys
 #define HOTKEY_BEGIN         HK_TIMER_ADD

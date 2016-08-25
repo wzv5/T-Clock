@@ -179,7 +179,7 @@ void ConvertSettings(VERSION ver) {
 		api.SetInt(L"Clock", L"VertPos", 0);
 		// remove "ID" from "Timers" as no longer used
 		len = wsprintf(buf, FMT("Timers\\Timer"));
-		idx2 = api.GetInt(L"Timers", L"NumberOfTimers",0);
+		idx2 = api.GetInt(L"Timers", L"NumberOfTimers", 0);
 		for(idx=0; idx<idx2; ){
 			wsprintf(buf+len, FMT("%d"), ++idx);
 			api.DelValue(buf, L"ID");
@@ -265,6 +265,7 @@ void ConvertSettings(VERSION ver) {
 			}
 		}}
 		/* fall through */
+		/// @note : on next backward incompatible change, remove unused "Timers/Timer#/Active" value
 		
 	case CURRENT:
 		break;

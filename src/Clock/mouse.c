@@ -121,7 +121,7 @@ void OnTimerMouse(HWND hwnd)
 		OnContextMenu(hwnd, pt.x, pt.y);
 		break;}
 	case MOUSEFUNC_TIMER:
-		DialogTimer();
+		DialogTimer(0);
 		break;
 	case MOUSEFUNC_SHOWCALENDER:
 		ToggleCalendar(0);

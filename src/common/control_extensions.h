@@ -17,6 +17,27 @@ extern "C" {
  * \sa ComboBox_AddString() */
 void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select, int def_select);
 
+enum SORT {
+	SORT_INSENSITIVE = 0x04000000, ///< case insensitive compare
+	SORT_CUSTOMPARAM = 0x08000000, ///< custom sort by item data
+	SORT_ASC         = 0x10000000, ///< sort ascending ⏶
+	SORT_DEC         = 0x20000000, ///< sort descending ⏷
+	SORT_REMEMBER    = 0x40000000, ///< remember last applied sort by setting \c GetWindowLongPtr(hwnd,GWLP_USERDATA) \sa SORT_NEXT
+	SORT_NEXT        = 0x80000000 | SORT_REMEMBER, ///< continue sort by toggling or redoing previous; implies \c SORT_REMEMBER \sa SORT_REMEMBER
+};
+typedef int (CALLBACK* sort_func_t)(HWND list, int flags, intptr_t item1, intptr_t item2, intptr_t user);
+
+int CALLBACK SortString_LV(HWND list, int flags, intptr_t item1, intptr_t item2, intptr_t column); ///< string sort (simple strcmp)
+/**
+ * \brief a smart replacement to \c ListView_SortItemsEx with enhanced sorting and listview capabilities
+ * \param list control handle
+ * \param func sort callback in form of \c sort_func_t, eg. \c SortString_LV
+ * \param param custom data passed to \p func \e [optional]
+ * \param flags any combination of \c SORT eg. <code>SORT_ASC | SORT_INSENSITIVE | SORT_NEXT</code>
+ * \remark if \p flags includes \c SORT_NEXT but neither \c SORT_ASC nor \c SORT_DEC , it'll just redo the current sort instead of toggling
+ * \sa SORT, SortString_LV, sort_func_t */
+void ListView_SortItemsExEx(HWND list, sort_func_t func, intptr_t param, int flags);
+
 /*
 	LINK CONTROLS
 */
