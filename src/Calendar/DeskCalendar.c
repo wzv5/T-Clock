@@ -69,9 +69,9 @@ LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 			#define CALTODAYTEXTHEIGHT 13
 			rc.right+=CALBORDER;
 			rc.bottom-=CALTODAYTEXTHEIGHT;
-			if(api.OS == TOS_2000){
-				rc.right+=2;
-				rc.bottom+=2;
+			if(api.OS <= TOS_XP){
+				rc.right += 2;
+				rc.bottom += 2;
 			}
 			switch(iMonths){
 			/*case 1:*/ case 2: case 3:
