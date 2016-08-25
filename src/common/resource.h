@@ -375,6 +375,7 @@
 #define IDC_SWE_LAP                     2102
 #define IDC_SWE_OUT                     2103
 
+#define IDM_I_BEGIN_                    IDM_I_ALARM
 #define IDM_I_ALARM                     60000 /* first alarm menu index */
 #define IDM_I_TIMER                     61000 /* first timer menu index */
 #define IDM_I_MENU                      62000 /* first custom menu index */

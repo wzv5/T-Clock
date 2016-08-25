@@ -19,6 +19,7 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	BOOL g_bQMDisplay;
 	HMENU hPopupMenu;
 	HMENU hMenu;
+	int item;
 	
 	g_bQMAudio   = api.GetInt(L"QuickyMenu", L"AudioProperties",   TRUE);
 	g_bQMNet     = api.GetInt(L"QuickyMenu", L"NetworkDrives",     TRUE);
@@ -69,8 +70,30 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	
 	/// http://support.microsoft.com/kb/135788
 	SetForegroundWindow(hWnd);
-	TrackPopupMenu(hPopupMenu, TPM_LEFTBUTTON, xPos, yPos, 0, hWnd, NULL);
-	PostMessage(hWnd,WM_NULL,0,0);
+	item = TrackPopupMenu(hPopupMenu, (TPM_LEFTBUTTON|TPM_NONOTIFY|TPM_RETURNCMD), xPos, yPos, 0, hWnd, NULL);
+	if(item) {
+		if(item >= IDM_I_BEGIN_) {
+			if(item >= IDM_I_TIMER && item < (IDM_I_TIMER+1000)){
+				ToggleTimer(item - IDM_I_TIMER);
+			}else if(item >= IDM_I_ALARM && item < (IDM_I_ALARM+1000)){
+				AlarmEnable(item - IDM_I_ALARM, -1);
+			}else if(item >= IDM_I_MENU && item < (IDM_I_MENU+1000)){
+				wchar_t key[MAX_PATH];
+				int offset = 9;
+				wchar_t szQM_Target[MAX_PATH];
+				wchar_t szQM_Switch[MAX_PATH];
+				wcscpy(key, L"MenuItem-");
+				offset += wsprintf(key+offset, FMT("%i"), (item-IDM_I_MENU));
+				wcscpy(key+offset, L"-Target");
+				api.GetStr(L"QuickyMenu\\MenuItems", key, szQM_Target, _countof(szQM_Target), L"");
+				wcscpy(key+offset, L"-Switches");
+				api.GetStr(L"QuickyMenu\\MenuItems", key, szQM_Switch, _countof(szQM_Switch), L"");
+				api.Exec(szQM_Target, szQM_Switch, hWnd);
+			}
+		} else
+			OnTClockCommand(hWnd, item);
+	}
+	PostMessage(hWnd, WM_NULL, 0, 0);
 	DestroyMenu(hMenu); // Starting Over is Simpler & Recommended
 }
 //================================================================================================
@@ -261,7 +284,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 				return 1;
 			} else {
 				if(IsWindow(g_hDlgSNTP))
-					SendMessage(g_hDlgSNTP, WM_CLOSE, 1, 0); // close Window but safe changes
+					SendMessage(g_hDlgSNTP, WM_CLOSE, 1, 0); // close window but safe changes
 			}
 			return 0;
 		}
@@ -277,27 +300,10 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		}
 		break;}
 	default:
-		if(wID>=IDM_I_TIMER && wID<IDM_I_TIMER+1000){
-			ToggleTimer(wID-IDM_I_TIMER);
-		}else if(wID>=IDM_I_ALARM && wID<IDM_I_ALARM+1000){
-			AlarmEnable(wID-IDM_I_ALARM, -1);
-		}else if(wID>=IDM_I_MENU && wID<IDM_I_MENU+1000){
-			wchar_t key[MAX_PATH];
-			int offset = 9;
-			wchar_t szQM_Target[MAX_PATH];
-			wchar_t szQM_Switch[MAX_PATH];
-			wcscpy(key, L"MenuItem-");
-			offset += wsprintf(key+offset, FMT("%i"), (wID-IDM_I_MENU));
-			wcscpy(key+offset, L"-Target");
-			api.GetStr(L"QuickyMenu\\MenuItems", key, szQM_Target, _countof(szQM_Target), L"");
-			wcscpy(key+offset, L"-Switches");
-			api.GetStr(L"QuickyMenu\\MenuItems", key, szQM_Switch, _countof(szQM_Switch), L"");
-			api.Exec(szQM_Target, szQM_Switch, hwnd);
-		}
 		#ifdef _DEBUG
-		else
-			DBGOUT("%s: unknown ID: %.5i(0x%.4x) (hwnd:%p)", __FUNCTION__, wID, wID, hwnd);
+		DBGOUT("%s: unknown ID: %.5i(0x%.4x) (hwnd:%p)", __FUNCTION__, wID, wID, hwnd);
 		#endif // _DEBUG
+		break;
 	}
 	return 0;
 }
