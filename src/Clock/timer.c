@@ -208,7 +208,7 @@ INT_PTR CALLBACK Window_Timer(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 				OnStopTimer(hwnd);
 				break;
 				
-			case IDC_TIMERSANSHO:
+			case IDC_TIMERFILEBROWSE:
 				OnSanshoAlarm(hwnd, id);
 				break;
 				

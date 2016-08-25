@@ -13,7 +13,7 @@ static void OnChangeAlarm(HWND hDlg);
 static void OnDropDownAlarm(HWND hDlg);
 static void OnDay(HWND hDlg);
 static void OnAlarmJihou(HWND hDlg, WORD id);
-static void OnSanshoAlarm(HWND hDlg, WORD id);
+static void OnBrowseAction(HWND hDlg, WORD id);
 static void On12Hour(HWND hDlg, int bOnChange);
 static void OnDelAlarm(HWND hDlg);
 static void OnFileChange(HWND hDlg, WORD id);
@@ -72,9 +72,9 @@ INT_PTR CALLBACK Page_Alarm(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 			}
 			break;
 		// browse file
-		case IDC_SANSHOALARM:
-		case IDC_SANSHOJIHOU:
-			OnSanshoAlarm(hDlg, id);
+		case IDC_BROWSEALARM:
+		case IDC_BROWSEJIHOU:
+			OnBrowseAction(hDlg, id);
 			OnFileChange(hDlg, (WORD)(id - 1));
 			SendPSChanged(hDlg);
 			break;
@@ -572,7 +572,7 @@ void OnMsgAlarm(HWND hDlg, WORD id)   //-------------------------------------+++
 /*------------------------------------------------
   browse sound file
 --------------------------------------------------*/
-void OnSanshoAlarm(HWND hDlg, WORD id)
+void OnBrowseAction(HWND hDlg, WORD id)
 {
 	wchar_t deffile[MAX_PATH], fname[MAX_PATH];
 	GetDlgItemText(hDlg, id - 1, deffile, _countof(deffile));

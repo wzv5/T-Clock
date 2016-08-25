@@ -284,7 +284,7 @@
 #define IDC_ALARMDAY                    1308
 #define IDC_LABSOUNDALARM               1309
 #define IDC_FILEALARM                   1310 /* groupB */
-#define IDC_SANSHOALARM                 1311
+#define IDC_BROWSEALARM                 1311
 #define IDC_LABTESTALARM                1312
 #define IDC_TESTALARM                   1313
 #define IDC_REPEATALARM                 1314 /* end groupB */
@@ -301,7 +301,7 @@
 #define IDC_JIHOU                       1330
 #define IDC_LABSOUNDJIHOU               1331 /* group */
 #define IDC_FILEJIHOU                   1332 /* groupB */
-#define IDC_SANSHOJIHOU                 1333
+#define IDC_BROWSEJIHOU                 1333
 #define IDC_LABTESTJIHOU                1334
 #define IDC_TESTJIHOU                   1335
 #define IDC_REPEATJIHOU                 1336 /* end groupB */
@@ -328,14 +328,7 @@
 #define IDCB_TOOLTIP                    1414
 #define IDC_TOOLTIP                     1415
 #define IDC_LIST                        1416
-#define IDC_DESKCAL                     1605
-#define IDC_LABDESKCAL                  1606
-#define IDC_COMDESKCAL                  1607
-#define IDC_SANSHODESKCAL               1608
-#define IDC_ONLYDATECHANGED             1609
-#define IDC_RESUMESUSPEND               1610
-#define IDC_TONIKAKU                    1611
-#define IDC_WATCHWALL                   1612
+
 #define IDC_STARTUP                     1613
 #define IDC_UPDATE_CHECK                1614
 #define IDC_UPDATE_RELEASE              1615
@@ -353,7 +346,7 @@
 #define IDC_TIMERDAYS                   1908
 #define IDC_TIMERDAYSPIN                1909
 #define IDC_TIMERFILE                   2010
-#define IDC_TIMERSANSHO                 2011
+#define IDC_TIMERFILEBROWSE             2011
 #define IDC_TIMERTEST                   2012
 #define IDC_TIMERREPEAT                 2013
 #define IDC_TIMERBLINK                  2014

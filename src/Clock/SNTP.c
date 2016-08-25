@@ -32,7 +32,7 @@ enum{
 BOOL GetSetTimePermissions();
 
 static void OnInit(HWND hDlg);
-static void OnSanshoAlarm(HWND hDlg, WORD id);
+static void OnBrowseAction(HWND hDlg, WORD id);
 static INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 //================================================================================================
 //---------------------------//----------------------------+++--> Save Request Results in SNTP.log:
@@ -430,7 +430,7 @@ INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 			return TRUE;
 			
 		case IDCB_SYNCSOUNDBROWSE:
-			OnSanshoAlarm(hDlg, IDCBX_SYNCSOUND);
+			OnBrowseAction(hDlg, IDCBX_SYNCSOUND);
 			return TRUE;
 			
 		case IDCB_CLEAR:{
@@ -571,7 +571,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 }
 //================================================================================================
 //----------------------------------------//---------------+++--> Browse for Sync Event Sound File:
-void OnSanshoAlarm(HWND hDlg, WORD id)   //-------------------------------------------------+++-->
+void OnBrowseAction(HWND hDlg, WORD id)   //-------------------------------------------------+++-->
 {
 	wchar_t deffile[MAX_PATH], fname[MAX_PATH];
 	
