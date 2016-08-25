@@ -71,10 +71,10 @@ BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus)
 static void CALLBACK ToggleCalendar_done(HWND hwnd, UINT uMsg, ULONG_PTR dwData, LRESULT lResult){
 	(void)uMsg;
 	(void)lResult;
+	if(api.OS >= TOS_WIN10_1)
+		return;
 	hwnd = api.GetCalendar();
 	if(!hwnd && api.OS >= TOS_WIN10){ // Win10 (new slow calendar)
-		if(api.OS >= TOS_WIN10_1)
-			return;
 		dwData = 50;
 		do{ // min 6-12 iterations on my VM (also seen 50+ under load)
 			Sleep(50);

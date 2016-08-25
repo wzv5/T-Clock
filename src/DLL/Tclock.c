@@ -713,8 +713,9 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		if(api.OS >= TOS_WIN10_1) { // emulated click for Win10.1, older OS would require the "click" on the notify area with the clocks coordinates (parent)
 			if(hwnd != m_clock_active)
 				return SendMessage(m_clock_active, message, wParam, lParam);
-			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(0,0));
-			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(0,0));
+			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(4,4));
+			Sleep(0);
+			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(4,4));
 			return 0;
 		}
 		break;}
@@ -922,8 +923,9 @@ static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WP
 	/// clock features
 	case WM_USER+102: // emulated click for Win10.1 to open calendar
 		if(dwRefData) {
-			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(0,0));
-			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(0,0));
+			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(4,4));
+			Sleep(0);
+			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(4,4));
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
