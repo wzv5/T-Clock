@@ -1,14 +1,13 @@
-57|419
-2.1.0|2.4.1
+57|445
+2.1.0|2.4.2
 |(first release)
-|Windows 10 Anniversary support (Beta2)
-!!! if you're using portable mode / T-Clock.ini, please create a backup before updating !!!
-! clock working once again on Windows 10 with anniversary update applied
-+ now fully supporting Unicode! Use all those fancy smileys for your clock text, or tryout other languages like Japanese ;)
-+ added update checker checkboxes to about page
-+ added link to forums to about page
-+ week number format now supports padding, just keep adding those "W" :P
-* we now call our options, "Options" and no longer "properties" (as they would only apply to single items / files)
-* "removed" Stoic Joker from about page by replacing his logo with mine.. :/
-* context menu slightly reordered
-! fixed .pcb file support. will now play smoothly on Windows 7+
+|Windows 10 Anniversary fixes, improved Timer Watch
++ Timer Watch got lots of new stuff (#55)
+* tooltips support corrected to work on Win2k/XP and Windows 10 (default tooltip)
+* tooltips are now positioned more unified across multiple monitors
+* taskbar transparency setting now supports previewing (and is less intrusive)
+* improved performance when setting-up multi-monitor clocks (regression from Win10 anniversary update)
+! improved API unloading procedure to be more reliable and properly restores the clock
+! fixed #54 (initial clock size on auto-hide taskbars)
+! fixed crash on Win2k/XP when using the uptime format
+! fixed XP calendar size calculations
