@@ -847,12 +847,12 @@ static void RemoveFromWatch(HWND hWnd, HWND list, int index) {
 
 
 
-static int CALLBACK SortTime(HWND list, int flags, intptr_t id1, intptr_t id2, intptr_t user) {
+static int CALLBACK SortTime(HWND list, int column, int flags, intptr_t id1, intptr_t id2, intptr_t user) {
 	int order;
 	int64_t time1;
 	int64_t time2;
 	
-	(void)list, (void)user;
+	(void)list, (void)column, (void)user;
 	
 	order = TimerFindIndexById((int)id1);
 	if(order != -1)
@@ -960,10 +960,10 @@ INT_PTR CALLBACK Window_TimerView(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 				item.iItem = SORT_NEXT | SORT_ASC;
 			switch(lParam) {
 			case 0:
-				ListView_SortItemsExEx(list, SortString_LV, 0, item.iItem | SORT_INSENSITIVE);
+				ListView_SortItemsExEx(list, 0, SortString_LV, 0, item.iItem | SORT_INSENSITIVE);
 				break;
 			case 1:
-				ListView_SortItemsExEx(list, SortTime, 1, item.iItem | SORT_CUSTOMPARAM);
+				ListView_SortItemsExEx(list, 1, SortTime, 0, item.iItem | SORT_CUSTOMPARAM);
 				break;
 			}
 		case IDM_TIMER_RESTART:

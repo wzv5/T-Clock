@@ -24,15 +24,17 @@ void ComboBox_AddStringOnce(HWND box, const wchar_t* str, int select, int def_se
 		ComboBox_SetCurSel(box, sel);
 }
 
-int CALLBACK SortString_LV(HWND list, int flags, intptr_t item1, intptr_t item2, intptr_t column) {
+int CALLBACK SortString_LV(HWND list, int column, int flags, intptr_t item1, intptr_t item2, intptr_t unused) {
 	int order;
 	wchar_t str1[128];
 	wchar_t str2[_countof(str1)];
 	LVITEM item;
 	
+	(void)unused;
+	
 	item.mask = LVIF_TEXT;
 	item.cchTextMax = _countof(str1);
-	item.iSubItem = (int)column;;
+	item.iSubItem = column;
 	
 	item.iItem = (int)item1;
 	item.pszText = str1;
@@ -55,25 +57,33 @@ typedef struct sort_wrapper_t {
 	sort_func_t func;
 	intptr_t user;
 	HWND hwnd;
+	int column;
 	int flags;
 } sort_wrapper_t;
 
 static int CALLBACK SortWrapper_(LPARAM item1, LPARAM item2, LPARAM wrapper_) {
 	sort_wrapper_t* wrapper = (sort_wrapper_t*)wrapper_;
-	return wrapper->func(wrapper->hwnd, wrapper->flags, item1, item2, wrapper->user);
+	return wrapper->func(wrapper->hwnd, wrapper->column, wrapper->flags, item1, item2, wrapper->user);
 }
 
-void ListView_SortItemsExEx(HWND list, sort_func_t func, intptr_t param, int flags) {
+void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t user, int flags) {
 	sort_wrapper_t wrapper;
-	LONG_PTR last_sort;
+	LONG_PTR last_sort = 0;
+	LVCOLUMN col;
+	const wchar_t kAscending[]        = L" ⏶",
+	kDescending[_countof(kAscending)] = L" ⏷";
+	const wchar_t* indicator;
+	wchar_t column_name[64];
 	wrapper.func = func;
-	wrapper.user = param;
+	wrapper.user = user;
 	wrapper.hwnd = list;
+	wrapper.column = column;
 	wrapper.flags = flags;
 	if((wrapper.flags & SORT_NEXT) == SORT_NEXT) {
 		last_sort = GetWindowLongPtr(list, GWLP_USERDATA);
 		if(last_sort) {
-			if((last_sort & 0x00ffffff) == param) {
+			column = (last_sort & 0x00ffffff);
+			if(column == wrapper.column) {
 				wrapper.flags &= ~(SORT_ASC | SORT_DEC);
 				if(flags & (SORT_ASC | SORT_DEC)) { // toggle
 					if(last_sort & SORT_DEC)
@@ -92,11 +102,34 @@ void ListView_SortItemsExEx(HWND list, sort_func_t func, intptr_t param, int fla
 	else
 		ListView_SortItemsEx(list, SortWrapper_, &wrapper);
 	if(wrapper.flags & SORT_REMEMBER) {
-		last_sort = param;
-		if(wrapper.flags & SORT_DEC)
+		col.mask = LVCF_TEXT;
+		col.pszText = column_name;
+		col.cchTextMax = _countof(column_name);
+		if(last_sort) {
+			if(ListView_GetColumn(list, column, &col)) {
+				col.iOrder = (int)wcslen(column_name) - (_countof(kAscending) - 1);
+				if(col.iOrder >= 0 && column_name[col.iOrder] == kAscending[0]) {
+					column_name[col.iOrder] = '\0';
+					ListView_SetColumn(list, column, &col);
+				}
+			}
+		}
+		last_sort = wrapper.column;
+		if(wrapper.flags & SORT_DEC) {
+			indicator = kDescending;
 			last_sort |= SORT_DEC;
-		else
+		} else {
+			indicator = kAscending;
 			last_sort |= SORT_ASC;
+		}
+		
+		if(ListView_GetColumn(list, wrapper.column, &col)) {
+			col.iOrder = (int)wcslen(column_name);
+			if(col.iOrder + _countof(kAscending) <= _countof(column_name)) {
+				memcpy(column_name+col.iOrder, indicator, sizeof(kAscending));
+				ListView_SetColumn(list, wrapper.column, &col);
+			}
+		}
 		SetWindowLongPtr(list, GWLP_USERDATA, last_sort);
 	}
 }

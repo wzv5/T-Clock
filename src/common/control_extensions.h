@@ -25,18 +25,19 @@ enum SORT {
 	SORT_REMEMBER    = 0x40000000, ///< remember last applied sort by setting \c GetWindowLongPtr(hwnd,GWLP_USERDATA) \sa SORT_NEXT
 	SORT_NEXT        = 0x80000000 | SORT_REMEMBER, ///< continue sort by toggling or redoing previous; implies \c SORT_REMEMBER \sa SORT_REMEMBER
 };
-typedef int (CALLBACK* sort_func_t)(HWND list, int flags, intptr_t item1, intptr_t item2, intptr_t user);
+typedef int (CALLBACK* sort_func_t)(HWND list, int column, int flags, intptr_t item1, intptr_t item2, intptr_t user);
 
-int CALLBACK SortString_LV(HWND list, int flags, intptr_t item1, intptr_t item2, intptr_t column); ///< string sort (simple strcmp)
+int CALLBACK SortString_LV(HWND list, int column, int flags, intptr_t item1, intptr_t item2, intptr_t unused); ///< string sort (simple strcmp)
 /**
  * \brief a smart replacement to \c ListView_SortItemsEx with enhanced sorting and listview capabilities
  * \param list control handle
+ * \param column the column to sort
  * \param func sort callback in form of \c sort_func_t, eg. \c SortString_LV
- * \param param custom data passed to \p func \e [optional]
+ * \param user custom data passed to \p func \e [optional]
  * \param flags any combination of \c SORT eg. <code>SORT_ASC | SORT_INSENSITIVE | SORT_NEXT</code>
  * \remark if \p flags includes \c SORT_NEXT but neither \c SORT_ASC nor \c SORT_DEC , it'll just redo the current sort instead of toggling
  * \sa SORT, SortString_LV, sort_func_t */
-void ListView_SortItemsExEx(HWND list, sort_func_t func, intptr_t param, int flags);
+void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t user, int flags);
 
 /*
 	LINK CONTROLS
