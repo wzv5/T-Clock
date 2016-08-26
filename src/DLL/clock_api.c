@@ -133,11 +133,10 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 						_wrename(out_name, in_name);
 					}
 				}
-			}
+			} else
+				ret = 2;
 			free(out);
 			free(in_data);
-			if(!in_data || !out)
-				ret = 2;
 		}
 		fclose(in_fp);
 	}
@@ -227,6 +226,8 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 			case 0:
 				break;
 			default:
+				ReleaseSemaphore(api_lock, 1, NULL);
+				CloseHandle(api_lock);
 				return -4;
 			}
 		} else {

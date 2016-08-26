@@ -966,6 +966,7 @@ INT_PTR CALLBACK Window_TimerView(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 				ListView_SortItemsExEx(list, 1, SortTime, 0, item.iItem | SORT_CUSTOMPARAM);
 				break;
 			}
+			break;
 		case IDM_TIMER_RESTART:
 			item.iItem = ListView_GetNextItem(list, -1, LVNI_SELECTED);
 			if(item.iItem != -1) {
