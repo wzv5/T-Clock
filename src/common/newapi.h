@@ -102,6 +102,11 @@ void DrawXPClockHover(HWND hwnd, HDC hdc, RECT* prc);
 		(LRESULT)SNDMSG((hwnd), BCM_SETSHIELD, 0, (LPARAM)fRequired)
 #endif
 
+#ifndef MSGFLT_ADD
+#	define MSGFLT_ADD 1
+#	define MSGFLT_REMOVE 2
+#endif
+typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message, DWORD dwFlag); ///< type of \c ChangeWindowMessageFilter() found in \c user32 since Vista
 
 #ifndef SHGSI_ICONLOCATION
 	typedef struct SHSTOCKICONINFO {

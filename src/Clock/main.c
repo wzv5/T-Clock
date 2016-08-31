@@ -332,9 +332,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	g_atomTClock = RegisterClass(&wndclass);
 	
 	if(api.OS >= TOS_VISTA) { // allow non elevated processes to send control messages (eg, App with admin rights, explorer without)
-		#define MSGFLT_ADD 1
-		#define MSGFLT_REMOVE 2
-		typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message,DWORD dwFlag);
 		ChangeWindowMessageFilter_t ChangeWindowMessageFilter = (ChangeWindowMessageFilter_t)GetProcAddress(GetModuleHandleA("user32"), "ChangeWindowMessageFilter");
 		if(ChangeWindowMessageFilter){
 			int msgid;

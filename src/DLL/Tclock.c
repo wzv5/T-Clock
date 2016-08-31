@@ -1011,7 +1011,7 @@ void ReadFormatData(HWND hwnd, int preview)   //---------------------+++-->
 	DWORD dwInfoFormat;
 	m_bNoClock = (char)api.GetInt(section, L"NoClockCustomize", 0);
 	// read format
-	if(!api.GetStr(section,L"Format",m_format,_countof(m_format),L"") || !m_format[0]) {
+	if(!api.GetStr(section,L"Format",m_format,_countof(m_format),L"\"config error\"") || !m_format[0]) {
 		m_bNoClock = 1;
 	}
 	g_bHourZero = (char)api.GetInt(section, L"HourZero", 0);
