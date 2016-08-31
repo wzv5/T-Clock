@@ -20,6 +20,7 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	HMENU hPopupMenu;
 	HMENU hMenu;
 	int item;
+	HBITMAP shield_bmp = NULL;
 	
 	g_bQMAudio   = api.GetInt(L"QuickyMenu", L"AudioProperties",   TRUE);
 	g_bQMNet     = api.GetInt(L"QuickyMenu", L"NetworkDrives",     TRUE);
@@ -66,6 +67,13 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 				InsertMenuItem(hPopupMenu, IDM_SHOWCALENDER, FALSE, &mii);
 			}
 		}
+	
+		if(!HaveSetTimePermissions()) {
+			HICON shield = GetStockIcon(SIID_SHIELD, SHGSI_SMALLICON);
+			shield_bmp = GetBitmapFromIcon(shield, -2);
+			DestroyIcon(shield);
+			SetMenuItemBitmaps(hPopupMenu, IDM_SNTP_SYNC, MF_BYCOMMAND, shield_bmp, NULL);
+		}
 	}
 	
 	/// http://support.microsoft.com/kb/135788
@@ -95,6 +103,8 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	}
 	PostMessage(hWnd, WM_NULL, 0, 0);
 	DestroyMenu(hMenu); // Starting Over is Simpler & Recommended
+	if(shield_bmp)
+		DeleteBitmap(shield_bmp);
 }
 //================================================================================================
 //--------------------------------------+++--> Show/Hide Desktop (e.g. Show/Hide all Open Windows):
