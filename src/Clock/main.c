@@ -191,18 +191,14 @@ int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name)
 	HRESULT hres;
 	IShellLink* psl;
 	
-	CoInitializeEx(NULL,COINIT_APARTMENTTHREADED);
+	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 	
 	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (void**)&psl);
 	if(SUCCEEDED(hres)) {
 		IPersistFile* ppf;
-		wchar_t path[MAX_PATH];
 		
 		psl->lpVtbl->SetPath(psl, fname);
 		psl->lpVtbl->SetDescription(psl, name);
-		wcsncpy_s(path,MAX_PATH,fname,_TRUNCATE);
-		del_title(path);
-		psl->lpVtbl->SetWorkingDirectory(psl, path);
 		
 		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (void**)&ppf);
 		if(SUCCEEDED(hres)) {
@@ -218,9 +214,7 @@ int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name)
 	}
 	CoUninitialize();
 	
-	if(SUCCEEDED(hres))
-		return 1;
-	return 0;
+	return SUCCEEDED(hres);
 }
 
 void TranslateDispatchTClockMessage(MSG* msg) {
