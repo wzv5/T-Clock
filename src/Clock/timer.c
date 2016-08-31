@@ -830,7 +830,7 @@ static void RemoveFromWatch(HWND hWnd, HWND list, int index) {
 	}
 	
 	wsprintf(caption, FMT("Cancel Timer (%s) Also?"), item.pszText);
-	idx = MessageBox(hWnd, message, caption, MB_YESNOCANCEL|MB_ICONQUESTION);
+	idx = MessageBox(hWnd, message, caption, MB_YESNOCANCEL|MB_ICONQUESTION|MB_SETFOREGROUND);
 	
 	item.mask = LVIF_PARAM;
 	ListView_GetItem(list, &item); // get up-to-date data

@@ -242,20 +242,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	
 	g_instance = hInstance;
 	if(LoadClockAPI(L"misc/T-Clock" ARCH_SUFFIX, &api)){
-		MessageBox(NULL, L"Error loading: T-Clock" ARCH_SUFFIX L".dll", L"API error", MB_OK|MB_ICONERROR);
+		MessageBox(NULL, L"Error loading: T-Clock" ARCH_SUFFIX L".dll", L"API error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		return 2;
 	}
 	_wchdir(api.root); // make sure we've got the right working directory
 	
 	// Make sure we're running Windows 2000 and above
 	if(!api.OS) {
-		MessageBox(NULL, L"T-Clock requires Windows 2000 or newer", L"old OS", MB_OK|MB_ICONERROR);
+		MessageBox(NULL, L"T-Clock requires Windows 2000 or newer", L"old OS", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		return 1;
 	}
 	
 	// make sure ObjectBar isn't running -> From Original Code/Unclear if This is Still a Conflict. (test suggested not really.. no crash but no clock either :P)
 	if(FindWindowA("ObjectBar Main","ObjectBar")) {
-		MessageBox(NULL, L"ObjectBar and T-Clock can't be run together", L"ObjectBar detected!" ,MB_OK|MB_ICONERROR);
+		MessageBox(NULL, L"ObjectBar and T-Clock can't be run together", L"ObjectBar detected!" ,MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		return 1;
 	}
 	
@@ -396,6 +396,7 @@ void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //--------------
 	int just_elevated = 0;
 	const wchar_t* p = cmdline;
 	if(!g_hwndTClockMain){
+		AllowSetForegroundWindow(ASFW_ANY);
 		g_hwndTClockMain = CreateWindow(L"STATIC", NULL, 0, 0,0,0,0, HWND_MESSAGE_nowarn, 0, 0, 0);
 		SubclassWindow(g_hwndTClockMain, Window_TClockDummy);
 	}
@@ -497,7 +498,7 @@ static void InjectClockHook(HWND hwnd) {
 					L"It's possible that T-Clock is crashing your Explorer,\n"
 					L"automated hooking postponed.\n"
 					L"\n"
-					L"Take precaution and exit T-Clock now?", L"T-Clock",MB_YESNO,MB_ICONEXCLAMATION) == IDYES) {
+					L"Take precaution and exit T-Clock now?", L"T-Clock", MB_YESNO|MB_SETFOREGROUND, MB_ICONEXCLAMATION) == IDYES) {
 				SendMessage(hwnd, WM_CLOSE, 0, 0);
 				return;
 			}
@@ -637,7 +638,7 @@ void InitError(int n)
 	wchar_t msg[160];
 	
 	wsprintf(msg, FMT("%s: %d"), MyString(IDS_NOTFOUNDCLOCK), n);
-	api.Message(NULL, msg, L"Error", MB_OK, MB_ICONEXCLAMATION);
+	api.Message(NULL, msg, L"Error", MB_OK|MB_SETFOREGROUND, MB_ICONEXCLAMATION);
 }
 /*---------------------------------------------------------
 ---- Main Timer -------------------------------------------

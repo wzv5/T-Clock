@@ -71,7 +71,7 @@ void Log(const char* msg)   //--------------------------------------------------
 	}
 	
 	if(m_flags&SNTPF_MESSAGE) {
-		MessageBoxA(0, logmsg, "T-Clock Time Sync", MB_OK);
+		MessageBoxA(0, logmsg, "T-Clock Time Sync", MB_OK|MB_SETFOREGROUND);
 	}
 }
 //================================================================================================
@@ -178,7 +178,7 @@ void ReceiveSNTPReply(SOCKET sock)   //-----------------------------------------
 	if(retval == -1){
 		char szErr[MIN_BUFF];
 		wsprintfA(szErr, "Receive SOCKET ERROR: %d", WSAGetLastError());
-		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR); // @todo : SocketClose can also show this message
+		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR|MB_SETFOREGROUND); // @todo : SocketClose can also show this message
 		SocketClose(sock, szErr);
 		return;
 	}
@@ -240,7 +240,7 @@ SOCKET OpenTimeSocket(const wchar_t* server)
 		case EAI_MEMORY: strcpy(szErr, "out of memory"); break;
 		default:
 			wsprintfA(szErr, "getaddrinfo ERROR: %d", WSAGetLastError());
-			MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+			MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		}
 		SocketClose((SOCKET)-1, szErr);
 		return (SOCKET)-1;
@@ -273,7 +273,7 @@ SOCKET OpenTimeSocket(const wchar_t* server)
 	if(sock == -1) {
 		freeaddrinfo(addrs);
 		wsprintfA(szErr, "socket ERROR: %d", WSAGetLastError());
-		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		SocketClose(sock, szErr);
 		return (SOCKET)-1;
 	}
@@ -283,7 +283,7 @@ SOCKET OpenTimeSocket(const wchar_t* server)
 	retval = SNTPSend(sock, &serv_addr);
 	if(retval == -1) {
 		wsprintfA(szErr, "SNTPSend ERROR: %d", WSAGetLastError());
-		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR);
+		MessageBoxA(0, szErr, "Time Sync Failed", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		SocketClose(sock, szErr);
 		return (SOCKET)-1;
 	}
@@ -310,7 +310,7 @@ void SyncTimeNow()
 	api.GetStrEx(m_subkey, L"Server", server, _countof(server), L"");
 	if(!server[0]) {
 		wsprintf(szErr, FMT("No SNTP Server Specified!"));
-		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
+		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		if(!g_hDlgSNTP)
 			NetTimeConfigDialog(0);
 		return;
@@ -319,13 +319,13 @@ void SyncTimeNow()
 	retval = WSAStartup(wVersionRequested, &wsaData);
 	if(retval) { //-----------------------------------------+++--> If WinSock Startup Fails...
 		wsprintf(szErr, FMT("Error initializing WinSock"));
-		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
+		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		return;
 	}
 	
 	if(wsaData.wVersion != wVersionRequested) { //-+++-> Check WinSOCKET's Version:
 		wsprintf(szErr, FMT("WinSock version not supported"));
-		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR);
+		MessageBox(0, szErr, L"Time Sync Failed", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		return;
 	}
 	
