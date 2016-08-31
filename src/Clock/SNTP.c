@@ -31,7 +31,6 @@ enum{
 
 BOOL GetSetTimePermissions();
 
-static void OnInit(HWND hDlg);
 static void OnBrowseAction(HWND hDlg, WORD id);
 static INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 //================================================================================================
@@ -393,83 +392,9 @@ void OkaySave(HWND hDlg)   //---------------------------------------------------
 	}
 	api.SetInt(m_subkey, L"ServerNum", count);
 }
-//================================================================================================
-//------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
-INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch(msg)  {
-	case WM_INITDIALOG:
-		OnInit(hDlg);
-		if(lParam) // justElevated
-			PostMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDCB_SYNCNOW,BN_CLICKED), (LPARAM)GetDlgItem(hDlg,IDCB_SYNCNOW));
-		return TRUE;
-	case WM_DESTROY:
-		g_hDlgSNTP = NULL;
-		break;
-	case WM_CLOSE:
-		if(!lParam && wParam == 1)
-			OkaySave(hDlg);
-		break;
-		
-	case WM_COMMAND:
-		switch(LOWORD(wParam))  {
-		case IDCB_SYNCNOW:{
-			if(m_flags&SNTPF_UAC){
-				api.ExecElevated(GetClockExe(),L"/UAC /SyncOpt",hDlg);
-				return TRUE;
-			}
-			OkaySave(hDlg);
-			SyncTimeNow();
-			return TRUE;}
-			
-		case IDCBX_SNTPLOG:
-			m_flags ^= SNTPF_LOG;
-			return TRUE;
-		case IDCBX_SNTPMESSAGE:
-			m_flags ^= SNTPF_MESSAGE;
-			return TRUE;
-			
-		case IDCB_SYNCSOUNDBROWSE:
-			OnBrowseAction(hDlg, IDCBX_SYNCSOUND);
-			return TRUE;
-			
-		case IDCB_CLEAR:{
-			wchar_t logfile[MAX_PATH];
-			FILE* fp;
-			HWND hList = GetDlgItem(hDlg, IDC_LIST);
-			ListView_DeleteAllItems(hList);
-			
-			memcpy(logfile, api.root, api.root_size);
-			add_title(logfile, L"SNTP.log");
-			fp = _wfopen(logfile, L"wb");
-			if(fp) fclose(fp);
-			return TRUE;}
-		
-		case IDCB_DELSERVER:{
-			HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
-			int index = ComboBox_GetCurSel(hServer);
-			if(index != CB_ERR){
-				ComboBox_DeleteString(hServer, index);
-			}
-			ComboBox_SetCurSel(hServer, 0);
-			return TRUE;}
-			
-		case IDOK:
-			OkaySave(hDlg);
-			/* fall through */
-		case IDCANCEL:
-			DestroyWindow(hDlg);
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-//=================//=====//>>>>>---------------------------------------------+++-->
-#include <stdio.h> //-----//--+++--> Required Here For Log FILE Open Functions Only.
-//=================//=====//======================================================================
-//------------------------//---------------------------+++--> To-Do List for Dialog Initialization:
-void OnInit(HWND hDlg)   //-----------------------------------------------------------------+++-->
-{
+
+
+static void OnSNTPInit(HWND hDlg, LPARAM just_elevated) {
 	union {
 		wchar_t w[MAX_BUFF];
 		char a[MAX_BUFF];
@@ -481,6 +406,7 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	HWND hList = GetDlgItem(hDlg,IDC_LIST);
 	HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
 	HWND sound_cb = GetDlgItem(hDlg,IDCBX_SYNCSOUND);
+	HWND button_sync = GetDlgItem(hDlg, IDCB_SYNCNOW);
 	
 	api.PositionWindow(hDlg,21);
 	
@@ -542,9 +468,8 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 	
 	// Test For: SE_SYSTEMTIME_NAME Priviledge Before Enabling Sync Now Button:
 	if(!HaveSetTimePermissions()){
-		HWND hwndSync = GetDlgItem(hDlg, IDCB_SYNCNOW);
 		m_flags |= SNTPF_UAC;
-		Button_SetElevationRequiredState(hwndSync, 1);
+		Button_SetElevationRequiredState(button_sync, 1);
 	}
 	
 	// Load the Time Synchronization Log File:
@@ -568,6 +493,78 @@ void OnInit(HWND hDlg)   //-----------------------------------------------------
 		}
 		fclose(stReport);
 	}
+	
+	if(just_elevated && !(m_flags & SNTPF_UAC))
+		PostMessage(hDlg, WM_COMMAND, MAKEWPARAM(IDCB_SYNCNOW,BN_CLICKED), (LPARAM)button_sync);
+}
+//================================================================================================
+//------------------------------------------------------+++--> SNTP Configuration Dialog Procedure:
+INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	switch(msg)  {
+	case WM_INITDIALOG:
+		OnSNTPInit(hDlg, lParam);
+		return TRUE;
+	case WM_DESTROY:
+		g_hDlgSNTP = NULL;
+		break;
+	case WM_CLOSE:
+		if(!lParam && wParam == 1)
+			OkaySave(hDlg);
+		break;
+		
+	case WM_COMMAND:
+		switch(LOWORD(wParam))  {
+		case IDCB_SYNCNOW:{
+			if(m_flags&SNTPF_UAC){
+				api.ExecElevated(GetClockExe(),L"/UAC /SyncOpt",hDlg);
+				return TRUE;
+			}
+			OkaySave(hDlg);
+			SyncTimeNow();
+			return TRUE;}
+			
+		case IDCBX_SNTPLOG:
+			m_flags ^= SNTPF_LOG;
+			return TRUE;
+		case IDCBX_SNTPMESSAGE:
+			m_flags ^= SNTPF_MESSAGE;
+			return TRUE;
+			
+		case IDCB_SYNCSOUNDBROWSE:
+			OnBrowseAction(hDlg, IDCBX_SYNCSOUND);
+			return TRUE;
+			
+		case IDCB_CLEAR:{
+			wchar_t logfile[MAX_PATH];
+			FILE* fp;
+			HWND hList = GetDlgItem(hDlg, IDC_LIST);
+			ListView_DeleteAllItems(hList);
+			
+			memcpy(logfile, api.root, api.root_size);
+			add_title(logfile, L"SNTP.log");
+			fp = _wfopen(logfile, L"wb");
+			if(fp) fclose(fp);
+			return TRUE;}
+		
+		case IDCB_DELSERVER:{
+			HWND hServer = GetDlgItem(hDlg,IDCBX_NTPSERVER);
+			int index = ComboBox_GetCurSel(hServer);
+			if(index != CB_ERR){
+				ComboBox_DeleteString(hServer, index);
+			}
+			ComboBox_SetCurSel(hServer, 0);
+			return TRUE;}
+			
+		case IDOK:
+			OkaySave(hDlg);
+			/* fall through */
+		case IDCANCEL:
+			DestroyWindow(hDlg);
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
 //================================================================================================
 //----------------------------------------//---------------+++--> Browse for Sync Event Sound File:
