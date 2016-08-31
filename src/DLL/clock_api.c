@@ -340,7 +340,7 @@ void Clock_Exit()
 	if(gs_hwndClock && IsWindow(gs_hwndClock)){
 		HANDLE lock;
 		SendMessage(gs_hwndClock,WM_COMMAND,IDM_EXIT,0); // kill our clock
-		lock = OpenSemaphore(SYNCHRONIZE, 0, kConfigName+1);
+		lock = OpenSemaphore(SYNCHRONIZE|SEMAPHORE_MODIFY_STATE, 0, kConfigName+1);
 		WaitForSingleObject(lock, INFINITE);
 		ReleaseSemaphore(lock, 1, NULL);
 		CloseHandle(lock);
