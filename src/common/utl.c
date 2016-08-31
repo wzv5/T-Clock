@@ -402,12 +402,14 @@ HBITMAP GetBitmapFromIcon(HICON icon, int size) {
 	if(size == 0) {
 		width = GetSystemMetrics(SM_CXICON);
 		height = GetSystemMetrics(SM_CYICON);
-	} else if(size == -1) {
+	/* } else if(size == -2) {
+		// returned values are wrong, eg. 15px instead of 16px at 100% scaling (Win10)
+		// see: http://trac.wxwidgets.org/ticket/17290
+		width = GetSystemMetrics(SM_CXMENUCHECK);
+		height = GetSystemMetrics(SM_CYMENUCHECK);// */
+	} else if(size < 0) {
 		width = GetSystemMetrics(SM_CXSMICON);
 		height = GetSystemMetrics(SM_CYSMICON);
-	} else if(size == -2) {
-		width = GetSystemMetrics(SM_CXMENUCHECK);
-		height = GetSystemMetrics(SM_CYMENUCHECK);
 	} else {
 		width = height = size;
 	}
