@@ -16,6 +16,8 @@ SHARED wchar_t ms_inifile[MAX_PATH] = {0};
 
 SHARED HWND gs_hwndTClockMain = NULL;
 SHARED HWND gs_hwndClock = NULL;
+SHARED HWND gs_tray = NULL;
+SHARED HWND gs_taskbar = NULL;
 SHARED HWND gs_hwndCalendar = NULL;
 SHARED unsigned short gs_tos = 0;
 #ifndef __GNUC__
@@ -346,6 +348,7 @@ void Clock_Exit()
 		CloseHandle(lock);
 		Sleep(1); // hopefully useless sleep
 		
+		gs_taskbar = gs_tray = NULL;
 		gs_hwndClock = NULL;
 	}
 }

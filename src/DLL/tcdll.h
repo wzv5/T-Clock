@@ -17,7 +17,9 @@
 #include "../common/clock.h" // common clock api
 
 extern HWND gs_hwndTClockMain; /**< our main window for hotkeys, menus and sounds \b [shared] */
-extern HWND gs_hwndClock;      /**< the clock hwnd \b [shared] */
+extern HWND gs_hwndClock;      /**< primary clock hwnd \b [shared] */
+extern HWND gs_tray;           /**< primary clock's tray \b [shared] */
+extern HWND gs_taskbar;        /**< primary clock's taskbar \b [shared] */
 extern HWND gs_hwndCalendar;   /**< calendar state \b [shared] \sa TClockAPI::GetCalendar() */
 
 extern const wchar_t* kConfigName;   /**< ini file name (also used for mutexes) */
