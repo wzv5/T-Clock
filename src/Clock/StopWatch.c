@@ -443,8 +443,11 @@ static INT_PTR CALLBACK Window_StopwatchExportDlg(HWND hDlg, UINT msg, WPARAM wP
 		Edit_SetSel(GetDlgItem(hDlg,IDC_SWE_OUT), 0, -1);
 		SetFocus(GetDlgItem(hDlg,IDC_SWE_OUT));
 		return FALSE;}
-	case WM_DESTROY:{
-		break;}
+	case WM_DESTROY:
+		break;
+	case WM_ACTIVATE:
+		WM_ActivateTopmost(hDlg, wParam, lParam);
+		break;
 	case WM_COMMAND: {
 			switch(LOWORD(wParam)) {
 			case IDC_SWE_EXPORT:{

@@ -512,6 +512,9 @@ INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 		if(!lParam && wParam == 1)
 			OkaySave(hDlg);
 		break;
+	case WM_ACTIVATE:
+		WM_ActivateTopmost(hDlg, wParam, lParam);
+		break;
 		
 	case WM_COMMAND:
 		switch(LOWORD(wParam))  {
