@@ -241,8 +241,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	(void)nShowCmd;
 	
 	g_instance = hInstance;
-	if(LoadClockAPI(L"misc/T-Clock" ARCH_SUFFIX, &api)){
-		MessageBox(NULL, L"Error loading: T-Clock" ARCH_SUFFIX L".dll", L"API error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+	updated = LoadClockAPI(L"misc/T-Clock" ARCH_SUFFIX, &api);
+	if(updated) {
+		wchar_t title[16];
+		swprintf(title, _countof(title), FMT("API error (%i)"), updated);
+		MessageBox(NULL, L"Error loading: T-Clock" ARCH_SUFFIX L".dll", title, (MB_OK | MB_ICONERROR | MB_SETFOREGROUND));
 		return 2;
 	}
 	_wchdir(api.root); // make sure we've got the right working directory
