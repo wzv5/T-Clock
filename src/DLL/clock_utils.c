@@ -40,6 +40,9 @@ HWND Clock_GetCalendar() {
 			POINT pt;
 		} u;
 		GetWindowRect(hwnd, &u.rc);
+		// following is somehow required... 2px is enough though
+		u.pt.x += 25;
+		u.pt.y += 25;
 		// IsWindowVisible()/IsWindowEnabled() are always true
 		if(ChildWindowFromPointEx(GetDesktopWindow(), u.pt, CWP_SKIPDISABLED|CWP_SKIPTRANSPARENT) == hwnd)
 			return hwnd;

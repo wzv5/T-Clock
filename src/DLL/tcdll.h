@@ -28,6 +28,7 @@ extern const wchar_t* kConfigName;   /**< ini file name (also used for mutexes) 
 
 #define WIN_CLOCK_TIMER_ID 0 ///< actually invalid since TOS_WIN10_1
 #define TCLOCK_TIMER_ID 13 ///< non-conflicting timer ID
+#define TCLOCK_TIMER_ID_CLICK 14 ///< Win10-Anniversary-calendar-click-emulation-mouse-up-timer
 
 // tclock.c
 void DrawClock(HDC hdc);

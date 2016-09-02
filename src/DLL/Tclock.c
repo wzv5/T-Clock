@@ -716,8 +716,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 			if(hwnd != m_clock_active)
 				return SendMessage(m_clock_active, message, wParam, lParam);
 			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(4,4));
-			Sleep(0);
-			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(4,4));
+			SetTimer(hwnd, TCLOCK_TIMER_ID_CLICK, 25, NULL);
 			return 0;
 		}
 		break;}
@@ -733,6 +732,11 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 //		InvalidateRect(hwnd,NULL,0); /// uncomment for debugging purpose, eg. does our drawing flicker
 		return 0;}
 	case WM_TIMER: // Windows uses timer ID 0 to update every minute (tries to stay ~1 sec. close to full minute)
+		if(wParam == TCLOCK_TIMER_ID_CLICK) {
+			KillTimer(hwnd, wParam);
+			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(4,4));
+			return 0;
+		}
 		if(m_bNoClock) break;
 		return 0;
 	/* start of shared code used by multi-clock winproc
@@ -926,7 +930,12 @@ static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WP
 	case WM_USER+102: // emulated click for Win10.1 to open calendar
 		if(dwRefData) {
 			DefSubclassProc(hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(4,4));
-			Sleep(0);
+			SetTimer(hwnd, TCLOCK_TIMER_ID_CLICK, 25, NULL);
+		}
+		return 0;
+	case WM_TIMER:
+		if(wParam == TCLOCK_TIMER_ID_CLICK) {
+			KillTimer(hwnd, wParam);
 			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(4,4));
 		}
 		return 0;
