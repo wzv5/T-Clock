@@ -1,8 +1,5 @@
-﻿//===============================================================================
-//--+++--> alarm.c - KAZUBON 1997-1999 ===========================================
-//--+++--> Sound a wave, a media file, or open a file =============================
-//================= Last Modified by Stoic Joker: Wednesday, 12/22/2010 @ 11:29:24pm
-#include "tclock.h" //---------------{ Stoic Joker 2006-2010 }---------------+++-->
+﻿#include "../common/version.h"
+#include "tclock.h"
 #include <time.h>
 #include <stdio.h>
 #include <dsound.h>
@@ -15,6 +12,28 @@ static Schedule* timetable_end_ = NULL;
 
 static time_t AlarmNextTimestamp();
 static void AlarmGetMSG(dlgmsg_t* msg);
+
+/**
+ * \brief get our update check interval based on \c VER_TIMESTAMP (with rarer update checks with increasing age)
+ * \param time current time
+ * \return update interval
+ * \sa VER_TIMESTAMP */
+static int GetUpdateInterval(time_t time) {
+	time_t diff = (time - VER_TIMESTAMP);
+	if(diff < 90*24*3600) {
+		if(diff < 21*24*3600) {
+			if(diff < 7*24*3600) {
+				if(diff < 24*3600) {
+					return 3*3600;
+				}
+				return 24*3600;
+			}
+			return 2*24*3600;
+		}
+		return 7*24*3600;
+	}
+	return 14*24*3600;
+}
 
 static void TimetableClean() {
 	Schedule* iter = timetable_begin_;
@@ -339,6 +358,8 @@ void InitAlarm()   //-----------------------------------------------------------
 {
 	time_t ts;
 	time_t next_update;
+	time_t diff;
+	int update_interval;
 	TimetableClean();
 	m_maxAlarm = GetAlarmNum();
 	if(m_maxAlarm > 0) {
@@ -364,6 +385,14 @@ void InitAlarm()   //-----------------------------------------------------------
 		//api.SetInt64(NULL, UPDATE_TIMESTAMP, next_update);
 		next_update = ts + 1200; // in 25 minutes
 	}
+	
+	// see also OnTimerAlarm() case SCHEDID_UPDATE
+	update_interval = GetUpdateInterval(ts);
+	diff = (next_update - ts);
+	if(diff > (update_interval + update_interval/4)) {
+		next_update -= (diff - (diff % update_interval));
+	}
+	
 	if(ts > next_update)
 		TimetableAdd(SCHEDID_UPDATE, ts, (unsigned)(ts-next_update));
 	else
@@ -427,12 +456,15 @@ void OnTimerAlarm(HWND hwnd, time_t time)   // 12am = Midnight -----------------
 						schedule->time = 0;
 						break;
 					}
-					schedule->time += 86400;
+					// see also InitAlarm()
+					repeat_u1 = GetUpdateInterval(time);
+					schedule->time += repeat_u1;
 					schedule->time -= schedule->data;
 					schedule->data = 0;
 					if(time > schedule->time)
-						schedule->time = time + 86400;
-					api.SetInt64(NULL, UPDATE_TIMESTAMP, schedule->time);
+						schedule->time += (((time - schedule->time) / repeat_u1) * repeat_u1) + repeat_u1;
+					if(repeat_u1 > 24*3600) // store only even 24h
+						api.SetInt64(NULL, UPDATE_TIMESTAMP, schedule->time);
 					api.ShellExecute(NULL, L"misc\\Options", L"-unotify", NULL, SW_HIDE, NULL);
 					break;
 #				ifdef WIN2K_COMPAT
