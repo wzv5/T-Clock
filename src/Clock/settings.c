@@ -19,6 +19,7 @@ typedef enum VERSION {
 	_2_4_0,
 	CURRENT, /**< current version */
 } VERSION;
+static const VERSION kIncompatibleSince = _2_2_0; /**< last known incompatible version */
 
 static int ParseSettings();
 static void ConvertSettings(VERSION ver);
@@ -65,7 +66,10 @@ int ParseSettings(){
 	wchar_t msg[1024];
 	int updateflags = SFORMAT_NONE;
 	int compatibilityflags = SCOMPAT_NONE;
-	VERSION ver = api.GetInt(L"", L"Ver", 0);
+	VERSION ver, incompatible;
+	incompatible = api.GetInt(L"", L"Ver", FRESH);
+	ver = (short)(incompatible & 0xffff);
+	incompatible >>= 16;
 	
 //	api.SetStr(NULL, L"ExePath", api.root);
 	api.GetStr(L"Clock", L"Font", msg, 80, L"");
@@ -75,18 +79,32 @@ int ParseSettings(){
 		SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(metrics), &metrics, 0);
 		api.SetStr(L"Clock", L"Font", metrics.lfCaptionFont.lfFaceName);
 		
-		if(ver == 0){ // very likely a new installation
-			FirstTimeSetup(FRESH);
+		if(ver == FRESH){ // very likely a new installation
+			FirstTimeSetup(ver);
 			return 1;
 		}
 	}
 	
+	if(incompatible > kIncompatibleSince) {
+		int ans = MessageBox(NULL,
+					L"Seems like you've been using a newer version.\n"
+					L"Some information gets lost if you continue\n"
+					L"to run this previous version and isn't advised.\n"
+					L"\n"
+					L"Run this version anyway?", L"T-Clock downgraded?",
+					MB_OKCANCEL | MB_ICONINFORMATION | MB_SETFOREGROUND);
+		if(ans != IDOK)
+			return -1;
+		ConvertSettings(ver); // should do nothing, just downgrade our version number
+		return 0;
+	}
 	
 	/// old installation, set update flags if any
 	switch(ver) {
+	case FRESH:
 	case _2_2_0:
-		updateflags |= SFORMAT_EFFICIENT|SFORMAT_LESSMEM|SFORMAT_FEATURE|SFORMAT_TEXTPOSITION;
-		compatibilityflags |= SCOMPAT_FORMAT|SCOMPAT_TIMERS;
+		updateflags |= SFORMAT_EFFICIENT | SFORMAT_LESSMEM | SFORMAT_FEATURE | SFORMAT_TEXTPOSITION;
+		compatibilityflags |= SCOMPAT_FORMAT | SCOMPAT_TIMERS;
 		/* fall through */
 		
 	case _2_3_0:
@@ -99,25 +117,13 @@ int ParseSettings(){
 		
 	case CURRENT:
 		break;
-		
-	default:{
-		int ans = MessageBox(NULL,
-							L"Seems like you've been using a newer version.\n"
-							L"Some settings might not be readable\n"
-							L"by this older version and you could loose them.\n"
-							L"\n"
-							L"Run this version anyway?", L"T-Clock downgraded?", MB_OKCANCEL|MB_ICONINFORMATION|MB_SETFOREGROUND);
-		if(ans != IDOK)
-			return -1;
-		ConvertSettings(ver); // should do nothing, just downgrade our version number
-		return 0;}
 	}
 	
 	
 	/// check if update is "required"
-	if(updateflags){
+	if(updateflags) {
 		int ans;
-		if(updateflags!=SFORMAT_SILENT){
+		if(updateflags != SFORMAT_SILENT){
 			int flags;
 			wchar_t* pos = msg;
 			pos += wsprintf(pos,
@@ -161,7 +167,7 @@ void ConvertSettings(VERSION ver) {
 	int idx, idx2;
 	size_t len;
 	
-	switch(ver){
+	switch(ver) {
 	case FRESH:
 	case _2_2_0:
 		// update font rotate (from none,left,right to 0-360 angle)
@@ -203,7 +209,7 @@ void ConvertSettings(VERSION ver) {
 		// convert alarms to use 24h format
 		len = wsprintf(buf, FMT("Alarm"));
 		idx2 = GetAlarmNum();
-		for(idx=0; idx<idx2; ){
+		for(idx=0; idx<idx2; ) {
 			wsprintf(buf+len, FMT("%d"), ++idx);
 			is12h = api.GetInt(buf, L"Hour12", 0);
 			if(is12h){ // convert to 24h format
@@ -219,13 +225,13 @@ void ConvertSettings(VERSION ver) {
 		if(api.GetInt(L"Format", L"Lf", -1) == -1)
 			api.SetInt(L"Format", L"Lf", (api.GetInt(L"Format",L"Kaigyo",0) ? BST_CHECKED : BST_UNCHECKED));
 		// convert old 12h switch - h/w(±) -> HH/W
-		if(!api.GetInt(L"Format",L"Hour12",1)){
+		if(!api.GetInt(L"Format",L"Hour12",1)) {
 			char converted = 0;
 			wchar_t fmt[MAX_FORMAT];
 			size_t fmtlen;
 			wchar_t* pos;
 			fmtlen = api.GetStr(L"Format", L"CustomFormat", fmt, _countof(fmt), L"");
-			for(pos=fmt; *pos; ){
+			for(pos=fmt; *pos; ) {
 				if(pos[0] == '"') {
 					do{
 						for(++pos; *pos&&*pos++!='"'; );
@@ -257,7 +263,7 @@ void ConvertSettings(VERSION ver) {
 				}
 				++pos;
 			}
-			if(converted){
+			if(converted) {
 				api.SetStr(L"Format", L"CustomFormat", fmt);
 				if(api.GetInt(L"Format", L"Custom", 0)){
 					api.SetStr(L"Format", L"Format", fmt);
@@ -310,5 +316,5 @@ void FirstTimeSetup(VERSION from_version) {
 	case CURRENT:
 		break;
 	}
-	api.SetInt(L"", L"Ver", CURRENT);
+	api.SetInt(L"", L"Ver", ((kIncompatibleSince<<16) | (CURRENT&0xffff)));
 }
