@@ -28,6 +28,22 @@ void GetDayOfYearTitle(wchar_t* szTitle, int ivMonths)   //---------------------
 		wsprintf(szTitle, FMT("T-Clock: Calendar  Day: %s"), szDoY);
 	}
 }
+static LRESULT CALLBACK Window_CalendarControl_Hooked(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+	(void)dwRefData;
+	
+	switch(uMsg) {
+	case WM_DESTROY:
+		RemoveWindowSubclass(hwnd, Window_CalendarControl_Hooked, uIdSubclass);
+		break;
+	case WM_KEYDOWN:
+		if(wParam == VK_ESCAPE) {
+			PostMessage(GetParent(hwnd), uMsg, wParam, lParam);
+			return 0;
+		}
+		break;
+	}
+	return DefSubclassProc(hwnd, uMsg, wParam, lParam);
+}
 LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 	switch(uMsg) {
@@ -53,6 +69,7 @@ LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		
 		hCal = CreateWindowEx(0, MONTHCAL_CLASS, L"", dwCalStyle, 0,0,0,0, hwnd, NULL, NULL, NULL);
 		if(!hCal) return -1;
+		SetWindowSubclass(hCal, &Window_CalendarControl_Hooked, 0, 0);
 		
 		for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
 			unsigned color = api.GetInt(L"Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
@@ -137,6 +154,10 @@ LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	case WM_DESTROY:
 		Sleep(50);//we needed more delay... 50ms looks good (to allow T-Clock's FindWindow to work) 100ms is slower then Vista's native calendar
 		PostQuitMessage(0);
+		break;
+	case WM_KEYDOWN:
+		if(wParam == VK_ESCAPE)
+			SendMessage(hwnd, WM_CLOSE, 0, 0);
 		break;
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
