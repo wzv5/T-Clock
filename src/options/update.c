@@ -209,10 +209,10 @@ static INT_PTR CALLBACK Window_UpdateCheckDlg(HWND hDlg, UINT uMsg, WPARAM wPara
 		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)data->icon_update);
 		data->icon_update_small = LoadImage(g_instance, MAKEINTRESOURCE(IDI_UPDATE_S), IMAGE_ICON, 0,0, LR_DEFAULTSIZE);
 		data->next_version[0] = api.GetInt(NULL, kValueNextVersion[0], 1);
-		#if VER_IsReleaseOrHigher() // release build, opt-in beta check
 		data->next_version[1] = api.GetInt(NULL, kValueNextVersion[1], 0);
-		#else // non-release build, force beta check
-		data->next_version[1] = 1;
+		#if !VER_IsReleaseOrHigher() // non-release build, forced beta check
+		if(!data->next_version[1])
+			data->next_version[1] = 1;
 		#endif
 		SetWindowLongPtr(hDlg, DWLP_USER, (LONG_PTR)data);
 		
