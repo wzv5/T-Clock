@@ -171,4 +171,34 @@ void OpportunisticConsole() {
 	FreeConsole();
 }
 
+typedef DWORD (WINAPI *WTSGetActiveConsoleSessionId_t)(void);
+typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND hWnd, DWORD dwFlags);
+typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND hWnd);
+
+DWORD win2k_WTSGetActiveConsoleSessionId(void) {
+	static WTSGetActiveConsoleSessionId_t WTSGetActiveConsoleSessionId = NULL;
+	if(!WTSGetActiveConsoleSessionId) {
+		WTSGetActiveConsoleSessionId = (WTSGetActiveConsoleSessionId_t)GetProcAddress(GetModuleHandleA("kernel32"), "WTSGetActiveConsoleSessionId");
+		if(!WTSGetActiveConsoleSessionId)
+			return 0xFFFFFFFF;
+	}
+	return WTSGetActiveConsoleSessionId();
+}
+
+BOOL win2k_WTSRegisterSessionNotification(HWND hWnd, DWORD dwFlags) {
+	WTSRegisterSessionNotification_t WTSRegisterSessionNotification;
+	WTSRegisterSessionNotification = (WTSRegisterSessionNotification_t)GetProcAddress(GetModuleHandleA("wtsapi32"), "WTSRegisterSessionNotification");
+	if(!WTSRegisterSessionNotification)
+		return 0;
+	return WTSRegisterSessionNotification(hWnd, dwFlags);
+}
+
+BOOL win2k_WTSUnRegisterSessionNotification(HWND hWnd) {
+	WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification;
+	WTSUnRegisterSessionNotification = (WTSUnRegisterSessionNotification_t)GetProcAddress(GetModuleHandleA("wtsapi32"), "WTSUnRegisterSessionNotification");
+	if(!WTSUnRegisterSessionNotification)
+		return 0;
+	return WTSUnRegisterSessionNotification(hWnd);
+}
+
 #endif // WIN2K_COMPAT

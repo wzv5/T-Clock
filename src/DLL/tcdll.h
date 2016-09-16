@@ -11,10 +11,10 @@
 #include <math.h>     // Required by use of floor() in Format.c
 
 #include "../common/resource.h"
-#include "../common/win2k_compat.h"
 #include "../common/newapi.h" // UxTheme stuff
 #include "../common/utl.h" // utility functions
 #include "../common/clock.h" // common clock api
+#include "../common/win2k_compat.h"
 
 extern HWND gs_hwndTClockMain; /**< our main window for hotkeys, menus and sounds \b [shared] */
 extern HWND gs_hwndClock;      /**< primary clock hwnd \b [shared] */

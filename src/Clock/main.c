@@ -112,37 +112,17 @@ static BOOL m_bMonOffOnLock = FALSE;
 //------------------------------+++--> UnRegister the Clock For Login Session Change Notifications:
 void UnregisterSession(HWND hwnd)   //--------{ Explicitly Linked for Windows 2000 }--------+++-->
 {
-	HINSTANCE handle;
 	if(!m_bMonOffOnLock)
 		return;
-	handle = LoadLibraryA("wtsapi32");
-	if(handle){
-		typedef BOOL (WINAPI *WTSUnRegisterSessionNotification_t)(HWND);
-		WTSUnRegisterSessionNotification_t WTSUnRegisterSessionNotification=(WTSUnRegisterSessionNotification_t)GetProcAddress(handle,"WTSUnRegisterSessionNotification");
-		if(WTSUnRegisterSessionNotification){
-			WTSUnRegisterSessionNotification(hwnd);
-			m_bMonOffOnLock = FALSE;
-		}
-		FreeLibrary(handle);
-	}
+	m_bMonOffOnLock = !WTSUnRegisterSessionNotification(hwnd);
 }
 //================================================================================================
 //--------------------------------+++--> Register the Clock For Login Session Change Notifications:
 void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 2000 }---------+++-->
 {
-	HINSTANCE handle;
 	if(m_bMonOffOnLock)
 		return;
-	handle = LoadLibraryA("wtsapi32");
-	if(handle){
-		typedef BOOL (WINAPI *WTSRegisterSessionNotification_t)(HWND,DWORD);
-		WTSRegisterSessionNotification_t WTSRegisterSessionNotification=(WTSRegisterSessionNotification_t)GetProcAddress(handle,"WTSRegisterSessionNotification");
-		if(WTSRegisterSessionNotification) {
-			WTSRegisterSessionNotification(hwnd,NOTIFY_FOR_THIS_SESSION);
-			m_bMonOffOnLock = TRUE;
-		}
-		FreeLibrary(handle);
-	}
+	m_bMonOffOnLock = WTSRegisterSessionNotification(hwnd, NOTIFY_FOR_ALL_SESSIONS);
 }
 //====================================================================================
 //---------------------------+++--> Does our startup file exist? Also creates filename:
@@ -521,6 +501,7 @@ static void InjectClockHook(HWND hwnd) {
 //--------------------------------------------------+++--> The Main Application "Window" Procedure:
 LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lParam)   //-+++-->
 {
+	const unsigned kIdleMS = 5000;
 	switch(message) {
 	case WM_CREATE:
 		InitAlarm();  // initialize alarms
@@ -528,10 +509,56 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		InjectClockHook(hwnd);
 		return 0;
 		
-	case WM_TIMER:
-		if(wParam == IDTIMER_MAIN) OnTimerMain(hwnd);
-		else if(wParam == IDTIMER_MOUSE) OnTimerMouse(hwnd);
-		return 0;
+	case WM_TIMER:{
+		switch(wParam) {
+		case IDTIMER_MAIN:
+			OnTimerMain(hwnd);
+			break;
+		case IDTIMER_MOUSE:
+			OnTimerMouse(hwnd);
+			break;
+		case IDTIMER_MONITOR:{
+			static unsigned lastidle_ = 0;
+			unsigned current = GetTickCount();
+			LASTINPUTINFO li;
+			li.cbSize = sizeof(li);
+			GetLastInputInfo(&li);
+			if(li.dwTime != lastidle_) {
+				if(li.dwTime > current) // 'current' overflow
+					li.dwTime = 0;
+				li.dwTime += kIdleMS;
+				if(li.dwTime <= current) {
+					lastidle_ = (li.dwTime - kIdleMS);
+					li.dwTime = kIdleMS;
+					SendMessage(HWND_BROADCAST_nowarn, WM_SYSCOMMAND, SC_MONITORPOWER, 2);
+				} else {
+					li.dwTime -= current;
+				}
+				SetTimer(hwnd, IDTIMER_MONITOR, li.dwTime, NULL);
+			}
+			break;}
+		}
+		return 0;}
+	case WM_WTSSESSION_CHANGE:{
+		WTS_CONNECTSTATE_CLASS* state;
+		DWORD size;
+		switch(wParam) {
+		case WTS_CONSOLE_DISCONNECT: // "switch user", creates new session
+			if(WTSGetActiveConsoleSessionId() != 0xFFFFFFFF)
+				break;
+			/* fall through */
+		case WTS_SESSION_LOCK: // "lock", keeps current session
+			SetTimer(hwnd, IDTIMER_MONITOR, kIdleMS, NULL);
+			break;
+		case WTS_CONSOLE_CONNECT:
+		case WTS_SESSION_UNLOCK:
+			WTSQuerySessionInformationW(NULL, (DWORD)lParam, WTSConnectState, (wchar_t**)&state, &size);
+			if(*state == WTSActive)
+				KillTimer(hwnd, IDTIMER_MONITOR);
+			WTSFreeMemory(state);
+			break;
+		}
+		return 0;}
 		
 	case WM_ENDSESSION:
 		if(!wParam)
@@ -616,15 +643,7 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 	case WM_XBUTTONUP:
 		OnMouseMsg(hwnd, message, wParam, lParam); // mouse.c
 		return 0;
-		
-	case WM_WTSSESSION_CHANGE:
-		switch(wParam) {
-		case WTS_SESSION_LOCK:
-			Sleep(500); // Eliminate user's interaction for 500 ms
-			SendMessage(HWND_BROADCAST_nowarn, WM_SYSCOMMAND,SC_MONITORPOWER, 2);
-			return 0;
-		}
-		break;
+	
 	default:
 		if(message == g_WM_TaskbarCreated){
 			InjectClockHook(hwnd);

@@ -92,6 +92,7 @@
 			<Add library="uuid" />
 			<Add library="msimg32" />
 			<Add library="dsound" />
+			<Add library="wtsapi32" />
 		</Linker>
 		<ExtraCommands>
 			<Add before="../common/AutoVersion --git . ../common/version.h" />

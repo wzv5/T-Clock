@@ -28,6 +28,14 @@ extern DefSubclassProc_ptr win2k_DefSubclassProc;
 #define RemoveWindowSubclass win2k_RemoveWindowSubclass
 #define DefSubclassProc win2k_DefSubclassProc
 
+#include <wtsapi32.h>
+DWORD win2k_WTSGetActiveConsoleSessionId(void);
+BOOL win2k_WTSRegisterSessionNotification(HWND hWnd, DWORD dwFlags);
+BOOL win2k_WTSUnRegisterSessionNotification(HWND hWnd);
+#define WTSGetActiveConsoleSessionId win2k_WTSGetActiveConsoleSessionId
+#define WTSRegisterSessionNotification win2k_WTSRegisterSessionNotification
+#define WTSUnRegisterSessionNotification win2k_WTSUnRegisterSessionNotification
+
 void OpportunisticConsole();
 
 #else

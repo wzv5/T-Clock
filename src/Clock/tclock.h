@@ -16,10 +16,11 @@
 #include "../common/control_extensions.h"
 
 // IDs for timer
-#define IDTIMER_MAIN				3
-#define IDTIMER_MOUSE				4
-#define IDTIMER_DEKSTOPICON			5
-#define IDTIMER_DESKTOPICONSTYLE	6
+#define IDTIMER_MAIN              3
+#define IDTIMER_MOUSE             4
+#define IDTIMER_DEKSTOPICON       5
+#define IDTIMER_DESKTOPICONSTYLE  6
+#define IDTIMER_MONITOR           7
 
 // for mouse.c and pagemouse.c
 #define MOUSEFUNC_NONE           0
@@ -266,7 +267,7 @@ void HotkeyBox_SetValue(HWND box, hotkey_t hotkey);
  * \brief (un-)registers hotkeys
  * \param hwnd target hotkey window
  * \param want_register \c 0 to remove them, \c 1 to add them, \c 2 for re-registration
- * \sa RegisterHotKey(), UnregisterHotKey() */     
+ * \sa RegisterHotKey(), UnregisterHotKey() */
 void RegisterHotkeys(HWND hwnd, int want_register);
 /**
  * \brief processes \c WM_HOTKEY messages (feature requested from \c eweoma at \c DonationCoder.com)
