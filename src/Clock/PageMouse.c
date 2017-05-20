@@ -290,13 +290,14 @@ INT_PTR CALLBACK Page_Mouse(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 				lvItem.iSubItem = 0;
 				ListView_GetItem(hList, &lvItem);
 				for(button=0; button<m_mouseButtonCount; ++button){
-					if(wcscmp(m_mouseButton[button], value) == 0)
+					if(wcscmp(m_mouseButton[button], lvItem.pszText) == 0)
 						break;
 				}
+				lvItem.pszText = value;
 				lvItem.iSubItem = 1;
 				ListView_GetItem(hList, &lvItem);
 				for(click=0; click<m_mouseClickCount; ++click){
-					if(wcscmp(m_mouseClick[click], value) == 0)
+					if(wcscmp(m_mouseClick[click], lvItem.pszText) == 0)
 						break;
 				}
 				UpdateUIControls(hDlg, button, click, 2);

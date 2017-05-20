@@ -156,14 +156,14 @@ void StopWatch_Lap(HWND hDlg,int bFromStop){ // Get Current Time as Lap Time and
 	
 	hrs=elapsed/3600000; elapsed%=3600000;
 	min=elapsed/60000; elapsed%=60000;
-	wsprintf(buf, FMT("%02d:%02d:%02lu.%03lu"), hrs ,min, elapsed/1000, elapsed%1000);
+	wsprintf(lvItem.pszText, FMT("%02d:%02d:%02lu.%03lu"), hrs ,min, elapsed/1000, elapsed%1000);
 	lvItem.iSubItem = 1;
 	ListView_SetItem(hList, &lvItem);
 	
 	elapsed=(unsigned long)((end.QuadPart-m_start.QuadPart)*1000/m_frequency.QuadPart);
 	hrs=elapsed/3600000; elapsed%=3600000;
 	min=elapsed/60000; elapsed%=60000;
-	wsprintf(buf, FMT("%02d:%02d:%02lu.%03lu"), hrs, min, elapsed/1000, elapsed%1000);
+	wsprintf(lvItem.pszText, FMT("%02d:%02d:%02lu.%03lu"), hrs, min, elapsed/1000, elapsed%1000);
 	lvItem.iSubItem = 2;
 	ListView_SetItem(hList, &lvItem);
 }

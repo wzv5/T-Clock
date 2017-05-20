@@ -38,6 +38,8 @@ int CALLBACK SortString_LV(HWND list, int column, int flags, intptr_t item1, int
 	int order;
 	wchar_t str1[128];
 	wchar_t str2[_countof(str1)];
+	wchar_t* str1_ptr;
+	wchar_t* str2_ptr;
 	LVITEM item;
 	
 	(void)unused;
@@ -49,15 +51,17 @@ int CALLBACK SortString_LV(HWND list, int column, int flags, intptr_t item1, int
 	item.iItem = (int)item1;
 	item.pszText = str1;
 	ListView_GetItem(list, &item);
+	str1_ptr = item.pszText;
 	
 	item.iItem = (int)item2;
 	item.pszText = str2;
 	ListView_GetItem(list, &item);
+	str2_ptr = item.pszText;
 	
 	if(flags & SORT_INSENSITIVE)
-		order = wcsncasecmp(str1, str2, _countof(str1));
+		order = wcsncasecmp(str1_ptr, str2_ptr, _countof(str1));
 	else
-		order = wcsncmp(str1, str2, _countof(str1));
+		order = wcsncmp(str1_ptr, str2_ptr, _countof(str1));
 	if(flags & SORT_DEC)
 		order = -order;
 	return order;
