@@ -72,6 +72,7 @@
 					<Add option="-m64" />
 				</Linker>
 				<ExtraCommands>
+					<Add before='cmd /C &quot;del ..\..\Debug\Crash.log&quot;' />
 					<Add after="objcopy --only-keep-debug ../../Debug/Clock64.exe ../../Debug/Clock64.dbg" />
 					<Add after="objcopy --strip-debug --strip-unneeded --add-gnu-debuglink=../../Debug/Clock64.dbg ../../Debug/Clock64.exe" />
 				</ExtraCommands>

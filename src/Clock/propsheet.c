@@ -35,7 +35,7 @@ char g_bApplyClock = 0;
 //----------------------------//-----------------------+++--> Show the (Tab Dialog) Property Sheet:
 void MyPropertySheet(int page)   //---------------------------------------------------------+++-->
 {
-	const DLGPROC PageProc[]={
+	static const DLGPROC PageProc[]={
 		Page_About, Page_Alarm,
 		Page_Color, Page_Format, Page_Mouse,
 		Page_Quicky,

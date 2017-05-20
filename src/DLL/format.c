@@ -349,7 +349,7 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 				++fmt;
 				if(!weekday && *fmt == 'i')
 					weekday = 7;
-				*out++ = '0' + weekday;
+				*out++ = '0' + (char)weekday;
 			} else {
 				*out++ = 'w';
 			}

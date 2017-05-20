@@ -124,7 +124,7 @@ void ChecksLocaleInit(char checks[GROUP_FORMAT_NUM], int ilang/*=0*/)
 {
 	wchar_t ampm[10];
 	int ival;
-	const int aLangDayOfWeekIsLast[] = {LANG_JAPANESE,LANG_KOREAN};
+	static const int aLangDayOfWeekIsLast[] = {LANG_JAPANESE, LANG_KOREAN};
 	char bTimeMarker; // use AM/PM (+12h format)
 	
 	if(ilang)
@@ -226,8 +226,8 @@ BOOL CALLBACK EnumLocalesProc(wchar_t* lpLocaleString)
 --------------------------------------------------*/
 void OnInit(HWND hDlg)
 {
-	const wchar_t* AM[] = {L"AM", L"am", L"A", L"a", L" ",};
-	const wchar_t* PM[] = {L"PM", L"pm", L"P", L"p", L" ",};
+	static const wchar_t* AM[] = {L"AM", L"am", L"A", L"a", L" ",};
+	static const wchar_t* PM[] = {L"PM", L"pm", L"P", L"p", L" ",};
 	const int AMPMs = _countof(AM);
 	HWND doc_lnk = GetDlgItem(hDlg, IDC_FORMAT_LNK);
 	HWND format_cb = GetDlgItem(hDlg, IDC_FORMAT);
@@ -472,7 +472,7 @@ void InitFormat()
 --------------------------------------------------*/
 void CreateFormat(wchar_t* dst, char* checks)
 {
-	const wchar_t* spacer = L" ";
+	static const wchar_t* spacer = L" ";
 	char use_time = 0; ///< bitmask; 1 = date, 2 = time
 	int control;
 	int creation_bit; ///< date/time bits; &1 = date, !&1 = time

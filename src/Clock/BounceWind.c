@@ -205,7 +205,7 @@ void OnOK(HWND hDlg)   //----------------------------------------------------+++
 //----------------------------+++--> Parse the Dialoggie Settings Out of the String:
 void ParseSettings(wchar_t* data)   //------------------------------------------+++-->
 {
-	const wchar_t seps[] = L",";
+	static const wchar_t seps[] = L",";
 	wchar_t* szToken, *nxToken;
 	int i=0;
 	

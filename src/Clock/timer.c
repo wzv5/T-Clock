@@ -802,7 +802,7 @@ static int OnWatchTimer(HWND hwnd) {
 	return count;
 }
 static void RemoveFromWatch(HWND hWnd, HWND list, int index) {
-	const wchar_t message[] = L"Yes will cancel the timer & remove it from the Watch List\n"
+	static const wchar_t message[] = L"Yes will cancel the timer & remove it from the Watch List\n"
 							L"No will remove timer from Watch List only (timer continues)\n"
 							L"Cancel will assume you hit delete accidentally (and do nothing)";
 	wchar_t caption[TNY_BUFF + kTimerNameLen];

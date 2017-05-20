@@ -340,7 +340,7 @@ int CALLBACK EnumFontFamExProc(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, 
 int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWORD FontType, LPARAM lParam)
 {
 	HWND hwndSize = (HWND)lParam;
-	const unsigned char nFontSizes[] = {4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,48,72};
+	static const unsigned char nFontSizes[] = {4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,26,28,32,36,48,72};
 	wchar_t str[8];
 	int i, size, count;
 	(void)lpelfe;
