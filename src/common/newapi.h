@@ -226,7 +226,7 @@ typedef BOOL (WINAPI* ChangeWindowMessageFilter_t)(UINT message, DWORD dwFlag); 
 	} SHSTOCKICONID;
 #endif // SHGSI_ICONLOCATION
 
-typedef HRESULT (* SHGetStockIconInfo_t)(SHSTOCKICONID siid, UINT uFlags, SHSTOCKICONINFO* psii); ///< type of \c SHGetStockIconInfo() found in \c shell32 since Vista
+typedef HRESULT (WINAPI* SHGetStockIconInfo_t)(SHSTOCKICONID siid, UINT uFlags, SHSTOCKICONINFO* psii); ///< type of \c SHGetStockIconInfo() found in \c shell32 since Vista
 /**
  * \brief custom function to get a stock icon using \c SHGetStockIconInfo()
  * \param siid requested icon
