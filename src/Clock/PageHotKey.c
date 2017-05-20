@@ -74,11 +74,11 @@ void HotkeyBox_Init(HWND hDlg, int idx) {
 	HWND control;
 	hotkey_t hk = GetHotkey(idx);
 	
-	control = GetDlgItem(hDlg, (HOTKEY_BEGIN+idx));
+	control = GetDlgItem(hDlg, (GROUP_HOTKEYS+idx));
 	SendMessage(control, HKM_SETRULES, HKCOMB_NONE, (HOTKEYF_CONTROL|HOTKEYF_SHIFT));
 	HotkeyBox_SetValue(control, hk);
 	
-	control = GetDlgItem(hDlg, (HOTKEY_BTN_BEGIN+idx));
+	control = GetDlgItem(hDlg, (GROUP_HOTKEYS_BTN+idx));
 	EnableWindow(control, 0);
 }
 
@@ -134,11 +134,11 @@ static void OnApply(HWND hDlg)   //---------------------------------------------
 	int i;
 	hotkey_t hotkey;
 	
-	for(i=0; i < HOTKEY_NUM; ++i) {
-		hotkey = HotkeyBox_GetValue(GetDlgItem(hDlg,(HOTKEY_BEGIN+i)));
+	for(i=0; i < GROUP_HOTKEYS_NUM; ++i) {
+		hotkey = HotkeyBox_GetValue(GetDlgItem(hDlg,(GROUP_HOTKEYS+i)));
 		SetHotkey(i, hotkey);
 		
-		EnableDlgItem(hDlg, (HOTKEY_BTN_BEGIN+i), 0);
+		EnableDlgItem(hDlg, (GROUP_HOTKEYS_BTN+i), 0);
 	}
 }
 //================================================================================================
@@ -147,7 +147,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 {
 	int i;
 	
-	for(i=0; i < HOTKEY_NUM; ++i) {
+	for(i=0; i < GROUP_HOTKEYS_NUM; ++i) {
 		HotkeyBox_Init(hDlg, i);
 	}
 }
@@ -188,14 +188,14 @@ INT_PTR CALLBACK Page_HotKey(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		
 		switch(id) {
 		default:
-			if(id >= HOTKEY_BEGIN && id <= HOTKEY_END) {
-				idx = (id - HOTKEY_BEGIN);
-				EnableDlgItem(hDlg, (HOTKEY_BTN_BEGIN+idx), 1);
+			if(id >= GROUP_HOTKEYS && id <= GROUP_HOTKEYS_END) {
+				idx = (id - GROUP_HOTKEYS);
+				EnableDlgItem(hDlg, (GROUP_HOTKEYS_BTN+idx), 1);
 				SendPSChanged(hDlg);
-			} else if(id >= HOTKEY_BTN_BEGIN && id <= HOTKEY_BTN_END) {
+			} else if(id >= GROUP_HOTKEYS_BTN && id <= GROUP_HOTKEYS_BTN_END) {
 				HWND control;
-				idx = (id - HOTKEY_BTN_BEGIN);
-				control = GetDlgItem(hDlg, (HOTKEY_BEGIN+idx));
+				idx = (id - GROUP_HOTKEYS_BTN);
+				control = GetDlgItem(hDlg, (GROUP_HOTKEYS+idx));
 				EnableWindow((HWND)lParam, 0);
 				HotkeyBox_SetValue(control, GetHotkey(idx));
 				SetFocus(control);
@@ -210,13 +210,13 @@ INT_PTR CALLBACK Page_HotKey(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 void RegisterHotkeys(HWND hwnd, int want_register) {
 	int i;
 	
-	for(i=0; i < HOTKEY_NUM; ++i) {
+	for(i=0; i < GROUP_HOTKEYS_NUM; ++i) {
 		if(want_register != 1)
-			UnregisterHotKey(hwnd, (HOTKEY_BEGIN+i));
+			UnregisterHotKey(hwnd, (GROUP_HOTKEYS+i));
 		if(want_register) {
 			hotkey_t hk = GetHotkey(i);
 			if(hk.key.vk)
-				RegisterHotKey(hwnd, (HOTKEY_BEGIN+i), hk.key.fsMod, hk.key.vk);
+				RegisterHotKey(hwnd, (GROUP_HOTKEYS+i), hk.key.fsMod, hk.key.vk);
 		}
 	}
 }

@@ -46,12 +46,13 @@ void MyPropertySheet(int page)   //---------------------------------------------
 		PROPSHEETPAGE psp[PROPERTY_NUM] = {{0}};
 		PROPSHEETHEADER psh = {sizeof(PROPSHEETHEADER)};
 		int i;
+		static_assert((GROUP_PAGE_END-GROUP_PAGE+1) == PROPERTY_NUM);
 		// Allocate Clean Memory for Each Page
 		for(i=0; i<PROPERTY_NUM; ++i) {
 			psp[i].dwSize = sizeof(PROPSHEETPAGE);
 			psp[i].hInstance = g_instance;
 			psp[i].pfnDlgProc = PageProc[i];
-			psp[i].pszTemplate = MAKEINTRESOURCE(PROPERTY_BASE+i);
+			psp[i].pszTemplate = MAKEINTRESOURCE(GROUP_PAGE + i);
 		}
 		
 		// set data of property sheet

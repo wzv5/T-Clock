@@ -431,7 +431,7 @@ void SubsSendResize(){
 	int clock_id;
 	HWND taskbar;
 	
-	COMPILE_ASSERT(sizeof(WINDOWPOS) == sizeof(WINDOWPOS_fix));
+	static_assert(sizeof(WINDOWPOS) == sizeof(WINDOWPOS_fix));
 	
 	if(api.OS < TOS_WIN10)
 		return;

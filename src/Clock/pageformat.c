@@ -6,13 +6,13 @@
 
 #include "tclock.h"
 
-static wchar_t* m_entrydate[FORMAT_NUM]={
+static wchar_t* m_entrydate[GROUP_FORMAT_NUM]={
 	L"Year4", L"Year", L"Month", L"MonthS", L"Day", L"Weekday",
 	L"Hour", L"Minute", L"Second", L"AMPM", L"InternetTime",
 	L"Lf", L"Hour12", L"HourZero", L"Custom",
 };
-#define ENTRY(id) m_entrydate[(id)-FORMAT_BEGIN]
-#define CHECKS(id) checks[(id)-FORMAT_BEGIN]
+#define ENTRY(id) m_entrydate[(id) - GROUP_FORMAT]
+#define CHECKS(id) checks[(id) - GROUP_FORMAT]
 static void CreateFormat(wchar_t* format, char* checks);
 
 static void OnInit(HWND hDlg);
@@ -120,7 +120,7 @@ INT_PTR CALLBACK Page_Format(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 /*------------------------------------------------
   Initialize Checks with locale settings (2nd used to overwrite values based on locale default instead of users)
 --------------------------------------------------*/
-void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
+void ChecksLocaleInit(char checks[GROUP_FORMAT_NUM], int ilang/*=0*/)
 {
 	wchar_t ampm[10];
 	int ival;
@@ -186,11 +186,11 @@ void ChecksLocaleInit(char checks[FORMAT_NUM], int ilang/*=0*/)
 /*------------------------------------------------
   Initialize Locale Infomation (2nd to 3rd param used to overwrite values based on locale default)
 --------------------------------------------------*/
-void Checks2Dialog(char checks[FORMAT_NUM], HWND hDlg, int bLocaleOnly/*=0*/)
+void Checks2Dialog(char checks[GROUP_FORMAT_NUM], HWND hDlg, int bLocaleOnly/*=0*/)
 {
 	if(!bLocaleOnly){
 		int i;
-		for(i=FORMAT_BEGIN; i<=FORMAT_END; ++i) {
+		for(i=GROUP_FORMAT; i<=GROUP_FORMAT_END; ++i) {
 			CheckDlgButton(hDlg,i,CHECKS(i));
 		}
 	}else{
@@ -239,7 +239,7 @@ void OnInit(HWND hDlg)
 	int i, count;
 	wchar_t ampm_user[TNY_BUFF];
 	wchar_t ampm_locale[TNY_BUFF];
-	char checks[FORMAT_NUM];
+	char checks[GROUP_FORMAT_NUM];
 	
 	m_transition=-1; // start transition lock
 	m_hwndPage = hDlg;
@@ -357,7 +357,7 @@ void OnApply(HWND hDlg,BOOL preview)   //---------------------------------------
 void OnLocale(HWND hDlg)   //---------------------------------------------------------------+++-->
 {
 	HWND locale_cb = GetDlgItem(hDlg, IDC_LOCALE);
-	char checks[FORMAT_NUM];
+	char checks[GROUP_FORMAT_NUM];
 	wchar_t fmt[MAX_FORMAT];
 	int ilang = (int)ComboBox_GetItemData(locale_cb, ComboBox_GetCurSel(locale_cb));
 	// change locale
@@ -404,7 +404,7 @@ void OnFormatCheck(HWND hDlg, WORD id)
 {
 	int i;
 	wchar_t fmt[MAX_FORMAT];
-	char checks[FORMAT_NUM];
+	char checks[GROUP_FORMAT_NUM];
 	char oldtransition = m_transition;
 	m_transition = -1; // start transition lock
 	
@@ -456,7 +456,7 @@ void InitFormat()
 {
 	wchar_t format_old[LRG_BUFF];
 	wchar_t format[LRG_BUFF];
-	char checks[FORMAT_NUM];
+	char checks[GROUP_FORMAT_NUM];
 	
 	if(api.GetInt(L"Format", ENTRY(IDC_CUSTOM), 0))
 		return;

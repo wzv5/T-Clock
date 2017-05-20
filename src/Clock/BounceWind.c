@@ -52,7 +52,7 @@ INT_PTR CALLBACK Window_AlarmMsgConfigDlg(HWND hDlg, UINT message, WPARAM wParam
 			case IDC_ALRMMSG_BOUN_ENABLE:{
 				int control;
 				int check=IsDlgButtonChecked(hDlg,IDC_ALRMMSG_BOUN_ENABLE);
-				for(control=IDC_ALRMMSG_SPEED_ST; control<=IDC_ALRMMSG_PAWS_SPIN; ++control){
+				for(control=GROUP_ALARM_BOUNCE; control<=GROUP_ALARM_BOUNCE_END; ++control){
 					EnableDlgItem(hDlg,control,check);
 				}
 				break;}
@@ -110,7 +110,7 @@ void OnInit(HWND hDlg, dlgmsg_t* dlg)   //--------------------------------------
 	SendDlgItemMessage(hDlg, IDC_ALRMMSG_BOUN_SPIN, UDM_SETRANGE32, 1,10);
 	if(!m_iBounce){
 		int control;
-		for(control=IDC_ALRMMSG_SPEED_ST; control<=IDC_ALRMMSG_PAWS_SPIN; ++control){
+		for(control=GROUP_ALARM_BOUNCE; control<=GROUP_ALARM_BOUNCE_END; ++control){
 			EnableDlgItem(hDlg,control,0);
 		}
 		SendDlgItemMessage(hDlg, IDC_ALRMMSG_BOUN_SPIN, UDM_SETPOS32, 0, 3); // default bounce 3

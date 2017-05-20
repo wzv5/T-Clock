@@ -18,15 +18,18 @@
 #define IDS_LIST_TASKNAME               76
 #define IDS_LIST_TASKTARGET             77
 #define IDS_LIST_TASKSWITCHES           78
-#define PROPERTY_BASE                   100
-#define IDD_PAGEABOUT                   100 /* group */
+/* group */
+#define GROUP_PAGE                      IDD_PAGEABOUT
+#define IDD_PAGEABOUT                   100
 #define IDD_PAGEALARM                   101
 #define IDD_PAGECLOCKTEXT               102
 #define IDD_PAGEFORMAT                  103
 #define IDD_PAGEMOUSE                   104
 #define IDD_PAGEQUICKY                  105
 #define IDD_PAGEHOTKEY                  106
-#define IDD_PAGEMISC                    107 /* end group */
+#define IDD_PAGEMISC                    107
+#define GROUP_PAGE_END                  IDD_PAGEMISC 
+/* end group */
 #define IDD_QUICKY_ADD                  110
 #define IDD_TIMER                       120
 #define IDD_ALARMDAY                    121
@@ -44,15 +47,16 @@
 #define IDI_JACKRUSSEL                  195
 #define IDI_STOICJOKER                  196
 #define IDI_STOICJOKER_XMAS             197
-/// messages / commands (menu, hotkey etc)
+/*** messages / commands (menu, hotkey etc) ***/
 #define IDR_MENU                        200
-#define IDC_SOUNDAUDIO                  201 /* group */
+/* group */
+#define IDC_SOUNDAUDIO                  201
 #define IDC_NETWORK                     202
 #define IDC_QUICKYS                     203
 #define IDC_TIMERS                      204
 #define IDC_EXITWIN                     205
-#define IDC_ALARMS                      206 /* end group */
-
+#define IDC_ALARMS                      206
+/* end group */
 #define IDM_VOLUMECONTROL               210 /* never change IDM numbers as they are used by mouse click settings, etc. */
 #define IDM_AUDIOPROP                   211
 #define IDM_RECYCLEBIN                  212
@@ -88,8 +92,8 @@
 #define IDM_STOPWATCH_PAUSE             324
 #define IDM_STOPWATCH_RESUME            325
 #define IDM_STOPWATCH_LAP               326
-
-#define IDM_FWD_RUNAPP                  401 /* group (forward commands, keep ids) */
+/* group (forward commands, keep ids) */
+#define IDM_FWD_RUNAPP                  401
 #define IDM_FWD_CASCADE                 403
 #define IDM_FWD_SIDEBYSIDE              404
 #define IDM_FWD_STACKED                 405
@@ -103,26 +107,29 @@
 #define IDM_FWD_CUSTOMNOTIFYICONS       421
 #define IDM_FWD_LOCKTASKBAR             424
 #define IDM_FWD_LOCKALLTASKBAR          425
-#define IDM_FWD_EXITEXPLORER            518 /* end group (forward commands), end never change */
-/// misc
+#define IDM_FWD_EXITEXPLORER            518
+/* end group (forward commands), end never change */
+/*** misc ***/
+/* group */
 #define GROUP_ABT_B_BEGIN               IDC_ABT_TITLE
-#define IDC_ABT_TITLE                   600 /* group */
+#define IDC_ABT_TITLE                   600
 #define IDC_ABT_StoicJoker              601
 #define IDC_ABT_StoicJoker2             602
 #define IDC_ABT_WEB                     603
 #define IDC_ABT_MAIL                    604
-#define IDC_ABT_FORUM                   605 /* end group */
+#define IDC_ABT_FORUM                   605
 #define GROUP_ABT_B_END                 IDC_ABT_FORUM
+/* end group */
 #define IDC_ABT_WEBuri                  606
 #define IDC_ABT_MAILuri                 607
 #define IDC_ABT_FORUMuri                608
 #define IDC_ABT_TCLOCK                  609
 #define IDC_QMEN_GROUP1                 700 /* group */
-#define IDC_QMEN_EXITWIN                701 /* group */
+#define IDC_QMEN_EXITWIN                701 /* group_1 */
 #define IDC_QMEN_AUDIO                  702
 #define IDC_QMEN_LAUNCH                 703
 #define IDC_QMEN_NET                    704
-#define IDC_QMEN_DISPLAY                705 /* end group */
+#define IDC_QMEN_DISPLAY                705 /* end group_1 */
 #define IDC_QMEN_GROUP2                 706
 #define IDC_QMEN_LIST                   707 /* end group */
 #define IDM_QMEM_REFRESH                710
@@ -144,12 +151,14 @@
 #define IDC_SW_RESET                    1024
 #define IDC_SW_EXPORT                   1025 /* end group */
 #define IDR_TIMER                       1100
+/* group 'timer context' */
 #define GROUP_TIMER_BEGIN               IDM_TIMER_RESTART
-#define IDM_TIMER_RESTART               1101 /* group 'timer context' */
+#define IDM_TIMER_RESTART               1101
 #define IDM_TIMER_STOP                  1102
 #define IDM_TIMER_HIDE                  1103
-#define IDM_TIMER_EDIT                  1104 /* end group */
+#define IDM_TIMER_EDIT                  1104
 #define GROUP_TIMER_END                 IDM_TIMER_EDIT
+/* end group */
 #define IDM_TIMER_CLEANUP               1105
 #define IDM_TIMER_ALL_RESTART           1106
 #define IDM_TIMER_RESTORE               1107
@@ -163,23 +172,25 @@
 #define IDM_TIMER_OPT_OPACITY_25        1124
 
 // HotKeys
-#define HOTKEY_BEGIN         HK_TIMER_ADD
-#define HK_TIMER_ADD     0 /* group */
-#define HK_STOPWATCH     1
-#define HK_TIMER_WATCH   2
-#define HK_SETTINGS      3
-#define HK_CALENDAR      4
-#define HK_SNTP          5 /* end group */
-#define HOTKEY_END           HK_SNTP
-#define HOTKEY_NUM           (1 + HOTKEY_END - HOTKEY_BEGIN)
-#define HOTKEY_BTN_BEGIN     1000
-#define HOTKEY_BTN_END       (HOTKEY_BTN_BEGIN + HOTKEY_NUM - 1)
-#define IDC_HK_TIMER_ADD_B   (HOTKEY_BTN_BEGIN + HK_TIMER_ADD)
-#define IDC_HK_STOPWATCH_B   (HOTKEY_BTN_BEGIN + HK_STOPWATCH)
-#define IDC_HK_TIMER_WATCH_B (HOTKEY_BTN_BEGIN + HK_TIMER_WATCH)
-#define IDC_HK_SETTINGS_B    (HOTKEY_BTN_BEGIN + HK_SETTINGS)
-#define IDC_HK_CALENDAR_B    (HOTKEY_BTN_BEGIN + HK_CALENDAR)
-#define IDC_HK_SNTP_B        (HOTKEY_BTN_BEGIN + HK_SNTP)
+/* group */
+#define GROUP_HOTKEYS           HK_TIMER_ADD
+#define HK_TIMER_ADD            0
+#define HK_STOPWATCH            1
+#define HK_TIMER_WATCH          2
+#define HK_SETTINGS             3
+#define HK_CALENDAR             4
+#define HK_SNTP                 5
+#define GROUP_HOTKEYS_END       HK_SNTP
+#define GROUP_HOTKEYS_NUM       (1 + GROUP_HOTKEYS_END - GROUP_HOTKEYS)
+#define GROUP_HOTKEYS_BTN       1000
+#define IDC_HK_TIMER_ADD_B      (GROUP_HOTKEYS_BTN + HK_TIMER_ADD)
+#define IDC_HK_STOPWATCH_B      (GROUP_HOTKEYS_BTN + HK_STOPWATCH)
+#define IDC_HK_TIMER_WATCH_B    (GROUP_HOTKEYS_BTN + HK_TIMER_WATCH)
+#define IDC_HK_SETTINGS_B       (GROUP_HOTKEYS_BTN + HK_SETTINGS)
+#define IDC_HK_CALENDAR_B       (GROUP_HOTKEYS_BTN + HK_CALENDAR)
+#define IDC_HK_SNTP_B           (GROUP_HOTKEYS_BTN + HK_SNTP)
+#define GROUP_HOTKEYS_BTN_END   (GROUP_HOTKEYS_BTN + GROUP_HOTKEYS_NUM - 1)
+/* end group */
 
 #define IDCB_DELSERVER                  1037
 #define IDCBX_NTPSERVER                 1038
@@ -196,7 +207,9 @@
 #define IDC_ALRMMSG_CAPT                1054
 #define IDC_ALRMMSG_TEXT                1055
 #define IDC_ALRMMSG_BOUN_ENABLE         1056
-#define IDC_ALRMMSG_SPEED_ST            1057 /* group */
+/* group */
+#define GROUP_ALARM_BOUNCE              IDC_ALRMMSG_SPEED_ST
+#define IDC_ALRMMSG_SPEED_ST            1057
 #define IDC_ALRMMSG_SPEED               1058
 #define IDC_ALRMMSG_SPEED_SPIN          1059
 #define IDC_ALRMMSG_DELTA_ST            1060
@@ -212,7 +225,9 @@
 #define IDC_ALRMMSG_BOUN_SPIN           1070
 #define IDC_ALRMMSG_PAWS_ST             1071
 #define IDC_ALRMMSG_PAWS                1072
-#define IDC_ALRMMSG_PAWS_SPIN           1073 /* end group */
+#define IDC_ALRMMSG_PAWS_SPIN           1073
+#define GROUP_ALARM_BOUNCE_END          IDC_ALRMMSG_PAWS_SPIN
+/* end group */
 
 #define IDC_FONTQUAL                    1072
 #define IDCB_TRANS2KICONS_GRP           1073 /* group */
@@ -222,9 +237,9 @@
 #define IDCB_MULTIMON_GRP               1077 /* group */
 #define IDCB_MULTIMON                   1078 /* end group */
 #define IDCB_USECALENDAR                1080
-
+/* group */
 #define GROUP_CALENDAR                  IDCB_SHOW_DOY
-#define IDCB_SHOW_DOY                   1081 /* group */
+#define IDCB_SHOW_DOY                   1081
 #define IDCB_SHOWWEEKNUMS               1082
 #define IDCB_CLOSECAL                   1083
 #define IDCB_CALTOPMOST                 1084
@@ -235,8 +250,9 @@
 #define IDC_CALMONTHS_LABEL             1089
 #define IDC_CALMONTHSPAST_LABEL         1090
 #define IDC_CALSTATIC1                  1091
-#define IDC_CALCOLORS                   1092 /* end group */
+#define IDC_CALCOLORS                   1092
 #define GROUP_CALENDAR_END              IDC_CALCOLORS
+/* end group */
 #define IDC_FIRSTWEEK                   1100
 #define IDC_FIRSTDAY                    1101
 #define IDC_OLDCALENDAR                 1102
@@ -265,24 +281,26 @@
 #define IDC_ANGLE                       1124
 #define IDC_SPINANGLE                   1125
 #define IDC_LOCALE                      1200
-#define FORMAT_BEGIN                    IDC_YEAR4
-#define IDC_YEAR4                       1201 /* groupA, groupB, groupC, groupD, groupE */
+/* group */
+#define GROUP_FORMAT                    IDC_YEAR4
+#define IDC_YEAR4                       1201 /* group_1, group_2, group_2_1, group_2_2 */
 #define IDC_YEAR                        1202
 #define IDC_MONTH                       1203
 #define IDC_MONTHS                      1204
-#define IDC_DAY                         1205 /* end groupE */
-#define IDC_WEEKDAY                     1206 /* end groupD */
-#define IDC_HOUR                        1207 /* groupF */
+#define IDC_DAY                         1205 /* end group_2_2 */
+#define IDC_WEEKDAY                     1206 /* end group_2_1 */
+#define IDC_HOUR                        1207 /* group_3 */
 #define IDC_MINUTE                      1208
-#define IDC_SECOND                      1209 /* end groupB */
-#define IDC_AMPM                        1210 /* groupG */
-#define IDC_INTERNETTIME                1211 /* end groupF */
+#define IDC_SECOND                      1209 /* end group_1 */
+#define IDC_AMPM                        1210 /* group_4 */
+#define IDC_INTERNETTIME                1211 /* end group_3 */
 #define IDC_LINEFEED                    1212
-#define IDC_12HOUR                      1213 /* end groupC */
+#define IDC_12HOUR                      1213 /* end group_2 */
 #define IDC_ZERO                        1214
-#define IDC_CUSTOM                      1215 /* end groupG, end groupA */
-#define FORMAT_END                      IDC_CUSTOM
-#define FORMAT_NUM                      /*15*/(1 + FORMAT_END - FORMAT_BEGIN)
+#define IDC_CUSTOM                      1215 /* end group_4 */
+#define GROUP_FORMAT_END                IDC_CUSTOM
+#define GROUP_FORMAT_NUM          /*15*/(1 + GROUP_FORMAT_END - GROUP_FORMAT)
+/* end group */
 #define IDC_FORMAT                      1216
 #define IDC_FORMAT_LNK                  1217
 #define IDC_AMSYMBOL                    1251
@@ -301,28 +319,28 @@
 #define IDC_SPINMINUTE                  1307
 #define IDC_ALARMDAY                    1308
 #define IDC_LABSOUNDALARM               1309
-#define IDC_FILEALARM                   1310 /* groupB */
+#define IDC_FILEALARM                   1310 /* group_1 */
 #define IDC_BROWSEALARM                 1311
 #define IDC_LABTESTALARM                1312
 #define IDC_TESTALARM                   1313
-#define IDC_REPEATALARM                 1314 /* end groupB */
+#define IDC_REPEATALARM                 1314 /* end group_1 */
 #define IDC_12HOURALARM                 1315
 #define IDC_AMPM_DISPLAY                1316
 #define IDC_AMPM_CHECK                  1317
 #define IDC_BLINKALARM                  1318
 #define IDC_CHIMEALARM                  1319
-#define IDC_REPEATIMES                  1320 /* groupC */
-#define IDC_SPINTIMES                   1321 /* end groupC */
+#define IDC_REPEATIMES                  1320 /* group_2 */
+#define IDC_SPINTIMES                   1321 /* end group_2 */
 #define IDC_ALRM_ONCE                   1322
 #define IDC_MSG_ALARM                   1323 /* end group */
 #define IDC_BMPJACK                     1326
 #define IDC_JIHOU                       1330
 #define IDC_LABSOUNDJIHOU               1331 /* group */
-#define IDC_FILEJIHOU                   1332 /* groupB */
+#define IDC_FILEJIHOU                   1332 /* group_1 */
 #define IDC_BROWSEJIHOU                 1333
 #define IDC_LABTESTJIHOU                1334
 #define IDC_TESTJIHOU                   1335
-#define IDC_REPEATJIHOU                 1336 /* end groupB */
+#define IDC_REPEATJIHOU                 1336 /* end group_1 */
 #define IDC_BLINKJIHOU                  1337 /* end group */
 #define IDC_ALARMDAY0                   1350
 #define IDC_ALARMDAY1                   1351
@@ -372,8 +390,9 @@
 
 #define IDC_CAL_PRESET                  2101
 #define IDC_CAL_PREVIEW                 2102
-#define CALENDAR_COLOR_BEGIN            IDC_CAL_OUTER
-#define IDC_CAL_OUTER                   2111 /* group, ColorBox */
+/* group, ColorBox */
+#define GROUP_CALENDAR_COLOR            IDC_CAL_OUTER
+#define IDC_CAL_OUTER                   2111
 #define IDC_CAL_OUTER_BTN               2112
 #define IDC_CAL_FORE                    2113
 #define IDC_CAL_FORE_BTN                2114
@@ -384,9 +403,10 @@
 #define IDC_CAL_TITLE_BG                2119
 #define IDC_CAL_TITLE_BG_BTN            2120
 #define IDC_CAL_TRAIL                   2121
-#define IDC_CAL_TRAIL_BTN               2122 /* end group */
-#define CALENDAR_COLOR_END              IDC_CAL_TRAIL_BTN
-#define CALENDAR_COLOR_NUM              ((1 + CALENDAR_COLOR_END - CALENDAR_COLOR_BEGIN) / 2)
+#define IDC_CAL_TRAIL_BTN               2122
+#define GROUP_CALENDAR_COLOR_END        IDC_CAL_TRAIL_BTN
+#define GROUP_CALENDAR_COLOR_NUM        ((1 + GROUP_CALENDAR_COLOR_END - GROUP_CALENDAR_COLOR) / 2)
+/* end group */
 
 #define IDC_SWE_EXPORT                  2100
 #define IDC_SWE_TOTAL                   2101

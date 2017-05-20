@@ -12,7 +12,7 @@ static void OnApply(HWND hDlg);
 #include "../common/calendar.inc"
 typedef struct{
 	const wchar_t* name;
-	COLORREF color[CALENDAR_COLOR_NUM];
+	COLORREF color[GROUP_CALENDAR_COLOR_NUM];
 } CalendarPreset;
 
 #define CALENDAR_PRESETS 3
@@ -31,8 +31,8 @@ static INT_PTR CALLBACK Window_CalendarColorConfigDlg(HWND hDlg, UINT msg, WPARA
 		HWND preset_cb = GetDlgItem(hDlg, IDC_CAL_PRESET);
 		int idx;
 		m_calendar_dirty = 0;
-		for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
-			unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
+		for(idx=0; idx<GROUP_CALENDAR_COLOR_NUM; ++idx){
+			unsigned color_id = GROUP_CALENDAR_COLOR + (idx * 2);
 			colors[idx].hwnd = GetDlgItem(hDlg, color_id);
 			colors[idx].color = api.GetInt(L"Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
 			m_calendar_preset[0].color[idx] = (COLORREF)MonthCal_GetColor(calendar, g_calendar_color[idx].mcsc);
@@ -65,8 +65,8 @@ static INT_PTR CALLBACK Window_CalendarColorConfigDlg(HWND hDlg, UINT msg, WPARA
 			int idx;
 			if(preset == CALENDAR_PRESETS)
 				break;
-			for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
-				unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
+			for(idx=0; idx<GROUP_CALENDAR_COLOR_NUM; ++idx){
+				unsigned color_id = GROUP_CALENDAR_COLOR + (idx * 2);
 				HWND color_cb = GetDlgItem(hDlg, color_id);
 				if(preset == 0)
 					ColorBox_SetColor(color_cb, TCOLOR(TCOLOR_DEFAULT));
@@ -82,7 +82,7 @@ static INT_PTR CALLBACK Window_CalendarColorConfigDlg(HWND hDlg, UINT msg, WPARA
 			break;}
 		case IDC_CAL_OUTER: case IDC_CAL_FORE: case IDC_CAL_BACK: case IDC_CAL_TITLE: case IDC_CAL_TITLE_BG: case IDC_CAL_TRAIL:
 			if(control_notify == CBN_SELCHANGE){
-				unsigned id = (control_id-CALENDAR_COLOR_BEGIN)/2;
+				unsigned id = (control_id - GROUP_CALENDAR_COLOR) / 2;
 				unsigned color = ColorBox_GetColorRaw((HWND)lParam);
 				char dirty = m_calendar_dirty;
 				if(color == TCOLOR(TCOLOR_DEFAULT))
@@ -103,8 +103,8 @@ static INT_PTR CALLBACK Window_CalendarColorConfigDlg(HWND hDlg, UINT msg, WPARA
 			break;
 		case IDOK:
 			{int idx;
-			for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
-				unsigned color_id = CALENDAR_COLOR_BEGIN+(idx*2);
+			for(idx=0; idx<GROUP_CALENDAR_COLOR_NUM; ++idx){
+				unsigned color_id = GROUP_CALENDAR_COLOR + (idx * 2);
 				HWND color_cb = GetDlgItem(hDlg, color_id);
 				api.SetInt(L"Calendar", g_calendar_color[idx].reg, ColorBox_GetColorRaw(color_cb));
 			}}

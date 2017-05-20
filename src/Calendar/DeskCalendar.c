@@ -71,7 +71,7 @@ LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		if(!hCal) return -1;
 		SetWindowSubclass(hCal, &Window_CalendarControl_Hooked, 0, 0);
 		
-		for(idx=0; idx<CALENDAR_COLOR_NUM; ++idx){
+		for(idx=0; idx<GROUP_CALENDAR_COLOR_NUM; ++idx){
 			unsigned color = api.GetInt(L"Calendar", g_calendar_color[idx].reg, TCOLOR(TCOLOR_DEFAULT));
 			if(color != TCOLOR(TCOLOR_DEFAULT)){
 				dirty |= (1<<idx);

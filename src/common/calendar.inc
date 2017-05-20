@@ -3,7 +3,7 @@ typedef struct{
 	char mcsc;
 } CalendarColor;
 
-const CalendarColor g_calendar_color[CALENDAR_COLOR_NUM] = {
+const CalendarColor g_calendar_color[GROUP_CALENDAR_COLOR_NUM] = {
 	{L"COuterBG", MCSC_BACKGROUND},
 	{L"CFore", MCSC_TEXT},
 	{L"CBack", MCSC_MONTHBK},
