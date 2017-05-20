@@ -37,14 +37,12 @@ HWND Clock_GetCalendar() {
 	if(hwnd){ // starts "invisible" full-size and becomes re-sized/moved and "visible" later
 		union{
 			RECT rc;
-			POINT pt;
+			POINT pt[2];
 		} u;
 		GetWindowRect(hwnd, &u.rc);
-		// following is somehow required... 2px is enough though
-		u.pt.x += 25;
-		u.pt.y += 25;
+		--u.pt[1].x, --u.pt[1].y;
 		// IsWindowVisible()/IsWindowEnabled() are always true
-		if(ChildWindowFromPointEx(GetDesktopWindow(), u.pt, CWP_SKIPDISABLED|CWP_SKIPTRANSPARENT) == hwnd)
+		if(ChildWindowFromPointEx(GetDesktopWindow(), u.pt[1], CWP_SKIPDISABLED|CWP_SKIPTRANSPARENT) == hwnd && SendMessage(hwnd,WM_NCHITTEST,0,MAKELPARAM(u.pt[1].x,u.pt[1].y)) > 0)
 			return hwnd;
 	}
 	return gs_hwndCalendar;
