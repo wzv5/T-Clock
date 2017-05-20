@@ -93,7 +93,7 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 	} UTF16file;
 	char* in_data;
 	UTF16file* out;
-	FILE* in_fp,* out_fp;
+	FILE* in_fp,* out_fp = 0;
 	size_t out_len, len;
 	wchar_t out_name[MAX_PATH];
 	int ret = 0;
@@ -127,6 +127,7 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 				}
 				out_fp = _wfopen(out_name, L"wb");
 				if(out_fp) {
+					fclose(in_fp);
 					++out_len;
 					out_len ^= fwrite(out, sizeof(wchar_t), out_len, out_fp);
 					fclose(out_fp);
@@ -140,7 +141,8 @@ static int ForceUTF_16(wchar_t* in_name, off_t file_size) {
 			free(out);
 			free(in_data);
 		}
-		fclose(in_fp);
+		if(!out_fp)
+			fclose(in_fp);
 	}
 	return ret;
 }
