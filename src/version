@@ -1,13 +1,11 @@
-57|445
-2.1.0|2.4.2
+57|471
+2.1.0|2.4.3
 |(first release)
-|Windows 10 Anniversary fixes, improved Timer Watch
-+ Timer Watch got lots of new stuff (#55)
-* tooltips support corrected to work on Win2k/XP and Windows 10 (default tooltip)
-* tooltips are now positioned more unified across multiple monitors
-* taskbar transparency setting now supports previewing (and is less intrusive)
-* improved performance when setting-up multi-monitor clocks (regression from Win10 anniversary update)
-! improved API unloading procedure to be more reliable and properly restores the clock
-! fixed #54 (initial clock size on auto-hide taskbars)
-! fixed crash on Win2k/XP when using the uptime format
-! fixed XP calendar size calculations
+|minor bug fix release
++ added UAC shield icon to "Synchronize time" menu item
++ added numeric day-of-week format (numeric weekday) #53
+* improved auto-hide taskbar support on Win10
+* improved "turn off monitors on workstation lock"
+* update checker got smarter
+! fixed "Synchronize time" elevation broken since always
+! fixed portable ini creation since v2.4.1#414
