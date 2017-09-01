@@ -7,7 +7,7 @@ with ISO week number support, bug fixes and the ability to use Windows' default 
 
 T-Clock *(called TClock)*, originally written by Kazubon in the early 90's, was a popular classic that was on the edge of extinction when Windows started going 64bit. ... Stoic Joker simply chose not to let that happen. And now it's up to us to continue their efforts.
 
-If you don't mind to read lots of text, and want to know more about T-Clock and its history: [check this page out!](http://greggdeselms.com/tclock.html) *(thanks Gregg)*
+If you don't mind to read lots of text, and want to know more about T-Clock and its history: [check this page out!](http://web.archive.org/web/20160202023839/http://greggdeselms.com/tclock.html) *(thanks Gregg)*
 
 
 ### Download (binaries)
