@@ -42,7 +42,8 @@ enum TOS {
 	TOS_WIN8	=0x0020, /**< first to support multiple taskbars, yet buggy \sa TClockAPI::OS */
 	TOS_WIN8_1	=0x0040, /**< first to require weird/stupid manifest... \sa TClockAPI::OS */
 	TOS_WIN10	=0x0080, /**< didn't add anything new to T-Clock yet \sa TClockAPI::OS */
-	TOS_WIN10_1	=0x0100 | TOS_WIN10, /**< latest, broke T-Clock entirely (1st-Anniversary Update) \sa TClockAPI::OS */
+	TOS_WIN10_1	=0x0100 | TOS_WIN10, /**< Anniversary Update; broke T-Clock entirely (#39) \sa TClockAPI::OS */
+	TOS_WIN10_2	=0x0200 | TOS_WIN10_1, /**< Creators Update; partially broke multi-monitor clocks (#126) \sa TClockAPI::OS */
 	TOS_NEWER	=0x8000, /**< in case we're "outdated" and the curent OS is newer than our known ones \sa TClockAPI::OS */
 };
 

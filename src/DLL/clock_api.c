@@ -205,12 +205,12 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 				}
 				break;
 			case 10: // Win 10 (newer versions)
-				gs_tos = TOS_WIN10; // build 9926
-				// Windows 10 Anniversary Update (Version 1607)
-				//	first build: 11082
-				//	breaking build (likely): 14291
-				if(osvi.dwBuildNumber >= 14291)
+				if(osvi.dwBuildNumber >= 15063) // Creators Update (v1703)
+					gs_tos = TOS_WIN10_2;
+				else if(osvi.dwBuildNumber >= 14291) // Anniversary Update (v1607); first build: 11082, breaking build (likely): 14291
 					gs_tos = TOS_WIN10_1;
+				else
+					gs_tos = TOS_WIN10; // build 9926
 				break;
 			default:
 				gs_tos = TOS_NEWER;

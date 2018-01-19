@@ -148,11 +148,11 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		ToggleCalendar(1); // 1=own calendar
 		break;
 		
-	case IDM_DISPLAYPROP:
-		if(api.OS >= TOS_VISTA)
+	case IDM_DISPLAYPROP: // https://msdn.microsoft.com/en-us/library/windows/desktop/cc144191(v=vs.85).aspx
+		if(api.OS >= TOS_WIN7 && api.OS < TOS_WIN10_2)
 			api.Exec(L"::{26EE0668-A00A-44D7-9371-BEB064C98683}\\1\\::{C555438B-3C23-4769-A71F-B6D3D9B6053A}", NULL, NULL);
 		else
-			api.Exec(L"control", L"desk.cpl, display,1", NULL);
+			api.Exec(L"control", L"desk.cpl,Settings,@Settings", NULL); // XP: @Themes,@Desktop,@ScreenSaver,@Appearance,@Settings (2k had more)
 		break;
 	case IDM_VOLUMECONTROL: //-------------------------------+++--> Volume Controls
 		#ifndef _WIN64
