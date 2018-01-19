@@ -100,7 +100,7 @@ int UpdateCheck_WriteDescription(wchar_t* out, int size, const char* text) {
 	*pos = '\0';
 //	for(; *out; ++out) {
 //		if(*out == ' ')
-//			*out = L' ';
+//			*out = L'\u202F';   (narrow non-breaking space)
 //	}
 	return (size - remaining);
 }

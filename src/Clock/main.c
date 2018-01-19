@@ -247,6 +247,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	g_hIconPlay = LoadImage(g_instance, MAKEINTRESOURCE(IDI_PLAY), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconStop = LoadImage(g_instance, MAKEINTRESOURCE(IDI_STOP), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
 	g_hIconDel  = LoadImage(g_instance, MAKEINTRESOURCE(IDI_DEL), IMAGE_ICON, 16, 16, LR_DEFAULTCOLOR);
+	// UI stuff
+	if(api.OS < TOS_WIN10) {
+		if(api.OS < TOS_VISTA) {
+			suffixAscending = kAscending2k;
+			suffixDescending = kDescending2k;
+		} else {
+			suffixAscending = kAscendingVista;
+			suffixDescending = kDescendingVista;
+		}
+	}
 	
 //	FindTrayServer(hwndMain);
 	

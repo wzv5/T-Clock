@@ -7,6 +7,12 @@ extern "C" {
 /* libs: user32, gdi32, comdlg32, msimg32 */
 
 
+extern const wchar_t kAscendingWin10[] /**< ⏶ */, kDescendingWin10[] /**< ⏷ */;
+extern const wchar_t kAscendingVista[] /**< ˄ */, kDescendingVista[] /**< ˅ */;
+extern const wchar_t kAscending2k[] /**< ٨ */, kDescending2k[] /**< ٧ */;
+extern const wchar_t* suffixAscending; ///< defaults to \c kAscendingWin10 \sa kAscendingWin10, kAscendingVista, kAscending2k
+extern const wchar_t* suffixDescending; ///< defaults to \c kDescendingWin10 \sa kDescendingWin10, kDescendingVista, kDescending2k
+
 /*
 	GENERIC
 */

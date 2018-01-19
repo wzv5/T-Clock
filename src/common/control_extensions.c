@@ -2,6 +2,16 @@
 #include <commctrl.h>
 #include "control_extensions.h"
 
+const wchar_t kAscendingWin10[]             = L" \u23F6", // ⏶
+kDescendingWin10[_countof(kAscendingWin10)] = L" \u23F7"; // ⏷
+const wchar_t kAscendingVista[]             = L" \u02C4", // ˄
+kDescendingVista[_countof(kAscendingVista)] = L" \u02C5"; // ˅
+const wchar_t kAscending2k[]                = L" \u0668", // ٨
+kDescending2k[_countof(kAscending2k)]       = L" \u0667"; // ٧
+
+const wchar_t* suffixAscending = kAscendingWin10;
+const wchar_t* suffixDescending = kDescendingWin10;
+
 /*
 	GENERIC
 */
@@ -84,8 +94,6 @@ void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t us
 	sort_wrapper_t wrapper;
 	LONG_PTR last_sort = 0;
 	LVCOLUMN col;
-	static const wchar_t kAscending[]        = L" ⏶",
-	kDescending[_countof(kAscending)]        = L" ⏷";
 	const wchar_t* indicator;
 	wchar_t column_name[64];
 	wrapper.func = func;
@@ -116,13 +124,14 @@ void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t us
 	else
 		ListView_SortItemsEx(list, SortWrapper_, &wrapper);
 	if(wrapper.flags & SORT_REMEMBER) {
+		size_t suffix_len = wcslen(suffixAscending);
 		col.mask = LVCF_TEXT;
 		col.pszText = column_name;
 		col.cchTextMax = _countof(column_name);
 		if(last_sort) {
 			if(ListView_GetColumn(list, column, &col)) {
-				col.iOrder = (int)wcslen(column_name) - (_countof(kAscending) - 1);
-				if(col.iOrder >= 0 && column_name[col.iOrder] == kAscending[0]) {
+				col.iOrder = (int)(wcslen(column_name) - suffix_len);
+				if(col.iOrder >= 0 && ((last_sort&SORT_ASC && !wcscmp(column_name+col.iOrder,suffixAscending)) || (last_sort&SORT_DEC && !wcscmp(column_name+col.iOrder,suffixDescending)))) {
 					column_name[col.iOrder] = '\0';
 					ListView_SetColumn(list, column, &col);
 				}
@@ -130,17 +139,18 @@ void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t us
 		}
 		last_sort = wrapper.column;
 		if(wrapper.flags & SORT_DEC) {
-			indicator = kDescending;
+			indicator = suffixDescending;
 			last_sort |= SORT_DEC;
 		} else {
-			indicator = kAscending;
+			indicator = suffixAscending;
 			last_sort |= SORT_ASC;
 		}
 		
 		if(ListView_GetColumn(list, wrapper.column, &col)) {
+			++suffix_len;
 			col.iOrder = (int)wcslen(column_name);
-			if(col.iOrder + _countof(kAscending) <= _countof(column_name)) {
-				memcpy(column_name+col.iOrder, indicator, sizeof(kAscending));
+			if(col.iOrder + suffix_len <= _countof(column_name)) {
+				memcpy(column_name+col.iOrder, indicator, (suffix_len * sizeof indicator[0]));
 				ListView_SetColumn(list, wrapper.column, &col);
 			}
 		}

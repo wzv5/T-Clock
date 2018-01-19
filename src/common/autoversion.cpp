@@ -585,6 +585,24 @@ bool ReadHeader(const char* filepath,Version &ver)
 	}
 	return true;
 }
+void fputsUnicodeEscaped(const char* utf8, FILE* fp) {
+	for(; *utf8; ++utf8) {
+		if(*utf8 & 0x80) {
+			char mask = 0x3f;
+			for(char ch=*utf8<<1; ch & 0x80; ch<<=1)
+				mask>>=1;
+			unsigned codepoint = *utf8 & mask;
+			for(++utf8; *utf8 & 0x80; ++utf8)
+				codepoint = (codepoint << 6) | (*utf8 & 0x7f);
+			--utf8;
+			if(codepoint > 0xffff)
+				fprintf(fp,"\\U%08X",codepoint);
+			else
+				fprintf(fp,"\\u%04X",codepoint);
+		} else
+			fputc(*utf8,fp);
+	}
+}
 void PrintDefine(FILE* fp,const char* define,const Version &ver)
 {
 	if(!strcasecmp("MAJOR",define)) {
@@ -600,7 +618,7 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	}else if(!strcasecmp("STATUS_SHORT",define)) {
 		fprintf(fp,"%s",STATUS_SS[ver.status]);
 	}else if(!strcasecmp("STATUS_GREEK",define)) {
-		fprintf(fp,"%s",STATUS_SS2[ver.status]);
+		fputsUnicodeEscaped(STATUS_SS2[ver.status],fp);
 	}else if(!strcasecmp("REVISION",define)) {
 		fprintf(fp,"%u",ver.revision);
 	
@@ -615,7 +633,9 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	}else if(!strcasecmp("SHORT_DOTS",define)) {
 		fprintf(fp,"%u.%u.%u",ver.major,ver.minor,ver.build);
 	}else if(!strcasecmp("SHORT_GREEK",define)) {
-		fprintf(fp,"%u.%u%s%u",ver.major,ver.minor,STATUS_SS2[ver.status],ver.build);
+		fprintf(fp,"%u.%u",ver.major,ver.minor);
+		fputsUnicodeEscaped(STATUS_SS2[ver.status],fp);
+		fprintf(fp,"%u",ver.build);
 	}else if(!strcasecmp("RC_REVISION",define)) {
 		fprintf(fp,"%u, %u, %u, %u",ver.major,ver.minor,ver.build,ver.revision);
 	}else if(!strcasecmp("RC_STATUS",define)) {
@@ -680,9 +700,9 @@ bool WriteHeader(const char* filepath,Version &ver)
 	WriteDefine(fheader,"MAJOR",ver);
 	WriteDefine(fheader,"MINOR",ver);
 	WriteDefine(fheader,"BUILD",ver);
-	fprintf(fheader,"	/** status values: 0=%s",STATUS_S[0]);
+	fprintf(fheader,"	/** status values: 0=%s(%s)",STATUS_S[0],STATUS_SS2[0]);
 	for(int i=1; i<STATUS_NUM_; ++i)
-		fprintf(fheader,", %i=%s",i,STATUS_S[i]);
+		fprintf(fheader,", %i=%s(%s)",i,STATUS_S[i],STATUS_SS2[i]);
 	fputs(" */\n",fheader);
 	WriteDefine(fheader,"STATUS",ver);
 	WriteDefineString(fheader,"STATUS_FULL",ver);

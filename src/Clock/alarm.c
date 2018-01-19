@@ -1,4 +1,4 @@
-﻿#include "../common/version.h"
+#include "../common/version.h"
 #include "tclock.h"
 #include <time.h>
 #include <stdio.h>
