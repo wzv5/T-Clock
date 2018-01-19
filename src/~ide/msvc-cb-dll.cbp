@@ -42,7 +42,7 @@
 				<Option type="3" />
 				<Option compiler="msvc10" />
 				<Compiler>
-					<Add option="/MDd /D_AFXDLL" />
+					<Add option="/MTd" />
 					<Add option="/Zi" />
 					<Add option="/D_DEBUG" />
 				</Compiler>
@@ -56,7 +56,7 @@
 				<Option type="3" />
 				<Option compiler="microsoft_visual_c_2010_64bit" />
 				<Compiler>
-					<Add option="/MDd /D_AFXDLL" />
+					<Add option="/MTd" />
 					<Add option="/Zi" />
 					<Add option="/D_DEBUG" />
 				</Compiler>

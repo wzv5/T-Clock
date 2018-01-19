@@ -28,7 +28,7 @@
 				<Option type="1" />
 				<Option compiler="msvc10" />
 				<Compiler>
-					<Add option="/MDd /D_AFXDLL" />
+					<Add option="/MTd" />
 					<Add option="/Zi" />
 					<Add option="/D_DEBUG" />
 				</Compiler>
