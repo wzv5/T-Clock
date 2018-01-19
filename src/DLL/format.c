@@ -374,9 +374,9 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 			case 'i':{ // ISO-8601 week (1st version by henriko.se, 2nd by White-Tiger)
 				int wday, borderdays, week;
 				for(;;){
-					wday = (!tmnow.tm_wday?6:tmnow.tm_wday-1); // convert from Sun-Sat to Mon-Sun (0-5)
-					borderdays = (tmnow.tm_yday + 7 - wday) % 7; // +7 to prevent it from going negative
-					week = (tmnow.tm_yday + 6 - wday) / 7;
+					wday = (!tmnow.tm_wday ? 6 : tmnow.tm_wday - 1); // convert from Sun-Sat to Mon-Sun (0-5)
+					borderdays = (1 + tmnow.tm_yday + 6 - wday) % 7;
+					week = (1 + tmnow.tm_yday + 6 - wday) / 7;
 					if(borderdays >= 4){ // year starts with at least 4 days
 						++week;
 					} else if(!week){ // we're still in last year's week
@@ -400,7 +400,7 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 				}
 				num = week;
 				break;}
-			case 'u':
+			case 'u': // U.S. like Week-of-Year - beginning on first day of the year, based on sunday
 				num = (1 + (tmnow.tm_yday + 6 - tmnow.tm_wday) / 7);
 				break;
 			case 'w': // SWN (Simple Week Number)
