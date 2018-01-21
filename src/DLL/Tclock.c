@@ -976,9 +976,8 @@ static LRESULT CALLBACK Window_SecondaryTaskbarWorker_Hooked(HWND hwnd, UINT mes
 		RemoveWindowSubclass(hwnd, Window_SecondaryTaskbarWorker_Hooked, uIdSubclass);
 		break;
 	case WM_WINDOWPOSCHANGING:{
-		int x,y,cx,cy;
-		int offset_x, offset_y;
 		WINDOWPOS* pwp = (WINDOWPOS*)lParam;
+		int offset_x, offset_y;
 		if(m_bNoClock)
 			break;
 		offset_x = (m_rcClock.right + api.desktop_button_size) - self->clock_base_width;
@@ -998,16 +997,35 @@ static LRESULT CALLBACK Window_SecondaryTaskbarWorker_Hooked(HWND hwnd, UINT mes
 			self->workerRECT.left = pwp->x;
 			self->workerRECT.top = pwp->y;
 		}
-		cx = m_rcClock.right;
-		cy = m_rcClock.bottom;
-		if(self->workerRECT.right > self->workerRECT.bottom){ // horizontal
-			x = self->workerRECT.left + self->workerRECT.right - offset_x;
-			y = self->workerRECT.top + m_BORDER_MARGIN;
-		}else{
-			x = self->workerRECT.left + m_BORDER_MARGIN;
-			y = self->workerRECT.top + self->workerRECT.bottom - offset_y;
+		if(api.OS >= TOS_WIN10_1) {
+			RECT sibling_rc;
+			HWND parent = GetParent(hwnd);
+			HWND sibling;
+			for(sibling=GetWindow(hwnd,GW_HWNDNEXT); sibling; sibling=GetWindow(sibling,GW_HWNDNEXT)) {
+				GetClientRect(sibling, &sibling_rc);
+				MapWindowPoints(sibling, parent, (POINT*)&sibling_rc, 1);
+				if(self->workerRECT.right > self->workerRECT.bottom) // horizontal
+					sibling_rc.left -= offset_x;
+				else
+					sibling_rc.top -= offset_y;
+				if(sibling == self->clock) {
+					// SWP_SHOWWINDOW|SWP_HIDEWINDOW prevents some flickering for some (stupid!?) reason...
+					SetWindowPos(sibling, 0, sibling_rc.left, sibling_rc.top, m_rcClock.right, m_rcClock.bottom, SWP_NOACTIVATE|SWP_NOZORDER|SWP_SHOWWINDOW|SWP_HIDEWINDOW);
+					break; // every following window is positioned correctly... (or so I hope)
+				}
+				SetWindowPos(sibling, 0, sibling_rc.left, sibling_rc.top, 0, 0, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOSIZE);
+			}
+		} else {
+			int x,y;
+			if(self->workerRECT.right > self->workerRECT.bottom){ // horizontal
+				x = self->workerRECT.left + self->workerRECT.right - offset_x;
+				y = self->workerRECT.top + m_BORDER_MARGIN;
+			}else{
+				x = self->workerRECT.left + m_BORDER_MARGIN;
+				y = self->workerRECT.top + self->workerRECT.bottom - offset_y;
+			}
+			SetWindowPos(self->clock, 0, x, y, m_rcClock.right, m_rcClock.bottom, 0);
 		}
-		SetWindowPos(self->clock, 0, x, y, cx, cy, 0);
 		return 0;}
 	case WM_WINDOWPOSCHANGED:{
 		break;}
