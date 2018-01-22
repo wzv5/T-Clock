@@ -235,7 +235,8 @@ struct TClockAPI {
 	
 /**
  * \brief a wrapper for ShellExecuteEx()
- * \param method "open", "runas", etc.
+ * \param method can be: open, runas, edit, print, explore, find, ...
+          ( \c NULL to use file's default action which might be "open" )
  * \param app path to run
  * \param params = \c NULL (optional program arguments)
  * \param parent = \c NULL (parent window)

@@ -99,12 +99,8 @@ void ToggleCalendar(int type)   //---------------------------+++-->
 	if(api.OS >= TOS_VISTA && (!is_custom && type!=1)){
 		// Windows 10 workaround as SendMessage doesn't work any longer (no error given)
 		SendMessageCallback(g_hwndClock, WM_USER+102, 1, 0, ToggleCalendar_done, 0);//1=open, 0=close
-	}else{
-		wchar_t cal[MAX_PATH];
-		memcpy(cal, api.root, api.root_size);
-		add_title(cal,L"misc\\XPCalendar.exe");
-		api.Exec(cal,NULL,g_hwndTClockMain);
-	}
+	} else
+		api.Exec(L"misc\\XPCalendar", NULL, g_hwndTClockMain);
 }
 
 static BOOL m_bMonOffOnLock = FALSE;
@@ -229,7 +225,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 		MessageBox(NULL, L"Error loading: T-Clock" ARCH_SUFFIX L".dll", title, (MB_OK | MB_ICONERROR | MB_SETFOREGROUND));
 		return 2;
 	}
-	_wchdir(api.root); // make sure we've got the right working directory
 	
 	// Make sure we're running Windows 2000 and above
 	if(!api.OS) {
@@ -278,11 +273,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 		// Make sure we're not running 32bit on a 64bit OS / start the other one
 		#ifndef _WIN64
 		if(IsWow64()){
-			wchar_t clock64[MAX_PATH];
 			CloseHandle(processlock);
-			memcpy(clock64, api.root, api.root_size);
-			add_title(clock64, L"Clock" ARCH_SUFFIX_64 L".exe");
-			api.ShellExecute(NULL, clock64, lpCmdLine, NULL, SW_SHOWNORMAL, &processlock);
+			api.ShellExecute(NULL, L"Clock" ARCH_SUFFIX_64 L".exe", lpCmdLine, NULL, SW_SHOWNORMAL, &processlock);
 			if(processlock) {
 				for(; (lpCmdLine = wcschr(lpCmdLine,'/'))!=NULL; ++lpCmdLine) { // MSVC sucks == true
 					if(!wcsncasecmp(lpCmdLine,L"/exit",5)) {

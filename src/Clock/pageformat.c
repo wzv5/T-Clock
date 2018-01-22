@@ -248,7 +248,7 @@ void OnInit(HWND hDlg)
 	if(hfont)
 		SendMessage(format_cb, WM_SETFONT, (WPARAM)hfont, 0);
 	
-	LinkControl_Setup(doc_lnk, LCF_SIMPLE|LCF_RELATIVE, L"T-Clock Help.rtf");
+	LinkControl_Setup(doc_lnk, LCF_SIMPLE, L"T-Clock Help.rtf");
 	
 	// Fill and select the "Locale" combobox
 	EnumSystemLocales(EnumLocalesProc, LCID_INSTALLED);

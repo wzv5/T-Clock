@@ -559,13 +559,48 @@ int Clock_DelKey(const wchar_t* section) {
 
 int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show, HANDLE* hProcess) {
 	int ret = -1;
+	wchar_t* buffer = NULL;
 	SHELLEXECUTEINFO sei = {sizeof(sei)};
 	sei.hwnd = parent;
 	sei.lpVerb = method;
 	sei.lpFile = app;
 	sei.lpParameters = params;
 	sei.nShow = show;
+	sei.lpDirectory = api.root;
 	if(*app){
+		/* this block would also work if "sei.lpDirectory" wasn't already working...
+		if(app[1]!=':' && ((app[1]!='/' && app[1]!='\\') || (app[0]!='/' && app[0]!='\\'))) {
+			const wchar_t exts[][4] = {L"com", L"exe", L"bat", L"cmd"};
+			int i;
+			size_t app_size;
+			if(app[0]=='/' || app[0]=='\\') // maybe handle device relative paths properly?
+				++app;
+			else if(app[0]=='.' && (app[1]=='/' || app[1]=='\\'))
+				app += 2;
+			app_size = (wcslen(app) + 1 + _countof(exts[0])) * sizeof(*buffer);
+			buffer = malloc(api.root_size + app_size);
+			if(!buffer) {
+				MessageBox(parent, L"out of memory", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+				if(hProcess)
+					*hProcess = sei.hProcess;
+				return -1;
+			}
+			memcpy(buffer, api.root, api.root_size);
+			buffer[api.root_len] = L'\\';
+			memcpy(buffer+api.root_len+1, app, app_size);
+			if(!Clock_PathExists(buffer)) {
+				app_size = app_size / sizeof(*buffer) - _countof(exts[0]) + api.root_len;
+				buffer[app_size++] = '.';
+				for(i=0; i<_countof(exts); ++i) {
+					memcpy(buffer + app_size, exts[i], sizeof(exts[0]));
+					if(Clock_PathExists(buffer))
+						break;
+				}
+				if(i < _countof(exts))
+					sei.lpFile = buffer;
+			} else
+				sei.lpFile = buffer;
+		} // */
 		if(hProcess)
 			sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
 		if(ShellExecuteEx(&sei)) {
@@ -573,6 +608,8 @@ int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t*
 		}else if(GetLastError() == ERROR_CANCELLED) {// UAC dialog user canceled
 			ret = 1;
 		}
+		if(buffer)
+			free(buffer);
 	}
 	if(hProcess)
 		*hProcess = sei.hProcess;

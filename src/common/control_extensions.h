@@ -63,8 +63,7 @@ void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t us
 #define LCF_HTTP         0x01 /**< execute link as \c http:// by appending it \sa LCF_HTTPS, LCF_MAIL */
 #define LCF_HTTPS        0x02 /**< execute link as \c https:// by appending it \sa LCF_HTTP, LCF_MAIL */
 #define LCF_MAIL         0x04 /**< execute link as a \c mailto: by appending it \sa LCF_HTTP, LCF_HTTPS */
-#define LCF_PARAMS       0x10 /**< link target is a command line \sa LCF_RELATIVE */
-#define LCF_RELATIVE     0x20 /**< link target is a relative to \c api.root \sa LCF_PARAMS, TClockApi::root */
+#define LCF_PARAMS       0x10 /**< link target is a command line */
 
 /**
  * \brief "converts" a static text control into a link like control
@@ -72,7 +71,7 @@ void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t us
  * \param flags "any" combination of \c LCF_*
  * \param target link target; can be \c NULL if \p link_control's text is to be used
  * \remark \p target is used directly without a copy. You must guarantee its existence for the lifetime of our link control
- * \see LCF_SIMPLE, LCF_NOTIFY, LCF_NOTIFYONLY, LCF_HTTP, LCF_HTTPS, LCF_MAIL, LCF_PARAMS, LCF_RELATIVE */
+ * \see LCF_SIMPLE, LCF_NOTIFY, LCF_NOTIFYONLY, LCF_HTTP, LCF_HTTPS, LCF_MAIL, LCF_PARAMS */
 void LinkControl_Setup(HWND link_control, unsigned char flags, const wchar_t* target);
 /**
  * \brief call on \c WM_CTLCOLORSTATIC messages from our link control

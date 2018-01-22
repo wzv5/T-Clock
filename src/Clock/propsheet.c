@@ -168,7 +168,7 @@ BOOL SelectMyFile(HWND hDlg, const wchar_t* filter, DWORD filter_index, const wc
 	ofn.lpstrFile = retfile;
 	ofn.nMaxFile = MAX_PATH;
 	ofn.lpstrInitialDir = initdir;
-	ofn.Flags = OFN_HIDEREADONLY | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_NODEREFERENCELINKS;
+	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY | OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_NODEREFERENCELINKS; // even with OFN_NOCHANGEDIR set, the working directory might be ultimately NOT restored.. (happens on Windows 10)
 	
 	return GetOpenFileName(&ofn);
 }

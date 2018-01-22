@@ -204,17 +204,17 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		
 	case IDM_SHUTDOWN:
 		if(!ShutDown())
-			MessageBox(0, L"Shutdown Request Failed!", L"ERROR", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+			MessageBox(0, L"Shutdown Request Failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		break;
 		
 	case IDM_REBOOT:
 		if(!ReBoot())
-			MessageBox(0, L"Reboot Request Failed!", L"ERROR", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+			MessageBox(0, L"Reboot Request Failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		break;
 		
 	case IDM_LOGOFF:
 		if(!LogOff())
-			MessageBox(0, L"Logoff Request Failed!", L"ERROR", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+			MessageBox(0, L"Logoff Request Failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		break;
 		
 	case IDM_FWD_CASCADE: case IDM_FWD_SIDEBYSIDE: case IDM_FWD_STACKED: case IDM_FWD_SHOWDESKTOP: case IDM_FWD_MINALL: case IDM_FWD_UNDO:

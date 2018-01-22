@@ -243,10 +243,6 @@ LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 				offset += wsprintf(offset, FMT("https://"));
 			}else if(data->flags & LCF_MAIL){
 				offset += wsprintf(offset, FMT("mailto:"));
-			}else if(data->flags & LCF_RELATIVE){
-				memcpy(offset, api.root, api.root_size);
-				offset += api.root_len;
-				*offset++ = '\\';
 			}
 			
 			if(data->target){
