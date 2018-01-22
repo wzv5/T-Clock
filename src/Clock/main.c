@@ -129,6 +129,7 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]){   //--------------------+++-->
 	size_t offset;
 	if(SHGetFolderPath(hDlg,CSIDL_STARTUP,NULL,SHGFP_TYPE_CURRENT,filename)!=S_OK){
+		*filename = '\0';
 		return 0;
 	}
 	offset = wcslen(filename);
@@ -157,16 +158,16 @@ void RemoveStartup(HWND hDlg)   //----------------------------------------------
 //===================================
 void AddStartup(HWND hDlg) //--+++-->
 {
-	wchar_t path[MAX_PATH], myexe[MAX_PATH];
+	wchar_t path[MAX_PATH], exe[MAX_PATH];
 	if(GetStartupFile(hDlg,path) || !*path)
 		return;
-	*wcsrchr(path, '\\') = '\0';
-	GetModuleFileName(g_instance, myexe, _countof(path));
-	CreateLink(myexe, path, CONF_START);
+	del_title(path);
+	
+	CreateLink(GetClockExe(exe), path, CONF_START);
 }
 //==========================
 //--+++--> Create Launch T-Clock on Windows Startup ShortCut:
-int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name)
+int CreateLink(const wchar_t* fname, const wchar_t* dstpath, const wchar_t* name)
 {
 	HRESULT hres;
 	IShellLink* psl;

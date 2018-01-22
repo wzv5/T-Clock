@@ -303,9 +303,10 @@ void OnApply(HWND hDlg)   //----------------------------------------------------
 		int old_calendar = api.GetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 0);
 		if((int)IsDlgButtonChecked(hDlg, IDC_OLDCALENDAR) != old_calendar){
 			wchar_t param[5] = L"/Wc0";
+			wchar_t exe[MAX_PATH];
 			if(!old_calendar)
 				param[3] = '1';
-			if(api.ExecElevated(GetClockExe(), param, NULL) == 1)
+			if(api.ExecElevated(GetClockExe(exe), param, NULL) == 1)
 				CheckDlgButton(hDlg, IDC_OLDCALENDAR, old_calendar);
 		}
 	}

@@ -54,12 +54,14 @@ void SetDesktopIconTextBk(int enable);
 
 /**
  * \brief returns full path to currently started Clock[64].exe
- * \return path to Clock.exe incl. filename
- * \remark currently just a wrapper for \c _pgmptr */
-//inline const char* GetClockExe(){
-//	return _wpgmptr;
-//}
-#define GetClockExe() _wpgmptr
+ * \param out \c wchar_t buffer of size \c MAX_PATH
+ * \return \p out with path to Clock.exe incl. filename
+ * \remark requires the API to be initialized \sa api */
+inline wchar_t* GetClockExe(wchar_t out[MAX_PATH]) {
+	memcpy(out, api.root, api.root_size);
+	add_title(out, L"Clock" ARCH_SUFFIX L".exe");
+	return out;
+}
 
 void TranslateDispatchTClockMessage(MSG* msg);
 void RegisterSession(HWND hwnd);
@@ -68,7 +70,7 @@ void ToggleCalendar(int type);
 int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]);
 void AddStartup(HWND hDlg);
 void RemoveStartup(HWND hDlg);
-int CreateLink(wchar_t* fname, wchar_t* dstpath, wchar_t* name);
+int CreateLink(const wchar_t* fname, const wchar_t* dstpath, const wchar_t* name);
 
 // Macros
 BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus);

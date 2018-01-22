@@ -520,7 +520,8 @@ INT_PTR CALLBACK Window_SNTPConfig(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lP
 		switch(LOWORD(wParam))  {
 		case IDCB_SYNCNOW:{
 			if(m_flags&SNTPF_UAC){
-				api.ExecElevated(GetClockExe(),L"/UAC /SyncOpt",hDlg);
+				wchar_t exe[MAX_PATH];
+				api.ExecElevated(GetClockExe(exe),L"/UAC /SyncOpt",hDlg);
 				return TRUE;
 			}
 			OkaySave(hDlg);
