@@ -623,28 +623,38 @@ static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM 
 			size.part.height += (int16_t)(m_rcClock.bottom - m_clock_base_height);
 		return size.combined;}
 	case WM_NOTIFY:{
-		LRESULT ret;
 		NMHDR* nmh = (NMHDR*)lParam;
-		RECT clock_rc;
-		POINT pos;
-		HWND child;
+		LRESULT ret;
+		RECT sibling_rc;
+		HWND sibling;
+		int clock_pos, next_pos;
 		if(nmh->code != PGN_CALCSIZE || m_bNoClock)
 			break;
 		ret = DefSubclassProc(hwnd, message, wParam, lParam);
-		GetClientRect(gs_hwndClock, &clock_rc);
-		MapWindowPoints(gs_hwndClock, hwnd, (POINT*)&clock_rc, 1);
-		clock_rc.right = clock_rc.left + m_clock_base_width;
-		clock_rc.bottom = clock_rc.top + m_clock_base_height;
-		for(child=GetWindow(hwnd,GW_CHILD); child; child=GetWindow(child, GW_HWNDNEXT)) {
-			pos.x = pos.y = 0;
-			MapWindowPoints(child, hwnd, &pos, 1);
-			if(pos.x >= clock_rc.right) {
-				pos.x += m_rcClock.right - m_clock_base_width;
-				SetWindowPos(child, 0, pos.x, pos.y, 0, 0, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOSIZE);
-			} else if(pos.y >= clock_rc.bottom) {
-				pos.y += m_rcClock.bottom - m_clock_base_height;
-				SetWindowPos(child, 0, pos.x, pos.y, 0, 0, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOSIZE);
+		GetClientRect(gs_hwndClock, &sibling_rc);
+		MapWindowPoints(gs_hwndClock, hwnd, (POINT*)&sibling_rc, 1);
+		if(m_bHorizontalTaskbar) {
+			clock_pos = sibling_rc.left;
+			next_pos = sibling_rc.left + sibling_rc.right;
+		} else {
+			clock_pos = sibling_rc.top;
+			next_pos = sibling_rc.top + sibling_rc.bottom;
+		}
+		for(sibling=GetWindow(gs_hwndClock,GW_HWNDNEXT); sibling; sibling=GetWindow(sibling,GW_HWNDNEXT)) {
+			GetClientRect(sibling, &sibling_rc);
+			MapWindowPoints(sibling, hwnd, (POINT*)&sibling_rc, 1);
+			if(m_bHorizontalTaskbar) {
+				if(sibling_rc.left < clock_pos) // Win10 orders the controls properly, but others don't
+					continue;
+				sibling_rc.left = next_pos;
+				next_pos += sibling_rc.right;
+			} else {
+				if(sibling_rc.top < clock_pos)
+					continue;
+				sibling_rc.top = next_pos;
+				next_pos += sibling_rc.bottom;
 			}
+			SetWindowPos(sibling, 0, sibling_rc.left, sibling_rc.top, 0, 0, SWP_NOACTIVATE|SWP_NOZORDER|SWP_NOSIZE);
 		}
 		return ret;}
 	}
