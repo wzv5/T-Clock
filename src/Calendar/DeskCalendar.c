@@ -67,7 +67,7 @@ LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		if(api.GetInt(L"Calendar",L"ShowWeekNums",0))
 			dwCalStyle|=MCS_WEEKNUMBERS;
 		
-		hCal = CreateWindowEx(0, MONTHCAL_CLASS, L"", dwCalStyle, 0,0,0,0, hwnd, NULL, NULL, NULL);
+		hCal = CreateWindowEx(0, MONTHCAL_CLASS, L"", dwCalStyle, 0,0,0,0, hwnd, 0, NULL, NULL);
 		if(!hCal) return -1;
 		SetWindowSubclass(hCal, &Window_CalendarControl_Hooked, 0, 0);
 		
@@ -141,6 +141,9 @@ LRESULT CALLBACK Window_Calendar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		if(m_bAutoClose && GetForegroundWindow() != hwnd)
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;}
+	case WM_SETFOCUS:
+		SetFocus(GetDlgItem(hwnd, 0)); 
+		break;
 	case WM_ACTIVATE:
 		if(!m_bTopMost){
 			WM_ActivateTopmost(hwnd, wParam, lParam);
