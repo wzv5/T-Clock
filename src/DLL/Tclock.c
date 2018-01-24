@@ -672,6 +672,11 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		RemoveWindowSubclass(hwnd, Window_Clock_Hooked, uIdSubclass);
 		DestroyClock();
 		break;
+	case(WM_USER+100):// send by Windows (<10 AU) to get clock size (used on XP for hidden notification icons)
+		if(m_bNoClock) break;
+		if(!(GetWindowLongPtr(hwnd,GWL_STYLE)&WS_VISIBLE))
+			return 0;
+		return ((LRESULT)m_rcClock.bottom << 16) | (LRESULT)m_rcClock.right;
 	case WM_WINDOWPOSCHANGING:{
 		WINDOWPOS* pwp=(WINDOWPOS*)lParam;
 		if(m_bNoClock) break;
