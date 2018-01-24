@@ -522,18 +522,19 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 			break;
 		case IDTIMER_MONITOR:{
 			static unsigned lastidle_ = 0;
-			unsigned current = GetTickCount();
+			unsigned current;
 			LASTINPUTINFO li;
 			li.cbSize = sizeof(li);
 			GetLastInputInfo(&li);
 			if(li.dwTime != lastidle_) {
+				current = GetTickCount();
 				if(li.dwTime > current) // 'current' overflow
 					li.dwTime = 0;
 				li.dwTime += kIdleMS;
 				if(li.dwTime <= current) {
 					lastidle_ = (li.dwTime - kIdleMS);
 					li.dwTime = kIdleMS;
-					SendMessage(HWND_BROADCAST_nowarn, WM_SYSCOMMAND, SC_MONITORPOWER, 2);
+					DefWindowProc(hwnd, WM_SYSCOMMAND, SC_MONITORPOWER, 2);
 				} else {
 					li.dwTime -= current;
 				}
