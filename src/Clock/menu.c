@@ -202,19 +202,27 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		SHEmptyRecycleBin(0, NULL, SHERB_NOCONFIRMATION);
 		break;
 		
-	case IDM_SHUTDOWN:
-		if(!ShutDown())
-			MessageBox(0, L"Shutdown Request Failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+	case IDM_LOCK:
+		LockWorkStation();
 		break;
-		
-	case IDM_REBOOT:
-		if(!ReBoot())
-			MessageBox(0, L"Reboot Request Failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
-		break;
-		
 	case IDM_LOGOFF:
-		if(!LogOff())
-			MessageBox(0, L"Logoff Request Failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+		WindowsExit(EWX_LOGOFF);
+		break;
+	case IDM_SLEEP:
+		if(!WindowsSleep(1))
+			MessageBox(0, L"Sleep request failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+		break;
+	case IDM_HIBERNATE:
+		if(!WindowsSleep(0))
+			MessageBox(0, L"Sleep request failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+		break;
+	case IDM_SHUTDOWN:
+		if(!WindowsExit(EWX_SHUTDOWN))
+			MessageBox(0, L"Shutdown request failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
+		break;
+	case IDM_REBOOT:
+		if(!WindowsExit(EWX_REBOOT))
+			MessageBox(0, L"Shutdown request failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		break;
 		
 	case IDM_FWD_CASCADE: case IDM_FWD_SIDEBYSIDE: case IDM_FWD_STACKED: case IDM_FWD_SHOWDESKTOP: case IDM_FWD_MINALL: case IDM_FWD_UNDO:

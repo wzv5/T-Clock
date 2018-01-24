@@ -72,6 +72,9 @@
 #define IDM_LOGOFF                      250
 #define IDM_REBOOT                      251
 #define IDM_SHUTDOWN                    252
+#define IDM_LOCK                        253
+#define IDM_SLEEP                       254
+#define IDM_HIBERNATE                   255
 #define IDM_CHIME                       260
 #define IDM_TOGGLE_DT                   280
 #define IDM_SHOWCALENDER                281

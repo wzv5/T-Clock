@@ -248,9 +248,19 @@ void StopWatch_Lap(HWND hDlg,int bFromStop);
 void StopWatch_TogglePause(HWND hDlg);
 
 // ExitWindows.c
-BOOL ShutDown();
-BOOL ReBoot();
-BOOL LogOff();
+/**
+ * \brief Helper function that calls \c ExitWindowsEx() to Shutdown, Reboot or LogOff Windows (requests \c SE_SHUTDOWN_NAME privilege, except for \c EWX_LOGOFF)
+ * \param ewx_type is the \c uFlags parameter of \c ExitWindowsEx(). e.g. \c EWX_LOGOFF, \c EWX_REBOOT, \c EWX_SHUTDOWN
+ * \return bool
+ * \remark it adds the \c EWX_FORCEIFHUNG flag to ensure shutdown without further user interaction
+ * \sa EWX_LOGOFF, EWX_REBOOT, EWX_SHUTDOWN, WindowsSleep(), ExitWindowsEx() */
+int WindowsExit(int ewx_type);
+/**
+ * \brief Helper function that calls \c SetSystemPowerState() to switch into sleep or hibernation (requests \c SE_SHUTDOWN_NAME privilege)
+ * \param standby \c 1 = standby, \c 0 = hibernate
+ * \return bool
+ * \sa WindowsExit(), SetSystemPowerState() */
+int WindowsSleep(int standby);
 
 // PageHotKey.c
 typedef union {

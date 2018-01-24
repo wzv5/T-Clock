@@ -95,7 +95,11 @@ BEGIN
         MENUITEM "",0,MFT_SEPARATOR,0
         POPUP "Exit Windows",IDC_EXITWIN,0,0
         BEGIN
+            MENUITEM "Lock",                        IDM_LOCK,0,0
             MENUITEM "Log off",                     IDM_LOGOFF,0,0
+            MENUITEM "",0,MFT_SEPARATOR,0
+            MENUITEM "Sleep",                       IDM_SLEEP,0,0
+            MENUITEM "Hibernate",                   IDM_HIBERNATE,0,0
             MENUITEM "Reboot",                      IDM_REBOOT,0,0
             MENUITEM "Shut Down",                   IDM_SHUTDOWN,0,0
         END
