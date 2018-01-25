@@ -88,6 +88,8 @@
 #define IDM_EXIT                        289
 #define IDM_SNTP                        290
 #define IDM_SNTP_SYNC                   291
+#define IDM_EXIT_EXPLORER               292
+#define IDM_RESTART_EXPLORER            293
 // stopwatch
 #define IDM_STOPWATCH_START             321
 #define IDM_STOPWATCH_STOP              322
@@ -110,7 +112,7 @@
 #define IDM_FWD_CUSTOMNOTIFYICONS       421
 #define IDM_FWD_LOCKTASKBAR             424
 #define IDM_FWD_LOCKALLTASKBAR          425
-#define IDM_FWD_EXITEXPLORER            518
+#define IDM_FWD_EXITEXPLORER            518 ///< Windows 10 only
 /* end group (forward commands), end never change */
 /*** misc ***/
 /* group */

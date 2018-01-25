@@ -668,6 +668,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	(void)dwRefData;
 	switch(message){
 	case WM_DESTROY:
+		PostMessage(gs_hwndTClockMain, MAINM_EXPLORER_SHUTDOWN, 0, 0);
 		RemoveWindowSubclass(gs_tray, Window_ClockTray_Hooked, 0);
 		RemoveWindowSubclass(hwnd, Window_Clock_Hooked, uIdSubclass);
 		DestroyClock();

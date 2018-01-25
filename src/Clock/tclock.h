@@ -43,6 +43,7 @@ extern HWND g_hDlgStopWatch;  /**< stopwatch dialog handle */
 extern HWND g_hDlgTimerWatch; /**< timer watch dialog handle */
 extern HWND g_hDlgSNTP;       /**< SNTP options dialog handle */
 extern HWND g_hwndSheet;      /**< property sheet window */
+extern int g_explorer_restarts; /**< number of detected Explorer restarts/crashes */
 /** frequently used icon handles */
 extern HICON g_hIconTClock, g_hIconPlay, g_hIconStop, g_hIconDel;
 #ifdef WIN2K_COMPAT

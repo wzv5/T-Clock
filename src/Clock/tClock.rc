@@ -106,7 +106,8 @@ BEGIN
         MENUITEM "Exit T-Clock",                    IDM_EXIT,0,0
         MENUITEM "",IDS_NONE,MFT_SEPARATOR,0
         MENUITEM "&Run...",                         IDM_FWD_RUNAPP,0,0
-        MENUITEM "E&xit Explorer",                  IDM_FWD_EXITEXPLORER,0,0
+        MENUITEM "Re&start Explorer",               IDM_RESTART_EXPLORER,0,0
+        MENUITEM "E&xit Explorer",                  IDM_EXIT_EXPLORER,0,0
     END
 END
 

@@ -473,12 +473,13 @@ void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //--------------
 		g_hwndTClockMain = NULL;
 	}
 }
+
+int g_explorer_restarts = 0;
 static void InjectClockHook(HWND hwnd) {
 	static DWORD s_restart_ticks = 0;
-	static int s_restart_num = 0;
 	DWORD ticks = GetTickCount();
 	if(ticks - s_restart_ticks < 30000){
-		if(++s_restart_num >= 3){
+		if(++g_explorer_restarts >= 3){
 			if(api.Message(0,
 					L"Multiple Explorer crashes or restarts detected\n"
 					L"It's possible that T-Clock is crashing your Explorer,\n"
@@ -489,11 +490,11 @@ static void InjectClockHook(HWND hwnd) {
 				return;
 			}
 			s_restart_ticks = GetTickCount();
-			s_restart_num = 0;
+			g_explorer_restarts = 0;
 		}
 	}else{
 		s_restart_ticks = ticks;
-		s_restart_num = 0;
+		g_explorer_restarts = 0;
 	}
 	api.Inject(hwnd);
 	#ifndef _DEBUG
@@ -608,6 +609,10 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		
 	case MAINM_BLINKOFF:    // clock no longer blinks
 		if(!g_bPlayingNonstop) StopFile();
+		return 0;
+		
+	case MAINM_EXPLORER_SHUTDOWN:
+		g_explorer_restarts = 0;
 		return 0;
 		
 	case MM_MCINOTIFY: // stop playing or repeat mci file (all but .wav, .pcb)

@@ -42,7 +42,8 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	if(!((GetAsyncKeyState(VK_SHIFT)|GetAsyncKeyState(VK_CONTROL))&0x8000)){
 		DeleteMenu(hPopupMenu, IDS_NONE, MF_BYCOMMAND); // seperator
 		DeleteMenu(hPopupMenu, IDM_FWD_RUNAPP, MF_BYCOMMAND);
-		DeleteMenu(hPopupMenu, IDM_FWD_EXITEXPLORER, MF_BYCOMMAND);
+		DeleteMenu(hPopupMenu, IDM_RESTART_EXPLORER, MF_BYCOMMAND);
+		DeleteMenu(hPopupMenu, IDM_EXIT_EXPLORER, MF_BYCOMMAND);
 	}
 	/// AlarmsTimer Menu Item y/n Goes HERE!!!
 	UpdateAlarmMenu(hPopupMenu);
@@ -191,7 +192,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		break;
 		
 	case IDM_QUICKY_WINEXP: { //-----------------//--+++--> Windows Explorer Opened
-		api.Exec(L"Explorer", L"/e, ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", hwnd);
+		api.Exec(L"explorer", L"/e, ::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", hwnd);
 		break;}
 		
 	case IDM_QUICKY_DOS: { // Command Prompt
@@ -224,7 +225,63 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		if(!WindowsExit(EWX_REBOOT))
 			MessageBox(0, L"Shutdown request failed!", L"Error", MB_OK|MB_ICONERROR|MB_SETFOREGROUND);
 		break;
-		
+	
+	case IDM_EXIT_EXPLORER: // Windows 10 also supports IDM_FWD_EXITEXPLORER
+	case IDM_RESTART_EXPLORER:{
+		HANDLE process;
+		DWORD processid;
+		HWND hwndTray = FindWindowA("Shell_TrayWnd", NULL);
+		if(hwndTray) {
+			GetWindowThreadProcessId(hwndTray, &processid);
+			if(api.OS >= TOS_VISTA) {
+				process = OpenProcess(SYNCHRONIZE, FALSE, processid);
+				PostMessage(hwndTray, WM_USER + 436, 0, 0);
+				if(wID == IDM_RESTART_EXPLORER) {
+					if(WaitForSingleObject(process, 15000) == WAIT_TIMEOUT) {
+						CloseHandle(process);
+						process = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, processid);
+						if(process) {
+							TerminateProcess(process, 1); // exit code needs to be 1, otherwise "winlogon" restarts Explorer
+							WaitForSingleObject(process, INFINITE);
+						}
+					}
+				}
+			} else {
+				DWORD timeout;
+				HWND current, last = hwndTray;
+				char class[18]; // DimmedWindowClass / FakeDesktopWClass
+				SetForegroundWindow(hwndTray); // the "Exit Windows" screen has to receive input focus for GetForegroundWindow() to work
+				process = OpenProcess(SYNCHRONIZE|PROCESS_TERMINATE, FALSE, processid);
+				PostMessage(hwndTray, WM_COMMAND, 506, 0); // shutdown dlg (saves icon positions whatsoever)
+				timeout = 5000 + GetTickCount();
+				for(;;) {
+					current = GetForegroundWindow();
+					if(current != last) {
+						last = current;
+						class[0] = '\0';
+						GetClassNameA(current, class, _countof(class));
+						current = GetParent(current);
+						if(!strcasecmp(class,"#32770") && current) {
+							GetClassNameA(current, class, _countof(class));
+							if(!strcasecmp(class,"DimmedWindowClass"/*XP*/) || !strcasecmp(class,"FakeDesktopWClass"/*2k*/)) {
+								Sleep(50); // should be fine without, but better safe than sorry ;)
+								break;
+							}
+						}
+					}
+					if(GetTickCount() >= timeout)
+						break;
+					Sleep(50);
+				}
+				TerminateProcess(process, 1); // exit code needs to be 1, otherwise "winlogon" restarts Explorer
+				WaitForSingleObject(process, INFINITE);
+			}
+			CloseHandle(process);
+		}
+		g_explorer_restarts = 0;
+		if(wID == IDM_RESTART_EXPLORER)
+			api.Exec(L"explorer", NULL, NULL);
+		break;}
 	case IDM_FWD_CASCADE: case IDM_FWD_SIDEBYSIDE: case IDM_FWD_STACKED: case IDM_FWD_SHOWDESKTOP: case IDM_FWD_MINALL: case IDM_FWD_UNDO:
 		g_undo=(wID!=IDM_FWD_UNDO);
 		/* fall through */
