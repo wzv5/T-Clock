@@ -283,7 +283,7 @@ void SetComboFontSize(HWND hDlg, BOOL bInit)
 {
 	HDC hdc;
 	wchar_t font[LF_FACESIZE];
-	DWORD size;
+	int size;
 	LOGFONT lf = {0};
 	HWND size_cb = GetDlgItem(hDlg, IDC_FONTSIZE);
 	HWND font_cb = GetDlgItem(hDlg, IDC_FONT);
@@ -348,7 +348,7 @@ int CALLBACK EnumSizeProcEx(const LOGFONT* lpelfe, const TEXTMETRIC* lpntme, DWO
 	// is modern font which supports any size?
 	if((FontType&TRUETYPE_FONTTYPE) || !(FontType&RASTER_FONTTYPE)) {
 		for(i=0; i<_countof(nFontSizes); ++i) {
-			wsprintf(str, FMT("%hu"), nFontSizes[i]);
+			wsprintf(str, FMT("%u"), (unsigned)nFontSizes[i]);
 			ComboBox_AddString(hwndSize, str);
 		}
 		return 0;

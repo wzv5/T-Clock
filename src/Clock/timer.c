@@ -284,7 +284,7 @@ static void TimerWatchList_Restart(HWND list, int itemid) {
 		} else {
 			wchar_t subkey[TNY_BUFF];
 			int offset = wsprintf(subkey, kKeyTimersTimer);
-			wsprintf(subkey+offset, FMT("%d"), item.lParam + 1);
+			wsprintf(subkey+offset, FMT("%d"), (int)item.lParam + 1);
 			m_timer[idx].expire = TimerParseExpire_(subkey);
 		}
 	}
@@ -1114,7 +1114,7 @@ INT_PTR CALLBACK Window_TimerView(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 			}
 			num = TimerGetHiddenCount();
 			if(num) {
-				wsprintf(str, L"Restore hidden (%i)", num);
+				wsprintf(str, FMT("Restore hidden (%i)"), num);
 				menuitem.dwTypeData = str;
 				SetMenuItemInfo(menu, IDM_TIMER_RESTORE, 0, &menuitem);
 				EnableMenuItem(menu, IDM_TIMER_RESTORE, MF_ENABLED | MF_BYCOMMAND);

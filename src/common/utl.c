@@ -383,8 +383,7 @@ HWND CreateDialogParamOnce(HWND* hwnd, HINSTANCE hInstance, const wchar_t* lpTem
 }
 
 HBITMAP CreateBitmapWithAlpha(HDC hdc, int width, int height) {
-	BITMAPINFO bmi = {0};
-	bmi.bmiHeader.biSize = sizeof(bmi.bmiHeader);
+	BITMAPINFO bmi = {{sizeof(bmi.bmiHeader)}};
 	bmi.bmiHeader.biPlanes = 1;
 	bmi.bmiHeader.biCompression = BI_RGB;
 	bmi.bmiHeader.biWidth = width;

@@ -181,7 +181,6 @@ HWND CreateCalender(HWND hwnd)   //---------------+++-->
 	wcx.cbClsExtra = 0;
 	wcx.cbWndExtra = 0;
 	wcx.hInstance = g_instance;
-	wcx.hIcon = NULL;
 	wcx.hIcon = LoadIcon(g_instance,MAKEINTRESOURCE(IDI_MAIN));
 	wcx.hCursor = LoadCursor(NULL,IDC_ARROW);
 	wcx.hbrBackground = (HBRUSH)COLOR_WINDOWFRAME;

@@ -81,7 +81,7 @@ void SaveNewMenuOptions(HWND hDlg)
 	GetDlgItemText(hDlg, IDC_MID_TARGET,   szmTarget, _countof(szmTarget));
 	GetDlgItemText(hDlg, IDC_MID_SWITCHES, szmSwitches, _countof(szmSwitches));
 	memcpy(key, L"MenuItem-", offset*sizeof(wchar_t));
-	offset += wsprintf(key+offset, FMT("%i"), GetWindowLong(hDlg,GWLP_USERDATA));
+	offset += wsprintf(key+offset, FMT("%li"), GetWindowLong(hDlg,GWLP_USERDATA));
 	if((wcslen(szmText)) && (wcslen(szmTarget))) {
 		api.SetInt(L"QuickyMenu\\MenuItems", key, 1);
 		
@@ -111,7 +111,7 @@ void DeleteMenuItem(HWND hDlg)
 	wchar_t key[TNY_BUFF];
 	int offset=9;
 	memcpy(key, L"MenuItem-", offset * sizeof key[0]);
-	offset += wsprintf(key+offset, FMT("%i"), GetWindowLong(hDlg,GWLP_USERDATA));
+	offset += wsprintf(key+offset, FMT("%li"), GetWindowLong(hDlg,GWLP_USERDATA));
 	api.DelValue(L"QuickyMenu\\MenuItems", key);
 	
 	wcscpy(key+offset, L"-Text");
