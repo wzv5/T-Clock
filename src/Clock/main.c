@@ -39,6 +39,19 @@ ATOM g_atomTClock = 0; /**< main window class atom */
 const wchar_t g_szClassName[] = L"TClockMainClass"; /**< our main window class name */
 UINT g_WM_TaskbarCreated = 0; /**< TaskbarCreated message (broadcasted on Explorer (re-)start) */
 
+/**
+ * \brief checks if the parameter at \p offset matches \p param
+ * \param[in] param case insensitive parameter
+ * \param[in,out] offset current offset of parameters string and after it when matched
+ * \return bool */
+static int IsParameter(const wchar_t* param, const wchar_t** offset) {
+	size_t len = wcslen(param);
+	if(wcsncasecmp(*offset, param, len) == 0 && (*offset)[len] <= ' ') {
+		*offset += len;
+		return 1;
+	}
+	return 0;
+}
 /** \brief processes our commandline parameters
  * \param hwndMain clock hwnd of master instance
  * \param cmdline commandline parameters
@@ -276,8 +289,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 			CloseHandle(processlock);
 			api.ShellExecute(NULL, L"Clock" ARCH_SUFFIX_64 L".exe", lpCmdLine, NULL, SW_SHOWNORMAL, &processlock);
 			if(processlock) {
-				for(; (lpCmdLine = wcschr(lpCmdLine,'/'))!=NULL; ++lpCmdLine) { // MSVC sucks == true
-					if(!wcsncasecmp(lpCmdLine,L"/exit",5)) {
+				while((lpCmdLine = wcschr(lpCmdLine,'/')) != NULL) { // MSVC sucks == true
+					++lpCmdLine;
+					if(IsParameter(L"exit", (const wchar_t**)&lpCmdLine)) {
 						WaitForSingleObject(processlock, INFINITE);
 						break;
 					}
@@ -335,6 +349,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 		if(api.GetInt(L"Desktop", L"MonOffOnLock", 0))
 			RegisterSession(hwndMain);
 	}
+
+	PostMessage(hwndMain, g_WM_TaskbarCreated, 0, 0);
 	if(updated==1){
 		PostMessage(hwndMain,WM_COMMAND,IDM_SHOWPROP,0);
 	}
@@ -366,18 +382,10 @@ LRESULT CALLBACK Window_TClockDummy(HWND hwnd, UINT message, WPARAM wParam, LPAR
 	}
 	return 0;
 }
-//========================================================================================
-//	/exit		exit T-Clock
-//	/prop		show T-Clock Options
-//	/SyncOpt	SNTP options
-//	/Sync		synchronize the system clock with an NTP server
-//	/start		start the Stopwatch (open as needed)
-//	/stop		stop (pause really) the Stopwatch
-//	/reset		reset Stopwatch to 0 (stop as needed)
-//	/lap		record a (the current) lap time
+
 //================================================================================================
 //---------------------------------------------//---------------+++--> T-Clock Command Line Option:
-void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //-----------------------------+++-->
+void ProcessCommandLine(HWND hwndMain, const wchar_t* cmdline)   //--------------------------+++-->
 {
 	int just_elevated = 0;
 	const wchar_t* p = cmdline;
@@ -390,52 +398,44 @@ void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline)   //--------------
 	while(*p != '\0') {
 		if(*p == '/') {
 			++p;
-			if(wcsncasecmp(p, L"prop", 4) == 0) {
+			if(IsParameter(L"prop", &p)) { // open T-Clock's properties (options)
 				SendMessage(hwndMain, WM_COMMAND, IDM_SHOWPROP, 0);
-				p += 4;
-			} else if(wcsncasecmp(p, L"exit", 4) == 0) {
+			} else if(IsParameter(L"exit", &p)) { // exit T-Clock
 				SendMessage(hwndMain, MAINM_EXIT, 0, 0);
-				p += 4;
-			} else if(wcsncasecmp(p, L"start", 5) == 0) {
+			} else if(IsParameter(L"exit-explorer", &p)) { // tries to exit Explorer gracefully (kills after 15 sec)
+				SendMessage(hwndMain, WM_COMMAND, IDM_EXIT_EXPLORER, 0);
+			} else if(IsParameter(L"restart-explorer", &p)) { // like above, but starts it afterwards
+				SendMessage(hwndMain, WM_COMMAND, IDM_RESTART_EXPLORER, 0);
+			} else if(IsParameter(L"start", &p)) { // start Stopwatch (open as/if needed)
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_START, 0);
-				p += 5;
-			} else if(wcsncasecmp(p, L"stop", 4) == 0) {
+			} else if(IsParameter(L"stop", &p)) { // stop the Stopwatch counter (kind of pause)
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_STOP, 0);
-				p += 4;
-			} else if(wcsncasecmp(p, L"reset", 5) == 0) {
+			} else if(IsParameter(L"reset", &p)) { // reset Stopwatch to 0 (doesn't stop)
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESET, 0);
-				p += 5;
-			} else if(wcsncasecmp(p, L"pause", 5) == 0) {
+			} else if(IsParameter(L"pause", &p)) { // -- "alias" for /stop...
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_PAUSE, 0);
-				p += 5;
-			} else if(wcsncasecmp(p, L"resume", 6) == 0) {
+			} else if(IsParameter(L"resume", &p)) { // -- "alias" for /resume...
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_RESUME, 0);
-				p += 6;
-			} else if(wcsncasecmp(p, L"lap", 3) == 0) {
+			} else if(IsParameter(L"lap", &p)) { // record a (the current) Lap Time
 				SendMessage(hwndMain, WM_COMMAND, IDM_STOPWATCH_LAP, 0);
-				p += 3;
-			} else if(wcsncasecmp(p, L"SyncOpt", 7) == 0) {
+			} else if(IsParameter(L"syncopt", &p)) { // open SNTP / synchronize options, also allows to sync now
 				if(!SendMessage(hwndMain, WM_COMMAND, MAKEWPARAM(IDM_SNTP,just_elevated), 0)) {
 					NetTimeConfigDialog(just_elevated);
 				}
-				p += 7;
-			} else if(wcsncasecmp(p, L"Sync", 4) == 0) {
-				p += 4;
+			} else if(IsParameter(L"sync", &p)) { // synchronize the time (UAC elevation required)
 				if(!SendMessage(hwndMain, WM_COMMAND, MAKEWPARAM(IDM_SNTP_SYNC,just_elevated), 0)) {
 					SyncTimeNow();
 				}
 				SendMessage(g_hwndTClockMain, MAINM_EXIT, 0, 0);
-			} else if(wcsncmp(p, L"Wc", 2) == 0) { // Win10 calendar "restore"
-				if(p[2] == '1') // restore to previous
+			} else if(IsParameter(L"Wc", &p)) { // -- internal Win10 calendar "restore"
+				if(*p == '1') // restore to previous
 					api.SetSystemInt(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray, 1);
 				else // use the slow (new) one
 					api.DelSystemValue(HKEY_LOCAL_MACHINE, kSectionImmersiveShell, kKeyWin32Tray);
-				p += 2;
-			} else if(wcsncmp(p, L"UAC", 3) == 0) {
+				// should do ++p but the loop doesn't really care
+			} else if(IsParameter(L"UAC", &p)) { // -- internal "tag"
 				just_elevated = 1;
-				p += 3;
-			} else if(wcsncmp(p, L"SEH", 3) == 0) {
-				p += 3;
+			} else if(IsParameter(L"SEH", &p)) { // unloads "exchndl" exception handler (required to fully exit T-Clock if debugging builds were used)
 				SendMessage(api.GetClock(0), WM_COMMAND, IDM_SHUTDOWN, 0);
 			}
 			continue;
@@ -510,7 +510,6 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 	case WM_CREATE:
 		InitAlarm();  // initialize alarms
 		SetTimer(hwnd, IDTIMER_MAIN, 1000, NULL);
-		InjectClockHook(hwnd);
 		return 0;
 		
 	case WM_TIMER:{
@@ -599,6 +598,19 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		return 0;
 		
 	case MAINM_ERROR:    // error
+		if(lParam == 1) { // silently retry to find the Taskbar a few times
+			if(g_explorer_restarts < 2) {
+				Sleep(3000);
+			} else {
+				g_explorer_restarts = 0;
+				if(api.Message(hwnd, L"Taskbar not found, which T-Clock requires to function\nRetry?", L"Error", MB_RETRYCANCEL, 0) != IDRETRY) {
+					SendMessage(hwnd, WM_CLOSE, 0, 0);
+					return 0;
+				}
+			}
+			InjectClockHook(hwnd);
+			return 0;
+		}
 		InitError((int)lParam);
 		SendMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
