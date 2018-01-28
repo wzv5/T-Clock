@@ -58,11 +58,7 @@ void SetDesktopIconTextBk(int enable);
  * \param out \c wchar_t buffer of size \c MAX_PATH
  * \return \p out with path to Clock.exe incl. filename
  * \remark requires the API to be initialized \sa api */
-inline wchar_t* GetClockExe(wchar_t out[MAX_PATH]) {
-	memcpy(out, api.root, api.root_size);
-	add_title(out, L"Clock" ARCH_SUFFIX L".exe");
-	return out;
-}
+wchar_t* GetClockExe(wchar_t out[MAX_PATH]);
 
 void TranslateDispatchTClockMessage(MSG* msg);
 void RegisterSession(HWND hwnd);

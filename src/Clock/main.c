@@ -66,6 +66,11 @@ static void InitError(int n);
 extern char g_bPlayingNonstop;
 
 
+wchar_t* GetClockExe(wchar_t out[MAX_PATH]) {
+	memcpy(out, api.root, api.root_size);
+	add_title(out, L"Clock" ARCH_SUFFIX L".exe");
+	return out;
+}
 //=================================================================
 //---------------------------+++--> fixes lost-keyboard-control bug:
 BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus)
