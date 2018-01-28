@@ -1,11 +1,10 @@
-57|471
-2.1.0|2.4.3
+57|492
+2.1.0|2.4.4
 |(first release)
-|minor bug fix release
-+ added UAC shield icon to "Synchronize time" menu item
-+ added numeric day-of-week format (numeric weekday) #53
-* improved auto-hide taskbar support on Win10
-* improved "turn off monitors on workstation lock"
-* update checker got smarter
-! fixed "Synchronize time" elevation broken since always
-! fixed portable ini creation since v2.4.1#414
+|release candidate
++ added "Restart Explorer" option to T-Clock's extended context menu (hold down Shift or Ctrl)
++ added /restart-explorer and /exit-explorer commandline arguments
++ added Lock and Sleep/Hibernate to "Exit Windows"
+! fixed 'Wi' (ISO week number) and 'wi' (numeric day of week) formats
+! fixed known Clock positioning issues (regressions from initial Windows 10 support)
+! fixed Windows 10 CU's "Ink Workspace" button on multi-monitor setups

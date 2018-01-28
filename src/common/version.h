@@ -4,43 +4,43 @@
 /**** Version ****/
 #	define VER_MAJOR 2
 #	define VER_MINOR 4
-#	define VER_BUILD 3
+#	define VER_BUILD 4
 	/** status values: 0=Alpha(α), 1=Beta(β), 2=RC(гc), 3=Release(г), 4=Maintenance(гm) */
-#	define VER_STATUS 1
-#	define VER_STATUS_FULL "Beta"
-#	define VER_STATUS_SHORT "b"
-#	define VER_STATUS_GREEK "\u03B2"
-#	define VER_REVISION 472
-#	define VER_FULL "2.4.3 Beta"
-#	define VER_SHORT "2.4b3"
-#	define VER_SHORT_DOTS "2.4.3"
-#	define VER_SHORT_GREEK "2.4\u03B23"
-#	define VER_RC_REVISION 2, 4, 3, 472
-#	define VER_RC_STATUS 2, 4, 3, 1
+#	define VER_STATUS 2
+#	define VER_STATUS_FULL "RC"
+#	define VER_STATUS_SHORT "rc"
+#	define VER_STATUS_GREEK "\u0433c"
+#	define VER_REVISION 492
+#	define VER_FULL "2.4.4 RC"
+#	define VER_SHORT "2.4rc4"
+#	define VER_SHORT_DOTS "2.4.4"
+#	define VER_SHORT_GREEK "2.4\u0433c4"
+#	define VER_RC_REVISION 2, 4, 4, 492
+#	define VER_RC_STATUS 2, 4, 4, 2
 /**** Subversion Information ****/
 #	define VER_REVISION_URL "git@github.com:White-Tiger/T-Clock.git"
-#	define VER_REVISION_DATE "2017-05-21 12:55:51 +0000 (Sun, May 21 2017)"
-#	define VER_REVISION_HASH "3048f3a"
-#	define VER_REVISION_TAG "v2.4.3#472-beta"
+#	define VER_REVISION_DATE "2018-01-28 19:22:27 +0000 (Sun, Jan 28 2018)"
+#	define VER_REVISION_HASH "e89dfdb"
+#	define VER_REVISION_TAG "v2.4.4#492-rc"
 /**** Date/Time ****/
-#	define VER_TIMESTAMP 1516026234
-#	define VER_TIME_SEC 54
-#	define VER_TIME_MIN 23
-#	define VER_TIME_HOUR 14
-#	define VER_TIME_DAY 15
+#	define VER_TIMESTAMP 1517167741
+#	define VER_TIME_SEC 1
+#	define VER_TIME_MIN 29
+#	define VER_TIME_HOUR 19
+#	define VER_TIME_DAY 28
 #	define VER_TIME_MONTH 1
 #	define VER_TIME_YEAR 2018
-#	define VER_TIME_WDAY 1
-#	define VER_TIME_YDAY 14
-#	define VER_TIME_WDAY_SHORT "Mon"
-#	define VER_TIME_WDAY_FULL "Monday"
+#	define VER_TIME_WDAY 0
+#	define VER_TIME_YDAY 27
+#	define VER_TIME_WDAY_SHORT "Sun"
+#	define VER_TIME_WDAY_FULL "Sunday"
 #	define VER_TIME_MONTH_SHORT "Jan"
 #	define VER_TIME_MONTH_FULL "January"
-#	define VER_TIME "14:23:54"
-#	define VER_DATE "2018-01-15"
-#	define VER_DATE_LONG "Mon, Jan 15, 2018 14:23:54 UTC"
-#	define VER_DATE_SHORT "2018-01-15 14:23:54 UTC"
-#	define VER_DATE_ISO "2018-01-15T14:23:54Z"
+#	define VER_TIME "19:29:01"
+#	define VER_DATE "2018-01-28"
+#	define VER_DATE_LONG "Sun, Jan 28, 2018 19:29:01 UTC"
+#	define VER_DATE_SHORT "2018-01-28 19:29:01 UTC"
+#	define VER_DATE_ISO "2018-01-28T19:29:01Z"
 /**** Helper 'functions' ****/
 #	define VER_IsReleaseOrHigher() ( VER_STATUS >= 3 )
 #	define VER_IsAlpha() ( VER_STATUS == 0 )

@@ -559,7 +559,7 @@ int Clock_DelKey(const wchar_t* section) {
 
 int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t* params, HWND parent, int show, HANDLE* hProcess) {
 	int ret = -1;
-	wchar_t* buffer = NULL;
+//	wchar_t* buffer = NULL;
 	SHELLEXECUTEINFO sei = {sizeof(sei)};
 	sei.hwnd = parent;
 	sei.lpVerb = method;
@@ -608,8 +608,8 @@ int Clock_ShellExecute(const wchar_t* method, const wchar_t* app, const wchar_t*
 		}else if(GetLastError() == ERROR_CANCELLED) {// UAC dialog user canceled
 			ret = 1;
 		}
-		if(buffer)
-			free(buffer);
+//		if(buffer)
+//			free(buffer);
 	}
 	if(hProcess)
 		*hProcess = sei.hProcess;
