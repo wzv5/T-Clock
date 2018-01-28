@@ -57,8 +57,13 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [ ] + improved hotkey support *tbd*
 
 ### Requirements
-* Windows 2000+ (up to Windows 10 as of 2014, Win2k requires static builds)
-* [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) (install **both** 32bit `vcredist_x86` +  64bit `vcredist_x64` **on 64bit** OS. Alternatively just use our \_static builds)
+* Windows 2000+ (up to Windows 10 as of 2014)
+
+### What's that `_vc2010` build?
+* As of 2018, all new releases will be build with GCC instead of the Visual C++ 2010 compiler.
+  So the previously known `_static` builds are used instead and for compatibility reasons,
+  `_vc2010` archives will still use the old compiler and are meant for advanced users.
+* Requires: [Microsoft Visual C++ 2010 Redistributable](http://microsoft.com/en-us/download/details.aspx?id=26999) (install **both** 32bit `vcredist_x86` +  64bit `vcredist_x64` **on 64bit** OS)
 
 ### Support
 * [Forum](http://donationcoder.com/forum/?board=324)

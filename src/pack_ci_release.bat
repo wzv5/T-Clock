@@ -24,8 +24,8 @@ for f in *.exe *.dll */*.exe */*.dll;do
 done
 # compress
 rm -f *.zip *.7z
-7z a $xclude T-Clock_static.zip .
-#7z a $xclude T-Clock_static.7z .
+7z a $xclude T-Clock.zip .
+7z a $xclude T-Clock.7z .
 exit $?
 
 
@@ -53,8 +53,8 @@ rem %signtool% verify Clock.exe
 rem if %errorlevel% neq 0 exit /B %errorlevel%
 rem compress
 del *.zip *.7z 2>nul
-7z a %xclude% T-Clock.zip .
-7z a %xclude% T-Clock.7z .
-powershell Push-AppveyorArtifact T-Clock.zip
-powershell Push-AppveyorArtifact T-Clock.7z
+7z a %xclude% T-Clock_vc2010.zip .
+7z a %xclude% T-Clock_vc2010.7z .
+powershell Push-AppveyorArtifact T-Clock_vc2010.zip
+powershell Push-AppveyorArtifact T-Clock_vc2010.7z
 exit /B %errorlevel%
