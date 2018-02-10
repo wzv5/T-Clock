@@ -60,7 +60,6 @@ static int IsParameter(const wchar_t* param, const wchar_t** offset) {
 static void ProcessCommandLine(HWND hwndMain,const wchar_t* cmdline);
 static void OnTimerMain(HWND hwnd);
 //static void FindTrayServer(); // Redux: what ever it was supposed to be..
-static void InitError(int n);
 
 // alarm.c
 extern char g_bPlayingNonstop;
@@ -482,6 +481,7 @@ void ProcessCommandLine(HWND hwndMain, const wchar_t* cmdline)   //-------------
 int g_explorer_restarts = 0;
 static void InjectClockHook(HWND hwnd) {
 	static DWORD s_restart_ticks = 0;
+	int error, retry;
 	DWORD ticks = GetTickCount();
 	if(ticks - s_restart_ticks < 30000){
 		if(++g_explorer_restarts >= 3){
@@ -501,7 +501,25 @@ static void InjectClockHook(HWND hwnd) {
 		s_restart_ticks = ticks;
 		g_explorer_restarts = 0;
 	}
-	api.Inject(hwnd);
+	for(error=api.Inject(hwnd),retry=0; error; error=api.Inject(hwnd)) {
+		if(error == 1) { // silently retry to find the Taskbar a few times
+			if(++retry < 5) {
+				Sleep(2000);
+			} else {
+				retry = 0;
+				if(api.Message(hwnd, L"Taskbar not found, which T-Clock requires to function\nRetry?", L"Error", MB_RETRYCANCEL, 0) != IDRETRY) {
+					SendMessage(hwnd, WM_CLOSE, 0, 0);
+					return;
+				}
+			}
+		} else {
+			wchar_t msg[160];
+			wsprintf(msg, FMT("%s: %d"), MyString(IDS_NOTFOUNDCLOCK), error);
+			api.Message(NULL, msg, L"Error", MB_OK|MB_SETFOREGROUND, MB_ICONEXCLAMATION);
+			SendMessage(hwnd, WM_CLOSE, 0, 0);
+			return;
+		}
+	}
 	#ifndef _DEBUG
 	EmptyWorkingSet(GetCurrentProcess());
 	#endif
@@ -602,24 +620,6 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		api.InjectFinalize(); // injected, now remove hook
 		return 0;
 		
-	case MAINM_ERROR:    // error
-		if(lParam == 1) { // silently retry to find the Taskbar a few times
-			if(g_explorer_restarts < 2) {
-				Sleep(3000);
-			} else {
-				g_explorer_restarts = 0;
-				if(api.Message(hwnd, L"Taskbar not found, which T-Clock requires to function\nRetry?", L"Error", MB_RETRYCANCEL, 0) != IDRETRY) {
-					SendMessage(hwnd, WM_CLOSE, 0, 0);
-					return 0;
-				}
-			}
-			InjectClockHook(hwnd);
-			return 0;
-		}
-		InitError((int)lParam);
-		SendMessage(hwnd, WM_CLOSE, 0, 0);
-		return 0;
-		
 	case MAINM_EXIT:    // exit
 		SendMessage(hwnd, WM_CLOSE, 0, 0);
 		return 0;
@@ -678,16 +678,6 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 	return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
-/*---------------------------------------------------------
--- show a message when TClock failed to customize the clock
----------------------------------------------------------*/
-void InitError(int n)
-{
-	wchar_t msg[160];
-	
-	wsprintf(msg, FMT("%s: %d"), MyString(IDS_NOTFOUNDCLOCK), n);
-	api.Message(NULL, msg, L"Error", MB_OK|MB_SETFOREGROUND, MB_ICONEXCLAMATION);
-}
 /*---------------------------------------------------------
 ---- Main Timer -------------------------------------------
 ---- synchronize, alarm, timer, execute Desktop Calendar...

@@ -11,7 +11,7 @@ typedef ULONGLONG (WINAPI* GetTickCount64_t)();
 extern unsigned short gs_tos; /**< \sa TClockAPI::OS */
 
 /** \sa TClockAPI::Inject() */
-void Clock_Inject(HWND hwndMain);
+int Clock_Inject(HWND hwndMain);
 /** \sa TClockAPI::InjectFinalize() */
 void Clock_InjectFinalize();
 /** \sa TClockAPI::Exit() */

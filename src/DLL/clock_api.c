@@ -288,7 +288,7 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 	return 0;
 }
 
-void Clock_Inject(HWND hwnd)
+int Clock_Inject(HWND hwnd)
 {
 	HWND hwndBar, hwndClock;
 	DWORD dwThreadId;
@@ -297,36 +297,33 @@ void Clock_Inject(HWND hwnd)
 	gs_hwndTClockMain = hwnd;
 	if(gs_hwndClock && IsWindow(gs_hwndClock) && gs_hwndClock==hwndClock){
 		SendMessage(gs_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)gs_hwndClock);
-		return; // already hooked / old instance
+		return 0; // already hooked / old instance
 	}
 	gs_hwndClock = NULL;
 	
 	// find the taskbar
 	hwndBar = FindWindowA("Shell_TrayWnd", NULL);
-	if(!hwndBar) {
-		SendMessage(gs_hwndTClockMain, MAINM_ERROR, 0, 1);
-		return;
-	}
+	if(!hwndBar)
+		return 1;
 	
 	// get thread ID of taskbar (explorer) - Specal thanks to T.Iwata.
 	dwThreadId = GetWindowThreadProcessId(hwndBar, NULL);
 	
-	if(!dwThreadId) {
-		SendMessage(gs_hwndTClockMain, MAINM_ERROR, 0, 2);
-		return;
-	}
+	if(!dwThreadId)
+		return 2 ;
 	
 	// install an hook to thread of taskbar
+	if(m_hhook) // cleanup possible remnant (Windows holds some kind of magic handle if not properly unhooked. The DLL can be deleted, but is still actually loaded)
+		UnhookWindowsHookEx(m_hhook);
 	m_hhook = SetWindowsHookEx(WH_CALLWNDPROC, Hook_CallWndProc, api.hInstance, dwThreadId);
-	if(!m_hhook) {
-		SendMessage(gs_hwndTClockMain, MAINM_ERROR, 0, 3);
-		return;
-	}
+	if(!m_hhook)
+		return 3;
 	
 	// refresh the taskbar
 	PostMessage(hwndBar, WM_SIZE, SIZE_RESTORED, 0);
 	
 	SendMessage(hwndClock, WM_NULL, 0, 0);
+	return 0;
 }
 
 void Clock_InjectFinalize()

@@ -6,7 +6,7 @@
 extern "C" {
 #endif
 
-#define CLOCK_API 3 // UTF-16, GetClock()
+#define CLOCK_API 4 // Inject() now returns errors directly
 
 #ifndef WM_DWMCOLORIZATIONCOLORCHANGED
 #	define WM_DWMCOLORIZATIONCOLORCHANGED 0x0320
@@ -60,8 +60,9 @@ struct TClockAPI {
 	uint16_t root_size; /**< size of our root folder path in bytes w/ \\0 */
 /**
  * \brief starts injection into explorer to replace clock
- * \param hwndMain handle to main/control window */
-	void (*Inject)(HWND hwndMain);
+ * \param hwndMain handle to main/control window
+ * \return error code (0 = success, 1 = Taskbar not found, 2 = couldn't get Taskbar thread, 3 = couldn't hook Taskbar */
+	int (*Inject)(HWND hwndMain);
 /**
  * \brief finalize injection after it's done by removing our temporarily hook on explorer */
 	void (*InjectFinalize)();
