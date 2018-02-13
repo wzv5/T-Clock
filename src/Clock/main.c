@@ -640,7 +640,7 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		StopFile();
 		return 0;
 		
-	case WM_WININICHANGE:
+	case WM_SETTINGCHANGE:
 		RefreshUs();
 		return 0;
 	// inform clock about DWM color change
@@ -673,6 +673,7 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 	default:
 		if(message == g_WM_TaskbarCreated){
 			InjectClockHook(hwnd);
+			return 0;
 		}
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);

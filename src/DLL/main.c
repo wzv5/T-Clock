@@ -15,7 +15,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   /
 	api.hInstance = hinstDLL;
 	switch(fdwReason) {
 	case DLL_PROCESS_ATTACH:
-		#if !defined(_MSC_VER) || !defined(_DLL) // if not static MSVC build
+		#if !defined(_MSC_VER) || defined(_DLL) // if not static MSVC build
 		DisableThreadLibraryCalls(hinstDLL);
 		#endif
 		break;
