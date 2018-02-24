@@ -513,7 +513,6 @@ int SetupClockAPI(int version, TClockAPI* api); // clock_api.c
 //---------------------------------------------------------------------+++--> Initialize the Clock:
 void InitClock(HWND hwnd)   //--------------------------------------------------------------+++-->
 {
-	gs_hwndClock = hwnd;
 	gs_tray = GetParent(hwnd);
 	gs_taskbar = GetParent(gs_tray);
 	LoadLibrary(L"T-Clock" ARCH_SUFFIX); // self-reference

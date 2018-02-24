@@ -16,11 +16,11 @@
 #include "../common/clock.h" // common clock api
 #include "../common/win2k_compat.h"
 
-extern HWND gs_hwndTClockMain; /**< our main window for hotkeys, menus and sounds \b [shared] */
-extern HWND gs_hwndClock;      /**< primary clock hwnd \b [shared] */
-extern HWND gs_tray;           /**< primary clock's tray \b [shared] */
-extern HWND gs_taskbar;        /**< primary clock's taskbar \b [shared] */
-extern HWND gs_hwndCalendar;   /**< calendar state \b [shared] \sa TClockAPI::GetCalendar() */
+extern HWND gs_hwndTClockMain; /**< \brief our main window for hotkeys, menus and sounds \b [shared] */
+extern HWND gs_hwndClock;      /**< \brief primary clock hwnd \b [shared] \remark initialized on injection start \sa gs_taskbar, gs_tray */
+extern HWND gs_tray;           /**< \brief primary clock's tray \b [shared] \remark initialized once fully injected ( prefer \c gs_taskbar ) \sa gs_hwndClock, gs_taskbar */
+extern HWND gs_taskbar;        /**< \brief primary clock's taskbar \b [shared] \remark initialized once fully injected \sa gs_hwndClock, gs_tray */
+extern HWND gs_hwndCalendar;   /**< \brief calendar state \b [shared] \sa TClockAPI::GetCalendar() */
 
 extern const wchar_t* kConfigName;   /**< ini file name (also used for mutexes) */
 

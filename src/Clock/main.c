@@ -497,7 +497,7 @@ static void InjectClockHook(HWND hwnd) {
 	DWORD ticks = GetTickCount();
 	DebugLog(1, "injecting T-Clock... (%i)", g_explorer_restarts);
 	if(ticks - s_restart_ticks < 30000){
-		if(++g_explorer_restarts >= 3){
+		if(g_explorer_restarts >= 3){
 			if(api.Message(0,
 					L"Multiple Explorer crashes or restarts detected\n"
 					L"It's possible that T-Clock is crashing your Explorer,\n"
@@ -514,7 +514,7 @@ static void InjectClockHook(HWND hwnd) {
 		s_restart_ticks = ticks;
 		g_explorer_restarts = 0;
 	}
-	for(error=api.Inject(hwnd),retry=0; error; error=api.Inject(hwnd)) {
+	for(error=api.Inject(hwnd),retry=0; error > 0; error=api.Inject(hwnd)) {
 		if(error == 1) { // silently retry to find the Taskbar a few times
 			DebugLog(0, "finding Taskbar, retry %i", retry);
 			if(++retry < 5) {
@@ -534,9 +534,13 @@ static void InjectClockHook(HWND hwnd) {
 			return;
 		}
 	}
-	#ifndef _DEBUG
-	EmptyWorkingSet(GetCurrentProcess());
-	#endif
+	if(error != -1) {
+		++g_explorer_restarts;
+		#ifndef _DEBUG
+		EmptyWorkingSet(GetCurrentProcess());
+		#endif
+	} else
+		DebugLog(0, "already hooked");
 	DebugLog(-1, "done injecting");
 }
 //================================================================================================

@@ -296,10 +296,11 @@ int Clock_Inject(HWND hwnd)
 	hwndClock = Clock_GetClock(1);
 	gs_hwndTClockMain = hwnd;
 	if(gs_hwndClock && IsWindow(gs_hwndClock) && gs_hwndClock==hwndClock){
-		SendMessage(gs_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)gs_hwndClock);
-		return 0; // already hooked / old instance
+		if(gs_taskbar)
+			SendMessage(gs_hwndTClockMain, MAINM_CLOCKINIT, 0, (LPARAM)gs_hwndClock);
+		return -1; // already hooked / old instance
 	}
-	gs_hwndClock = NULL;
+	gs_taskbar = gs_tray = gs_hwndClock = NULL;
 	
 	// find the taskbar
 	hwndBar = FindWindowA("Shell_TrayWnd", NULL);
@@ -319,6 +320,7 @@ int Clock_Inject(HWND hwnd)
 	if(!m_hhook)
 		return 3;
 	
+	gs_hwndClock = hwndClock;
 	// refresh the taskbar
 	PostMessage(hwndBar, WM_SIZE, SIZE_RESTORED, 0);
 	
@@ -338,7 +340,7 @@ void Clock_InjectFinalize()
 void Clock_Exit()
 {
 	Clock_InjectFinalize(); // uninstall hook helper if any
-	if(gs_hwndClock && IsWindow(gs_hwndClock)){
+	if(gs_taskbar && IsWindow(gs_taskbar)){
 		HANDLE lock;
 		SendMessage(gs_hwndClock,WM_COMMAND,IDM_EXIT,0); // kill our clock
 		lock = OpenSemaphore(SYNCHRONIZE|SEMAPHORE_MODIFY_STATE, 0, kConfigName+1);
@@ -347,7 +349,6 @@ void Clock_Exit()
 		CloseHandle(lock);
 		Sleep(1); // hopefully useless sleep
 		
-		gs_taskbar = gs_tray = NULL;
-		gs_hwndClock = NULL;
+		gs_taskbar = gs_tray = gs_hwndClock = NULL;
 	}
 }
