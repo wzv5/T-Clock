@@ -232,6 +232,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		DWORD processid;
 		HWND hwndTray = FindWindowA("Shell_TrayWnd", NULL);
 		DebugLog(1, "exiting explorer...");
+		g_explorer_restarts = 0;
 		if(hwndTray) {
 			GetWindowThreadProcessId(hwndTray, &processid);
 			if(api.OS >= TOS_VISTA) {
@@ -279,7 +280,6 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 			}
 			CloseHandle(process);
 		}
-		g_explorer_restarts = 0;
 		if(wID == IDM_RESTART_EXPLORER) {
 			DebugLog(0, "restarting explorer...");
 			api.Exec(L"explorer", NULL, NULL);
