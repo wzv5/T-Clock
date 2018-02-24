@@ -496,7 +496,7 @@ static void InjectClockHook(HWND hwnd) {
 	int error, retry;
 	DWORD ticks = GetTickCount();
 	DebugLog(1, "injecting T-Clock... (%i)", g_explorer_restarts);
-	if(ticks - s_restart_ticks < 30000){
+	if(ticks - s_restart_ticks < 40000) {
 		if(g_explorer_restarts >= 3){
 			ticks = g_WM_TaskbarCreated;
 			g_WM_TaskbarCreated = 0x7FFF; // highest valid WM_USER to temporarily disable WM_TaskbarCreated
