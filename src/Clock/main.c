@@ -698,7 +698,8 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		return 0;
 	
 	default:
-		if(message == g_WM_TaskbarCreated){
+		if(message == g_WM_TaskbarCreated) {
+			ReplyMessage(0);
 			InjectClockHook(hwnd);
 			return 0;
 		}
