@@ -498,16 +498,21 @@ static void InjectClockHook(HWND hwnd) {
 	DebugLog(1, "injecting T-Clock... (%i)", g_explorer_restarts);
 	if(ticks - s_restart_ticks < 30000){
 		if(g_explorer_restarts >= 3){
-			if(api.Message(0,
-					L"Multiple Explorer crashes or restarts detected\n"
-					L"It's possible that T-Clock is crashing your Explorer,\n"
-					L"automated hooking postponed.\n"
-					L"\n"
-					L"Take precaution and exit T-Clock now?", L"T-Clock", MB_YESNO|MB_SETFOREGROUND, MB_ICONEXCLAMATION) == IDYES) {
+			ticks = g_WM_TaskbarCreated;
+			g_WM_TaskbarCreated = 0x7FFF; // highest valid WM_USER to temporarily disable WM_TaskbarCreated
+			retry = api.Message(0,
+						L"Multiple Explorer crashes or restarts detected\n"
+						L"It's possible that T-Clock is crashing your Explorer,\n"
+						L"automated hooking postponed.\n"
+						L"\n"
+						L"Take precaution and exit T-Clock now?", L"T-Clock", MB_YESNO|MB_SETFOREGROUND, MB_ICONEXCLAMATION);
+			g_WM_TaskbarCreated = ticks;
+			if(retry == IDYES) {
 				SendMessage(hwnd, WM_CLOSE, 0, 0);
 				return;
 			}
-			s_restart_ticks = GetTickCount();
+			ticks = GetTickCount();
+			s_restart_ticks = ticks;
 			g_explorer_restarts = 0;
 		}
 	}else{
