@@ -203,6 +203,9 @@ enum{ // Drop&File enum / registry settings
 /// outputs a debug message using sprintf()
 #define DBGOUT_(fmt,...) __pragma(warning(suppress:4127)) do{static char _dbgbuf[1024]; sprintf(_dbgbuf,fmt,##__VA_ARGS__); OutputDebugStringA(_dbgbuf);}while(0)
 #ifdef _DEBUG
+#	ifndef LOGGING
+#		define LOGGING
+#	endif
 #	define DBGMSG DBGMSG_ /**< DEBUG; \sa DBGMSG_ */
 #	define DBGOUT DBGOUT_ /**< DEBUG; \sa DBGOUT_ */
 #else

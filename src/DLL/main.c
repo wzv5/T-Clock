@@ -15,11 +15,14 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   /
 	api.hInstance = hinstDLL;
 	switch(fdwReason) {
 	case DLL_PROCESS_ATTACH:
+		DebugLog(0, "DLL_PROCESS_ATTACH");
 		#if !defined(_MSC_VER) || defined(_DLL) // if not static MSVC build
 		DisableThreadLibraryCalls(hinstDLL);
 		#endif
 		break;
 	case DLL_PROCESS_DETACH:
+		DebugLog(0, "DLL_PROCESS_DETACH");
+		DebugLogFree();
 		if(g_exit_lock) {
 			// "notify" Clock.exe about our exit
 			ReleaseSemaphore(g_exit_lock, 1, NULL);

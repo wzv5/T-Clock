@@ -6,6 +6,11 @@
 #include "utl.h"
 #include <tlhelp32.h>
 
+#ifdef LOGGING
+#	include <time.h>
+#	include <shlobj.h> // SHGetFolderPath()
+#endif // LOGGING
+
 int IsRunAsAdmin()
 {
 	int is_admin = 0;
@@ -422,3 +427,83 @@ HBITMAP GetBitmapFromIcon(HICON icon, int size) {
 
 	return bitmap;
 }
+
+#ifdef LOGGING
+EXTERN_C IMAGE_DOS_HEADER __ImageBase; ///< own dll/exe handle
+typedef struct LOG_SHARE {
+	FILE* fp;
+	int indent;
+} LOG_SHARE;
+static HANDLE s_log_share = NULL;
+static LOG_SHARE* s_log = NULL;
+static const char* find_titleA(const char* path) {
+	const char* file = NULL;
+	for(; path[0]; ++path) {
+		if(path[0] == '\\' || path[0] == '/')
+			file = path + 1;
+	}
+	return file ? file : path;
+}
+void DebugLog(int indent, const char* format, ...) {
+	va_list args;
+	union u {
+		wchar_t path[MAX_PATH];
+		char buf[MAX_PATH * sizeof(wchar_t)];
+	} u;
+	SYSTEMTIME now;
+	
+	if(!s_log) {
+		int bfirst;
+		sprintf(u.buf, "TClLg%lx", GetCurrentProcessId());
+		s_log_share = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LOG_SHARE), u.buf);
+		if(!s_log_share)
+			return;
+		bfirst = (GetLastError() != ERROR_ALREADY_EXISTS);
+		s_log = (LOG_SHARE*)MapViewOfFile(s_log_share, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+		if(!s_log) {
+			DebugLogFree();
+			return;
+		}
+		if(bfirst) {
+			s_log->fp = NULL;
+			s_log->indent = 0;
+			if(SHGetFolderPath(NULL, CSIDL_DESKTOP, NULL, SHGFP_TYPE_CURRENT, u.path) == S_OK) {
+				add_title(u.path, L"T-Clock.log");
+				s_log->fp = _wfopen(u.path, L"ab");
+				if(s_log->fp) { // don't really care if the log couldn't be made
+					fputs("------ T-Clock: ", s_log->fp);
+					DebugLog(0, "- logging started -");
+				}
+			}
+		}
+	}
+	s_log->indent += indent;
+	if(*format) {
+		GetSystemTime(&now);
+		GetModuleFileNameA(NULL, u.buf, _countof(u.buf));
+		for(indent=s_log->indent-(indent>0 ? indent : 0); indent > 0; --indent)
+			fputc('	', s_log->fp);
+		fprintf(s_log->fp, "%04hu/%02hu/%02hu %02hu:%02hu:%02hu.%03hu UTC [%s", now.wYear, now.wMonth, now.wDay, now.wHour, now.wMinute, now.wSecond, now.wMilliseconds, find_titleA(u.buf));
+		if((HINSTANCE)&__ImageBase != GetModuleHandle(NULL)) {
+			GetModuleFileNameA((HINSTANCE)&__ImageBase, u.buf, _countof(u.buf));
+			fprintf(s_log->fp, ",%s", find_titleA(u.buf));
+		}
+		fputs("] ", s_log->fp);
+		va_start(args, format);
+		vfprintf(s_log->fp, format, args);
+		va_end(args);
+		fputc('\n', s_log->fp);
+	}
+	fflush(s_log->fp);
+}
+void DebugLogFree() {
+	if(s_log_share) {
+		if(s_log) {
+			if(s_log->fp)
+				fclose(s_log->fp), s_log->fp = NULL;
+			UnmapViewOfFile(s_log), s_log = NULL;
+		}
+		CloseHandle(s_log_share), s_log_share = NULL;
+	}
+}
+#endif // LOGGING

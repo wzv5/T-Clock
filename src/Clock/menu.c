@@ -231,6 +231,7 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 		HANDLE process;
 		DWORD processid;
 		HWND hwndTray = FindWindowA("Shell_TrayWnd", NULL);
+		DebugLog(1, "exiting explorer...");
 		if(hwndTray) {
 			GetWindowThreadProcessId(hwndTray, &processid);
 			if(api.OS >= TOS_VISTA) {
@@ -279,8 +280,11 @@ LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam)   //--------------------------
 			CloseHandle(process);
 		}
 		g_explorer_restarts = 0;
-		if(wID == IDM_RESTART_EXPLORER)
+		if(wID == IDM_RESTART_EXPLORER) {
+			DebugLog(0, "restarting explorer...");
 			api.Exec(L"explorer", NULL, NULL);
+		}
+		DebugLog(-1, "done");
 		break;}
 	case IDM_FWD_CASCADE: case IDM_FWD_SIDEBYSIDE: case IDM_FWD_STACKED: case IDM_FWD_SHOWDESKTOP: case IDM_FWD_MINALL: case IDM_FWD_UNDO:
 		g_undo=(wID!=IDM_FWD_UNDO);

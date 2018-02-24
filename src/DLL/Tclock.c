@@ -545,7 +545,7 @@ void InitClock(HWND hwnd)   //--------------------------------------------------
 }
 
 extern HANDLE g_exit_lock; // main.c
-EXTERN_C IMAGE_DOS_HEADER __ImageBase; ///< own dll handle
+EXTERN_C IMAGE_DOS_HEADER __ImageBase; ///< own dll/exe handle
 static void SelfDestruct(void* user)
 { // never crashed without this SelfDestruct stub, but better safe then sorry :P Crashing the explorer isn't that nice.
 	(void)user;

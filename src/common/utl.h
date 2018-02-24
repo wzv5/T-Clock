@@ -115,6 +115,21 @@ HBITMAP CreateBitmapWithAlpha(HDC hdc, int width, int height);
  * \return bitmap or \c NULL on error
  * \sa GetSystemMetrics(), SM_CXICON, SM_CYICON, SM_CXSMICON, SM_CYSMICON */
 HBITMAP GetBitmapFromIcon(HICON icon, int size);
+/**
+ * \brief logs debug stuff to T-Clock.log on the user's Desktop with \c fprintf()
+ * \param indent \c 0 for a simple log entry, other values will increase or decrease the log indentation. (useful for recursive functions)
+ * \param format string with \c fprintf() format specifiers (can be an empty string for log creation)
+ * \param ... any number of data to format
+ * \remark - symbol only exported for debug builds or if \c LOGGING has been defined
+ * \sa DebugLogFree() */
+void DebugLog(int indent, const char* format, ...);
+/**
+ * \brief cleanup function to \c DebugLog() that closes file pointers \sa DebugLog() */
+void DebugLogFree();
+#ifndef LOGGING
+#	define DebugLog(indent,format,...) /**< nop; RELEASE (LOGGING not defined) */
+#	define DebugLogFree() /**< nop; RELEASE (LOGGING not defined) */
+#endif // LOGGING
 #ifdef __cplusplus
 }
 #endif

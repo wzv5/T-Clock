@@ -235,7 +235,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	(void)nShowCmd;
 	
 	g_instance = hInstance;
+	DebugLog(0, "command line: %ls", lpCmdLine);
 	updated = LoadClockAPI(L"misc/T-Clock" ARCH_SUFFIX, &api);
+	DebugLog(0, "API loaded");
 	if(updated) {
 		wchar_t title[16];
 		swprintf(title, _countof(title), FMT("API error (%i)"), updated);
@@ -281,7 +283,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 			CloseHandle(processlock);
 			hwndMain = FindWindow(g_szClassName, NULL);
 			if(hwndMain) { // This One Sends Commands to the Instance
+				DebugLog(0, "sending commands to 1st instance");
 				ProcessCommandLine(hwndMain, lpCmdLine); // That is Currently Running.
+				DebugLog(0, "2nd instance command-line processed, bye");
 				return 0;
 			}
 			Sleep(200);
@@ -291,6 +295,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 		#ifndef _WIN64
 		if(IsWow64()){
 			CloseHandle(processlock);
+			DebugLog(0, "switching to 64bit version...");
 			api.ShellExecute(NULL, L"Clock" ARCH_SUFFIX_64 L".exe", lpCmdLine, NULL, SW_SHOWNORMAL, &processlock);
 			if(processlock) {
 				while((lpCmdLine = wcschr(lpCmdLine,'/')) != NULL) { // MSVC sucks == true
@@ -302,6 +307,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 				}
 				CloseHandle(processlock);
 			}
+			DebugLog(0, "bye.");
 			return 0;
 		}
 		#endif // _WIN64
@@ -341,11 +347,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 				ChangeWindowMessageFilter(msgid,MSGFLT_ADD);
 		}
 	}
+	DebugLog(0, "resources loaded, class created, filters setup");
 	
 	// create a hidden window
 	g_hwndTClockMain = hwndMain = CreateWindowEx(WS_EX_NOACTIVATE, MAKEINTATOM(g_atomTClock),NULL, 0, 0,0,0,0, NULL,NULL,g_instance,NULL);
+	DebugLog(0, "main window created");
 	// This Checks for First Instance Startup Options
 	ProcessCommandLine(hwndMain, lpCmdLine);
+	DebugLog(0, "command-line processed");
 	
 	RegisterHotkeys(hwndMain, 1);
 	
@@ -354,6 +363,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 			RegisterSession(hwndMain);
 	}
 
+	DebugLog(0, "app startup complete");
 	PostMessage(hwndMain, g_WM_TaskbarCreated, 0, 0);
 	if(updated==1){
 		PostMessage(hwndMain,WM_COMMAND,IDM_SHOWPROP,0);
@@ -367,6 +377,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	UnregisterSession(hwndMain);
 	
 	EndNewAPI(NULL);
+	DebugLog(-1, "exited.");
+	DebugLogFree();
 	
 	return (int)msg.wParam;
 }
@@ -483,6 +495,7 @@ static void InjectClockHook(HWND hwnd) {
 	static DWORD s_restart_ticks = 0;
 	int error, retry;
 	DWORD ticks = GetTickCount();
+	DebugLog(1, "injecting T-Clock... (%i)", g_explorer_restarts);
 	if(ticks - s_restart_ticks < 30000){
 		if(++g_explorer_restarts >= 3){
 			if(api.Message(0,
@@ -503,6 +516,7 @@ static void InjectClockHook(HWND hwnd) {
 	}
 	for(error=api.Inject(hwnd),retry=0; error; error=api.Inject(hwnd)) {
 		if(error == 1) { // silently retry to find the Taskbar a few times
+			DebugLog(0, "finding Taskbar, retry %i", retry);
 			if(++retry < 5) {
 				Sleep(2000);
 			} else {
@@ -523,6 +537,7 @@ static void InjectClockHook(HWND hwnd) {
 	#ifndef _DEBUG
 	EmptyWorkingSet(GetCurrentProcess());
 	#endif
+	DebugLog(-1, "done injecting");
 }
 //================================================================================================
 //--------------------------------------------------+++--> The Main Application "Window" Procedure:
@@ -592,6 +607,7 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 			break;
 		/* fall through */
 	case WM_DESTROY:
+		DebugLog(1, "exiting...");
 		KillTimer(hwnd, IDTIMER_MAIN);
 		if(g_hwndSheet && IsWindow(g_hwndSheet))
 			SendMessage(g_hwndSheet, WM_CLOSE, 0, 0);
@@ -616,6 +632,7 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		return HotkeyMessage(hwnd, wParam, lParam);
 		//==================================================
 	case MAINM_CLOCKINIT: // Messages sent/posted from TCDLL.dll
+		DebugLog(0, "tray clock initialized");
 		g_hwndClock = (HWND)lParam;
 		api.InjectFinalize(); // injected, now remove hook
 		return 0;
@@ -629,6 +646,7 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		return 0;
 		
 	case MAINM_EXPLORER_SHUTDOWN:
+		DebugLog(0, "explorer exited gracefully.");
 		g_explorer_restarts = 0;
 		return 0;
 		
