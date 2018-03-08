@@ -35,6 +35,9 @@ INT_PTR CALLBACK Page_About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 	switch(message) {
 	case WM_INITDIALOG:
 		OnInit(hDlg);
+#		ifdef LOGGING
+		CheckDlgButton(hDlg, IDC_LOGGING, (api.GetInt(L"",L"NoLog",0) != VER_REVISION));
+#		endif // LOGGING
 		return TRUE;
 	case WM_DESTROY:{
 		int controlid;
@@ -100,6 +103,17 @@ INT_PTR CALLBACK Page_About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 		}else if(id == IDC_UPDATE_RELEASE) {
 			SetUpdateChecks(hDlg, 1);
 		}
+#		ifdef LOGGING
+		else if(id == IDC_LOGGING) {
+			if(!IsDlgButtonChecked(hDlg,id))
+				api.SetInt(L"", L"NoLog", VER_REVISION);
+			else
+				api.DelValue(L"", L"NoLog");
+			SendMessage(g_hwndClock, CLOCKM_LOGGING_CLEANUP, 0, 0);
+			DebugLogFree();
+			return TRUE;
+		}
+#		endif // LOGGING
 		SendPSChanged(hDlg);
 		return TRUE;}
 	case WM_NOTIFY:

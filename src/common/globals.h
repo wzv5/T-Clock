@@ -138,15 +138,16 @@ enum{ // Drop&File enum / registry settings
 #define MAINM_EXPLORER_SHUTDOWN     (WM_USER + 5)
 #define MAINMLAST                   MAINM_BLINKOFF
 // messages to send the clock
-#define CLOCKM_REFRESHCLOCK					(WM_USER+1)
-#define CLOCKM_REFRESHTASKBAR				(WM_USER+2)
-#define CLOCKM_BLINK						(WM_USER+3)
-#define CLOCKM_COPY							(WM_USER+4)
-#define CLOCKM_REFRESHDESKTOP				(WM_USER+5)
-//#define CLOCKM_REFRESHCLEARTASKBAR			(WM_USER+6)
-#define CLOCKM_REFRESHCLOCKPREVIEW			(WM_USER+7)
-#define CLOCKM_REFRESHCLOCKPREVIEWFORMAT	(WM_USER+8)
-#define CLOCKM_BLINKOFF						(WM_USER+9)
+#define CLOCKM_REFRESHCLOCK               (WM_USER+1)
+#define CLOCKM_REFRESHTASKBAR             (WM_USER+2)
+#define CLOCKM_BLINK                      (WM_USER+3)
+#define CLOCKM_COPY                       (WM_USER+4)
+#define CLOCKM_REFRESHDESKTOP             (WM_USER+5)
+//#define CLOCKM_REFRESHCLEARTASKBAR        (WM_USER+6)
+#define CLOCKM_REFRESHCLOCKPREVIEW        (WM_USER+7)
+#define CLOCKM_REFRESHCLOCKPREVIEWFORMAT  (WM_USER+8)
+#define CLOCKM_BLINKOFF                   (WM_USER+9)
+#define CLOCKM_LOGGING_CLEANUP            (WM_USER+666)
 
 // Global Buffer Size Labels
 #define TNY_BUFF	32

@@ -15,7 +15,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)   /
 	api.hInstance = hinstDLL;
 	switch(fdwReason) {
 	case DLL_PROCESS_ATTACH:
-		DebugLog(0, "DLL_PROCESS_ATTACH");
+//		DebugLog(0, "DLL_PROCESS_ATTACH"); // API not loaded yet, thus bypasses "NoLog" setting (portable mode)
 		#if !defined(_MSC_VER) || defined(_DLL) // if not static MSVC build
 		DisableThreadLibraryCalls(hinstDLL);
 		#endif

@@ -129,6 +129,7 @@
 #define IDC_ABT_MAILuri                 607
 #define IDC_ABT_FORUMuri                608
 #define IDC_ABT_TCLOCK                  609
+#define IDC_LOGGING                     666 ///< debug logging checkbox (if \c LOGGING is defined)
 #define IDC_QMEN_GROUP1                 700 /* group */
 #define IDC_QMEN_EXITWIN                701 /* group_1 */
 #define IDC_QMEN_AUDIO                  702

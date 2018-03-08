@@ -260,7 +260,19 @@ DLL_EXPORT int SetupClockAPI(int version, TClockAPI* _api){
 	if(_api) // NULL if internally called
 		memcpy(_api, &api, sizeof(TClockAPI));
 	
-//	#if defined(_DEBUG)
+	
+#	ifdef LOGGING
+	{
+		const wchar_t* cmdline = GetCommandLineW();
+		if(cmdline && (cmdline[0] == '\"' || cmdline[0] == '\''))
+			cmdline = wcschr(cmdline+1, cmdline[0]);
+		if(cmdline)
+			cmdline = wcschr(cmdline, ' ');
+		cmdline = (cmdline ? cmdline + 1 : L"");
+		DebugLog(0, "argv: `%ls`", cmdline);
+	}
+#	endif
+//	#ifdef _DEBUG
 	{
 		HMODULE exchndl;
 		#ifdef _WIN64

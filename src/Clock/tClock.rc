@@ -3,6 +3,7 @@
 #include <windows.h> // prepares some resource stuff such as WC_STATIC doesn't work without (also includes WinResrc.h)
 #include <commctrl.h> // UPDOWN_CLASS
 #include "../common/resource.h"
+#include "../common/utl.h"
 #ifdef __GNUC__ //sadly we can't do this for MSVC as it's not smart enough to detect if it's 64 bit or 32 bit
 #   include "version.rc"
 #endif
@@ -165,6 +166,9 @@ BEGIN
     AUTOCHECKBOX    "Regularly check for updates", IDC_UPDATE_RELEASE, 29, 47, 105, 8, WS_TABSTOP
     AUTOCHECKBOX    "include beta versions", IDC_UPDATE_BETA, 142, 46, 83, 8, WS_TABSTOP
     PUSHBUTTON      "check now", IDC_UPDATE_CHECK, 231, 44, 47, 12, WS_TABSTOP
+#   ifdef LOGGING
+    AUTOCHECKBOX    "Debug Logging", IDC_LOGGING, 232, 59, 65, 8
+#   endif
     GROUPBOX        "T-Clock's History", IDC_STATIC, 7, 64, 295, 115
     LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features", IDC_STATIC, 13, 74, 283, 20
     LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.", IDC_STATIC, 13, 97, 283, 28

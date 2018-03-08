@@ -905,6 +905,11 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	case CLOCKM_COPY: // copy format to clipboard
 		OnCopy(hwnd, lParam);
 		return 0;
+#	ifdef LOGGING
+	case CLOCKM_LOGGING_CLEANUP:
+		DebugLogFree();
+		return 0;
+#	endif
 	}
 	return DefSubclassProc(hwnd, message, wParam, lParam);
 }

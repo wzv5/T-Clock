@@ -4,6 +4,7 @@
 // Modified by Stoic Joker: Monday, 03/22/2010 @ 7:32:29pm
 #include "globals.h"
 #include "utl.h"
+#include "version.h"
 #include <tlhelp32.h>
 
 #ifdef LOGGING
@@ -436,6 +437,7 @@ typedef struct LOG_SHARE {
 } LOG_SHARE;
 static HANDLE s_log_share = NULL;
 static LOG_SHARE* s_log = NULL;
+#define kLogDisabled ((LOG_SHARE*)(intptr_t)-1)
 static const char* find_titleA(const char* path) {
 	const char* file = NULL;
 	for(; path[0]; ++path) {
@@ -452,8 +454,14 @@ void DebugLog(int indent, const char* format, ...) {
 	} u;
 	SYSTEMTIME now;
 	
+	if(s_log == kLogDisabled)
+		return;
 	if(!s_log) {
 		int bfirst;
+		if(api.GetInt(L"", L"NoLog", 0) == VER_REVISION) {
+			s_log = kLogDisabled;
+			return;
+		}
 		sprintf(u.buf, "TClLg%lx", GetCurrentProcessId());
 		s_log_share = CreateFileMappingA(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE, 0, sizeof(LOG_SHARE), u.buf);
 		if(!s_log_share)
@@ -478,6 +486,8 @@ void DebugLog(int indent, const char* format, ...) {
 		}
 	}
 	s_log->indent += indent;
+	if(!s_log->fp)
+		return;
 	if(*format) {
 		GetSystemTime(&now);
 		GetModuleFileNameA(NULL, u.buf, _countof(u.buf));
@@ -497,6 +507,8 @@ void DebugLog(int indent, const char* format, ...) {
 	fflush(s_log->fp);
 }
 void DebugLogFree() {
+	if(s_log == kLogDisabled)
+		s_log = NULL;
 	if(s_log_share) {
 		if(s_log) {
 			if(s_log->fp)

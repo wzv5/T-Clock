@@ -235,9 +235,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, wchar_t* lpCmd
 	(void)nShowCmd;
 	
 	g_instance = hInstance;
-	DebugLog(0, "command line: %ls", lpCmdLine);
 	updated = LoadClockAPI(L"misc/T-Clock" ARCH_SUFFIX, &api);
-	DebugLog(0, "API loaded");
 	if(updated) {
 		wchar_t title[16];
 		swprintf(title, _countof(title), FMT("API error (%i)"), updated);
