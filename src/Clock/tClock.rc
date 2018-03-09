@@ -159,14 +159,14 @@ BEGIN
     CTEXT           "White", IDC_ABT_StoicJoker, 261, 19, 38, 8, SS_CENTER
     CTEXT           "Tiger", IDC_ABT_StoicJoker2, 261, 28, 38, 8, SS_CENTER
     RTEXT           "web:", IDC_ABT_WEB, 64, 13, 29, 9, SS_RIGHT
-    LTEXT           "https://github.com/White-Tiger/T-Clock", IDC_ABT_WEBuri, 95, 13, 129, 9, SS_LINK
     RTEXT           "email:", IDC_ABT_MAIL, 64, 24, 29, 9, SS_RIGHT
-    LTEXT           "T-Clock@WhiteTiger.e4ward.com", IDC_ABT_MAILuri, 95, 24, 129, 9, SS_LINK
     RTEXT           "forum:", IDC_ABT_FORUM, 64, 35, 29, 9, SS_RIGHT
+    LTEXT           "https://github.com/White-Tiger/T-Clock", IDC_ABT_WEBuri, 95, 13, 129, 9, SS_LINK
+    LTEXT           "T-Clock@WhiteTiger.e4ward.com", IDC_ABT_MAILuri, 95, 24, 129, 9, SS_LINK
     LTEXT           "http://donationcoder.com/forum/?board=324.0", IDC_ABT_FORUMuri, 95, 35, 129, 9, SS_LINK
-    AUTOCHECKBOX    "Regularly check for updates", IDC_UPDATE_RELEASE, 29, 47, 105, 8, WS_TABSTOP
-    AUTOCHECKBOX    "include beta versions", IDC_UPDATE_BETA, 142, 46, 83, 8, WS_TABSTOP
-    PUSHBUTTON      "check now", IDC_UPDATE_CHECK, 231, 44, 47, 12, WS_TABSTOP
+    AUTOCHECKBOX    "Regularly check for updates", IDC_UPDATE_RELEASE, 29, 47, 105, 8
+    AUTOCHECKBOX    "include beta versions", IDC_UPDATE_BETA, 142, 46, 83, 8
+    PUSHBUTTON      "check now", IDC_UPDATE_CHECK, 231, 44, 47, 12
 #   ifdef LOGGING
     AUTOCHECKBOX    "Debug Logging", IDC_LOGGING, 232, 59, 65, 8
 #   endif
@@ -174,7 +174,7 @@ BEGIN
     LTEXT           "The Original T-Clock was written by Kazubon in the mid to late 90's. It was released with Source Code included so that others could learn from and expand on its features", IDC_STATIC, 13, 74, 283, 20
     LTEXT           "T-Clock2 is a modified version of Kazubon's Original code written by Two_toNe in 2003. Two_toNe added many new features that allowed it to run properly with the then new Windows XP themes.", IDC_STATIC, 13, 97, 283, 28
     LTEXT           "",IDC_ABT_TCLOCK, 13, 127, 283, 50
-    AUTOCHECKBOX    "Start T-Clock Redux when Windows starts", IDC_STARTUP, 42, 184, 222, 11, WS_TABSTOP
+    AUTOCHECKBOX    "Start T-Clock Redux when Windows starts", IDC_STARTUP, 42, 184, 222, 11
 END
 
 IDD_PAGEALARM DIALOGEX 0, 0, 310, 199
@@ -196,7 +196,7 @@ BEGIN
     EDITTEXT        IDC_MINUTEALARM, 84, 41, 26, 13, ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
     CONTROL         "", IDC_SPINMINUTE, UPDOWN_CLASS, UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_NOTHOUSANDS | UDS_WRAP | UDS_AUTOBUDDY | UDS_SETBUDDYINT, 105, 68, 11, 12
     CTEXT           "AM", IDC_AMPM_DISPLAY, 114, 43, 29, 8, SS_CENTER
-    AUTOCHECKBOX    "PM", IDC_AMPM_CHECK, 147, 43, 23, 8, 0
+    AUTOCHECKBOX    "PM", IDC_AMPM_CHECK, 147, 43, 23, 8
     AUTOCHECKBOX    "12H", IDC_12HOURALARM, 174, 43, 27, 8
     AUTOCHECKBOX    "one-shot", IDC_ALRM_ONCE, 238, 20, 45, 8
     PUSHBUTTON      "Days...", IDC_ALARMDAY, 242, 32, 33, 14
@@ -297,8 +297,8 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Basic clock configuration",IDC_STATIC,7,3,295,151
     RTEXT           "Locale:",IDC_STATIC,107,16,25,10
-    GROUPBOX        "Date options",IDC_STATIC,17,30,261,44
     COMBOBOX        IDC_LOCALE,138,14,125,120,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Date options",IDC_STATIC,17,30,261,44
     CONTROL         "Month (digit)",IDC_MONTH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,42,59,11
     CONTROL         "Month (text)",IDC_MONTHS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,58,59,11
     CONTROL         "Day of Month (date)",IDC_DAY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,106,42,75,11
@@ -320,8 +320,8 @@ BEGIN
     COMBOBOX        IDC_PMSYMBOL,226,128,35,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "",IDC_STATIC,7,159,295,33
     CONTROL         "Advanced clock format",IDC_CUSTOM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,159,89,8
-    LTEXT           "See T-Clock Help.rtf for available formats",IDC_FORMAT_LNK,160,164,135,8,SS_LINK
     EDITTEXT        IDC_FORMAT,14,173,282,12,ES_AUTOHSCROLL
+    LTEXT           "See T-Clock Help.rtf for available formats",IDC_FORMAT_LNK,160,164,135,8,SS_LINK
 END
 
 IDD_PAGEMOUSE DIALOGEX 0, 0, 310, 200
