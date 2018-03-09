@@ -66,8 +66,7 @@ INT_PTR CALLBACK Page_Format(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetTextColor(hdcStatic, GetSysColor(COLOR_GRAYTEXT));
 			break;
 		case IDC_FORMAT_LNK:
-			LinkControl_OnCtlColorStatic(hDlg, wParam, lParam);
-			break;
+			return LinkControl_OnCtlColorStatic(hDlg, wParam, lParam);
 		}
 		return FALSE;
 	}

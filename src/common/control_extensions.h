@@ -65,9 +65,11 @@ void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t us
 #define LCF_MAIL         0x04 /**< execute link as a \c mailto: by appending it \sa LCF_HTTP, LCF_HTTPS */
 #define LCF_PARAMS       0x10 /**< link target is a command line */
 
+#define SS_LINK          (SS_NOTIFY | SS_NOPREFIX | WS_TABSTOP) /**< styles for proper link handling */
+
 /**
  * \brief "converts" a static text control into a link like control
- * \param link_control static text control to become a link (with \c SS_NOTIFY style)
+ * \param link_control static text control to become a link (with \c SS_LINK style(s) set)
  * \param flags "any" combination of \c LCF_*
  * \param target link target; can be \c NULL if \p link_control's text is to be used
  * \remark \p target is used directly without a copy. You must guarantee its existence for the lifetime of our link control

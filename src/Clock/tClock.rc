@@ -3,6 +3,7 @@
 #include <windows.h> // prepares some resource stuff such as WC_STATIC doesn't work without (also includes WinResrc.h)
 #include <commctrl.h> // UPDOWN_CLASS
 #include "../common/resource.h"
+#include "../common/control_extensions.h"
 #include "../common/utl.h"
 #ifdef __GNUC__ //sadly we can't do this for MSVC as it's not smart enough to detect if it's 64 bit or 32 bit
 #   include "version.rc"
@@ -158,11 +159,11 @@ BEGIN
     CTEXT           "White", IDC_ABT_StoicJoker, 261, 19, 38, 8, SS_CENTER
     CTEXT           "Tiger", IDC_ABT_StoicJoker2, 261, 28, 38, 8, SS_CENTER
     RTEXT           "web:", IDC_ABT_WEB, 64, 13, 29, 9, SS_RIGHT
-    LTEXT           "https://github.com/White-Tiger/T-Clock", IDC_ABT_WEBuri, 95, 13, 129, 9, SS_NOTIFY
+    LTEXT           "https://github.com/White-Tiger/T-Clock", IDC_ABT_WEBuri, 95, 13, 129, 9, SS_LINK
     RTEXT           "email:", IDC_ABT_MAIL, 64, 24, 29, 9, SS_RIGHT
-    LTEXT           "T-Clock@WhiteTiger.e4ward.com", IDC_ABT_MAILuri, 95, 24, 129, 9, SS_NOTIFY
+    LTEXT           "T-Clock@WhiteTiger.e4ward.com", IDC_ABT_MAILuri, 95, 24, 129, 9, SS_LINK
     RTEXT           "forum:", IDC_ABT_FORUM, 64, 35, 29, 9, SS_RIGHT
-    LTEXT           "http://donationcoder.com/forum/?board=324.0", IDC_ABT_FORUMuri, 95, 35, 129, 9, SS_NOTIFY
+    LTEXT           "http://donationcoder.com/forum/?board=324.0", IDC_ABT_FORUMuri, 95, 35, 129, 9, SS_LINK
     AUTOCHECKBOX    "Regularly check for updates", IDC_UPDATE_RELEASE, 29, 47, 105, 8, WS_TABSTOP
     AUTOCHECKBOX    "include beta versions", IDC_UPDATE_BETA, 142, 46, 83, 8, WS_TABSTOP
     PUSHBUTTON      "check now", IDC_UPDATE_CHECK, 231, 44, 47, 12, WS_TABSTOP
@@ -319,7 +320,7 @@ BEGIN
     COMBOBOX        IDC_PMSYMBOL,226,128,35,120,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "",IDC_STATIC,7,159,295,33
     CONTROL         "Advanced clock format",IDC_CUSTOM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,159,89,8
-    LTEXT           "See T-Clock Help.rtf for available formats",IDC_FORMAT_LNK,160,164,135,8,SS_NOTIFY
+    LTEXT           "See T-Clock Help.rtf for available formats",IDC_FORMAT_LNK,160,164,135,8,SS_LINK
     EDITTEXT        IDC_FORMAT,14,173,282,12,ES_AUTOHSCROLL
 END
 

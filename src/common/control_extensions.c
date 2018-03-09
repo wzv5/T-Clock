@@ -164,6 +164,7 @@ void ListView_SortItemsExEx(HWND list, int column, sort_func_t func, intptr_t us
 //#define WM_LINKSETTARGET    WM_USER+0x4910
 
 static short m_links = 0;
+static HWND m_link_hovered = NULL;
 static HFONT m_link_font_hovered = NULL;
 static HFONT m_link_font_underline;
 static HCURSOR m_cursor_hand;
@@ -183,7 +184,7 @@ void LinkControl_Setup(HWND link_control, unsigned char flags, const wchar_t* ta
 	data->target = target;
 	data->flags = flags;
 	SetWindowLongPtr(link_control, GWLP_USERDATA, (LONG_PTR)data);
-	if(!m_links++){
+	if(++m_links == 1){
 		HFONT hfont;
 		LOGFONT logft;
 		m_cursor_hand = LoadCursor(NULL, IDC_HAND);
@@ -196,13 +197,47 @@ void LinkControl_Setup(HWND link_control, unsigned char flags, const wchar_t* ta
 }
 
 LRESULT LinkControl_OnCtlColorStatic(HWND hwnd, WPARAM wParam, LPARAM lParam) {
-	if(m_link_font_hovered)
+	if(m_link_hovered == (HWND)lParam)
 		SetTextColor((HDC)wParam,RGB(255,0,0));
 	else
 		SetTextColor((HDC)wParam,RGB(0,0,255));
 	return DefWindowProc(hwnd, WM_CTLCOLORSTATIC, wParam, lParam);
 }
 
+static LRESULT LinkControl_ExecuteLink_(HWND hwnd) {
+	wchar_t str[MAX_PATH];
+	wchar_t* offset;
+	link_data* data = (link_data*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+	HWND parent = GetParent(hwnd);
+	if(data->flags != LCF_NOTIFYONLY){
+		str[0] = '\0';
+		offset = str;
+		if(data->flags & LCF_HTTP){
+			offset += wsprintf(offset, FMT("http://"));
+		}else if(data->flags & LCF_HTTPS){
+			offset += wsprintf(offset, FMT("https://"));
+		}else if(data->flags & LCF_MAIL){
+			offset += wsprintf(offset, FMT("mailto:"));
+		}
+		
+		if(data->target){
+			wcsncpy_s(offset, (_countof(str)-(offset-str)), data->target, _TRUNCATE);
+		}else{
+			GetWindowText(hwnd, offset, (int)(_countof(str)-(offset-str)));
+		}
+		
+		if(str[0]){
+			if(data->flags & LCF_PARAMS)
+				api.ExecFile(str, parent);
+			else
+				api.Exec(str, NULL, parent);
+		}
+	}
+	
+	if(data->flags & LCF_NOTIFY)
+		SendMessage(parent, WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hwnd),STN_CLICKED), (LPARAM)hwnd);
+	return 0;
+}
 LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam){
 	switch(msg){
 	case WM_DESTROY:{
@@ -213,15 +248,46 @@ LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		break;}
 	//case WM_LINKSETTARGET:
 	//	return 0;
+	case WM_KILLFOCUS:
+	case WM_SETFOCUS: {
+		HWND parent = GetParent(hwnd);
+		HDC dc;
+		RECT rc;
+		if(parent && !(DefWindowProc(hwnd,WM_QUERYUISTATE,0,0) & UISF_HIDEFOCUS)) {
+			GetClientRect(hwnd, &rc);
+			MapWindowPoints(hwnd, parent, (POINT*)&rc, 2);
+			InflateRect(&rc, 1, 1);
+			RedrawWindow(parent, &rc, 0, RDW_INVALIDATE|RDW_ERASE|RDW_ERASENOW); // required for WM_PAINT
+			if(msg == WM_SETFOCUS) {
+				dc = GetDC(parent);
+				DrawFocusRect(dc, &rc);
+				ReleaseDC(parent, dc);
+			}
+		}
+		return 0;}
+	case WM_PAINT:
+		if(GetFocus() == hwnd) // required for initial setup. the parent might not have been drawn when "WM_SETFOCUS" triggers
+			LinkControlProc(hwnd, WM_SETFOCUS, 0, 0);
+		break;
+	case WM_GETDLGCODE:
+//		if(wParam == VK_RETURN)
+//			return DLGC_WANTALLKEYS;
+		return 0;
+	case WM_KEYDOWN: {
+		switch(wParam) {
+		case VK_SPACE:
+//		case VK_RETURN:
+			return LinkControl_ExecuteLink_(hwnd);
+		}
+		break;}
 	case WM_MOUSELEAVE: {
-		HFONT hfont = m_link_font_hovered;
-		m_link_font_hovered = NULL;
-		SetWindowFont(hwnd, hfont, 1);
+		m_link_hovered = NULL;
+		SetWindowFont(hwnd, m_link_font_hovered, 1);
 		return 0;}
 	case WM_SETCURSOR:
-		if(!m_link_font_hovered){
+		if(!m_link_hovered){
 			TRACKMOUSEEVENT tme = {sizeof(tme), TME_LEAVE, 0, 10};
-			tme.hwndTrack = hwnd;
+			m_link_hovered = tme.hwndTrack = hwnd;
 			m_link_font_hovered = GetWindowFont(hwnd);
 			SetCursor(m_cursor_hand);
 			SetWindowFont(hwnd, m_link_font_underline, 1);
@@ -229,41 +295,12 @@ LRESULT CALLBACK LinkControlProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		}
 		return TRUE;
 //	case WM_RBUTTONDOWN:
-	case WM_LBUTTONDOWN:{
-		wchar_t str[MAX_PATH];
-		wchar_t* offset;
-		link_data* data = (link_data*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-		HWND parent = GetParent(hwnd);
-		if(data->flags != LCF_NOTIFYONLY){
-			str[0] = '\0';
-			offset = str;
-			if(data->flags & LCF_HTTP){
-				offset += wsprintf(offset, FMT("http://"));
-			}else if(data->flags & LCF_HTTPS){
-				offset += wsprintf(offset, FMT("https://"));
-			}else if(data->flags & LCF_MAIL){
-				offset += wsprintf(offset, FMT("mailto:"));
-			}
-			
-			if(data->target){
-				wcsncpy_s(offset, (_countof(str)-(offset-str)), data->target, _TRUNCATE);
-			}else{
-				GetWindowText(hwnd, offset, (int)(_countof(str)-(offset-str)));
-			}
-			
-			if(str[0]){
-				if(data->flags & LCF_PARAMS)
-					api.ExecFile(str, parent);
-				else
-					api.Exec(str, NULL, parent);
-			}
-		}
-		
-		if(data->flags & LCF_NOTIFY)
-			SendMessage(parent, WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hwnd),STN_CLICKED), (LPARAM)hwnd);
-		return 0;}
+	case WM_LBUTTONDOWN:
+		SetFocus(hwnd);
+		return 0;
 //	case WM_RBUTTONUP:
 	case WM_LBUTTONUP:
+		return LinkControl_ExecuteLink_(hwnd);
 //	case WM_RBUTTONDBLCLK:
 	case WM_LBUTTONDBLCLK:
 		return 0;
