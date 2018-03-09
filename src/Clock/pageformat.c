@@ -86,8 +86,11 @@ INT_PTR CALLBACK Page_Format(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 				SendPSChanged(hDlg);
 			break;
 		case IDC_ZERO:
-		case IDC_FORMAT:
 			SendPSChanged(hDlg);
+			break;
+		case IDC_FORMAT:
+			if(HIWORD(wParam) == EN_CHANGE)
+				SendPSChanged(hDlg);
 			break;
 		default: // "year" -- "Internet Time"
 			if(id>=IDC_YEAR4 && id<=IDC_12HOUR)
