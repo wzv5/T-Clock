@@ -638,6 +638,13 @@ static LRESULT CALLBACK Window_ClockTray_Hooked(HWND hwnd, UINT message, WPARAM 
 		} else {
 			clock_pos = sibling_rc.top;
 			next_pos = sibling_rc.top + sibling_rc.bottom;
+			// initial clock padding for vertical taskbars...
+			sibling = GetWindow(gs_hwndClock, GW_HWNDPREV);
+			if(sibling) {
+				GetClientRect(sibling, &sibling_rc);
+				MapWindowPoints(sibling, hwnd, (POINT*)&sibling_rc.right, 1);
+				next_pos += (clock_pos - 1 - sibling_rc.bottom);
+			}
 		}
 		for(sibling=GetWindow(gs_hwndClock,GW_HWNDNEXT); sibling; sibling=GetWindow(sibling,GW_HWNDNEXT)) {
 			GetClientRect(sibling, &sibling_rc);
