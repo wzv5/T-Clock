@@ -8,8 +8,9 @@
 #include "update.h"
 #include "resource.h"
 
-const wchar_t* kUpdateURL = L"http://rawgit.com/White-Tiger/T-Clock/master/src/version";
-//const wchar_t* kUpdateURL = L"http://cdn.rawgit.com/White-Tiger/T-Clock/master/src/version";
+//const wchar_t* kUpdateURL = L"https://rawgit.com/White-Tiger/T-Clock/master/src/version"; // fails on XP
+//const wchar_t* kUpdateURL = L"https://cdn.rawgit.com/White-Tiger/T-Clock/master/src/version"; // quite unusable thanks to "extreme" caching
+const wchar_t* kUpdateURL = L"https://raw.githubusercontent.com/White-Tiger/T-Clock/master/src/version"; // works on XP, even though it's https
 const wchar_t* kDownloadURL = L"https://github.com/White-Tiger/T-Clock/releases";
 #define UPDATE_BUFFER 2048
 #define WM_DOWNLOAD_RESULT WM_USER /**< 0 if successful, otherwise WINHTTP_CALLBACK_STATUS_* or HTTP status code */
@@ -32,8 +33,8 @@ static MessageBoxCustomData update_notify_data_ = {
 		{0},
 	},
 	{
-		{L"Regularly check for updates", {3, 3, 105, 8}, 0, 0},
-		{L"include beta versions", {3+105, 3, 80, 8}, BST_MBC_AUTODISABLE, 0},
+		{L"Regularly check for updates", {3, 3, 107, 8}, 0, 0},
+		{L"include beta versions", {6+107, 3, 80, 8}, BST_MBC_AUTODISABLE, 0},
 	},
 	ID_MBC3
 };
@@ -46,6 +47,7 @@ typedef struct {
 	HINTERNET session, connection, request;
 	volatile int ref_count;
 	int type;
+	int update_available;
 	int next_version[2];
 	char buffer[UPDATE_BUFFER + 1];
 } UpdateData;
@@ -207,7 +209,7 @@ static INT_PTR CALLBACK Window_UpdateCheckDlg(HWND hDlg, UINT uMsg, WPARAM wPara
 		data->icon_update = LoadImage(g_instance, MAKEINTRESOURCE(IDI_UPDATE), IMAGE_ICON, 0,0, LR_DEFAULTSIZE);
 		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)data->icon_update);
 		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)data->icon_update);
-		data->icon_update_small = LoadImage(g_instance, MAKEINTRESOURCE(IDI_UPDATE_S), IMAGE_ICON, 0,0, LR_DEFAULTSIZE);
+		data->icon_update_small = LoadImage(g_instance, MAKEINTRESOURCE(IDI_UPDATE_S), IMAGE_ICON, GetSystemMetrics(SM_CXICON)*2/3, GetSystemMetrics(SM_CYICON)*2/3, 0);
 		data->next_version[0] = api.GetInt(NULL, kValueNextVersion[0], 1);
 		data->next_version[1] = api.GetInt(NULL, kValueNextVersion[1], 0);
 		#if !VER_IsReleaseOrHigher() // non-release build, forced beta check
@@ -254,6 +256,10 @@ static INT_PTR CALLBACK Window_UpdateCheckDlg(HWND hDlg, UINT uMsg, WPARAM wPara
 		return 1;
 	case WMBC_INITDIALOG:
 		data = (UpdateData*)GetWindowLongPtr(hDlg,DWLP_USER);
+		if(!data->update_available) {
+			update_notify_data_.button[0].style = WS_DISABLED;
+			update_notify_data_.button[1].style = WS_DISABLED;
+		}
 		update_notify_data_.button[0].icon = data->icon_update_small;
 		// update check
 		update_notify_data_.check[0].state = 0;
@@ -339,11 +345,12 @@ static INT_PTR CALLBACK Window_UpdateCheckDlg(HWND hDlg, UINT uMsg, WPARAM wPara
 				return 1;
 			}
 			// show version
+			data->update_available = (version_next[0] || version_next[1]);
 			if(data->type == UPDATE_SHOW) {
 				version_next[0] = version[0];
 				version_next[1] = version[1];
 			}
-			if(version_next[0] || version_next[1]) {
+			if(data->update_available || data->type == UPDATE_SHOW) {
 				if(data->type != UPDATE_SILENT) {
 					wchar_t* abovebehind;
 					wchar_t* msg,* msg_pos,* msg_end;
@@ -356,10 +363,12 @@ static INT_PTR CALLBACK Window_UpdateCheckDlg(HWND hDlg, UINT uMsg, WPARAM wPara
 					ShowWindow(hDlg, SW_HIDE);
 					idx = version[0]-VER_REVISION;
 					abovebehind = (idx<0 ? L"above" : L"behind");
-					msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("Your version: ") FMT(VER_REVISION_TAG) FMT("	(%i change(s) %s stable)\n\n"), abs(idx), abovebehind);
+					if(!data->update_available)
+						msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("--- T-Clock is up-to-date ---\n\n"));
+					msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("\u2237 Your version: ") FMT(VER_REVISION_TAG) FMT("    (%i change(s) %s stable)\n\n"), abs(idx), abovebehind);
 					for(idx=0; idx<2; ++idx) {
 						if(version_next[idx]) {
-							msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("%hs:	v%hs#%u\n"), kVersionType[idx], version_str[idx], version[idx]);
+							msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("%s %hs:%*sv%hs#%u\n"), (!idx?L"\u2282":L"\u2283"), kVersionType[idx], (!idx?9:14), L"", version_str[idx], version[idx]);
 							msg_pos += UpdateCheck_WriteDescription(msg_pos, msg_end-msg_pos, version_text[idx]);
 							if(!idx)
 								msg_pos += swprintf(msg_pos, msg_end-msg_pos, FMT("\n"));
@@ -367,9 +376,14 @@ static INT_PTR CALLBACK Window_UpdateCheckDlg(HWND hDlg, UINT uMsg, WPARAM wPara
 					}
 					child_id = MessageBoxCustom(hDlg, msg, L"T-Clock updates", MB_ICONINFORMATION|MB_SETFOREGROUND);
 					switch(child_id) {
-					case ID_MBC1:
-						api.ExecFile(kDownloadURL, hDlg);
-						break;
+					case ID_MBC1:{
+						HANDLE proc;
+						api.ShellExecute(NULL, kDownloadURL, NULL, hDlg, SW_SHOWNORMAL, &proc);
+						WaitForInputIdle(proc, 5000);
+						CloseHandle(proc);
+						Sleep(250); // might help the user to notice that a link opens (in case Explorer windows are full-screen/maximized)
+						api.ShellExecute(NULL, api.root, NULL, hDlg, SW_SHOWNORMAL, NULL);
+						break;}
 					case ID_MBC2:
 						for(idx=0; idx<2; ++idx) {
 							if(version[idx] && data->next_version[idx])

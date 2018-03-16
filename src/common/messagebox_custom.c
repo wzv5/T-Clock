@@ -58,9 +58,9 @@ static LRESULT CALLBACK Window_MessageBoxCustomDlg(HWND hwnd, UINT uMsg, WPARAM 
 			btn_hwnd[iter] = GetDlgItem(hwnd, kBtnId[iter]);
 			if(settings->button[iter].style) {
 				int style = settings->button[iter].style;
-				if(!(style & BS_MBC_RAWF))
+				if(!(style & BS_MBC_RAW_STYLE))
 					style |= GetWindowLongPtr(btn_hwnd[iter],GWL_STYLE);
-				style &= ~BS_MBC_RAWF;
+				style &= ~BS_MBC_RAW_STYLE;
 				SetWindowLongPtr(btn_hwnd[iter], GWL_STYLE, style);
 				UpdateWindow(btn_hwnd[iter]);
 			}

@@ -15,9 +15,8 @@ extern "C" {
  * \sa MessageBoxCustom() */
 #define WMBC_CHECKS     (WM_USER + 0x451)
 
-/** use raw button style. Eg. BS_MBC_DEFAULT */
-#define BS_MBC_RAW     (BS_MBC_RAWF | WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON)
-#define BS_MBC_RAWF     0x00080000
+/** use raw button styles */
+#define BS_MBC_RAW_STYLE     0x00080000
 
 /** auto disable checkbox based on previous checkbox */
 #define BST_MBC_AUTODISABLE   0x00010000
@@ -61,14 +60,14 @@ int MessageBoxCustom_Direct(MessageBoxCustomData* settings, const wchar_t* messa
 typedef struct MBC_Button {
 	const wchar_t* text;
 	HICON icon; /**< additional icon for the button */
-	int style;  /**< button styles or zero for default */
+	int style;  /**< button styles to add/overwrite \sa BS_MBC_RAW_STYLE, BS_*, WS_* */
 } MBC_Button;
 
 typedef struct MBC_Check {
 	const wchar_t* text;
 	RECT pos;  /**< checkbox offset and size in dialog units (left: left padding, top: vertical padding, right: width, bottom: height */
 	int state; /**< checked states \sa BST_CHECKED, BST_UNCHECKED, BST_MBC_AUTODISABLE, BST_MBC_RAW_STYLE */
-	int style; /**< checkbox styles to add/overwrite \sa BST_MBC_RAW_STYLE */
+	int style; /**< checkbox styles to add/overwrite \sa BST_MBC_RAW_STYLE, BST_*, WS_* */
 } MBC_Check;
 
 struct MessageBoxCustomData {
