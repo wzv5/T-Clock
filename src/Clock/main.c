@@ -528,6 +528,7 @@ static void InjectClockHook(HWND hwnd) {
 		if(g_explorer_restarts >= 3){
 			ticks = g_WM_TaskbarCreated;
 			g_WM_TaskbarCreated = 0x7FFF; // highest valid WM_USER to temporarily disable WM_TaskbarCreated
+			SendMessage(hwnd, WM_COMMAND, IDM_SHOWPROP, 0); // allow user to modify settings
 			retry = api.Message(0,
 						L"Multiple Explorer crashes or restarts detected\n"
 						L"It's possible that T-Clock is crashing your Explorer,\n"
