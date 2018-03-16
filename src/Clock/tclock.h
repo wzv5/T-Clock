@@ -64,10 +64,39 @@ void TranslateDispatchTClockMessage(MSG* msg);
 void RegisterSession(HWND hwnd);
 void UnregisterSession(HWND hwnd);
 void ToggleCalendar(int type);
-int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]);
-void AddStartup(HWND hDlg);
-void RemoveStartup(HWND hDlg);
-int CreateLink(const wchar_t* fname, const wchar_t* dstpath, const wchar_t* name);
+/**
+ * \brief retrieves the startup file path if any
+ * \param[out] filename path to startup file
+ * \return boolean
+ * \sa AddStartup(), RemoveStartup(), IsStartupAdded() */
+int GetStartupFile(wchar_t filename[MAX_PATH]);
+/**
+ * \brief check whether a startup file is present and points to this T-Clock
+ * \return boolean
+ * \sa AddStartup(), RemoveStartup(), GetStartupFile() */
+int IsStartupAdded(void);
+/**
+ * \brief adds T-Clock to "Startup" folder for automated launch on logon
+ * \sa RemoveStartup(), IsStartupAdded(), GetStartupFile() */
+void AddStartup(void);
+/**
+ * \brief removes the startup file
+ * \sa AddStartup(), IsStartupAdded(), GetStartupFile() */
+void RemoveStartup(void);
+/**
+ * \brief read or write shell links (shortcuts)
+ * \param[in] file shell link file name (output parameters are allowed to overlap \p file)
+ * \param[in] read_len do a read operation with \p read_len characters per buffer (use \c 0 to write/create the link instead)
+ * \param[in,out] target links target file
+ * \param[in,out] params arguments for target file \e [optional]
+ * \param[in,out] workingdir working directory "Start in" \e [optional]
+ * \param[in,out] comment user / app created comment (description) \e [optional]
+ * \param[in,out] icon path to preferred icon (or \c NULL for default) \e [optional]
+ * \param[in,out] icon_index index of the icon \e [optional]
+ * \param[in,out] show \c one of ShowWindow() values \e [optional] \sa SW_*
+ * \param[in,out] hotkey virtual key code in low-order, HOTKEYF_* modifier flags in high-order byte \e [optional] \sa HOTKEYF_*
+ * \return boolean. if any string value couldn't be read, it'll result in an empty string. */
+int WindowsShellLink(wchar_t* file, int read_len, wchar_t* target, wchar_t* params, wchar_t* workingdir, wchar_t* comment, wchar_t* icon, int* icon_index, int* show, WORD* hotkey);
 
 // Macros
 BOOL EnableDlgItemSafeFocus(HWND hDlg,int control,BOOL bEnable,int nextFocus);

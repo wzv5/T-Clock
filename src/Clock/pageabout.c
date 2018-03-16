@@ -127,7 +127,6 @@ INT_PTR CALLBACK Page_About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPara
 //--------------------+++--> Initialize Options dialog & customize T-Clock controls as required:
 static void OnInit(HWND hDlg)   //----------------------------------------------------------+++-->
 {
-	wchar_t path[MAX_PATH];
 	int controlid;
 	LOGFONT logft;
 	HFONT hftBold;
@@ -174,7 +173,7 @@ static void OnInit(HWND hDlg)   //----------------------------------------------
 	LinkControl_Setup(GetDlgItem(hDlg,IDC_ABT_MAILuri), LCF_NOTIFYONLY, NULL);
 	LinkControl_Setup(GetDlgItem(hDlg,IDC_ABT_FORUMuri), LCF_SIMPLE, NULL);
 	
-	CheckDlgButton(hDlg, IDC_STARTUP, GetStartupFile(hDlg,path));
+	CheckDlgButton(hDlg, IDC_STARTUP, IsStartupAdded());
 }
 /*--------------------------------------------------
   "Apply" button ----------------- IS NOT USED HERE!
@@ -198,9 +197,9 @@ void OnApply(HWND hDlg)
 	}
 	
 	if(IsDlgButtonChecked(hDlg,IDC_STARTUP))
-		AddStartup(hDlg);
+		AddStartup();
 	else
-		RemoveStartup(hDlg);
+		RemoveStartup();
 }
 /*--------------------------------------------------
  -- IF User Clicks eMail - Fire up their Mail Client

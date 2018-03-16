@@ -198,9 +198,9 @@ void ConvertSettings(VERSION ver) {
 		/* fall through */
 		
 	case _2_3_0:
-		if(GetStartupFile(NULL,buf)){
-			DeleteFile(buf);
-			AddStartup(NULL);
+		if(IsStartupAdded()){
+			RemoveStartup();
+			AddStartup();
 		}
 		/* fall through */
 		

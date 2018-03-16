@@ -137,11 +137,10 @@ void RegisterSession(HWND hwnd)   //---------{ Explicitly Linked for Windows 200
 		return;
 	m_bMonOffOnLock = WTSRegisterSessionNotification(hwnd, NOTIFY_FOR_ALL_SESSIONS);
 }
-//====================================================================================
-//---------------------------+++--> Does our startup file exist? Also creates filename:
-int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]){   //--------------------+++-->
+
+int GetStartupFile(wchar_t filename[MAX_PATH]){
 	size_t offset;
-	if(SHGetFolderPath(hDlg,CSIDL_STARTUP,NULL,SHGFP_TYPE_CURRENT,filename)!=S_OK){
+	if(SHGetFolderPath(NULL,CSIDL_STARTUP,NULL,SHGFP_TYPE_CURRENT,filename)!=S_OK){
 		*filename = '\0';
 		return 0;
 	}
@@ -159,52 +158,83 @@ int GetStartupFile(HWND hDlg, wchar_t filename[MAX_PATH]){   //-----------------
 		return 1;
 	return 0;
 }
-//================================================================================================
-//----------------------------------------+++--> Remove Launch T-Clock on Windows Startup ShortCut:
-void RemoveStartup(HWND hDlg)   //----------------------------------------------------------+++-->
+
+int IsStartupAdded() {
+	wchar_t filename[MAX_PATH];
+	wchar_t exe[MAX_PATH];
+	if(!GetStartupFile(filename))
+		return 0;
+	if(!WindowsShellLink(filename, MAX_PATH, filename, NULL, NULL, NULL, NULL, NULL, NULL, NULL))
+		return 0;
+	return !wcscmp(filename, GetClockExe(exe));
+}
+
+void RemoveStartup()
 {
 	wchar_t path[MAX_PATH];
-	if(!GetStartupFile(hDlg,path))
+	if(!IsStartupAdded())
 		return;
+	GetStartupFile(path);
 	DeleteFile(path);
 }
-//===================================
-void AddStartup(HWND hDlg) //--+++-->
+
+void AddStartup()
 {
 	wchar_t path[MAX_PATH], exe[MAX_PATH];
-	if(GetStartupFile(hDlg,path) || !*path)
+	if(IsStartupAdded())
 		return;
-	del_title(path);
-	
-	CreateLink(GetClockExe(exe), path, CONF_START);
+	GetStartupFile(path);
+	WindowsShellLink(path, 0, GetClockExe(exe), NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 }
-//==========================
-//--+++--> Create Launch T-Clock on Windows Startup ShortCut:
-int CreateLink(const wchar_t* fname, const wchar_t* dstpath, const wchar_t* name)
+
+int WindowsShellLink(wchar_t* file, int read_len, wchar_t* target, wchar_t* params, wchar_t* workingdir, wchar_t* comment, wchar_t* icon, int* icon_index, int* show, WORD* hotkey)
 {
 	HRESULT hres;
-	IShellLink* psl;
+	IShellLink* link;
 	
 	CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 	
-	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (void**)&psl);
+	hres = CoCreateInstance(&CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, &IID_IShellLink, (void**)&link);
 	if(SUCCEEDED(hres)) {
-		IPersistFile* ppf;
-		
-		psl->lpVtbl->SetPath(psl, fname);
-		psl->lpVtbl->SetDescription(psl, name);
-		
-		hres = psl->lpVtbl->QueryInterface(psl, &IID_IPersistFile, (void**)&ppf);
+		IPersistFile* persist;
+		hres = link->lpVtbl->QueryInterface(link, &IID_IPersistFile, (void**)&persist);
 		if(SUCCEEDED(hres)) {
-			wchar_t lnkfile[MAX_PATH];
-			wcsncpy_s(lnkfile, MAX_PATH, dstpath, _TRUNCATE);
-			add_title(lnkfile, name);
-			wcscat(lnkfile, L".lnk");
-			
-			hres = ppf->lpVtbl->Save(ppf, lnkfile, 1);
-			ppf->lpVtbl->Release(ppf);
+			if(read_len) {
+				hres = persist->lpVtbl->Load(persist, file, 0);
+				if(SUCCEEDED(hres)) {
+					*target = '\0', link->lpVtbl->GetPath(link, target, read_len, NULL, 0);
+					if(params)
+						*params = '\0', link->lpVtbl->GetArguments(link, params, read_len);
+					if(workingdir)
+						*workingdir = '\0', link->lpVtbl->GetWorkingDirectory(link, workingdir, read_len);
+					if(comment)
+						*comment = '\0', link->lpVtbl->GetDescription(link, comment, read_len);
+					if(icon)
+						*icon = '\0', link->lpVtbl->GetIconLocation(link, icon, read_len, icon_index);
+					if(show)
+						link->lpVtbl->GetShowCmd(link, show);
+					if(hotkey)
+						link->lpVtbl->GetHotkey(link, hotkey);
+				}
+			} else {
+				link->lpVtbl->SetPath(link, target);
+				if(params)
+					link->lpVtbl->SetArguments(link, params);
+				if(workingdir)
+					link->lpVtbl->SetWorkingDirectory(link, workingdir);
+				if(comment)
+					link->lpVtbl->SetDescription(link, comment);
+				if(icon)
+					link->lpVtbl->SetIconLocation(link, icon, *icon_index);
+				if(show)
+					link->lpVtbl->SetShowCmd(link, *show);
+				if(hotkey)
+					link->lpVtbl->SetHotkey(link, *hotkey);
+				hres = persist->lpVtbl->Save(persist, file, 1);
+			}
+			persist->lpVtbl->Release(persist);
 		}
-		psl->lpVtbl->Release(psl);
+		link->lpVtbl->Release(link);
 	}
 	CoUninitialize();
 	
