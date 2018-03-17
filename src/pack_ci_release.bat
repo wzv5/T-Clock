@@ -5,7 +5,7 @@ xclude="-xr!*.ini -xr!*.log -xr!*.rpt -x!*.zip -xr!*.pdb -xr!*.exp -xr!*.lib -xr
 tag=${TRAVIS_TAG:-${APPVEYOR_REPO_TAG_NAME}}
 function errchk(){ e=$?; if [ $e -ne 0 ];then exit $e; fi }
 # require tag
-[ -z "$tag" ] && exit 0
+#[ -z "$tag" ] && exit 0
 echo "	$tag"
 # get cert and signtool for linux
 (cd .. && echo "wget 'osslsigncode'"
@@ -25,8 +25,13 @@ done
 # compress
 rm -f *.zip *.7z
 7z a $xclude T-Clock.zip .
-7z a $xclude T-Clock.7z .
-exit $?
+ret=$?
+[ "$tag" ] && 7z a $xclude T-Clock.7z .
+if [ "$GDRIVE_REFRESH_TOKEN" ]; then
+	wget -qO gdrive "https://docs.google.com/uc?id=0B3X9GlR6EmbnLV92dHBpTkFhTEU&export=download" && chmod +x gdrive
+	./gdrive update --refresh-token $GDRIVE_REFRESH_TOKEN "1m18Jb-eZya6to3NsXUlZeC2ITjXdM7IU" T-Clock.zip
+fi
+return $ret 2>/dev/null || exit $ret
 
 
 :=kkk

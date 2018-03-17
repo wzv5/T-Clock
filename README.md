@@ -10,8 +10,11 @@ T-Clock *(called TClock)*, originally written by Kazubon in the early 90's, was 
 If you don't mind to read lots of text, and want to know more about T-Clock and its history: [check this page out!](http://web.archive.org/web/20160202023839/http://greggdeselms.com/tclock.html) *(thanks Gregg)*
 
 
-### Download (binaries)
-* [**view all available**](//github.com/White-Tiger/T-Clock/releases)
+### Downloads *(binaries)*
+* [![all releases](https://img.shields.io/badge/ALL-RELEASES-brightgreen.svg?logo=github&style=flat-square) ![](https://img.shields.io/github/downloads/White-Tiger/T-Clock/total.svg?style=flat-square)](//github.com/White-Tiger/T-Clock/releases)
+* [![stable](https://img.shields.io/github/release/White-Tiger/T-Clock.svg?label=STABLE&logo=github&style=flat-square) ![](https://img.shields.io/github/downloads/White-Tiger/T-Clock/latest/total.svg?style=flat-square) ![](https://img.shields.io/github/release-date/White-Tiger/T-Clock.svg?style=flat-square)](//github.com/White-Tiger/T-Clock/releases/latest)
+* [![beta](https://img.shields.io/github/release/White-Tiger/T-Clock/all.svg?label=BETA&logo=github&style=flat-square) ![](https://img.shields.io/github/downloads-pre/White-Tiger/T-Clock/latest/total.svg?style=flat-square) ![](https://img.shields.io/github/release-date-pre/White-Tiger/T-Clock.svg?style=flat-square)](//github.com/White-Tiger/T-Clock/releases)
+* [![nightly](https://img.shields.io/badge/NIGHTLY-for_testing_only-ff69b4.svg?logo=travis&style=flat-square) ![](https://img.shields.io/github/commits-since/White-Tiger/T-Clock/latest.svg?style=flat-square) ![](https://img.shields.io/github/last-commit/White-Tiger/T-Clock.svg?style=flat-square)](//drive.google.com/open?id=1m18Jb-eZya6to3NsXUlZeC2ITjXdM7IU)
 
 #### Differences to Stoic Joker's T-Clock 2010 [Build 95/98](http://www.donationcoder.com/forum/index.php?topic=21944.0)
 - [x] + supports Win10 with 1st-Anniversary update *(v2.4.1)*
@@ -57,7 +60,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 - [ ] + improved hotkey support *tbd*
 
 ### Requirements
-* Windows 2000+ (up to Windows 10 as of 2014)
+* Windows 2000+ *(up to Windows 10 as of 2014)*
 
 ### What's that `_vc2010` build?
 * As of 2018, all new releases will be build with GCC instead of the Visual C++ 2010 compiler.
@@ -68,7 +71,7 @@ If you don't mind to read lots of text, and want to know more about T-Clock and 
 ### Support
 * [Forum](http://donationcoder.com/forum/?board=324)
 * [Issue Tracker](//github.com/White-Tiger/T-Clock/issues)
-* or send a mail to the email address in T-Clock's about screen *(just click on it)*
+* or via email from T-Clock's about screen *(just click on it)*
 
 ### License
 * GPLv2 ? *(license is currently unknown, needs further research)*
