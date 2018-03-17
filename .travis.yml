@@ -71,7 +71,7 @@ deploy:
 before_script: # also before Coverity
 - pushd src/~ide
 script:
-- "[ ${COVERITY_SCAN_BRANCH} == 1 ] || ./makex"
+- ./makex
 after_success:
 - cd ..
 - ./pack_ci_release.bat
