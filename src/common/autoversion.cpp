@@ -1,44 +1,26 @@
-//Based on autorevision.cpp by Code::Blocks released as GPLv3 (should be enough modification to vanish GPL, MUHAHAHAHAW)
+// Based on autorevision.cpp by Code::Blocks released under GPLv3 (should be enough modification to vanish GPL, MUHAHAHAHAW)
 //	Rev: 7109 @ 2011-04-15T11:53:16.901970Z
-//Now released as WTFPL
+// Now released under WTFPL
+#ifdef _MSC_VER // sucks == true
+#	define _CRT_NONSTDC_NO_WARNINGS
+#	define _CRT_SECURE_NO_WARNINGS
+#endif
 #include <stdio.h>
+#include <sys/stat.h>
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
 #include <string>
 using namespace std;
 
-#define AV_VERSION "1.0.3"
+#define AV_VERSION "1.0.4"
 
 #ifdef _MSC_VER
 #	include <direct.h>//unlink,getcwd
 #	define PATH_MAX 260
 #	define popen _popen
 #	define pclose _pclose
-#	define unlink _unlink
-#	define getcwd _getcwd
-#	define sscanf sscanf_s
-#	define chdir _chdir
 #	define strcasecmp _stricmp
-#	define fopen fopenMShit
-	FILE* fopenMShit(const char* filename, const char* mode){
-		FILE* ret; fopen_s(&ret,filename,mode);
-	return ret;
-	}
-#	define gmtime gmtimeMShit
-	struct tm* gmtimeMShit(const time_t* time){
-		static struct tm ret; gmtime_s(&ret,time);
-		return &ret;
-	}
-#	define getenv getenvMShit
-	char* getenvMShit(const char* varname){
-		size_t wrote;
-		static char ret[2048];
-		getenv_s(&wrote,ret,sizeof(ret),varname);
-		if(wrote)
-			return ret;
-		return NULL;
-	}
 #else
 #	include <unistd.h>//unlink,getcwd
 #	include <stdlib.h>//getenv,setenv
@@ -54,23 +36,23 @@ using namespace std;
 
 #include "getopt_tools.c"
 
-enum{
-	REPO_NONE     =0x00,
-	REPO_AUTOINC  =0x01, // fake repo, simple autoincrement
-	REPO_GIT      =0x02,
-	REPO_SVN      =0x04,
+enum Repository{
+	REPO_NONE     =0x00, ///< no repository, only synchronize defines (manual mode)
+	REPO_AUTOINC  =0x01, ///< fake repository, simple auto-increment
+	REPO_GIT      =0x02, ///< use Git for automated revision update
+	REPO_SVN      =0x04, ///< use SVN revision
 };
-enum{
+enum Flag{
 	FLAG_NONE     =0x00,
-	FLAG_PRE      =0x01,
-	FLAG_POST     =0x02,
-	FLAG_E_IF     =0x04,
-	FLAG_E_IFNOT  =0x08,
-	FLAG_VERBOSE  =0x10,
-	FLAG_ERROR    =0x80,
+	FLAG_PRE      =0x01, ///< pre-build, create a build lock to prevent further version changes (eg. failed build)
+	FLAG_POST     =0x02, ///< post-build, remove build lock to allow new version increments
+	FLAG_E_IF     =0x04, ///< allow version update if condition is true
+	FLAG_E_IFNOT  =0x08, ///< allow version update if condition is false
+	FLAG_VERBOSE  =0x10, ///< enable verbose output (not implemented yet)
+	FLAG_ERROR    =0x80, ///< exit with code 2 after argument parsing stage
 };
-unsigned char g_flag = FLAG_PRE;
-unsigned char g_repo = REPO_AUTOINC;
+unsigned char g_flag = FLAG_PRE; ///< behavior flags \sa Flag
+unsigned char g_repo = REPO_AUTOINC; ///< repositories to use \sa Repository
 
 //major.minor[.build[.revision]]
 //0.1a1
@@ -93,10 +75,11 @@ const char* STATUS_S[STATUS_NUM_]   = {"Alpha","Beta","RC","Release","Maintenanc
 const char* STATUS_SS[STATUS_NUM_]  = {"a","b","rc","r","rm"};
 const char* STATUS_SS2[STATUS_NUM_] = {"α","β","гc","г","гm"};
 enum VersionFlags{
-	VER_DIRTY = 0x01,
+	VER_DIRTY = 0x01, ///< 'dirty' flag, a new header should be written
+	VER_OFFSET_REV = 0x02, ///< use differential revision numbering (required by shallow Gits; allows manually adjusted revisions)
 };
 struct Version{
-	uint32_t flags_;
+	uint32_t flags; ///< any combination of \c VersionFlags \sa VersionFlags
 	uint32_t major;
 	uint32_t minor;
 	uint32_t build;
@@ -108,12 +91,57 @@ struct Version{
 	string revhash;
 };
 
+/**
+ * \brief Read version header values
+ * \param[in] filepath header's file path
+ * \param[in,out] ver receives version information (sets \c VER_DIRTY flag if header values are out of sync)
+ * \return true if header was read successfully
+ * \sa VER_DIRTY */
 bool ReadHeader(const char* filepath,Version &ver);
+/**
+ * \brief Query the Git repository to update revision (counts all commits)
+ * \param[in] path repository path
+ * \param[in,out] ver updated version information
+ * \return true on success */
 bool QueryGit(const char* path,Version* ver);
+/**
+ * \brief Query the SVN repository to update revision
+ * \param[in] path repository path
+ * \param[in,out] ver updated version information
+ * \return true on success */
 bool QuerySVN(const char* path,Version* ver);
+/**
+ * \brief Prints \p define to version file or stdout
+ * \param[in] fp output target
+ * \param[in] define which define to output
+ * \param[in] ver version information */
 void PrintDefine(FILE* fp,const char* define,const Version &ver);
+/**
+ * \brief Writes our version header
+ * \param[in] filepath output file path
+ * \param[in,out] ver version information (clears \c VER_DIRTY flag)
+ * \sa VER_DIRTY */
 bool WriteHeader(const char* filepath,Version &ver);
 
+/**
+ * \brief Small helper to ensure timely error outputs by flushing them
+ * \param format fprintf format string
+ * \param ... variable number of arguments for fprintf */
+void printf_stderr_line(const char* format, ...) {
+	va_list args;
+	fflush(stdout);
+	va_start(args, format);
+	vfprintf(stderr, format, args);
+	va_end(args);
+	putc('\n', stderr);
+	fflush(stderr);
+}
+
+/**
+ * \brief Ensures that Git/SVN tools are inside PATH
+ * \param paths custom paths to add \e [optional]
+ * \remark parses AUVER_PATH variable
+ * \remark falls back to meaningful defaults if neither \p paths nor AUVER_PATH are set (Windows only) */
 void SetupPath(const char* paths) {
 #	ifdef _WIN32
 #		define PATH_DELIM ";"
@@ -151,11 +179,15 @@ void SetupPath(const char* paths) {
 #	endif // _WIN32
 }
 
+/**
+ * \brief reads \p var environment variable as a boolean
+ * \param var variable name
+ * \return \c -1 on error, otherwise boolean
+ * \remark empty strings, 0, null, n, no, false are considered 'false' */
 int GetEnvBool(const char* var){
 	const char* env = getenv(var);
 	if(!env)
 		return -1;
-	// *empty*, 0, 'null', 'n', 'no' nor 'false'
 	switch(tolower(env[0])){
 	case 0:
 		return 0;
@@ -172,10 +204,12 @@ int main(int argc, char** argv)
 {
 	const char* additional_paths = NULL;
 	const char* headerPath;
+	Version ver = {0};
+	ver.date = "unknown date";
 	char* Gitpath = NULL;
 	char* SVNpath = NULL;;
 	const char* get_define = NULL;
-	static const char* short_options = "hvVa:g:s:d:e:E:pPI";
+	static const char* short_options = "hvVa:g:s:od:e:E:pPI";
 	static struct option long_options[] = {
 		// basic
 		{"help",           no_argument,       0, 'h'},
@@ -186,6 +220,7 @@ int main(int argc, char** argv)
 		{"path",           required_argument, 0, 'a'},
 		{"git",            required_argument, 0, 'g'},
 		{"svn",            required_argument, 0, 's'},
+		{"offset-revision",no_argument,       0, 'o'},
 		// misc features
 		{"get",            required_argument, 0, 'd'},
 		{"if",             required_argument, 0, 'e'},
@@ -210,6 +245,7 @@ int main(int argc, char** argv)
 		{'a',"<paths>","additional paths to append to PATH variable. Works like the AUVER_PATH environment variable"},
 		{'g',"<repository>","use Git repo for 'revision', also add Git date & URL"},
 		{'s',"<repository>","use SVN repo for 'revision', also add SVN date & URL"},
+		{'o',0,"add differential Git/SVN 'revision' to VER_REVISION (automatically in use by shallow Gits)"},
 		//
 		{'d',"<define>","display <define> and exit"},
 		{'e',"<ENV>","only update version.h if specified environment variable is true. 'true' means that the content is neither:\n   *empty*, 0, 'null', 'n', 'no' nor 'false'"},
@@ -258,6 +294,9 @@ int main(int argc, char** argv)
 		case 's':
 			g_repo |= REPO_SVN;
 			SVNpath = optarg;
+			break;
+		case 'o':
+			ver.flags |= VER_OFFSET_REV;
 			break;
 		//
 		case 'd': get_define = optarg; break;
@@ -342,12 +381,10 @@ int main(int argc, char** argv)
 			//	do_autoinc=false;
 		}
 	}
-	Version ver = {0};
-	ver.date = "unknown date";
 
 //	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	if(!ReadHeader(headerPath, ver))
-		fprintf(stderr, "Error: Couldn't read version file '%s'\n", headerPath);
+		printf_stderr_line("Error: Couldn't read version file '%s'", headerPath);
 //	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	unsigned int rev = ver.revision;
 	if(g_repo&REPO_GIT){
@@ -377,7 +414,7 @@ int main(int argc, char** argv)
 //	}
 //	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
 	if(rev!=ver.revision){
-		ver.flags_ |= VER_DIRTY;
+		ver.flags |= VER_DIRTY;
 		puts("	- increased revision");
 	}
 	if(WriteHeader(headerPath,ver)){
@@ -391,11 +428,11 @@ bool QueryGit(const char* path,Version* ver)
 	bool found = false;
 	char cwd[PATH_MAX];
 	if(!getcwd(cwd, sizeof(cwd))) {
-		fputs("failed to retrieve current directory!", stderr);
+		printf_stderr_line("failed to retrieve current directory!");
 		return false;
 	}
 	if(chdir(path)){
-		fputs("invalid repository path!", stderr);
+		printf_stderr_line("invalid repository path!");
 		return false;
 	}
 	char buf[4097],* pos,* data;
@@ -405,7 +442,32 @@ bool QueryGit(const char* path,Version* ver)
 		int error;
 		size_t read = fread(buf,1,(sizeof(buf)-1),git); buf[read]='\0'; error=pclose(git);
 		if(!error && *buf>='0' && *buf<='9'){ // simple error check on command failure
-			ver->revision = atoi(buf);
+			int revision = atoi(buf);
+			if(!(ver->flags & VER_OFFSET_REV)) {
+				git = popen("git rev-parse --git-dir","r");
+				if(git){ /// path to .git for shallow detection (Git 2.15 supports `git rev-parse --is-shallow-repository`)
+					struct stat st;
+					read = fread(buf,1,(sizeof(buf)-1),git); buf[read]='\0'; error=pclose(git);
+					strcat(strtok(buf,"\r\n"), "/shallow");
+					if(!error && stat(buf,&st) != -1) { /// is shallow repository
+						ver->flags |= VER_OFFSET_REV;
+						printf_stderr_line("warn: shallow repository");
+					}
+				}
+			}
+			if(ver->flags & VER_OFFSET_REV) {
+				string revcount("git rev-list --count " + ver->revhash + "..HEAD --");
+				git = popen(revcount.c_str(),"r");
+				if(git){ /// revision count delta
+					read = fread(buf,1,(sizeof(buf)-1),git); buf[read]='\0'; error=pclose(git);
+					if(error) // fallback to all commits we see
+						printf_stderr_line("shallow clone depth too low!");
+					else
+						revision = atoi(buf);
+					revision += ver->revision;
+				}
+			}
+			ver->revision = revision;
 			git = popen("git remote -v","r");
 			if(git){ /// url
 				read = fread(buf,1,(sizeof(buf)-1),git); buf[read]='\0'; error=pclose(git);
@@ -433,7 +495,7 @@ bool QueryGit(const char* path,Version* ver)
 		}
 	}
 	if(chdir(cwd) != 0)
-		fputs("warning: change directory failed", stderr);
+		printf_stderr_line("warn: change directory failed");
 	return found;
 }
 bool QuerySVN(const char* path,Version* ver)
@@ -467,7 +529,11 @@ bool QuerySVN(const char* path,Version* ver)
 						value[value_len] = '\0';
 						if(!strcmp(attrib,"Revision")) {
 //							printf("Found: %s %s\n",attrib,value);
-							ver->revision = atoi(value);
+							if(ver->flags & VER_OFFSET_REV)
+								ver->revision += atoi(value) - atoi(ver->revhash.c_str());
+							else
+								ver->revision = atoi(value);
+							ver->revhash.assign(value);
 							found = true;
 						} else if(!strcmp(attrib,"Last Changed Date")) {
 //							printf("Found: %s @ %s\n",attrib,value);
@@ -579,12 +645,15 @@ bool ReadHeader(const char* filepath,Version &ver)
 		for(; *c && *c!='\n'; ++c);
 		for(; *c=='\r'||*c=='\n'||*c==' '||*c=='\t'; ++c);
 	}
-	ver.flags_=0;
 	if(cmajor!=ver.major || cminor!=ver.minor || cbuild!=ver.build || cstatus!=ver.status) {
-		ver.flags_ |= VER_DIRTY;
+		ver.flags |= VER_DIRTY;
 	}
 	return true;
 }
+/**
+ * \brief writes non-ASCII characters as Universal Character Names to file pointer
+ * \param utf8 string to write (UTF-8 encoded)
+ * \param fp open file to write to */
 void fputsUnicodeEscaped(const char* utf8, FILE* fp) {
 	for(; *utf8; ++utf8) {
 		if(*utf8 & 0x80) {
@@ -666,7 +735,7 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	
 	
 	}else{
-		fprintf(stderr, "unknown define: %s\n", define);
+		printf_stderr_line("unknown define: %s", define);
 	}
 }
 void WriteDefine(FILE* fp,const char* define,const Version &ver)
@@ -684,12 +753,12 @@ void WriteDefineString(FILE* fp,const char* define,const Version &ver)
 bool WriteHeader(const char* filepath,Version &ver)
 {
 	FILE* fheader;
-	if(!(ver.flags_&VER_DIRTY)){
+	if(!(ver.flags&VER_DIRTY)){
 		return false;
 	}
 	fheader = fopen(filepath,"wb");
 	if(!fheader) {
-		fputs("Error: Couldn't open output file.", stderr);
+		printf_stderr_line("Error: Couldn't open output file.");
 		return false;
 	}
 	fputs("#ifndef AUTOVERSION_H\n",fheader);
