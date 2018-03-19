@@ -6,7 +6,8 @@
 #	define _CRT_SECURE_NO_WARNINGS
 #endif
 #include <stdio.h>
-#include <sys/stat.h>
+#include <sys/stat.h>//stat
+#include <stdarg.h>//va_list,va_start,va_end
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
