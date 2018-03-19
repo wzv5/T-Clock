@@ -28,7 +28,7 @@ rm -f *.zip *.7z
 ret=$?
 [ "$tag" ] && 7z a $xclude T-Clock.7z .
 if [ "$GDRIVE_REFRESH_TOKEN" ]; then
-	wget -qO gdrive "https://docs.google.com/uc?id=0B3X9GlR6EmbnLV92dHBpTkFhTEU&export=download" && chmod +x gdrive
+	wget -qO gdrive "https://drive.google.com/uc?id=1L1iWOR_yCvgR7L_FrcIYqcPLjwXwlAxX&export=download" && chmod +x gdrive
 	./gdrive update --refresh-token $GDRIVE_REFRESH_TOKEN "1m18Jb-eZya6to3NsXUlZeC2ITjXdM7IU" T-Clock.zip
 fi
 return $ret 2>/dev/null || exit $ret
