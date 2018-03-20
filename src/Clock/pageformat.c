@@ -474,7 +474,7 @@ void InitFormat()
 --------------------------------------------------*/
 void CreateFormat(wchar_t* dst, char* checks)
 {
-	static const wchar_t* spacer = L" ";
+	const wchar_t* spacer = L" ";
 	char use_time = 0; ///< bitmask; 1 = date, 2 = time
 	int control;
 	int creation_bit; ///< date/time bits; &1 = date, !&1 = time
