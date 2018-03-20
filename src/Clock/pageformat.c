@@ -62,13 +62,14 @@ INT_PTR CALLBACK Page_Format(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		HDC hdcStatic = (HDC)wParam;
 		int id = GetDlgCtrlID((HWND)lParam);
 		switch(id){
-		case IDC_FORMAT:
+		case IDC_FORMAT:{
+			LRESULT brush = DefWindowProc(hDlg, message, wParam, lParam);
 			SetTextColor(hdcStatic, GetSysColor(COLOR_GRAYTEXT));
-			break;
+			return brush;}
 		case IDC_FORMAT_LNK:
 			return LinkControl_OnCtlColorStatic(hDlg, wParam, lParam);
 		}
-		return FALSE;
+		break;
 	}
 	case WM_COMMAND: {
 		WORD id=LOWORD(wParam);

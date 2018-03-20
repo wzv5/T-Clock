@@ -197,11 +197,12 @@ void LinkControl_Setup(HWND link_control, unsigned char flags, const wchar_t* ta
 }
 
 LRESULT LinkControl_OnCtlColorStatic(HWND hwnd, WPARAM wParam, LPARAM lParam) {
+	LRESULT brush = DefWindowProc(hwnd, WM_CTLCOLORSTATIC, wParam, lParam);
 	if(m_link_hovered == (HWND)lParam)
 		SetTextColor((HDC)wParam,RGB(255,0,0));
 	else
 		SetTextColor((HDC)wParam,RGB(0,0,255));
-	return DefWindowProc(hwnd, WM_CTLCOLORSTATIC, wParam, lParam);
+	return brush;
 }
 
 static LRESULT LinkControl_ExecuteLink_(HWND hwnd) {
