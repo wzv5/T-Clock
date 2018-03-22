@@ -441,7 +441,7 @@ void OnFormatCheck(HWND hDlg, WORD id)
 		CHECKS(IDC_12HOUR) = 1;
 		CheckDlgButton(hDlg, IDC_12HOUR, 1);
 	}
-	else if(id == IDC_12HOUR && !IsDlgButtonChecked(hDlg,IDC_12HOUR)) {
+	else if(id == IDC_12HOUR && !CHECKS(IDC_12HOUR)) {
 		CHECKS(IDC_AMPM) = 0;
 		CheckDlgButton(hDlg, IDC_AMPM, 0);
 	}
@@ -463,7 +463,7 @@ void InitFormat()
 	
 	if(api.GetInt(L"Format", ENTRY(IDC_CUSTOM), 0))
 		return;
-	ChecksLocaleInit(checks, 0);	
+	ChecksLocaleInit(checks, 0);
 	CreateFormat(format, checks);
 	api.GetStr(L"Format", L"Format", format_old, _countof(format_old), L"");
 	if(wcscmp(format, format_old))
