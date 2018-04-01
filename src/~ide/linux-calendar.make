@@ -12,11 +12,11 @@ LD = i686-w64-mingw32-g++
 WINDRES = i686-w64-mingw32-windres
 
 INC = 
-CFLAGS = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
+CFLAGS = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC = 
 LIBDIR = 
 LIB = -ladvapi32 -lshell32 -luser32 -lgdi32 -lpsapi -lcomdlg32 -lcomctl32 -lmsimg32
-LDFLAGS = -static
+LDFLAGS = -static -Wl,--gc-sections
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O3 -m32 -DNDEBUG

@@ -12,11 +12,11 @@ LD = g++.exe
 WINDRES = windres.exe
 
 INC = 
-CFLAGS = -fno-ident -Wall -fvisibility=hidden
+CFLAGS = -fno-ident -Wall -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables
 RESINC = 
 LIBDIR = 
 LIB = 
-LDFLAGS = 
+LDFLAGS = -Wl,--gc-sections
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -m32 -Os -DNDEBUG

@@ -12,11 +12,11 @@ LD0 = i686-w64-mingw32-g++
 WINDRES0 = windres
 
 INC0 = 
-CFLAGS0 = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
+CFLAGS0 = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC0 = 
 LIBDIR0 = 
 LIB0 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -lcomctl32 -lcomdlg32 -lshlwapi -lversion -lwinmm -lws2_32 -lmpr -luuid -lmsimg32 -ldsound -lwtsapi32
-LDFLAGS0 = -municode -static
+LDFLAGS0 = -municode -static -Wl,--gc-sections
 
 CC1 = $(CCACHE) x86_64-w64-mingw32-gcc
 CXX1 = $(CCACHE) x86_64-w64-mingw32-g++
@@ -25,11 +25,11 @@ LD1 = x86_64-w64-mingw32-g++
 WINDRES1 = windres
 
 INC1 = 
-CFLAGS1 = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
+CFLAGS1 = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC1 = 
 LIBDIR1 = 
 LIB1 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -lcomctl32 -lcomdlg32 -lshlwapi -lversion -lwinmm -lws2_32 -lmpr -luuid -lmsimg32 -ldsound -lwtsapi32
-LDFLAGS1 = -municode -static
+LDFLAGS1 = -municode -static -Wl,--gc-sections
 
 INC_RELEASE_32 = $(INC0)
 CFLAGS_RELEASE_32 = $(CFLAGS0) -O3 -m32 -DNDEBUG
@@ -525,6 +525,7 @@ clean_debug_32:
 	cmd /c rd $(OBJDIR_DEBUG_32)\\__\\common
 
 before_debug_64: 
+	cmd /C "del ..\..\Debug\Crash.log"
 	cmd /c if not exist ..\\..\\Debug md ..\\..\\Debug
 	cmd /c if not exist $(OBJDIR_DEBUG_64)\\__\\Clock md $(OBJDIR_DEBUG_64)\\__\\Clock
 	cmd /c if not exist $(OBJDIR_DEBUG_64)\\__\\common md $(OBJDIR_DEBUG_64)\\__\\common

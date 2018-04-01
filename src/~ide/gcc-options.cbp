@@ -42,6 +42,8 @@
 			<Add option="-Wall" />
 			<Add option="-m32" />
 			<Add option="-fvisibility=hidden" />
+			<Add option="-ffunction-sections" />
+			<Add option="-fno-asynchronous-unwind-tables" />
 			<Add option="-D_POSIX=1" />
 			<Add option="-D_POSIX_C_SOURCE=200112L" />
 			<Add option="-D__STDC_FORMAT_MACROS" />
@@ -54,6 +56,7 @@
 		<Linker>
 			<Add option="-static" />
 			<Add option="-m32" />
+			<Add option="-Wl,--gc-sections" />
 			<Add library="advapi32" />
 			<Add library="shell32" />
 			<Add library="user32" />

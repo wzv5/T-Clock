@@ -87,6 +87,8 @@
 			<Add option="-Wall" />
 			<Add option="-std=c99" />
 			<Add option="-fvisibility=hidden" />
+			<Add option="-ffunction-sections" />
+			<Add option="-fno-asynchronous-unwind-tables" />
 			<Add option="-D_POSIX=1" />
 			<Add option="-D_POSIX_C_SOURCE=200112L" />
 			<Add option="-D__STDC_FORMAT_MACROS" />
@@ -99,6 +101,7 @@
 		<Linker>
 			<Add option="-municode" />
 			<Add option="-static" />
+			<Add option="-Wl,--gc-sections" />
 			<Add library="advapi32" />
 			<Add library="shell32" />
 			<Add library="user32" />

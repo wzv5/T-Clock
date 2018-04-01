@@ -28,7 +28,12 @@
 			<Add option="-fno-ident" />
 			<Add option="-Wall" />
 			<Add option="-fvisibility=hidden" />
+			<Add option="-ffunction-sections" />
+			<Add option="-fno-asynchronous-unwind-tables" />
 		</Compiler>
+		<Linker>
+			<Add option="-Wl,--gc-sections" />
+		</Linker>
 		<Unit filename="../common/autoversion.cpp" />
 		<Unit filename="../common/getopt_tools.c">
 			<Option compilerVar="CC" />
