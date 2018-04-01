@@ -264,7 +264,7 @@ time_t AlarmNextTimestamp() {
 	
 	hour = api.GetInt(g_alarmkey, L"Hour", 12) % 24;
 	minute = api.GetInt(g_alarmkey, L"Minute", 0);
-	days = api.GetInt(g_alarmkey, L"Days", DAYF_DAILY);
+	days = api.GetInt(g_alarmkey, L"Days", 0);
 	
 	ts = time(NULL);
 	localtime_r(&ts, &tm);
@@ -276,7 +276,7 @@ time_t AlarmNextTimestamp() {
 		if(dayf & DAYF_OVERFLOW)
 			dayf = DAYF_MONDAY;
 	}
-	if(days != DAYF_DAILY) {
+	if(days & DAYF_EVERYDAY_BITMASK) {
 		while(!(days & dayf)) {
 			++tm.tm_mday;
 			dayf <<= 1;
@@ -298,7 +298,7 @@ void ReadAlarmFromReg(alarm_t* pAS, int idx)
 	
 	pAS->hour = api.GetInt(g_alarmkey, L"Hour", 12) % 24;
 	pAS->minute = api.GetInt(g_alarmkey, L"Minute", 0);
-	pAS->days = api.GetInt(g_alarmkey, L"Days", DAYF_DAILY);
+	pAS->days = api.GetInt(g_alarmkey, L"Days", 0);
 	pAS->iTimes = api.GetInt(g_alarmkey, L"Times", 1);
 	
 	/// @note : on next backward incompatible change, store a single value including every "flag"

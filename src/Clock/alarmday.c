@@ -37,7 +37,7 @@ INT_PTR CALLBACK Window_AlarmDaySelectDlg(HWND hDlg, UINT message, WPARAM wParam
 				OnOK(hDlg);
 				break;
 			case IDCANCEL:
-				EndDialog(hDlg,id);
+				EndDialog(hDlg, 0);
 			}
 			return TRUE;
 		}
@@ -61,7 +61,7 @@ void OnInit(HWND hDlg, unsigned days)
 		flag <<= 1;
 	}
 	
-	if(days == DAYF_DAILY) {
+	if(!days || days == DAYF_EVERYDAY_BITMASK) {
 		CheckDlgButton(hDlg, IDC_ALARMDAY0, 1);
 		OnEveryDay(hDlg);
 	}
@@ -78,6 +78,8 @@ void OnOK(HWND hDlg)
 			ret|=dflag;
 		dflag<<=1;
 	}
+	if(!ret)
+		ret = DAYF_EVERYDAY_BITMASK;
 	EndDialog(hDlg,ret|ALARMDAY_OKFLAG);
 }
 //=================================================*
