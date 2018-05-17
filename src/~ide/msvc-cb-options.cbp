@@ -40,6 +40,7 @@
 		<Compiler>
 			<Add option="/D_UNICODE /DUNICODE" />
 			<Add option="/W4" />
+			<Add option="/wd4204" />
 			<Add option="/wd4428" />
 			<Add option="/DWINVER=0x0501" />
 			<Add option="/DPSAPI_VERSION=1" />

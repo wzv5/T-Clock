@@ -41,6 +41,7 @@
 			<Add option="-fno-ident" />
 			<Add option="-Wall" />
 			<Add option="-m32" />
+			<Add option="-Werror=declaration-after-statement" />
 			<Add option="-fvisibility=hidden" />
 			<Add option="-ffunction-sections" />
 			<Add option="-fno-asynchronous-unwind-tables" />

@@ -813,11 +813,8 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		if(message == WM_SETFOCUS) {
 			m_HoverState |= kHoverKeyboard;
 		} else if(!(m_HoverState & kHoverMouse)) {
+			TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_HOVER|TME_LEAVE, hwnd, HOVER_DEFAULT};
 			m_HoverState |= kHoverMouse;
-			TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT)};
-			tme.dwFlags = TME_HOVER|TME_LEAVE;
-			tme.hwndTrack = hwnd;
-			tme.dwHoverTime = HOVER_DEFAULT;
 			TrackMouseEvent(&tme);
 		}
 		return 0;

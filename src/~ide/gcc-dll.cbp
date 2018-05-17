@@ -85,7 +85,7 @@
 			<Add option="-D_UNICODE -DUNICODE" />
 			<Add option="-fno-ident" />
 			<Add option="-Wall" />
-			<Add option="-std=c99" />
+			<Add option="-Werror=declaration-after-statement" />
 			<Add option="-fvisibility=hidden" />
 			<Add option="-ffunction-sections" />
 			<Add option="-fno-asynchronous-unwind-tables" />
