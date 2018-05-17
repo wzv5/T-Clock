@@ -15,7 +15,7 @@ INC0 =
 CFLAGS0 = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC0 = 
 LIBDIR0 = 
-LIB0 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi
+LIB0 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -luuid
 LDFLAGS0 = -municode -static -Wl,--gc-sections
 
 CC1 = $(CCACHE) x86_64-w64-mingw32-gcc
@@ -28,7 +28,7 @@ INC1 =
 CFLAGS1 = -D_UNICODE -DUNICODE -fno-ident -Wall -std=c99 -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC1 = 
 LIBDIR1 = 
-LIB1 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi
+LIB1 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -luuid
 LDFLAGS1 = -municode -static -Wl,--gc-sections
 
 INC_RELEASE_32 = $(INC0)
