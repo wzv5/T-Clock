@@ -706,6 +706,9 @@ LRESULT CALLBACK Window_TClock(HWND hwnd,	UINT message, WPARAM wParam, LPARAM lP
 		return 0;
 		
 	// context menu
+	case WM_CONTEXTMENU:
+		OnContextMenu(hwnd, (HWND)wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		return 0;
 	case WM_COMMAND:
 		return OnTClockCommand(hwnd, wParam); // menu.c
 		

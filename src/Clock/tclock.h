@@ -234,7 +234,15 @@ void InitFormat();
 
 // menu.c
 LRESULT OnTClockCommand(HWND hwnd, WPARAM wParam);
-void OnContextMenu(HWND hwnd, int xPos, int yPos);
+/**
+ * \brief Shows the context menu
+ * \param hwnd menu's parent window (eg. hidden T-Clock window)
+ * \param hwnd_from the current / previous parent to focus on closing the menu (eg. the clock)
+ * \param xPos mouse pointer X coordinate for menu positioning
+ * \param yPos mouse pointer Y coordinate for menu positioning
+ * \remark set \p xPos and \p yPos to \c -1 to use the current cursor position.
+ * \sa TrackPopupMenu() */
+void OnContextMenu(HWND hwnd, HWND hwnd_from, int xPos, int yPos);
 
 // mouse.c
 void OnTimerMouse(HWND hwnd);

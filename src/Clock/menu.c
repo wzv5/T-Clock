@@ -10,7 +10,7 @@ static char g_undo=0; // did we change windows and can undo it?
 /*-----------------------------------------------------------------
  ----------------  when the clock is right-clicked show pop-up menu
 -----------------------------------------------------------------*/
-void OnContextMenu(HWND hWnd, int xPos, int yPos)
+void OnContextMenu(HWND hwnd, HWND hwnd_from, int xPos, int yPos)
 {
 	BOOL g_bQMAudio;
 	BOOL g_bQMNet;
@@ -36,16 +36,16 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 	if(!g_bQMLaunch)	DeleteMenu(hPopupMenu, IDC_QUICKYS,		MF_BYCOMMAND);
 	if(!g_bQMExitWin)	DeleteMenu(hPopupMenu, IDC_EXITWIN,		MF_BYCOMMAND);
 	if(!g_bQMDisplay)	DeleteMenu(hPopupMenu, IDM_DISPLAYPROP,	MF_BYCOMMAND);
-	/// simple implementation of "Undo ..." (eg. Undo Cascade windows)
+	// simple implementation of "Undo ..." (eg. Undo Cascade windows)
 	if(!g_undo)			DeleteMenu(hPopupMenu, IDM_FWD_UNDO,	MF_BYCOMMAND);
-	/// special menu items, only shown if SHIFT or CTRL was pressed
+	// special menu items, only shown if SHIFT or CTRL was pressed
 	if(!((GetAsyncKeyState(VK_SHIFT)|GetAsyncKeyState(VK_CONTROL))&0x8000)){
 		DeleteMenu(hPopupMenu, IDS_NONE, MF_BYCOMMAND); // seperator
 		DeleteMenu(hPopupMenu, IDM_FWD_RUNAPP, MF_BYCOMMAND);
 		DeleteMenu(hPopupMenu, IDM_RESTART_EXPLORER, MF_BYCOMMAND);
 		DeleteMenu(hPopupMenu, IDM_EXIT_EXPLORER, MF_BYCOMMAND);
 	}
-	/// AlarmsTimer Menu Item y/n Goes HERE!!!
+	// AlarmsTimer Menu Item y/n Goes HERE!!!
 	UpdateAlarmMenu(hPopupMenu);
 	UpdateTimerMenu(hPopupMenu); // Get the List of Active Timers.
 	
@@ -77,9 +77,15 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 		}
 	}
 	
-	/// http://support.microsoft.com/kb/135788
-	SetForegroundWindow(hWnd);
-	item = TrackPopupMenu(hPopupMenu, (TPM_LEFTBUTTON|TPM_NONOTIFY|TPM_RETURNCMD), xPos, yPos, 0, hWnd, NULL);
+	// TrackPopupMenu() quirks: http://support.microsoft.com/kb/135788
+	SetForegroundWindow(hwnd);
+	if(xPos == -1 && yPos == -1) {
+		POINT pt; GetCursorPos(&pt);
+		xPos = pt.x, yPos = pt.y;
+	}
+	item = TrackPopupMenu(hPopupMenu, (TPM_LEFTBUTTON|TPM_NONOTIFY|TPM_RETURNCMD), xPos, yPos, 0, hwnd, NULL);
+	PostMessage(hwnd, WM_NULL, 0, 0);
+	SetForegroundWindow(hwnd_from); // mainly for Keyboard use with `Win+B`; doesn't seem to bug below window creation
 	if(item) {
 		if(item >= IDM_I_BEGIN_) {
 			if(item >= IDM_I_TIMER && item < (IDM_I_TIMER+1000)){
@@ -97,12 +103,11 @@ void OnContextMenu(HWND hWnd, int xPos, int yPos)
 				api.GetStr(L"QuickyMenu\\MenuItems", key, szQM_Target, _countof(szQM_Target), L"");
 				wcscpy(key+offset, L"-Switches");
 				api.GetStr(L"QuickyMenu\\MenuItems", key, szQM_Switch, _countof(szQM_Switch), L"");
-				api.Exec(szQM_Target, szQM_Switch, hWnd);
+				api.Exec(szQM_Target, szQM_Switch, hwnd);
 			}
 		} else
-			OnTClockCommand(hWnd, item);
+			OnTClockCommand(hwnd, item);
 	}
-	PostMessage(hWnd, WM_NULL, 0, 0);
 	DestroyMenu(hMenu); // Starting Over is Simpler & Recommended
 	if(shield_bmp)
 		DeleteBitmap(shield_bmp);

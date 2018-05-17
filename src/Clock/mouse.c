@@ -113,8 +113,7 @@ void OnMouseMsg(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	} else if(button == RIGHT && api.GetStr(L"Format",L"Format",NULL,0,NULL) == -1) {
 		// fallback in case config is empty and read-only
-		POINT pt; GetCursorPos(&pt);
-		OnContextMenu(hwnd, pt.x, pt.y);
+		OnContextMenu(hwnd, NULL, -1, -1);
 		return;
 	}
 	SetTimer(hwnd, IDTIMER_MOUSE, m_doubleclick_time, 0);
@@ -129,10 +128,9 @@ void OnTimerMouse(HWND hwnd)
 	wchar_t entry[3+4], data[MAX_PATH];
 	KillTimer(hwnd, IDTIMER_MOUSE);
 	switch(func){
-	case MOUSEFUNC_MENU:{
-		POINT pt; GetCursorPos(&pt);
-		OnContextMenu(hwnd, pt.x, pt.y);
-		break;}
+	case MOUSEFUNC_MENU:
+		OnContextMenu(hwnd, NULL, -1, -1);
+		break;
 	case MOUSEFUNC_TIMER:
 		DialogTimer(0);
 		break;

@@ -92,7 +92,14 @@ static long m_clock_base_width; ///< original clock's width used by taskbar calc
 static long m_clock_base_height; ///< original clock's height used by taskbar calculation
 static HWND m_clock_active = NULL;
 #define WPARAM_SUBCLOCK 0x8000
-int m_TipState=0;
+typedef enum HoverStates {
+	kHoverNone,
+	kHoverTip = 0x01,
+	kHoverMouse = 0x10,
+	kHoverKeyboard = 0x20,
+	kHoverAny = kHoverMouse | kHoverKeyboard,
+} HoverStates;
+HoverStates m_HoverState = kHoverNone;
 HWND m_TipHwnd = NULL;
 TOOLINFO m_TipInfo;
 wchar_t m_format[256];
@@ -717,7 +724,7 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		if(message == WM_THEMECHANGED) {
 			ReloadXPClockTheme(hwnd);
 			FillClockBG();
-			if(m_TipState) // draws on-top
+			if(m_HoverState & kHoverAny) // draws on-top
 				FillClockBGHover();
 		}
 		/* fall through */
@@ -790,24 +797,32 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	case WM_XBUTTONUP:
 		PostMessage(gs_hwndTClockMain, message, wParam, lParam);
 		return 0;
-//	case WM_CONTEXTMENU:
-//		PostMessage(g_hwndTClockMain, message, wParam, lParam);
-//		return 0;
+	case WM_CONTEXTMENU: {
+		RECT rc; GetWindowRect(hwnd, &rc);
+		SetForegroundWindow(gs_hwndTClockMain); // set T-Clock to foreground so we can open menus, etc.
+		PostMessage(gs_hwndTClockMain, message, wParam, MAKELPARAM(rc.left,rc.top));
+		return 0;}
+	case WM_SETFOCUS:
 	case WM_MOUSEMOVE:
-		if(!m_TipState){
-			TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT)};
-			tme.dwFlags = TME_HOVER|TME_LEAVE;
-			tme.hwndTrack = hwnd;
-			tme.dwHoverTime = HOVER_DEFAULT;
-			m_TipState = TrackMouseEvent(&tme);
+		if(!(m_HoverState & kHoverAny)) {
 			m_col = m_col_hover;
 			FillClockBGHover();
 			InvalidateRect(gs_hwndClock, NULL, 0);
 			SendMessage((wParam & WPARAM_SUBCLOCK ? GetParent(hwnd) : gs_taskbar), WM_NCHITTEST, 0, GetMessagePos());
 		}
+		if(message == WM_SETFOCUS) {
+			m_HoverState |= kHoverKeyboard;
+		} else if(!(m_HoverState & kHoverMouse)) {
+			m_HoverState |= kHoverMouse;
+			TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT)};
+			tme.dwFlags = TME_HOVER|TME_LEAVE;
+			tme.hwndTrack = hwnd;
+			tme.dwHoverTime = HOVER_DEFAULT;
+			TrackMouseEvent(&tme);
+		}
 		return 0;
 	case WM_MOUSEHOVER:
-		m_TipState = 2;
+		m_HoverState |= kHoverTip;
 		if(api.OS >= TOS_WIN10_1 || (api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0))){
 			ShowTip();//show custom/emulated tooltip
 		}else{
@@ -823,15 +838,20 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 			}
 		}
 		return 0;
+	case WM_KILLFOCUS:
 	case WM_MOUSELEAVE:
-		if(m_TipState){
-			if(m_TipState == 2){
+		if(message == WM_KILLFOCUS) {
+			m_HoverState &= ~kHoverKeyboard;
+		} else {
+			if(m_HoverState & kHoverTip){
 				if(api.OS >= TOS_WIN10_1 || (api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0)))
 					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
 				else
 					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
 			}
-			m_TipState = 0;
+			m_HoverState &= ~(kHoverMouse | kHoverTip);
+		}
+		if(!(m_HoverState & kHoverAny)) {
 			m_col = m_col_normal;
 			FillClockBG();
 			InvalidateRect(gs_hwndClock,NULL,0);
@@ -865,7 +885,6 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 		}
 		return 0;
 	case CLOCKM_REFRESHCLOCK: { // refresh the clock
-		m_TipState = 0;
 		SubsDestroy();
 		ReadFormatData(hwnd,0);
 		ReadStyleData(hwnd,0); // also creates/updates clock
