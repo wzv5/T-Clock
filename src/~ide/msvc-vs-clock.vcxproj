@@ -88,6 +88,7 @@
     <ClInclude Include="..\common\control_extensions.h" />
     <ClInclude Include="..\common\newapi.h" />
     <ClInclude Include="..\common\utl.h" />
+    <ClInclude Include="..\common\utl_logging.h" />
     <ClInclude Include="..\common\win2k_compat.h" />
     <ClInclude Include="..\Clock\tclock.h" />
   </ItemGroup>

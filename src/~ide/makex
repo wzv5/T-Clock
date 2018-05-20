@@ -1,6 +1,6 @@
 #!/bin/bash
 set -o pipefail
-make $* 2>&1 | ./tool/colorgcc | tee build.log
+make "$@" 2>&1 | ./tool/colorgcc | tee build.log
 ret=$?;
 if [[ "$1" != "clean" ]];then
 	echo

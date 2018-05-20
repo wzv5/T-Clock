@@ -47,9 +47,11 @@ enum Flag{
 	FLAG_NONE     =0x00,
 	FLAG_PRE      =0x01, ///< pre-build, create a build lock to prevent further version changes (eg. failed build)
 	FLAG_POST     =0x02, ///< post-build, remove build lock to allow new version increments
-	FLAG_E_IF     =0x04, ///< allow version update if condition is true
-	FLAG_E_IFNOT  =0x08, ///< allow version update if condition is false
-	FLAG_VERBOSE  =0x10, ///< enable verbose output (not implemented yet)
+	FLAG_E_IF     =0x04, ///< allow version update if condition is \c true
+	FLAG_E_IFNOT  =0x08, ///< allow version update if condition is \c false
+	FLAG_READ_ONLY=0x10, ///< prints defines and exists
+	FLAG_GETOPT_SECOND_PASS=0x20, ///< sets defines to absolute or relative values
+	FLAG_VERBOSE  =0x40, ///< enable verbose output (not implemented yet)
 	FLAG_ERROR    =0x80, ///< exit with code 2 after argument parsing stage
 };
 unsigned char g_flag = FLAG_PRE; ///< behavior flags \sa Flag
@@ -76,7 +78,7 @@ const char* STATUS_S[STATUS_NUM_]   = {"Alpha","Beta","RC","Release","Maintenanc
 const char* STATUS_SS[STATUS_NUM_]  = {"a","b","rc","r","rm"};
 const char* STATUS_SS2[STATUS_NUM_] = {"α","β","гc","г","гm"};
 enum VersionFlags{
-	VER_DIRTY = 0x01, ///< 'dirty' flag, a new header should be written
+	VER_TIME_SET   = 0x01, ///< time already set, don't use current
 	VER_OFFSET_REV = 0x02, ///< use differential revision numbering (required by shallow Gits; allows manually adjusted revisions)
 };
 struct Version{
@@ -91,37 +93,50 @@ struct Version{
 	string date;
 	string revhash;
 };
+Version ver_ = {0};
 
+/**
+ * \brief Sets a list of defines with ';' as the delimiter
+ * \param[in] define_list string with one or more defines
+ * \param[in,out] ver receives written version information
+ * \return \c true on success */
+bool SetDefineList(char* define_list, Version &ver);
+/**
+ * \brief Sets specified define to either absolute or relative value
+ * \param[in] define variable name
+ * \param[in] value target value which can be +/-N to increment or decrement value by N
+ * \param[in,out] ver receives written version information
+ * \return \c true on success */
+bool SetDefine(const char* define, const char* value, Version &ver);
 /**
  * \brief Read version header values
  * \param[in] filepath header's file path
- * \param[in,out] ver receives version information (sets \c VER_DIRTY flag if header values are out of sync)
- * \return true if header was read successfully
- * \sa VER_DIRTY */
+ * \param[in,out] ver receives version information
+ * \return \c true if header was read successfully */
 bool ReadHeader(const char* filepath,Version &ver);
 /**
  * \brief Query the Git repository to update revision (counts all commits)
  * \param[in] path repository path
  * \param[in,out] ver updated version information
- * \return true on success */
+ * \return \c true on success */
 bool QueryGit(const char* path,Version* ver);
 /**
  * \brief Query the SVN repository to update revision
  * \param[in] path repository path
  * \param[in,out] ver updated version information
- * \return true on success */
+ * \return \c true on success */
 bool QuerySVN(const char* path,Version* ver);
 /**
  * \brief Prints \p define to version file or stdout
  * \param[in] fp output target
  * \param[in] define which define to output
- * \param[in] ver version information */
-void PrintDefine(FILE* fp,const char* define,const Version &ver);
+ * \param[in] ver version information
+ * \return \c true on success */
+bool PrintDefine(FILE* fp,const char* define,const Version &ver);
 /**
- * \brief Writes our version header
+ * \brief Writes version header if any value has changed
  * \param[in] filepath output file path
- * \param[in,out] ver version information (clears \c VER_DIRTY flag)
- * \sa VER_DIRTY */
+ * \param[in,out] ver version information */
 bool WriteHeader(const char* filepath,Version &ver);
 
 /**
@@ -184,7 +199,7 @@ void SetupPath(const char* paths) {
  * \brief reads \p var environment variable as a boolean
  * \param var variable name
  * \return \c -1 on error, otherwise boolean
- * \remark empty strings, 0, null, n, no, false are considered 'false' */
+ * \remark empty strings, 0, null, n, no, false are considered \c false */
 int GetEnvBool(const char* var){
 	const char* env = getenv(var);
 	if(!env)
@@ -208,9 +223,8 @@ int main(int argc, char** argv)
 	Version ver = {0};
 	ver.date = "unknown date";
 	char* Gitpath = NULL;
-	char* SVNpath = NULL;;
-	const char* get_define = NULL;
-	static const char* short_options = "hvVa:g:s:od:e:E:pPI";
+	char* SVNpath = NULL;
+	static const char* short_options = "hvVa:g:s:od:D:e:E:pPI";
 	static struct option long_options[] = {
 		// basic
 		{"help",           no_argument,       0, 'h'},
@@ -224,6 +238,7 @@ int main(int argc, char** argv)
 		{"offset-revision",no_argument,       0, 'o'},
 		// misc features
 		{"get",            required_argument, 0, 'd'},
+		{"set",            required_argument, 0, 'D'},
 		{"if",             required_argument, 0, 'e'},
 		{"if-not",         required_argument, 0, 'E'},
 		// build features
@@ -248,7 +263,8 @@ int main(int argc, char** argv)
 		{'s',"<repository>","use SVN repo for 'revision', also add SVN date & URL"},
 		{'o',0,"add differential Git/SVN 'revision' to VER_REVISION (automatically in use by shallow Gits)"},
 		//
-		{'d',"<define>","display <define> and exit"},
+		{'d',"<define>","display <define> (eg. `REVISION`) and exit"},
+		{'D',"<define>=<value>","sets a <define> to given value\nValue can be +/-# to increment/decrement value by #\neg. MINOR=+1"},
 		{'e',"<ENV>","only update version.h if specified environment variable is true. 'true' means that the content is neither:\n   *empty*, 0, 'null', 'n', 'no' nor 'false'"},
 		{'E',"<ENV>","inverse of -e, so don't update if 'true'."},
 		//
@@ -259,9 +275,7 @@ int main(int argc, char** argv)
 		{0}
 	};
 	for(;;){
-		int opt;
-		int option_index = 0;
-		opt = getopt_long(argc, argv, short_options, long_options, &option_index);
+		int opt = getopt_long(argc, argv, short_options, long_options, NULL);
 		if (opt == -1)
 			break;
 		switch(opt){
@@ -270,16 +284,18 @@ int main(int argc, char** argv)
 		case '?': /*case ':':*/
 			g_flag |= FLAG_ERROR;
 			break;
-		case 'h':
-			option_index = DisplayHelp(argv[0], short_options, long_options, help_info, 80);
+		case 'h':{
+			int line_length = DisplayHelp(argv[0], short_options, long_options, help_info, 80);
 			printf("Environment variables:\n"
 			       "  AUVER_PATH");
-			PrintIndentedLine("see --path", 80, 12, option_index);
+			PrintIndentedLine("see --path", 80, 12, line_length);
 			printf("  AUVER_IF");
-			PrintIndentedLine("see --if", 80, 10, option_index);
+			PrintIndentedLine("see --if", 80, 10, line_length);
 			printf("  AUVER_IF_NOT");
-			PrintIndentedLine("see --if-not", 80, 14, option_index);
-			puts("");
+			PrintIndentedLine("see --if-not", 80, 14, line_length);
+			printf("  AUVER_SET");
+			PrintIndentedLine("';' separated list of defines to override; see --set", 80, 11, line_length);
+			puts("");}
 			/* fall through */
 		case '1':
 			puts("AutoVersion " AV_VERSION);
@@ -300,7 +316,8 @@ int main(int argc, char** argv)
 			ver.flags |= VER_OFFSET_REV;
 			break;
 		//
-		case 'd': get_define = optarg; break;
+		case 'D': g_flag |= FLAG_GETOPT_SECOND_PASS; break;
+		case 'd': g_flag |= (FLAG_GETOPT_SECOND_PASS | FLAG_READ_ONLY); break;
 		case 'e': // if
 			if(GetEnvBool(optarg) != 1){
 				printf("if: '%s' is false\n", optarg);
@@ -322,11 +339,11 @@ int main(int argc, char** argv)
 		}
 	}
 	if(GetEnvBool("AUVER_IF") == 0){
-		printf("AUVER_IF = %s\n", getenv("AUVER_IF"));
+		fprintf(stderr, "AUVER_IF = %s\n", getenv("AUVER_IF"));
 		g_flag |= FLAG_E_IF;
 	}
 	if(GetEnvBool("AUVER_IF_NOT") == 1){
-		printf("AUVER_IF_NOT = %s\n", getenv("AUVER_IF_NOT"));
+		fprintf(stderr, "AUVER_IF_NOT = %s\n", getenv("AUVER_IF_NOT"));
 		g_flag |= FLAG_E_IFNOT;
 	}
 	if(g_flag & (FLAG_E_IF|FLAG_E_IFNOT)){
@@ -347,7 +364,7 @@ int main(int argc, char** argv)
 	else
 		headerPath = "version.h";
 	size_t hlen = strlen(headerPath);
-	if(!get_define) {
+	if(!(g_flag & FLAG_READ_ONLY)) {
 /// @todo (White-Tiger#1#): aren't both files doin' "nearly" the same?
 		char lockPath[PATH_MAX];
 			memcpy(lockPath,headerPath,hlen);
@@ -387,7 +404,6 @@ int main(int argc, char** argv)
 	if(!ReadHeader(headerPath, ver))
 		printf_stderr_line("Error: Couldn't read version file '%s'", headerPath);
 //	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
-	unsigned int rev = ver.revision;
 	if(g_repo&REPO_GIT){
 		if(QueryGit(Gitpath,&ver))
 			g_repo = REPO_GIT;
@@ -401,28 +417,48 @@ int main(int argc, char** argv)
 			g_repo &= ~REPO_SVN;
 	}
 	
-	if(get_define) {
-		PrintDefine(stdout, get_define, ver);
-		return 0;
+	if(getenv("AUVER_SET")) {
+		char* define_list = strdup(getenv("AUVER_SET"));
+		fprintf(stderr, "AUVER_SET = %s\n", define_list);
+		if(!SetDefineList(define_list, ver))
+			g_flag |= FLAG_ERROR;
+		free(define_list);
 	}
-	
-	if(g_repo&REPO_AUTOINC){
-		g_repo = REPO_NONE;
-		++ver.revision;
+	if(g_flag & FLAG_GETOPT_SECOND_PASS) {
+		int printed = 0;
+		optind = 1;
+		for(;;) {
+			int opt = getopt_long(argc, argv, short_options, long_options, NULL);
+			if (opt == -1)
+				break;
+			switch(opt) {
+			case 'D':
+				if(!SetDefineList(optarg, ver))
+					g_flag |= FLAG_ERROR;
+				break;
+			case 'd':
+				if(printed++)
+					putc('\n', stdout);
+				if(!PrintDefine(stdout, optarg, ver))
+					g_flag |= FLAG_ERROR;
+				break;
+			}
+		}
 	}
-//	if(g_repo){ // increase revision because on commit the revision increases :P
-//		++ver.revision; // So we should use the "comming" revision and not the previous (grml... date and time is wrong though :/ )
-//	}
-//	printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
-	if(rev!=ver.revision){
-		ver.flags |= VER_DIRTY;
-		puts("	- increased revision");
+	if(!(g_flag & (FLAG_READ_ONLY|FLAG_ERROR))) {
+		if(g_repo&REPO_AUTOINC){
+			g_repo = REPO_NONE;
+			++ver.revision;
+		}
+//		if(g_repo){ // increase revision because on commit the revision increases :P
+//			++ver.revision; // So we should use the "comming" revision and not the previous (grml... date and time is wrong though :/ )
+//		}
+//		printf("Version: %u.%u.%u.%u #%u\n",ver.major,ver.minor,ver.build,ver.status,ver.revision);
+		if(WriteHeader(headerPath,ver)){
+			puts("	- version updated");
+		}
 	}
-	if(WriteHeader(headerPath,ver)){
-		puts("	- header updated");
-	}
-
-	return 0;
+	return (g_flag & FLAG_ERROR);
 }
 bool QueryGit(const char* path,Version* ver)
 {
@@ -562,12 +598,69 @@ bool QuerySVN(const char* path,Version* ver)
 	}
 	return found;
 }
+bool SetDefineList(char* define_list, Version &ver)
+{
+	bool success = true;
+	char* define;
+	char* value;
+	define = strtok(define_list, "=");
+	while(define) {
+		value = strtok(NULL, ";");
+		if(!value)
+			value = strchr(define, '\0');
+		if(!SetDefine(define, value, ver)) {
+			success = false;
+			printf_stderr_line("  unknown define: %s", define);
+		}
+		define = strtok(NULL, "=");
+	}
+	return success;
+}
+bool SetDefine(const char* define, const char* value, Version &ver)
+{
+	int additive = 0;
+	if(value[0] == '+' || value[0] == '-')
+		additive = 1;
+	if(!strcasecmp(define,"MAJOR")) {
+		int tmp = atoi(value) + (additive ? ver.major : 0);
+		if(tmp > 0xFF) tmp = 0xFF;
+		else if(tmp < 0) tmp = 0;
+		ver.major = tmp;
+	} else if(!strcasecmp(define,"MINOR")) {
+		int tmp = atoi(value) + (additive ? ver.minor : 0);
+		if(tmp > 0xFFFF) tmp = 0xFFFF;
+		else if(tmp < 0) tmp = 0;
+		ver.minor = tmp;
+	} else if(!strcasecmp(define,"BUILD")) {
+		int tmp = atoi(value) + (additive ? ver.build : 0);
+		if(tmp > 0xFFFF) tmp = 0xFFFF;
+		else if(tmp < 0) tmp = 0;
+		ver.build = tmp;
+	} else if(!strcasecmp(define,"REVISION")) {
+		ver.revision = atoi(value) + (additive ? ver.revision : 0);
+	} else if(!strcasecmp(define,"STATUS")) {
+		int tmp = atoi(value) + (additive ? ver.status : 0);
+		if(tmp > STATUS_NUM_-1) tmp = STATUS_NUM_-1;
+		else if(tmp < 0) tmp = 0;
+		ver.status = tmp;
+	} else if(!strcasecmp(define,"REVISION_URL")) {
+		ver.url = value;
+	} else if(!strcasecmp(define,"REVISION_DATE")) {
+		ver.date = value;
+	} else if(!strcasecmp(define,"REVISION_HASH")) {
+		ver.revhash = value;
+	} else if(!strcasecmp(define,"TIMESTAMP")) {
+		ver.flags |= VER_TIME_SET;
+		ver.timestamp = atoi(value) + (additive ? ver.timestamp : 0);
+	} else
+		return false;
+	return true;
+}
 bool ReadHeader(const char* filepath,Version &ver)
 {
 	FILE* fheader = fopen(filepath,"rb");
 	if(!fheader)
 		return false;
-	unsigned cmajor=0,cminor=0,cbuild=0,cstatus=0;
 	char buf[2048];
 	int read = fread(buf,1,(sizeof(buf)-1),fheader);
 	buf[read] = '\0';
@@ -599,46 +692,16 @@ bool ReadHeader(const char* filepath,Version &ver)
 				value[value_len++] = *c;
 			}
 			if(*c == '\n') {
-				value[value_len] = '\0';
-//				printf("Found: %s: %s\n",attrib,value);
-				if(!strcmp(attrib,"VER_MAJOR")) {
-					int tmp = atoi(value);
-					if(tmp > 0xFF) tmp = 0xFF;
-					else if(tmp < 0) tmp = 0;
-					ver.major = tmp;
-				} else if(!strcmp(attrib,"VER_MINOR")) {
-					int tmp = atoi(value);
-					if(tmp > 0xFFFF) tmp = 0xFFFF;
-					else if(tmp < 0) tmp = 0;
-					ver.minor = tmp;
-				} else if(!strcmp(attrib,"VER_BUILD")) {
-					int tmp = atoi(value);
-					if(tmp > 0xFFFF) tmp = 0xFFFF;
-					else if(tmp < 0) tmp = 0;
-					ver.build = tmp;
-				} else if(!strcmp(attrib,"VER_REVISION")) {
-					ver.revision = atoi(value);
-				} else if(!strcmp(attrib,"VER_STATUS")) {
-					int tmp = atoi(value);
-					if(tmp > STATUS_NUM_-1) tmp = STATUS_NUM_-1;
-					else if(tmp < 0) tmp = 0;
-					ver.status = tmp;
-				} else if(!strcmp(attrib,"VER_RC_STATUS")) {
-					sscanf(value,"%u, %u, %u, %u",&cmajor,&cminor,&cbuild,&cstatus);
-				} else if(!strcmp(attrib,"VER_REVISION_URL")) {
-					ver.url = value;
-					if(ver.url.length() >=2)
-						ver.url = ver.url.substr(1,ver.url.length()-2);
-				} else if(!strcmp(attrib,"VER_REVISION_DATE")) {
-					ver.date = value;
-					if(ver.date.length() >=2)
-						ver.date = ver.date.substr(1,ver.date.length()-2);
-				} else if(!strcmp(attrib,"VER_REVISION_HASH")) {
-					ver.revhash = value;
-					if(ver.revhash.length() >=2)
-						ver.revhash = ver.revhash.substr(1,ver.revhash.length()-2);
-				} else if(!strcmp(attrib,"VER_TIMESTAMP")) {
-					ver.timestamp = atoi(value);
+				char* value_ptr = value;
+				if(value_ptr[0] == '"' && value_len >=2) {
+					++value_ptr;
+					value_len -= 2;
+				}
+				value_ptr[value_len] = '\0';
+//				printf("Found: %s: %s\n", attrib, value_ptr);
+				if(attrib_len > 4) {
+					if(!SetDefine(attrib+4, value_ptr, ver) && !strcmp(attrib+4,"RC_STATUS"))
+						sscanf(value_ptr, "%u, %u, %u, %u", &ver_.major, &ver_.minor, &ver_.build, &ver_.status);
 				}
 			}
 		}
@@ -646,9 +709,13 @@ bool ReadHeader(const char* filepath,Version &ver)
 		for(; *c && *c!='\n'; ++c);
 		for(; *c=='\r'||*c=='\n'||*c==' '||*c=='\t'; ++c);
 	}
-	if(cmajor!=ver.major || cminor!=ver.minor || cbuild!=ver.build || cstatus!=ver.status) {
-		ver.flags |= VER_DIRTY;
-	}
+	ver.flags &= ~VER_TIME_SET;
+	// major, minor, build, status set above in `RC_STATUS` parsing
+	ver_.revision = ver.revision;
+	ver_.timestamp = ver.timestamp;
+	ver_.url = ver.url;
+	ver_.date = ver.date;
+	ver_.revhash = ver.revhash;
 	return true;
 }
 /**
@@ -673,7 +740,7 @@ void fputsUnicodeEscaped(const char* utf8, FILE* fp) {
 			fputc(*utf8,fp);
 	}
 }
-void PrintDefine(FILE* fp,const char* define,const Version &ver)
+bool PrintDefine(FILE* fp,const char* define,const Version &ver)
 {
 	if(!strcasecmp("MAJOR",define)) {
 		fprintf(fp,"%u",ver.major);
@@ -736,8 +803,10 @@ void PrintDefine(FILE* fp,const char* define,const Version &ver)
 	
 	
 	}else{
-		printf_stderr_line("unknown define: %s", define);
+		printf_stderr_line("  unknown define: %s", define);
+		return false;
 	}
+	return true;
 }
 void WriteDefine(FILE* fp,const char* define,const Version &ver)
 {
@@ -754,7 +823,15 @@ void WriteDefineString(FILE* fp,const char* define,const Version &ver)
 bool WriteHeader(const char* filepath,Version &ver)
 {
 	FILE* fheader;
-	if(!(ver.flags&VER_DIRTY)){
+	if(ver.major == ver_.major
+	&& ver.minor == ver_.minor
+	&& ver.build == ver_.build
+	&& ver.status == ver_.status
+	&& ver.revision == ver_.revision
+	&& ver.timestamp == ver_.timestamp
+	&& ver.url == ver_.url
+	&& ver.date == ver_.date
+	&& ver.revhash == ver_.revhash){
 		return false;
 	}
 	fheader = fopen(filepath,"wb");
@@ -792,7 +869,8 @@ bool WriteHeader(const char* filepath,Version &ver)
 	WriteDefineString(fheader,"REVISION_HASH",ver);
 	WriteDefineString(fheader,"REVISION_TAG",ver);
 	char tmp[64];
-	ver.timestamp = time(NULL);
+	if(!(ver.flags & VER_TIME_SET))
+		ver.timestamp = time(NULL);
 	tm* ttm=gmtime(&ver.timestamp);
 	fputs("/**** Date/Time ****/\n",fheader);
 	WriteDefine(fheader,"TIMESTAMP",ver);

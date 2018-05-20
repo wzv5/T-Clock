@@ -7,7 +7,6 @@ cache: ccache
 
 env:
   global:
-  - AUVER_IF_NOT=${TRAVIS_TAG:-${APPVEYOR_REPO_TAG_NAME}}
   - TRAVIS_COMMIT_MSG="${TRAVIS_COMMIT_MSG:-$(git log --format=%B --no-merges -n1)}"
   #- CCACHE=ccache
   # Coverity hack to disable Coverity by default unless [ci coverity] was specified in commit message
@@ -52,8 +51,8 @@ addons:
       cov-configure --compiler=i686-w64-mingw32-gcc --comptype=gcc --template
       cov-configure --compiler=x86_64-w64-mingw32-gcc --comptype=gcc --template
       ccache --clear
-      ./makex clean
-    build_command: ./makex
+      ./compile.bat clean
+    build_command: . compile.bat
     branch_pattern: ".*"
 
 deploy:
@@ -69,10 +68,9 @@ deploy:
     tags: true
 
 before_script: # also before Coverity
-- pushd src/~ide
+- pushd src
 script:
-- ./makex
+- . compile.bat
 after_success:
-- cd ..
 - ./sign-n-zip.bat
 - popd

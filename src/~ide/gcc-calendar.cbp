@@ -101,6 +101,7 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="../common/utl.h" />
+		<Unit filename="../common/utl_logging.h" />
 		<Unit filename="../common/version.h" />
 		<Unit filename="../common/win2k_compat.c">
 			<Option compilerVar="CC" />
