@@ -74,5 +74,5 @@ script:
 - ./makex
 after_success:
 - cd ..
-- ./pack_ci_release.bat
+- ./sign-n-zip.bat
 - popd
