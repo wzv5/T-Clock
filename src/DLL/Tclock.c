@@ -569,6 +569,7 @@ static void SelfDestruct(void* user)
 //---+++--> End Clock Procedure (Window_Clock_Hooked) - (Before?) Removing Hook:
 void EndClock()   //------------------------------------------------------+++-->
 {
+	int i;
 	g_exit_lock = CreateSemaphore(NULL, 1, 1, kConfigName+1); // SendMessage() "fix"
 	WaitForSingleObject(g_exit_lock, 0);
 	SubsDestroy(); // <- causes our parents SendMessage() call to exit prematurely
@@ -580,7 +581,8 @@ void EndClock()   //------------------------------------------------------+++-->
 	MyDragDrop_DeInit();
 	DestroyTip();
 	
-	KillTimer(gs_hwndClock, TCLOCK_TIMER_ID);
+	for(i=GROUP_TCLOCK_TIMER_BEGIN; i<=GROUP_TCLOCK_TIMER_END; ++i)
+		KillTimer(gs_hwndClock, i);
 	RemoveWindowSubclass(gs_tray, Window_ClockTray_Hooked, 0);
 	RemoveWindowSubclass(gs_hwndClock, Window_Clock_Hooked, 0);
 	// Windows uses timer ID 0 for every-minute drawing
@@ -765,6 +767,10 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 			KillTimer(hwnd, wParam);
 			DefSubclassProc(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(4,4));
 			return 0;
+		} else if(wParam == TCLOCK_TIMER_ID_TOOLTIP) {
+			KillTimer(hwnd, wParam);
+			SendMessage(hwnd, WM_MOUSEHOVER, 0, 0); // show tooltip
+			return 0;
 		}
 		if(m_bNoClock) break;
 		return 0;
@@ -811,7 +817,10 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 			SendMessage((wParam & WPARAM_SUBCLOCK ? GetParent(hwnd) : gs_taskbar), WM_NCHITTEST, 0, GetMessagePos());
 		}
 		if(message == WM_SETFOCUS) {
+			UINT hover_time;
 			m_HoverState |= kHoverKeyboard;
+			SystemParametersInfo(SPI_GETMOUSEHOVERTIME, 0, &hover_time, 0);
+			SetTimer(gs_hwndClock, TCLOCK_TIMER_ID_TOOLTIP, hover_time, NULL);
 		} else if(!(m_HoverState & kHoverMouse)) {
 			TRACKMOUSEEVENT tme = {sizeof(TRACKMOUSEEVENT), TME_HOVER|TME_LEAVE, hwnd, HOVER_DEFAULT};
 			m_HoverState |= kHoverMouse;
@@ -839,14 +848,16 @@ static LRESULT CALLBACK Window_Clock_Hooked(HWND hwnd, UINT message, WPARAM wPar
 	case WM_MOUSELEAVE:
 		if(message == WM_KILLFOCUS) {
 			m_HoverState &= ~kHoverKeyboard;
+			KillTimer(gs_hwndClock, TCLOCK_TIMER_ID_TOOLTIP);
 		} else {
-			if(m_HoverState & kHoverTip){
-				if(api.OS >= TOS_WIN10_1 || (api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0)))
-					PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
-				else
-					PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
-			}
-			m_HoverState &= ~(kHoverMouse | kHoverTip);
+			m_HoverState &= ~kHoverMouse;
+		}
+		if(!(m_HoverState & kHoverMouse) && m_HoverState & kHoverTip) {
+			if(api.OS >= TOS_WIN10_1 || (api.OS < TOS_VISTA || api.GetInt(L"Tooltip",L"bCustom",0)))
+				PostMessage(m_TipHwnd, TTM_TRACKACTIVATE , FALSE, (LPARAM)&m_TipInfo);//hide custom tooltip
+			else
+				PostMessage(gs_hwndClock, WM_USER+103,0,0);//hide system tooltip
+			m_HoverState &= ~kHoverTip;
 		}
 		if(!(m_HoverState & kHoverAny)) {
 			m_col = m_col_normal;
@@ -949,6 +960,7 @@ static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WP
 		return 0; }
 	case WM_CLOSE:{
 		RevokeDragDrop(hwnd); // kill DropFiles on sub-clock
+		KillTimer(hwnd, TCLOCK_TIMER_ID_CLICK);
 		if(dwRefData) { // hooked clock window
 			RemoveWindowSubclass(hwnd, Window_SecondaryClock_Hooked, uIdSubclass);
 			if(wParam != 0xDEED)
@@ -1001,6 +1013,10 @@ static LRESULT CALLBACK Window_SecondaryClock_Hooked(HWND hwnd, UINT message, WP
 	case WM_MOUSEMOVE:
 	case WM_MOUSEHOVER:
 	case WM_MOUSELEAVE:
+	// keyboard navigation
+	case WM_CONTEXTMENU:
+	case WM_SETFOCUS:
+	case WM_KILLFOCUS:
 		return Window_Clock_Hooked(hwnd, message, wParam|WPARAM_SUBCLOCK, lParam, 0, 0); // quite dangerous call
 	}
 	return DefWindowProc(hwnd, message, wParam, lParam);
