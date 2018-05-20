@@ -16,7 +16,7 @@ CFLAGS0 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statem
 RESINC0 = 
 LIBDIR0 = 
 LIB0 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -lcomctl32 -lcomdlg32 -lshlwapi -lversion -lwinmm -lws2_32 -lmpr -luuid -lmsimg32 -ldsound -lwtsapi32
-LDFLAGS0 = -municode -static -Wl,--gc-sections
+LDFLAGS0 = -municode -static -Wl,--gc-sections -mwindows
 
 CC1 = $(CCACHE) x86_64-w64-mingw32-gcc
 CXX1 = $(CCACHE) x86_64-w64-mingw32-g++
@@ -29,7 +29,7 @@ CFLAGS1 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statem
 RESINC1 = 
 LIBDIR1 = 
 LIB1 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -lcomctl32 -lcomdlg32 -lshlwapi -lversion -lwinmm -lws2_32 -lmpr -luuid -lmsimg32 -ldsound -lwtsapi32
-LDFLAGS1 = -municode -static -Wl,--gc-sections
+LDFLAGS1 = -municode -static -Wl,--gc-sections -mwindows
 
 INC_RELEASE_32 = $(INC0)
 CFLAGS_RELEASE_32 = $(CFLAGS0) -O3 -m32 -DNDEBUG
@@ -216,7 +216,7 @@ build_release_32: before_release_32 out_release_32 after_release_32
 release_32: before_build build_release_32 after_build
 
 out_release_32: before_release_32 $(OBJ_RELEASE_32) $(DEP_RELEASE_32)
-	$(LD0) $(LIBDIR_RELEASE_32) -o $(OUT_RELEASE_32) $(OBJ_RELEASE_32)  $(LDFLAGS_RELEASE_32) -mwindows $(LIB_RELEASE_32)
+	$(LD0) $(LIBDIR_RELEASE_32) -o $(OUT_RELEASE_32) $(OBJ_RELEASE_32)  $(LDFLAGS_RELEASE_32) $(LIB_RELEASE_32)
 
 $(OBJDIR_RELEASE_32)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES0) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_RELEASE_32)/__/Clock/tClock.o -O coff $(INC_RELEASE_32)
@@ -322,7 +322,7 @@ build_release_64: before_release_64 out_release_64 after_release_64
 release_64: before_build build_release_64 after_build
 
 out_release_64: before_release_64 $(OBJ_RELEASE_64) $(DEP_RELEASE_64)
-	$(LD1) $(LIBDIR_RELEASE_64) -o $(OUT_RELEASE_64) $(OBJ_RELEASE_64)  $(LDFLAGS_RELEASE_64) -mwindows $(LIB_RELEASE_64)
+	$(LD1) $(LIBDIR_RELEASE_64) -o $(OUT_RELEASE_64) $(OBJ_RELEASE_64)  $(LDFLAGS_RELEASE_64) $(LIB_RELEASE_64)
 
 $(OBJDIR_RELEASE_64)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES1) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_RELEASE_64)/__/Clock/tClock.o -O coff $(INC_RELEASE_64)
@@ -430,7 +430,7 @@ build_debug_32: before_debug_32 out_debug_32 after_debug_32
 debug_32: before_build build_debug_32 after_build
 
 out_debug_32: before_debug_32 $(OBJ_DEBUG_32) $(DEP_DEBUG_32)
-	$(LD0) $(LIBDIR_DEBUG_32) -o $(OUT_DEBUG_32) $(OBJ_DEBUG_32)  $(LDFLAGS_DEBUG_32) -mwindows $(LIB_DEBUG_32)
+	$(LD0) $(LIBDIR_DEBUG_32) -o $(OUT_DEBUG_32) $(OBJ_DEBUG_32)  $(LDFLAGS_DEBUG_32) $(LIB_DEBUG_32)
 
 $(OBJDIR_DEBUG_32)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES0) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_DEBUG_32)/__/Clock/tClock.o -O coff $(INC_DEBUG_32)
@@ -538,7 +538,7 @@ build_debug_64: before_debug_64 out_debug_64 after_debug_64
 debug_64: before_build build_debug_64 after_build
 
 out_debug_64: before_debug_64 $(OBJ_DEBUG_64) $(DEP_DEBUG_64)
-	$(LD1) $(LIBDIR_DEBUG_64) -o $(OUT_DEBUG_64) $(OBJ_DEBUG_64)  $(LDFLAGS_DEBUG_64) -mwindows $(LIB_DEBUG_64)
+	$(LD1) $(LIBDIR_DEBUG_64) -o $(OUT_DEBUG_64) $(OBJ_DEBUG_64)  $(LDFLAGS_DEBUG_64) $(LIB_DEBUG_64)
 
 $(OBJDIR_DEBUG_64)/__/Clock/tClock.o: ../Clock/tClock.rc
 	$(WINDRES1) -i ../Clock/tClock.rc -J rc -o $(OBJDIR_DEBUG_64)/__/Clock/tClock.o -O coff $(INC_DEBUG_64)

@@ -16,7 +16,7 @@ CFLAGS0 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statem
 RESINC0 = 
 LIBDIR0 = 
 LIB0 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -lcomctl32 -lcomdlg32 -lshlwapi -lversion -lwinmm -lws2_32 -lmpr -luuid -lmsimg32 -ldsound -lwtsapi32
-LDFLAGS0 = -municode -static -Wl,--gc-sections
+LDFLAGS0 = -municode -static -Wl,--gc-sections -mwindows
 
 CC1 = $(CCACHE) x86_64-w64-mingw32-gcc
 CXX1 = $(CCACHE) x86_64-w64-mingw32-g++
@@ -29,7 +29,7 @@ CFLAGS1 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statem
 RESINC1 = 
 LIBDIR1 = 
 LIB1 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -lcomctl32 -lcomdlg32 -lshlwapi -lversion -lwinmm -lws2_32 -lmpr -luuid -lmsimg32 -ldsound -lwtsapi32
-LDFLAGS1 = -municode -static -Wl,--gc-sections
+LDFLAGS1 = -municode -static -Wl,--gc-sections -mwindows
 
 INC_RELEASE_32 = $(INC0)
 CFLAGS_RELEASE_32 = $(CFLAGS0) -O3 -m32 -DNDEBUG

@@ -16,7 +16,7 @@ CFLAGS = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-stateme
 RESINC = 
 LIBDIR = 
 LIB = -ladvapi32 -lshell32 -luser32 -lgdi32 -lpsapi -lcomdlg32 -lcomctl32 -lmsimg32
-LDFLAGS = -static -Wl,--gc-sections
+LDFLAGS = -static -Wl,--gc-sections -mwindows
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O3 -m32 -DNDEBUG

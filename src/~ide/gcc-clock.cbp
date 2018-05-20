@@ -7,7 +7,7 @@
 		<Option compiler="i686-w64-mingw32" />
 		<Build>
 			<Target title="release-32">
-				<Option output="../../Release/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Release/Clock.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../.obj/gcc" />
 				<Option type="0" />
 				<Option compiler="i686-w64-mingw32" />
@@ -22,7 +22,7 @@
 				</Linker>
 			</Target>
 			<Target title="release-64">
-				<Option output="../../Release/Clock64" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Release/Clock64.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../.obj64/gcc" />
 				<Option type="0" />
 				<Option compiler="x86_64-w64-mingw32" />
@@ -37,7 +37,7 @@
 				</Linker>
 			</Target>
 			<Target title="debug-32">
-				<Option output="../../Debug/Clock" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Debug/Clock.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../.obj/gcc/dbg" />
 				<Option type="0" />
 				<Option compiler="i686-w64-mingw32" />
@@ -57,7 +57,7 @@
 				</ExtraCommands>
 			</Target>
 			<Target title="debug-64">
-				<Option output="../../Debug/Clock64" prefix_auto="1" extension_auto="1" />
+				<Option output="../../Debug/Clock64.exe" prefix_auto="0" extension_auto="0" />
 				<Option object_output="../.obj64/gcc/dbg" />
 				<Option type="0" />
 				<Option compiler="x86_64-w64-mingw32" />
@@ -103,6 +103,7 @@
 			<Add option="-municode" />
 			<Add option="-static" />
 			<Add option="-Wl,--gc-sections" />
+			<Add option="-mwindows" />
 			<Add library="advapi32" />
 			<Add library="shell32" />
 			<Add library="user32" />

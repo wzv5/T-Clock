@@ -16,7 +16,7 @@ CFLAGS = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-stateme
 RESINC = 
 LIBDIR = 
 LIB = -ladvapi32 -lshell32 -luser32 -lgdi32 -lpsapi -lcomdlg32 -lcomctl32 -lmsimg32
-LDFLAGS = -static -Wl,--gc-sections
+LDFLAGS = -static -Wl,--gc-sections -mwindows
 
 INC_RELEASE = $(INC)
 CFLAGS_RELEASE = $(CFLAGS) -O3 -m32 -DNDEBUG
@@ -77,7 +77,7 @@ build_release: before_release out_release after_release
 release: before_build build_release after_build
 
 out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
-	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) -mwindows $(LIB_RELEASE)
+	$(LD) $(LIBDIR_RELEASE) -o $(OUT_RELEASE) $(OBJ_RELEASE)  $(LDFLAGS_RELEASE) $(LIB_RELEASE)
 
 $(OBJDIR_RELEASE)/__/common/win2k_compat.o: ../common/win2k_compat.c
 	$(CC) $(CFLAGS_RELEASE) $(INC_RELEASE) -c ../common/win2k_compat.c -o $(OBJDIR_RELEASE)/__/common/win2k_compat.o
@@ -119,7 +119,7 @@ build_debug: before_debug out_debug after_debug
 debug: before_build build_debug after_build
 
 out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
-	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) -mwindows $(LIB_DEBUG)
+	$(LD) $(LIBDIR_DEBUG) -o $(OUT_DEBUG) $(OBJ_DEBUG)  $(LDFLAGS_DEBUG) $(LIB_DEBUG)
 
 $(OBJDIR_DEBUG)/__/common/win2k_compat.o: ../common/win2k_compat.c
 	$(CC) $(CFLAGS_DEBUG) $(INC_DEBUG) -c ../common/win2k_compat.c -o $(OBJDIR_DEBUG)/__/common/win2k_compat.o
