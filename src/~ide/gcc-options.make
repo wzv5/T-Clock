@@ -12,7 +12,7 @@ LD = i686-w64-mingw32-g++
 WINDRES = windres
 
 INC = 
-CFLAGS = -D_UNICODE -DUNICODE -fno-ident -Wall -m32 -Werror=declaration-after-statement -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
+CFLAGS = -D_UNICODE -DUNICODE -fno-ident -Wall -m32 -Werror=declaration-after-statement -fvisibility=hidden -ffunction-sections -fmerge-all-constants -fno-asynchronous-unwind-tables -fno-exceptions -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC = 
 LIBDIR = 
 LIB = -ladvapi32 -lshell32 -luser32 -lgdi32 -lpsapi -lcomctl32 -lwinhttp

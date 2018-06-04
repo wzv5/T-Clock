@@ -44,7 +44,9 @@
 			<Add option="-Werror=declaration-after-statement" />
 			<Add option="-fvisibility=hidden" />
 			<Add option="-ffunction-sections" />
+			<Add option="-fmerge-all-constants" />
 			<Add option="-fno-asynchronous-unwind-tables" />
+			<Add option="-fno-exceptions" />
 			<Add option="-D_POSIX=1" />
 			<Add option="-D_POSIX_C_SOURCE=200112L" />
 			<Add option="-D__STDC_FORMAT_MACROS" />

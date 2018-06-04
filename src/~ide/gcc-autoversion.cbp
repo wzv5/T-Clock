@@ -13,14 +13,11 @@
 				<Option compiler="gcc" />
 				<Option parameters="--git . _testver.h" />
 				<Compiler>
-					<Add option="-m32" />
 					<Add option="-Os" />
 					<Add option="-DNDEBUG" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add option="-m32" />
-					<Add option="-static" />
 				</Linker>
 			</Target>
 		</Build>
@@ -29,9 +26,13 @@
 			<Add option="-Wall" />
 			<Add option="-fvisibility=hidden" />
 			<Add option="-ffunction-sections" />
+			<Add option="-fmerge-all-constants" />
 			<Add option="-fno-asynchronous-unwind-tables" />
+			<Add option="-fno-exceptions" />
+			<Add option="-fwhole-program" />
 		</Compiler>
 		<Linker>
+			<Add option="-static" />
 			<Add option="-Wl,--gc-sections" />
 		</Linker>
 		<Unit filename="../common/autoversion.cpp" />

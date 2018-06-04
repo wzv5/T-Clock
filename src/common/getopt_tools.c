@@ -19,7 +19,7 @@ const char* PrintIndentedLine(const char* str, int max_line, int indented, int i
 		if(eol == str)
 			eol = str + max_line - 1;
 	}
-	printf("%.*s\n", eol-str, str);
+	printf("%.*s\n", (int)(eol-str), str);
 	if(*eol <= ' ' && *eol)
 		return eol + 1;
 	return eol;
@@ -32,8 +32,8 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
 		flag_optional = 0x04,
 	};
 	int flags;
-	size_t longest_line;
-	size_t len;
+	int longest_line;
+	int len;
 	int measure;
 	int idx;
 	int opt;
@@ -62,7 +62,7 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
 	// get indent part one
 	longest_line = 0;
 	for(opt=0; long_options[opt].name; ++opt){
-		len = 4 + 2 + strlen(long_options[opt].name) + 2;
+		len = 4 + 2 + (int)strlen(long_options[opt].name) + 2;
 		if(len > longest_line)
 			longest_line = len;
 	}
@@ -92,7 +92,7 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
 						flags = flag_valid | flag_long;
 						if(long_options[opt].has_arg == optional_argument)
 							flags |= flag_optional;
-						len += 2 + strlen(long_options[opt].name); // --x
+						len += 2 + (int)strlen(long_options[opt].name); // --x
 						if(!measure)
 							printf("  --%s", long_options[opt].name);
 						++opt;
@@ -104,7 +104,7 @@ int DisplayHelp(const char* argv0, const char* short_options, const struct optio
 			}
 			// print parameter
 			if(help_info[idx].params){
-				len += 1 + strlen(help_info[idx].params);
+				len += 1 + (int)strlen(help_info[idx].params);
 				if(flags & flag_optional) {
 					if(flags & flag_long) {
 						len += 2;
@@ -216,7 +216,7 @@ int getopt_long_msvc(int argc, char*const argv[], const char* optstring, const s
 			s_nextchar = strchr(opt, '=');
 			if(!s_nextchar)
 				s_nextchar = strchr(opt, '\0');
-			len = s_nextchar - opt;
+			len = (int)(s_nextchar - opt);
 			s_nextchar = NULL;
 			for(idx=0; longopts[idx].name; ++idx){
 				if(!strncmp(opt, longopts[idx].name, len)){

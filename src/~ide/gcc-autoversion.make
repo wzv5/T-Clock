@@ -12,19 +12,19 @@ LD = g++.exe
 WINDRES = windres.exe
 
 INC = 
-CFLAGS = -fno-ident -Wall -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables
+CFLAGS = -fno-ident -Wall -fvisibility=hidden -ffunction-sections -fmerge-all-constants -fno-asynchronous-unwind-tables -fno-exceptions -fwhole-program
 RESINC = 
 LIBDIR = 
 LIB = 
-LDFLAGS = -Wl,--gc-sections
+LDFLAGS = -static -Wl,--gc-sections
 
 INC_RELEASE = $(INC)
-CFLAGS_RELEASE = $(CFLAGS) -m32 -Os -DNDEBUG
+CFLAGS_RELEASE = $(CFLAGS) -Os -DNDEBUG
 RESINC_RELEASE = $(RESINC)
 RCFLAGS_RELEASE = $(RCFLAGS)
 LIBDIR_RELEASE = $(LIBDIR)
 LIB_RELEASE = $(LIB)
-LDFLAGS_RELEASE = $(LDFLAGS) -s -m32 -static
+LDFLAGS_RELEASE = $(LDFLAGS) -s
 OBJDIR_RELEASE = ..\\.obj\\gcc
 DEP_RELEASE = 
 OUT_RELEASE = ..\\common\\AutoVersion.exe

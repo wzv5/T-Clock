@@ -12,7 +12,7 @@ LD0 = i686-w64-mingw32-g++
 WINDRES0 = windres
 
 INC0 = 
-CFLAGS0 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statement -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
+CFLAGS0 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statement -fvisibility=hidden -ffunction-sections -fmerge-all-constants -fno-asynchronous-unwind-tables -fno-exceptions -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC0 = 
 LIBDIR0 = 
 LIB0 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -luuid
@@ -25,7 +25,7 @@ LD1 = x86_64-w64-mingw32-g++
 WINDRES1 = windres
 
 INC1 = 
-CFLAGS1 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statement -fvisibility=hidden -ffunction-sections -fno-asynchronous-unwind-tables -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
+CFLAGS1 = -D_UNICODE -DUNICODE -fno-ident -Wall -Werror=declaration-after-statement -fvisibility=hidden -ffunction-sections -fmerge-all-constants -fno-asynchronous-unwind-tables -fno-exceptions -D_POSIX=1 -D_POSIX_C_SOURCE=200112L -D__STDC_FORMAT_MACROS -D__USE_MINGW_ANSI_STDIO=0 -D__MINGW_USE_VC2005_COMPAT -DWINVER=0x0501 -DPSAPI_VERSION=1 -DWIN2K_COMPAT
 RESINC1 = 
 LIBDIR1 = 
 LIB1 = -ladvapi32 -lshell32 -luser32 -lole32 -lgdi32 -lpsapi -luuid

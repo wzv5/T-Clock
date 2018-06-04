@@ -23,11 +23,10 @@
 		</Build>
 		<Compiler>
 			<Add option="/GL" />
-			<Add option="/EHc" />
-			<Add option="/EHs" />
 			<Add option="/W4" />
 			<Add option="/wd4706" />
 			<Add option="/wd4428" />
+			<Add option="/D_HAS_EXCEPTIONS=0" />
 		</Compiler>
 		<Linker>
 			<Add option="/LTCG" />

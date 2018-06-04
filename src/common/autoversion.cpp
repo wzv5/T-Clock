@@ -11,7 +11,13 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+ // MinGW's C++ includes might force __USE_MINGW_ANSI_STDIO, but it bugs inttypes.h
+#if __USE_MINGW_ANSI_STDIO != 0 // backup old value
+#	define REAL_MINGW_ANSI_STDIO 1
+#endif // __USE_MINGW_ANSI_STDIO
 #include <string>
+#undef __USE_MINGW_ANSI_STDIO // correct it
+#define __USE_MINGW_ANSI_STDIO REAL_MINGW_ANSI_STDIO
 using namespace std;
 
 #define AV_VERSION "1.0.4"
@@ -22,12 +28,16 @@ using namespace std;
 #	define popen _popen
 #	define pclose _pclose
 #	define strcasecmp _stricmp
+#	define strtoll _strtoi64
+#	define PRIi64 "I64i"
 #else
 #	include <unistd.h>//unlink,getcwd
 #	include <stdlib.h>//getenv,setenv
 #	ifdef __linux__
 #		include <linux/limits.h>//PATH_MAX
 #	endif // __linux__
+#	define __STDC_FORMAT_MACROS
+#	include <inttypes.h>//PRIi64
 #endif
 
 #ifdef _WIN32
@@ -81,6 +91,35 @@ enum VersionFlags{
 	VER_TIME_SET   = 0x01, ///< time already set, don't use current
 	VER_OFFSET_REV = 0x02, ///< use differential revision numbering (required by shallow Gits; allows manually adjusted revisions)
 };
+
+// time_t issues on 32bit systems
+#ifdef __i386__
+#	ifdef _WIN32
+		typedef __time64_t timeX_t;
+#		define timeX(tt) _time64(tt)
+		inline struct tm* gmtimeX_r(timeX_t* tt, struct tm* tm) {return _gmtime64_s(tm, tt) ? NULL : tm;}
+#	else
+		typedef int64_t timeX_t;
+		timeX_t timeX(timeX_t* tt) {
+			timeX_t my_tt = (timeX_t)time(NULL);
+			if(tt) *tt = my_tt;
+			return my_tt;
+		}
+		struct tm* gmtimeX_r(timeX_t* tt, struct tm* tm) {
+			time_t sys_tt = (time_t)*tt;
+			return gmtime_r(&sys_tt, tm);
+		}
+#	endif
+#else
+	typedef time_t timeX_t;
+#	define timeX(tt) time(tt)
+#	ifdef _WIN32
+		inline struct tm* gmtimeX_r(timeX_t* tt, struct tm* tm) {return gmtime_s(tm, tt) ? NULL : tm;}
+#	else
+#		define gmtimeX_r(tt,tm) gmtime_r(tt,tm)
+#	endif
+#endif // __i386__
+
 struct Version{
 	uint32_t flags; ///< any combination of \c VersionFlags \sa VersionFlags
 	uint32_t major;
@@ -88,7 +127,7 @@ struct Version{
 	uint32_t build;
 	uint32_t status;
 	uint32_t revision;
-	time_t timestamp;
+	timeX_t timestamp;
 	string url;
 	string date;
 	string revhash;
@@ -166,7 +205,7 @@ void SetupPath(const char* paths) {
 #	endif // _WIN32
 	string path;
 	const char* envp;
-	size_t len = 0;
+	int len = 0;
 	if((envp=getenv("PATH")))
 		path += envp;
 	if(paths && paths[0]){
@@ -520,9 +559,9 @@ bool QueryGit(const char* path,Version* ver)
 						for(pos=buf; *pos && (*pos!='\r'&&*pos!='\n'); ++pos);
 						if(!error && *pos){
 							ver->revhash.assign(buf,pos-buf); ++pos;
-							time_t tt = atoi(pos);
-							tm* ttm = gmtime(&tt);
-							strftime(buf,64,"%Y-%m-%d %H:%M:%S +0000 (%a, %b %d %Y)",ttm);
+							timeX_t tt = (timeX_t)strtoll(pos, NULL, 0);
+							tm ttm = {0};
+							strftime(buf,64,"%Y-%m-%d %H:%M:%S +0000 (%a, %b %d %Y)", gmtimeX_r(&tt,&ttm));
 							ver->date.assign(buf);
 							found = true;
 						}
@@ -651,7 +690,7 @@ bool SetDefine(const char* define, const char* value, Version &ver)
 		ver.revhash = value;
 	} else if(!strcasecmp(define,"TIMESTAMP")) {
 		ver.flags |= VER_TIME_SET;
-		ver.timestamp = atoi(value) + (additive ? ver.timestamp : 0);
+		ver.timestamp = strtoll(value,NULL,0) + (additive ? ver.timestamp : 0);
 	} else
 		return false;
 	return true;
@@ -662,7 +701,7 @@ bool ReadHeader(const char* filepath,Version &ver)
 	if(!fheader)
 		return false;
 	char buf[2048];
-	int read = fread(buf,1,(sizeof(buf)-1),fheader);
+	size_t read = fread(buf,1,(sizeof(buf)-1),fheader);
 	buf[read] = '\0';
 	fclose(fheader);
 	size_t def_found, def_num=7;const char def[]="define ";
@@ -799,7 +838,7 @@ bool PrintDefine(FILE* fp,const char* define,const Version &ver)
 	
 	// date / time
 	}else if(!strcasecmp("TIMESTAMP",define)) {
-		fprintf(fp,"%lu", (unsigned long)ver.timestamp);
+		fprintf(fp, "%" PRIi64, (uint64_t)ver.timestamp);
 	
 	
 	}else{
@@ -870,35 +909,36 @@ bool WriteHeader(const char* filepath,Version &ver)
 	WriteDefineString(fheader,"REVISION_TAG",ver);
 	char tmp[64];
 	if(!(ver.flags & VER_TIME_SET))
-		ver.timestamp = time(NULL);
-	tm* ttm=gmtime(&ver.timestamp);
+		ver.timestamp = timeX(NULL);
+	tm ttm = {0};
+	gmtimeX_r(&ver.timestamp, &ttm);
 	fputs("/**** Date/Time ****/\n",fheader);
 	WriteDefine(fheader,"TIMESTAMP",ver);
-	fprintf(fheader,"#	define VER_TIME_SEC %i\n",ttm->tm_sec);
-	fprintf(fheader,"#	define VER_TIME_MIN %i\n",ttm->tm_min);
-	fprintf(fheader,"#	define VER_TIME_HOUR %i\n",ttm->tm_hour);
-	fprintf(fheader,"#	define VER_TIME_DAY %i\n",ttm->tm_mday);
-	fprintf(fheader,"#	define VER_TIME_MONTH %i\n",ttm->tm_mon+1);
-	fprintf(fheader,"#	define VER_TIME_YEAR %i\n",1900+ttm->tm_year);
-	fprintf(fheader,"#	define VER_TIME_WDAY %i\n",ttm->tm_wday);
-	fprintf(fheader,"#	define VER_TIME_YDAY %i\n",ttm->tm_yday);
-	strftime(tmp,64,"%a",ttm);
+	fprintf(fheader,"#	define VER_TIME_SEC %i\n",ttm.tm_sec);
+	fprintf(fheader,"#	define VER_TIME_MIN %i\n",ttm.tm_min);
+	fprintf(fheader,"#	define VER_TIME_HOUR %i\n",ttm.tm_hour);
+	fprintf(fheader,"#	define VER_TIME_DAY %i\n",ttm.tm_mday);
+	fprintf(fheader,"#	define VER_TIME_MONTH %i\n",ttm.tm_mon+1);
+	fprintf(fheader,"#	define VER_TIME_YEAR %i\n",1900+ttm.tm_year);
+	fprintf(fheader,"#	define VER_TIME_WDAY %i\n",ttm.tm_wday);
+	fprintf(fheader,"#	define VER_TIME_YDAY %i\n",ttm.tm_yday);
+	strftime(tmp,64,"%a",&ttm);
 	fprintf(fheader,"#	define VER_TIME_WDAY_SHORT \"%s\"\n",tmp);
-	strftime(tmp,64,"%A",ttm);
+	strftime(tmp,64,"%A",&ttm);
 	fprintf(fheader,"#	define VER_TIME_WDAY_FULL \"%s\"\n",tmp);
-	strftime(tmp,64,"%b",ttm);
+	strftime(tmp,64,"%b",&ttm);
 	fprintf(fheader,"#	define VER_TIME_MONTH_SHORT \"%s\"\n",tmp);
-	strftime(tmp,64,"%B",ttm);
+	strftime(tmp,64,"%B",&ttm);
 	fprintf(fheader,"#	define VER_TIME_MONTH_FULL \"%s\"\n",tmp);
-	strftime(tmp,64,"%H:%M:%S",ttm);
+	strftime(tmp,64,"%H:%M:%S",&ttm);
 	fprintf(fheader,"#	define VER_TIME \"%s\"\n",tmp);
-	strftime(tmp,64,"%Y-%m-%d",ttm);
+	strftime(tmp,64,"%Y-%m-%d",&ttm);
 	fprintf(fheader,"#	define VER_DATE \"%s\"\n",tmp);
-	strftime(tmp,64,"%a, %b %d, %Y %H:%M:%S UTC",ttm);
+	strftime(tmp,64,"%a, %b %d, %Y %H:%M:%S UTC",&ttm);
 	fprintf(fheader,"#	define VER_DATE_LONG \"%s\"\n",tmp);
-	strftime(tmp,64,"%Y-%m-%d %H:%M:%S UTC",ttm);
+	strftime(tmp,64,"%Y-%m-%d %H:%M:%S UTC",&ttm);
 	fprintf(fheader,"#	define VER_DATE_SHORT \"%s\"\n",tmp);
-	strftime(tmp,64,"%Y-%m-%dT%H:%M:%SZ",ttm);
+	strftime(tmp,64,"%Y-%m-%dT%H:%M:%SZ",&ttm);
 	fprintf(fheader,"#	define VER_DATE_ISO \"%s\"\n",tmp);
 	
 	fputs("/**** Helper 'functions' ****/\n",fheader);
