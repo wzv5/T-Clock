@@ -13,7 +13,7 @@ fi
 ./makex "$@"
 ret=$?
 popd
-return $ret 2>/dev/null || exit $ret
+return $ret 2>/dev/null;exit $ret
 
 
 :=kkk
