@@ -1,7 +1,7 @@
 goto=kkk
 #!/bin/bash
 # start of bash
-pushd "`dirname "${BASH_SOURCE[0]}"`/~ide"
+pushd "`dirname "${BASH_SOURCE[0]}"`"
 xclude="-xr!*.ini -xr!*.log -xr!*.rpt -x!*.zip -xr!*.pdb -xr!*.exp -xr!*.lib -xr!*.def -xr!*.a -xr!*.manifest"
 tag=${TRAVIS_TAG:-${APPVEYOR_REPO_TAG_NAME}}
 # require tag
@@ -15,7 +15,7 @@ if [ "$signpwd" ];then
 	echo "make 'osslsigncode'" && cd osslsigncode-src && ./configure -q && make V=0 && mv osslsigncode ../ && popd)
 	e=$?;[ $e != 0 ]&&(return $e 2>/dev/null;exit $e)
 	# sign
-	pushd ../Release && echo "sign"
+	pushd ../Release; echo "sign"
 	for f in *.exe *.dll */*.exe */*.dll;do
 		[ -f "$f" ] || continue
 		echo -n "$f: "
@@ -26,7 +26,7 @@ if [ "$signpwd" ];then
 	popd
 fi
 # compress
-cd ../Release && echo "compress"
+cd ../Release; echo "compress"
 rm -f *.zip *.7z
 7z a $xclude T-Clock.zip .
 ret=$?
@@ -42,14 +42,14 @@ return $ret 2>/dev/null;exit $ret
 :=kkk
 @echo off
 rem # start of batch
-pushd %~dp0~ide
+pushd %~dp0
 if not defined signtool set signtool=signtool
 set "xclude=-xr!*.ini -xr!*.log -xr!*.rpt -x!*.zip -xr!*.pdb -xr!*.exp -xr!*.lib -xr!*.def -xr!*.a -xr!*.manifest -xr!_*"
 if defined TRAVIS_TAG set tag=%TRAVIS_TAG%
 if defined APPVEYOR_REPO_TAG_NAME set tag=%APPVEYOR_REPO_TAG_NAME%
 rem # require tag
 rem if not defined tag exit /B 0
-echo 	%tag%
+echo.	%tag%
 if defined signpwd (
 	rem # get cert
 	pushd .. && echo wget '.cert.zip'
@@ -58,7 +58,7 @@ if defined signpwd (
 	if not exist .cert.pfx exit /B 666
 	popd
 	rem # sign
-	pushd ..\Release && echo sign
+	pushd ..\Release & echo sign
 	%signtool% sign /v /f ..\.cert.pfx /t http://timestamp.verisign.com/scripts/timstamp.dll *.exe misc\*.exe misc\*.dll
 	if %errorlevel% neq 0 exit /B %errorlevel%
 	rem %signtool% verify Clock.exe
@@ -66,7 +66,7 @@ if defined signpwd (
 	popd
 )
 rem # compress
-cd ..\Release && echo compress
+cd ..\Release & echo compress
 del *.zip *.7z 2>nul
 7z a %xclude% T-Clock_vc2010.zip .
 set ret=%errorlevel%

@@ -7,7 +7,10 @@ export TRAVIS_COMMIT_MSG="${TRAVIS_COMMIT_MSG:-$(git log --format=%B --no-merges
 AUVER_IF_NOT=${TRAVIS_TAG:-${APPVEYOR_REPO_TAG_NAME}}
 if [ -z "$AUVER_IF_NOT" ];then export AUVER_SET="STATUS=0"; fi
 if [[ $TRAVIS_COMMIT_MSG =~ \[(log(ging)?)\] ]];then
-	echo "#define LOGGING" > common/utl_logging.h
+	LOGGING=1
+fi
+if [ "$LOGGING" = 1 ];then
+	echo "#define LOGGING" > ../common/utl_logging.h
 fi
 
 ./makex "$@"
@@ -31,11 +34,13 @@ rem if not defined APPVEYOR_REPO_COMMIT_MESSAGE_EXTENDED (
 	git log --format^=%%B --no-merges -n1 >.tmp_msg
 	(findstr /C:"[logging]" .tmp_msg || findstr /C:"[log]" .tmp_msg) >nul
 	if %errorlevel% equ 0 (
-		echo #define LOGGING > common/utl_logging.h
+		set LOGGING=1
 	)
 	del .tmp_msg
 rem )
-
+if "%LOGGING%"=="1" (
+	echo #define LOGGING > ../common/utl_logging.h
+)
 if defined APPVEYOR (
 	if not defined MSBUILD_LOGGER set "MSBUILD_LOGGER=/logger:"C:\Program Files\AppVeyor\BuildAgent\Appveyor.MSBuildLogger.dll""
 )
