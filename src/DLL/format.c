@@ -508,6 +508,15 @@ unsigned MakeFormat(wchar_t buf[FORMAT_MAX_SIZE], const wchar_t* fmt, SYSTEMTIME
 			fmt +=3;
 		}
 //=================================================================================================
+//======================================= Lunar =======================================
+		else if (*fmt == 'C' && wcsncmp(fmt, L"CN", 2) == 0)
+		{
+			fmt += 2;
+			void GetLunarStr(int year, int month, int day, wchar_t* buf);
+			GetLunarStr(pt->wYear, pt->wMonth, pt->wDay, out);
+			for (; *out; ++out);
+		}
+//=================================================================================================
 		else {
 			*out++ = *fmt++;
 		}
